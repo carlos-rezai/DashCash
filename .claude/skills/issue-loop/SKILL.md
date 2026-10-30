@@ -1,6 +1,6 @@
 ---
 name: issue-loop
-description: Drive a feature's tickets through tdd → RED commit → build → GREEN commit → review → push, one ticket at a time, unattended, then open the feature pull request.
+description: Drive a feature's tickets through tdd → RED commit → build → GREEN commit → review → push, one ticket at a time, unattended, then open the feature pull request and run pr-review on it.
 disable-model-invocation: true
 ---
 
@@ -70,7 +70,7 @@ ticket path and the range from the commit before RED to `HEAD`.
 
 ### 5. Push
 
-`git push`, then wait for the CI run on that commit: `gh run watch` on the
+`git push -u origin HEAD`, then wait for the CI run on that commit: `gh run watch` on the
 latest run of the branch. A red run stops the loop: report which job failed.
 
 ### 6. Next
@@ -82,23 +82,26 @@ Back to 1.
 When every ticket in the folder is `done`, set the feature's status in
 `docs/feature-checklist.md` to `done`, commit it
 (`docs: [<feature>] mark feature done`) and push, then open the pull request
-into `main` and stop:
+into `main`:
 
 ```
 gh pr create --base main --title "feat: [<feature>] <description>" --body-file <tmp>
 ```
 
 The body: the feature folder, one line per ticket, and that the agents wrote
-both the code and its tests. Do not merge it: the human reviews it, CI runs
-`verify:full` with the end-to-end tests, and it lands as a merge commit.
+both the code and its tests.
+
+Then follow `.claude/skills/pr-review/SKILL.md` for this PR, kind `feature`.
+It ends with the PR approved and waiting for the human's merge, or stopped.
 
 ## Reporting
 
-When the loop stops — the feature pull request opened, or a failed step —
-report one line per ticket taken and the reason it stopped:
+When the loop stops — the PR approved, or a failed step — report one line per
+ticket taken and the reason it stopped:
 
 ```
-02  RED a1b2c3 (84k)  GREEN d4e5f6 (61k)  REVIEW approve (38k)  CI green
+02     RED a1b2c3 (84k)  GREEN d4e5f6 (61k)  REVIEW approve (38k)  CI green
+PR 12  REVIEW round 1 changes (55k)  round 2 approve (24k)
 ```
 
 The bracketed figure is the subagent's token count from its completion notice

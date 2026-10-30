@@ -4,16 +4,29 @@
 
 ## Workflow
 
-grill-me → design-log → ubiquitous-language (with the human)
+grill-me → design-log → ubiquitous-language
 → write-a-prd → prd-to-plan → prd-to-issues
+   (unattended: the `planner` agent, which logs every answer the
+   sources do not settle as an assumption)
 → issue-loop: tdd → build → review per ticket (unattended)
-→ feature PR (human review)
-→ request-refactor-plan → refactor → refactor PR (human review)
+→ feature PR: pr-review by the reviewer agent → human merges
+→ refactor-loop: request-refactor-plan → refactor per step (unattended)
+→ refactor PR: pr-review by the reviewer agent → human merges
+
+`/feature-pipeline <name>` runs the whole chain and pauses only for the
+two merges; write `merged` to continue.
 
 - Every change belongs to a ticket in `docs/features/`.
 - TDD stops at RED: show the failing test, wait for a go (issue-loop: the ticket is the go).
 - New domain terms go into `docs/ubiquitous-language.md` before they appear in code.
 - Skills and agents live in `.claude/` and are committed.
+
+## Test layers
+
+- **Domain** (Vitest): every rule and every calculation.
+- **Story** (Storybook, `play`): a component's behaviour and states, with a fake bridge.
+- **End-to-end** (Playwright, `e2e/`): one test per main user flow, written RED in the ticket that completes the flow. A main user flow is a goal the user reaches across pages, IPC and the database, such as importing a CSV or creating an account. A behaviour inside one component is never an end-to-end test.
+- Aim for a handful of end-to-end tests per feature at most; everything else belongs a layer lower.
 
 ## Branches and pull requests
 

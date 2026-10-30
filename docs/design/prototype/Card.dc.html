@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/industry-f2e85e32-8671-471e-b527-852aab1772ed/styles.css">
+<link rel="stylesheet" href="tokens/dashcash-dark.css">
+<script src="_ds/industry-f2e85e32-8671-471e-b527-852aab1772ed/_ds_bundle.js"></script>
+</helmet>
+<div class="card blueprint" style="background: var(--sb-card-bg); border-color: var(--sb-card-border); padding: {{ pad }}; gap: var(--space-3); height: 100%; min-width: 0;">
+  
+  <sc-if value="{{ hasHeader }}" hint-placeholder-val="{{ true }}">
+    <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-3);">
+      <div style="display: flex; flex-direction: column; gap: 2px; min-width: 0;">
+        <sc-if value="{{ kicker }}"><span class="card-kicker" style="color: var(--color-accent-600);">{{ kicker }}</span></sc-if>
+        <sc-if value="{{ title }}"><span class="card-title" style="font-size: 19px;">{{ title }}</span></sc-if>
+      </div>
+    </div>
+  </sc-if>
+  {{ children }}
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:360,&quot;height&quot;:200},&quot;kicker&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Kicker&quot;,&quot;tsType&quot;:&quot;string | undefined&quot;},&quot;title&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Card title&quot;,&quot;tsType&quot;:&quot;string | undefined&quot;},&quot;padding&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;none&quot;,&quot;sm&quot;,&quot;md&quot;,&quot;lg&quot;],&quot;default&quot;:&quot;md&quot;,&quot;tsType&quot;:&quot;'none' | 'sm' | 'md' | 'lg'&quot;},&quot;actions&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;React.ReactNode&quot;},&quot;children&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;React.ReactNode&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    const p = this.props;
+    const pads = { none: '0', sm: 'var(--space-3)', md: 'var(--space-4)', lg: 'var(--space-6)' };
+    return { pad: pads[p.padding || 'md'], hasHeader: !!(p.kicker || p.title) };
+  }
+}
+</script>
+</body>
+</html>

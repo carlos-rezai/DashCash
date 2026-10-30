@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/industry-f2e85e32-8671-471e-b527-852aab1772ed/styles.css">
+<link rel="stylesheet" href="tokens/dashcash-dark.css">
+<script src="_ds/industry-f2e85e32-8671-471e-b527-852aab1772ed/_ds_bundle.js"></script>
+</helmet>
+<div style="display: flex; flex-direction: column; gap: 6px; min-width: 0;">
+  <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 8px;">
+    <span style="font-size: 12px; color: var(--sb-text-muted);">{{ label }}</span>
+    <dc-import name="Amount" cents="{{ value }}" size="md" strong="{{ true }}" tone="{{ amountTone }}" hint-size="80px,18px"></dc-import>
+  </div>
+  <dc-import name="Meter" value="{{ ratio }}" tone="{{ tone }}" height="{{ 6 }}" hint-size="100%,6px"></dc-import>
+  <span style="display: flex; align-items: center; gap: 5px; font-size: 12px; color: {{ noteColor }}; text-wrap: pretty;">
+    <sc-if value="{{ showIcon }}"><dc-import name="Icon" glyph="alert" size="{{ 12 }}" hint-size="12px,12px"></dc-import></sc-if>
+    <span>{{ note }}</span>
+  </span>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:260,&quot;height&quot;:90},&quot;value&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:6760,&quot;tsType&quot;:&quot;Cents&quot;},&quot;budget&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:45000,&quot;tsType&quot;:&quot;Cents&quot;},&quot;tone&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;neutral&quot;,&quot;warning&quot;,&quot;danger&quot;],&quot;default&quot;:&quot;warning&quot;,&quot;tsType&quot;:&quot;'neutral' | 'warning' | 'danger' | undefined&quot;},&quot;label&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Headroom&quot;,&quot;tsType&quot;:&quot;string | undefined&quot;},&quot;note&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string | undefined&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    const p = this.props;
+    const v = p.value ?? 0, b = p.budget || 1;
+    const nf = new Intl.NumberFormat('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const ratio = Math.max(0, Math.min(1, v / b));
+    const tone = p.tone || (v <= 0 ? 'danger' : ratio < 0.2 ? 'warning' : 'neutral');
+    const notes = {
+      neutral: 'of ' + nf.format(b / 100) + '\u00a0€ left this month',
+      warning: 'Getting close: goal holds if you stay under this',
+      danger: 'Goal missed this month at this pace'
+    };
+    return {
+      label: p.label || 'Headroom', value: v, ratio, tone,
+      amountTone: tone === 'neutral' ? 'default' : tone,
+      note: p.note || notes[tone], showIcon: tone !== 'neutral',
+      noteColor: tone === 'neutral' ? 'var(--sb-text-faint)' : tone === 'warning' ? 'var(--sb-warning)' : 'var(--sb-danger)'
+    };
+  }
+}
+</script>
+</body>
+</html>

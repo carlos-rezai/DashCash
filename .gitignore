@@ -1,0 +1,38 @@
+# Dependencies
+node_modules/
+
+# Build and package output
+dist/
+out/
+release/
+.vite/
+storybook-static/
+
+# Test and quality output
+coverage/
+playwright-report/
+test-results/
+.stryker-tmp/
+reports/
+
+# Secrets
+.env
+.env.*
+!.env.example
+
+# Personal finance data: never in git, test data lives in fixtures/
+*.db
+*.db-*
+*.sqlite
+*.sqlite-*
+*.csv
+!fixtures/**/*.csv
+
+# Local Claude Code settings
+.claude/settings.local.json
+
+# Logs and OS files
+*.log
+npm-debug.log*
+.DS_Store
+Thumbs.db

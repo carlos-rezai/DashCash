@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/industry-f2e85e32-8671-471e-b527-852aab1772ed/styles.css">
+<link rel="stylesheet" href="tokens/dashcash-dark.css">
+<script src="_ds/industry-f2e85e32-8671-471e-b527-852aab1772ed/_ds_bundle.js"></script>
+<script src="lib/store.js"></script>
+</helmet>
+<div style="display: flex; flex-direction: column; gap: var(--space-6);">
+  <dc-import name="Card" kicker="{{ kicker }}" title="{{ pickTitle }}" padding="lg" hint-size="100%,110px">
+    <div style="display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap;">
+      <dc-import name="Segmented" options="{{ modeOpts }}" value="{{ mode }}" on-change="{{ setMode }}" hint-size="150px,28px"></dc-import>
+    </div>
+    <div style="display: flex; gap: var(--space-2); flex-wrap: wrap;">
+      <sc-for list="{{ chips }}" as="c" hint-placeholder-count="12">
+        <dc-import name="Chip" label="{{ c.label }}" active="{{ c.active }}" disabled="{{ c.disabled }}" on-click="{{ c.toggle }}" hint-size="80px,28px"></dc-import>
+      </sc-for>
+    </div>
+  </dc-import>
+  <sc-if value="{{ showYearNote }}" hint-placeholder-val="{{ false }}">
+    <div style="display: flex; align-items: center; gap: var(--space-4); flex-wrap: wrap; padding: 10px 14px; border: 1px solid var(--sb-card-border); background: var(--sb-card-bg); font-size: 13px;">
+      <span style="display: inline-flex; align-items: center; gap: 8px; flex: 1; min-width: 260px; color: var(--color-text);"><dc-import name="Icon" glyph="info" size="{{ 16 }}" hint-size="16px,16px"></dc-import><span style="text-wrap: pretty;">{{ yearNote }}</span></span>
+      <dc-import name="Switch" checked="{{ fullYears }}" label="Full years" on-change="{{ setFullYears }}" hint-size="120px,18px"></dc-import>
+    </div>
+  </sc-if>
+  <dc-import name="Card" padding="none" hint-size="100%,700px">
+    <table class="table" style="font-size: 14px;">
+      <thead>
+        <tr>
+          <th style="padding-left: 20px;">Category</th>
+          <sc-for list="{{ cols }}" as="h" hint-placeholder-count="4"><th style="text-align: right; width: 150px;">{{ h }}</th></sc-for>
+          <th style="text-align: right; width: 170px; padding-right: 20px;">{{ changeHead }}</th>
+        </tr>
+      </thead>
+      <sc-for list="{{ sections }}" as="sec" hint-placeholder-count="2">
+        <tbody>
+          <tr><td colSpan="{{ span }}" style="padding: 18px 20px 6px; border-bottom: 1px solid var(--color-divider);"><div style="display: flex; align-items: baseline; gap: 10px;"><span style="font-family: var(--font-heading); font-weight: 600; font-size: 18px;">{{ sec.title }}</span><span style="font-size: 12px; color: var(--sb-text-faint);">{{ sec.note }}</span></div></td></tr>
+          <sc-for list="{{ sec.rows }}" as="r" hint-placeholder-count="6">
+            <tr style="font-weight: {{ r.weight }};">
+              <td style="padding-left: 20px;"><div style="display: flex; align-items: center; gap: 10px;"><sc-if value="{{ r.color }}"><dc-import name="Swatch" color="{{ r.color }}" size="{{ 10 }}" hint-size="10px,10px"></dc-import></sc-if><span>{{ r.name }}</span></div></td>
+              <sc-for list="{{ r.cells }}" as="c" hint-placeholder-count="4">
+                <td style="text-align: right; font-variant-numeric: tabular-nums; background: {{ c.bg }}; color: {{ c.fg }}; box-shadow: {{ c.ring }};">{{ c.text }}</td>
+              </sc-for>
+              <td style="text-align: right; padding-right: 20px;"><span style="display: inline-flex; align-items: center; gap: 4px; color: {{ r.changeColor }}; font-variant-numeric: tabular-nums;"><sc-if value="{{ r.icon }}"><dc-import name="Icon" glyph="{{ r.icon }}" size="{{ 13 }}" hint-size="13px,13px"></dc-import></sc-if>{{ r.change }}</span></td>
+            </tr>
+          </sc-for>
+        </tbody>
+      </sc-for>
+    </table>
+  </dc-import>
+  <div style="display: flex; align-items: center; gap: var(--space-4); font-size: 12px; color: var(--sb-text-faint);">
+    <span style="display: inline-flex; align-items: center; gap: 6px;"><span style="width: 14px; height: 10px; background: var(--color-accent-200); box-shadow: inset 0 0 0 1px var(--color-accent-400);"></span>{{ hiLegend }}</span>
+    <span>Change = effect on your money: more spending shows as negative (red), less as positive (green).</span>
+    <span>All accounts, including the credit card. Transfers are excluded.</span>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1160,&quot;height&quot;:900}}">
+class Component extends DCLogic {
+  state = { mode: 'months', sel: [30, 31, 32, 33], ysel: [12, 24], fullYears: false };
+  componentDidMount() {
+    const go = () => { this.unsub = window.SB.subscribe(() => this.forceUpdate()); this.forceUpdate(); };
+    if (window.SB) go(); else this.t = setInterval(() => { if (window.SB) { clearInterval(this.t); go(); } }, 40);
+  }
+  componentWillUnmount() { this.unsub && this.unsub(); clearInterval(this.t); }
+  renderVals() {
+    const SB = window.SB;
+    if (!SB) return { chips: [], cols: [], sections: [] };
+    const years = this.state.mode === 'years';
+    const key = years ? 'ysel' : 'sel';
+    const sel = (this.state[key] || []).slice().sort((a, b) => a - b);
+    const T = SB.TODAY_IDX, curY = SB.mYear(T), todayM = T % 12;
+    // A year column is identified by its first month index (Jan). With the current year selected and "Full years" off,
+    // every year is summed over the same months (Jan … current month) so the partial year compares like for like.
+    const curY0 = T - todayM, hasCur = years && sel.includes(curY0), likeForLike = hasCur && !this.state.fullYears;
+    const span = likeForLike ? todayM + 1 : 12;
+    const yearMonths = (y0) => { const out = []; for (let i = y0; i < y0 + span && i <= T; i++) out.push(i); return out; };
+    const spend = (catId, i) => years ? yearMonths(i).reduce((s, m) => s + SB.categorySpend(catId, m), 0) : SB.categorySpend(catId, i);
+    const label = years
+      ? (i) => String(SB.mYear(i)) + (i === curY0 ? ' · to date' : '')
+      : (i) => SB.mShort(i) + (i % 12 === 0 || i === sel[0] ? ' ' + SB.mYear(i) : '') + (i === T ? ' · to date' : '');
+    const pool = [];
+    if (years) { const R = SB.TX_RANGE; for (let i = R.first - (R.first % 12); i <= R.last; i += 12) pool.push(i); } else { for (let i = T - 11; i <= T; i++) pool.push(i); }
+    const chips = pool.map((i) => {
+      const active = sel.includes(i);
+      return {
+        label: years ? String(SB.mYear(i)) : SB.mShort(i) + ' ' + String(SB.mYear(i)).slice(2), active, disabled: !active && sel.length >= 4,
+        toggle: () => this.setState((s) => { const c = s[key]; return { [key]: active ? (c.length > 1 ? c.filter((x) => x !== i) : c) : c.length < 4 ? c.concat(i) : c }; })
+      };
+    });
+    const fmt = (c) => SB.eur(c);
+    const mkRow = (name, color, vals, weight) => {
+      const ok = (k) => !(hasCur && !likeForLike && sel[k] === curY0); // partial year never wins the highlight in full-years mode
+      const cand = vals.filter((_, k) => ok(k)), max = Math.max(...cand), uniform = cand.every((v) => v === cand[0]);
+      const cells = vals.map((v, k) => {
+        const hi = ok(k) && cand.length > 1 && !uniform && v === max && max > 0;
+        return { text: fmt(v), bg: hi ? 'var(--color-accent-200)' : 'transparent', fg: hi ? 'var(--color-accent-900)' : 'var(--color-text)', ring: hi ? 'inset 0 0 0 1px var(--color-accent-400)' : 'none' };
+      });
+      let change = '', changeColor = 'var(--sb-text-faint)', icon = '';
+      if (vals.length >= 2) {
+        const d = vals[0] - vals[vals.length - 1];
+        change = d === 0 ? '±0,00\u00a0€' : SB.eur(d, { sign: true });
+        if (d > 0) changeColor = 'var(--sb-positive)'; else if (d < 0) changeColor = 'var(--sb-negative)';
+      }
+      return { name, color, cells, change, changeColor, icon, weight };
+    };
+    const section = (kind, title, note) => {
+      const cats = SB.state.categories.filter((c) => c.kind === kind);
+      const rows = cats.map((c) => mkRow(c.name, c.color, sel.map((i) => spend(c.id, i)), 400));
+      const tot = sel.map((_, k) => rows.reduce((s, r, j) => s + spend(cats[j].id, sel[k]), 0));
+      rows.push(mkRow('Subtotal', '', tot, 500));
+      return { title, note, rows, tot };
+    };
+    const v = section('variable', 'Variable', 'Where saving is possible');
+    const f = section('fixed', 'Fixed', 'Recurring items');
+    const total = { title: 'Total', note: '', rows: [mkRow('All spending', '', sel.map((_, k) => v.tot[k] + f.tot[k]), 500)] };
+    return {
+      chips, hiLegend: years ? 'Highest year per row' : 'Highest month per row', kicker: years ? 'Years' : 'Months', pickTitle: 'Compare up to 4 ' + (years ? 'years' : 'months') + ' · ' + sel.length + ' selected',
+      isYears: years, mode: this.state.mode,
+      showYearNote: hasCur, fullYears: !!this.state.fullYears, setFullYears: (v) => this.setState({ fullYears: v }),
+      yearNote: likeForLike ? 'Compared Jan–' + SB.mShort(T) + ' in every year, so the partial year is fair.' : 'Full calendar years. ' + curY + ' runs to date and is left out of the highlight.',
+      modeOpts: [{ value: 'months', label: 'Months' }, { value: 'years', label: 'Years' }],
+      setMode: (v) => this.setState({ mode: v }),
+      cols: sel.map(label), span: sel.length + 2,
+      changeHead: sel.length >= 2 ? (years ? SB.mYear(sel[0]) + ' → ' + SB.mYear(sel[sel.length - 1]) : SB.mShort(sel[0]) + ' → ' + SB.mShort(sel[sel.length - 1])) : 'Change',
+      sections: [v, f, total]
+    };
+  }
+}
+</script>
+</body>
+</html>

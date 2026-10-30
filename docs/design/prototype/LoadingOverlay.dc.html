@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/industry-f2e85e32-8671-471e-b527-852aab1772ed/styles.css">
+<link rel="stylesheet" href="tokens/dashcash-dark.css">
+<script src="_ds/industry-f2e85e32-8671-471e-b527-852aab1772ed/_ds_bundle.js"></script>
+</helmet>
+<sc-if value="{{ open }}">
+  <sc-if value="{{ isSplash }}">
+    <div role="status" aria-label="{{ title }}" style="position: fixed; inset: 0; z-index: 80; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; background: var(--color-bg);">
+      <div style="width: 72px; height: 72px; display: grid; place-items: center;"><dc-import name="Loader" variant="draw" size="{{ 72 }}" delay="{{ 0 }}" hint-size="1px,1px"></dc-import></div>
+      <span style="font-family: var(--font-heading); font-size: 28px; font-weight: 600; letter-spacing: 0.02em;">DashCash</span>
+      <span style="font-size: 13px; color: var(--sb-text-muted);">{{ title }}</span>
+    </div>
+  </sc-if>
+  <sc-if value="{{ isOverlay }}">
+    <div role="status" aria-label="{{ title }}" style="position: fixed; inset: 0; z-index: 70; display: grid; place-items: center; background: var(--sb-backdrop);">
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 14px; padding: 28px 32px; min-width: 280px; background: var(--sb-raised-bg); border: 1px solid var(--sb-card-border); box-shadow: var(--shadow-lg); text-align: center;">
+        <div style="width: 48px; height: 48px; display: grid; place-items: center;"><dc-import name="Loader" variant="draw" size="{{ 48 }}" delay="{{ 0 }}" hint-size="1px,1px"></dc-import></div>
+        <span style="font-size: 14px;">{{ title }}</span>
+        <sc-if value="{{ message }}"><span style="font-size: 12px; color: var(--sb-text-faint);">{{ message }}</span></sc-if>
+      </div>
+    </div>
+  </sc-if>
+</sc-if>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:600,&quot;height&quot;:400},&quot;open&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;},&quot;variant&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;overlay&quot;,&quot;splash&quot;],&quot;default&quot;:&quot;overlay&quot;,&quot;tsType&quot;:&quot;'overlay' | 'splash'&quot;},&quot;title&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Moving the database…&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;message&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;DashCash restarts when it's done.&quot;,&quot;tsType&quot;:&quot;string | undefined&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    const p = this.props, splash = p.variant === 'splash';
+    return { open: !!p.open, isSplash: splash, isOverlay: !splash, title: p.title || (splash ? 'Opening your accounts…' : 'Working…'), message: p.message };
+  }
+}
+</script>
+</body>
+</html>

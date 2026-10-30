@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/industry-f2e85e32-8671-471e-b527-852aab1772ed/styles.css">
+<link rel="stylesheet" href="tokens/dashcash-dark.css">
+<script src="_ds/industry-f2e85e32-8671-471e-b527-852aab1772ed/_ds_bundle.js"></script>
+</helmet>
+<dc-import name="PageLayout" title="Import" subtitle="Bring in a bank CSV. Duplicates are skipped, rows without a category never block the import." hint-size="100%,900px">
+  <dc-import name="ImportWizard" initial-step="{{ initialStep }}" initial-account="{{ initialAccount }}" on-navigate="{{ onNavigate }}" hint-size="100%,700px"></dc-import>
+  <dc-import name="ImportedFiles" hint-size="100%,460px"></dc-import>
+</dc-import>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1208,&quot;height&quot;:900},&quot;initialStep&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:0,&quot;min&quot;:0,&quot;max&quot;:4,&quot;tsType&quot;:&quot;number&quot;},&quot;initialAccount&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string | undefined&quot;},&quot;onNavigate&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(page: PageId) =&gt; void&quot;}}">
+class Component extends DCLogic {
+  renderVals() { return { onNavigate: this.props.onNavigate, initialStep: this.props.initialStep ?? 0, initialAccount: this.props.initialAccount || '' }; }
+}
+</script>
+</body>
+</html>

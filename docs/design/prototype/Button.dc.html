@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/industry-f2e85e32-8671-471e-b527-852aab1772ed/styles.css">
+<link rel="stylesheet" href="tokens/dashcash-dark.css">
+<script src="_ds/industry-f2e85e32-8671-471e-b527-852aab1772ed/_ds_bundle.js"></script>
+</helmet>
+<button type="button" class="{{ cls }}" onClick="{{ onClick }}" disabled="{{ disabled }}" aria-busy="{{ loading }}" title="{{ title }}" style="box-sizing: border-box; height: {{ h }}; min-height: {{ h }}; line-height: 1; font-size: {{ fs }}; padding: {{ pad }}; color: {{ fg }}; width: {{ w }}; flex: none; white-space: nowrap; letter-spacing: 0.01em;">
+  <sc-if value="{{ loading }}"><dc-import name="Loader" variant="{{ loaderVariant }}" size="{{ iconSize }}" delay="{{ 0 }}" color="currentColor" hint-size="16px,16px"></dc-import></sc-if>
+  <sc-if value="{{ showIcon }}"><dc-import name="Icon" glyph="{{ icon }}" size="{{ iconSize }}" hint-size="16px,16px"></dc-import></sc-if>
+  <sc-if value="{{ label }}"><span>{{ label }}</span></sc-if>
+  <sc-if value="{{ iconRight }}"><dc-import name="Icon" glyph="{{ iconRight }}" size="{{ iconSize }}" hint-size="16px,16px"></dc-import></sc-if>
+</button>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:220,&quot;height&quot;:80},&quot;label&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Import CSV&quot;,&quot;tsType&quot;:&quot;string | undefined&quot;},&quot;variant&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;primary&quot;,&quot;secondary&quot;,&quot;ghost&quot;,&quot;danger&quot;],&quot;default&quot;:&quot;primary&quot;,&quot;tsType&quot;:&quot;'primary' | 'secondary' | 'ghost' | 'danger'&quot;},&quot;size&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;sm&quot;,&quot;md&quot;],&quot;default&quot;:&quot;md&quot;,&quot;tsType&quot;:&quot;'sm' | 'md'&quot;},&quot;icon&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;upload&quot;,&quot;tsType&quot;:&quot;IconName | undefined&quot;},&quot;iconRight&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;IconName | undefined&quot;},&quot;block&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;disabled&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;title&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string | undefined&quot;},&quot;onClick&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;() =&gt; void&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    const p = this.props;
+    const v = p.variant || 'secondary';
+    const size = p.size || 'md';
+    const iconOnly = !p.label;
+    const cls = ['btn', v === 'danger' ? 'btn-secondary' : 'btn-' + v, v === 'primary' ? 'blueprint' : '', iconOnly ? 'btn-icon' : ''].join(' ');
+    const pads = { sm: iconOnly ? '0' : '0 10px', md: iconOnly ? '0' : '0 14px' };
+    return {
+      cls,
+      isPrimary: v === 'primary',
+      fs: size === 'sm' ? '13px' : '14px', h: size === 'sm' ? '28px' : '36px',
+      pad: pads[size],
+      fg: v === 'danger' ? 'var(--sb-danger)' : v === 'ghost' ? 'var(--color-accent-600)' : v === 'primary' ? 'var(--color-bg)' : 'var(--color-text)',
+      w: iconOnly ? (size === 'sm' ? '28px' : '36px') : p.block ? '100%' : 'auto',
+      iconSize: size === 'sm' ? 14 : 16,
+      label: p.loading && p.loadingLabel ? p.loadingLabel : p.label, icon: p.icon, loading: !!p.loading, showIcon: !!p.icon && !p.loading, loaderVariant: p.loaderVariant || 'draw', iconRight: p.iconRight, title: p.title || p.label,
+      disabled: !!p.disabled || !!p.loading,
+      onClick: p.onClick
+    };
+  }
+}
+</script>
+</body>
+</html>

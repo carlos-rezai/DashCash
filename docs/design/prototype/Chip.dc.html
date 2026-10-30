@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/industry-f2e85e32-8671-471e-b527-852aab1772ed/styles.css">
+<link rel="stylesheet" href="tokens/dashcash-dark.css">
+<script src="_ds/industry-f2e85e32-8671-471e-b527-852aab1772ed/_ds_bundle.js"></script>
+</helmet>
+<button type="button" aria-pressed="{{ active }}" onClick="{{ onClick }}" disabled="{{ disabled }}" style="display: inline-flex; align-items: center; gap: 7px; box-sizing: border-box; height: 28px; padding: 0 10px; font: inherit; font-size: 13px; line-height: 1; cursor: pointer; color: {{ fg }}; background: {{ bg }}; border: 1px solid {{ bd }}; white-space: nowrap; opacity: {{ op }};" style-hover="background: {{ hoverBg }};">
+  <sc-if value="{{ swatch }}"><span style="width: 10px; height: {{ swH }}; flex: none; background: {{ swatchFill }}; border: 1px solid {{ swatch }}; border-radius: {{ swR }}; box-sizing: border-box;"></span></sc-if>
+  <span>{{ label }}</span>
+  <sc-if value="{{ meta }}"><span style="color: var(--sb-text-muted); font-variant-numeric: tabular-nums;">{{ meta }}</span></sc-if>
+</button>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:240,&quot;height&quot;:50},&quot;label&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Sparkasse Giro&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;active&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;},&quot;swatch&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;default&quot;:&quot;#d69c8e&quot;,&quot;tsType&quot;:&quot;string | undefined&quot;},&quot;swatchShape&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;square&quot;,&quot;line&quot;],&quot;default&quot;:&quot;square&quot;,&quot;tsType&quot;:&quot;'square' | 'line'&quot;},&quot;meta&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string | undefined&quot;},&quot;disabled&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;onClick&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;() =&gt; void&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    const p = this.props;
+    const a = !!p.active;
+    return {
+      active: a, label: p.label, meta: p.meta, swatch: p.swatch, disabled: !!p.disabled,
+      swatchFill: a ? p.swatch : 'transparent', swH: p.swatchShape === 'line' ? '3px' : '10px', swR: p.swatchShape === 'circle' ? '50%' : '0',
+      fg: a ? 'var(--color-text)' : 'var(--sb-text-muted)',
+      bg: a ? 'var(--color-accent-100)' : 'transparent',
+      bd: a ? 'var(--color-accent-400)' : 'var(--color-divider)',
+      op: p.disabled ? 0.45 : 1, hoverBg: p.disabled ? (a ? 'var(--color-accent-100)' : 'transparent') : 'var(--color-accent-100)',
+      onClick: p.onClick
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/industry-f2e85e32-8671-471e-b527-852aab1772ed/styles.css">
+<link rel="stylesheet" href="tokens/dashcash-dark.css">
+<script src="_ds/industry-f2e85e32-8671-471e-b527-852aab1772ed/_ds_bundle.js"></script>
+<script src="lib/store.js"></script>
+</helmet>
+<dc-import name="Card" kicker="Categories" title="{{ title }}" padding="lg" hint-size="100%,700px">
+  <div style="display: flex; justify-content: space-between; align-items: center; gap: var(--space-3);">
+    <span style="font-size: 13px; color: var(--sb-text-muted);">Renaming updates everywhere. Deleting merges into a replacement.</span>
+    <dc-import name="Button" variant="secondary" size="sm" icon="plus" label="New category" on-click="{{ create }}" hint-size="120px,28px"></dc-import>
+  </div>
+  <table class="table" style="font-size: 14px;">
+    <thead><tr><th>Name</th><th>Kind</th><th style="text-align: right;">Transactions</th><th style="text-align: right;">Rules</th><th style="width: 72px;"></th></tr></thead>
+    <tbody>
+      <sc-for list="{{ rows }}" as="c" hint-placeholder-count="10">
+        <tr>
+          <td><div style="display: flex; align-items: center; gap: 10px;"><dc-import name="Swatch" color="{{ c.color }}" size="{{ 10 }}" hint-size="10px,10px"></dc-import><span>{{ c.name }}</span></div></td>
+          <td><div style="display: flex; gap: 4px;"><dc-import name="Tag" label="{{ c.kind }}" tone="neutral" hint-size="60px,20px"></dc-import><sc-if value="{{ c.builtIn }}"><dc-import name="Tag" label="Built-in" tone="outline" hint-size="60px,20px"></dc-import></sc-if></div></td>
+          <td style="text-align: right; font-variant-numeric: tabular-nums;">{{ c.tx }}</td>
+          <td style="text-align: right; font-variant-numeric: tabular-nums; color: var(--sb-text-muted);">{{ c.rules }}</td>
+          <td><div style="display: flex; justify-content: flex-end; gap: 2px;">
+            <dc-import name="Button" variant="ghost" size="sm" icon="pencil" title="Rename" on-click="{{ c.edit }}" hint-size="28px,28px"></dc-import>
+            <dc-import name="Button" variant="ghost" size="sm" icon="merge" title="{{ c.mergeTitle }}" disabled="{{ c.builtIn }}" on-click="{{ c.merge }}" hint-size="28px,28px"></dc-import>
+          </div></td>
+        </tr>
+      </sc-for>
+    </tbody>
+  </table>
+</dc-import>
+<dc-import name="Modal" open="{{ edit.open }}" title="{{ edit.title }}" on-close="{{ close }}" hint-size="0px,0px">
+  <dc-import name="FormField" label="Name" hint-size="100%,60px"><dc-import name="Input" value="{{ edit.name }}" on-change="{{ setName }}" hint-size="100%,36px"></dc-import></dc-import>
+  <dc-import name="FormField" label="Colour" hint="{{ colorHint }}" hint-size="100%,170px">
+    <div style="display: grid; grid-template-columns: repeat(10, 30px); gap: 6px;">
+      <sc-for list="{{ palette }}" as="p" hint-placeholder-count="40">
+        <button type="button" onClick="{{ p.pick }}" disabled="{{ p.disabled }}" aria-pressed="{{ p.selected }}" aria-label="{{ p.name }}" title="{{ p.name }}" style="position: relative; width: 30px; height: 30px; display: grid; place-items: center; background: transparent; border: 1px solid {{ p.bd }}; cursor: {{ p.cursor }}; padding: 0;" style-hover="border-color: {{ p.hoverBd }};">
+          <span style="width: 16px; height: 16px; background: {{ p.color }}; opacity: {{ p.op }};"></span>
+          <sc-if value="{{ p.used }}"><span style="position: absolute; inset: 0; background: linear-gradient(to top right, transparent calc(50% - 0.75px), var(--color-text) calc(50% - 0.75px), var(--color-text) calc(50% + 0.75px), transparent calc(50% + 0.75px)); opacity: 0.7; pointer-events: none;"></span></sc-if>
+        </button>
+      </sc-for>
+    </div>
+  </dc-import>
+  <sc-if value="{{ edit.isNew }}"><dc-import name="FormField" label="Kind" hint-size="100%,60px"><dc-import name="Segmented" options="{{ kinds }}" value="{{ edit.kind }}" on-change="{{ setKind }}" hint-size="240px,28px"></dc-import></dc-import></sc-if>
+  <div style="display: flex; justify-content: flex-end; gap: var(--space-2);">
+    <dc-import name="Button" variant="secondary" label="Cancel" on-click="{{ close }}" hint-size="80px,36px"></dc-import>
+    <dc-import name="Button" variant="primary" icon="check" label="{{ edit.save }}" disabled="{{ edit.invalid }}" on-click="{{ saveEdit }}" hint-size="110px,36px"></dc-import>
+  </div>
+</dc-import>
+<dc-import name="Modal" open="{{ merge.open }}" title="{{ merge.title }}" subtitle="Nothing becomes uncategorised silently." on-close="{{ close }}" hint-size="0px,0px">
+  <span style="font-size: 14px; color: var(--sb-text-muted); text-wrap: pretty;">{{ merge.text }}</span>
+  <dc-import name="FormField" label="Replacement category" hint-size="100%,60px"><dc-import name="Select" value="{{ merge.to }}" options="{{ merge.options }}" placeholder="Pick a replacement" show-swatch="{{ true }}" on-change="{{ setMergeTo }}" hint-size="100%,36px"></dc-import></dc-import>
+  <div style="display: flex; justify-content: flex-end; gap: var(--space-2);">
+    <dc-import name="Button" variant="secondary" label="Cancel" on-click="{{ close }}" hint-size="80px,36px"></dc-import>
+    <dc-import name="Button" variant="danger" icon="merge" label="Delete and merge" disabled="{{ merge.invalid }}" on-click="{{ doMerge }}" hint-size="150px,36px"></dc-import>
+  </div>
+</dc-import>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:560,&quot;height&quot;:800}}">
+class Component extends DCLogic {
+  state = { edit: { open: false }, merge: { open: false } };
+  componentDidMount() {
+    const go = () => { this.unsub = window.SB.subscribe(() => this.forceUpdate()); this.forceUpdate(); };
+    if (window.SB) go(); else this.t = setInterval(() => { if (window.SB) { clearInterval(this.t); go(); } }, 40);
+  }
+  componentWillUnmount() { this.unsub && this.unsub(); clearInterval(this.t); }
+  renderVals() {
+    const SB = window.SB;
+    if (!SB) return { rows: [], edit: {}, merge: {}, palette: [] };
+    const cats = SB.state.categories;
+    const kindLabel = { variable: 'Variable', fixed: 'Fixed', income: 'Income' };
+    const rows = cats.map((c) => ({
+      name: c.name, color: c.color, kind: kindLabel[c.kind], builtIn: !!c.builtIn, mergeTitle: c.builtIn ? 'Built-in category, cannot be deleted' : 'Delete and merge', tx: new Intl.NumberFormat('de-DE').format(c.tx),
+      rules: SB.state.rules.filter((r) => r.category === c.id).length,
+      edit: () => this.setState({ edit: { open: true, id: c.id, title: 'Rename category', name: c.name, color: c.color, kind: c.kind, save: 'Save' } }),
+      merge: () => this.setState({ merge: { open: true, id: c.id, to: '' } })
+    }));
+    const e = this.state.edit, m = this.state.merge;
+    const allUsed = SB.CAT_COLORS.every((col) => SB.colorOwner(col, e.id));
+    const order = SB.CAT_COLORS.map((col, i) => i).sort((x, y) => SB.CAT_HUES[x] - SB.CAT_HUES[y]);
+    const palette = order.map((i) => { const color = SB.CAT_COLORS[i];
+      const owner = SB.colorOwner(color, e.id), sel = e.color === color, used = !!owner && !sel;
+      const disabled = used && !allUsed;
+      return {
+        color, selected: sel, used, disabled, op: used ? 0.45 : 1, cursor: disabled ? 'not-allowed' : 'pointer',
+        name: owner ? 'Used by ' + owner.name : 'Colour ' + (i + 1) + (sel ? ' (selected)' : ''),
+        bd: sel ? 'var(--color-accent-600)' : 'var(--color-divider)', hoverBd: disabled ? 'var(--color-divider)' : 'var(--color-accent-400)',
+        pick: () => !disabled && this.setState({ edit: Object.assign({}, e, { color }) })
+      };
+    });
+    const selOwner = e.color && SB.colorOwner(e.color, e.id);
+    const colorHint = allUsed ? (selOwner ? 'All ' + SB.CAT_COLORS.length + ' colours are in use. Sharing with ' + selOwner.name + '.' : 'All ' + SB.CAT_COLORS.length + ' colours are in use.') : 'Crossed-out colours are taken; deleting a category frees its colour.';
+    const from = m.id && SB.category(m.id);
+    const ruleN = from ? SB.state.rules.filter((r) => r.category === from.id).length : 0;
+    return {
+      title: cats.length + ' categories', rows, palette, colorHint,
+      kinds: [{ value: 'variable', label: 'Variable' }, { value: 'fixed', label: 'Fixed' }, { value: 'income', label: 'Income' }],
+      edit: Object.assign({}, e, { isNew: !e.id, invalid: !(e.name || '').trim() }),
+      merge: Object.assign({}, m, {
+        title: from ? 'Delete “' + from.name + '”' : '',
+        text: from ? 'Its ' + from.tx + ' transactions and ' + ruleN + (ruleN === 1 ? ' rule' : ' rules') + ' move to the replacement category.' : '',
+        options: cats.filter((c) => c.id !== m.id).map((c) => ({ value: c.id, label: c.name, color: c.color })),
+        invalid: !m.to
+      }),
+      create: () => {
+        const smallest = cats.slice().sort((x, y) => x.tx - y.tx)[0];
+        const color = SB.freeColor() || (smallest && smallest.color) || SB.CAT_COLORS[0];
+        this.setState({ edit: { open: true, id: null, title: 'New category', name: '', color, kind: 'variable', save: 'Create' } });
+      },
+      close: () => this.setState({ edit: { open: false }, merge: { open: false } }),
+      setName: (v) => this.setState({ edit: Object.assign({}, e, { name: v }) }),
+      setKind: (v) => this.setState({ edit: Object.assign({}, e, { kind: v }) }),
+      setMergeTo: (v) => this.setState({ merge: Object.assign({}, m, { to: v }) }),
+      saveEdit: () => { if (e.id) SB.actions.updateCategory(e.id, { name: e.name.trim(), color: e.color }); else SB.actions.addCategory({ name: e.name.trim(), color: e.color, kind: e.kind }); this.setState({ edit: { open: false } }); },
+      doMerge: () => { SB.actions.mergeCategory(m.id, m.to); this.setState({ merge: { open: false } }); }
+    };
+  }
+}
+</script>
+</body>
+</html>

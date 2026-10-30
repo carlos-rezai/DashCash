@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/industry-f2e85e32-8671-471e-b527-852aab1772ed/styles.css">
+<link rel="stylesheet" href="tokens/dashcash-dark.css">
+<script src="_ds/industry-f2e85e32-8671-471e-b527-852aab1772ed/_ds_bundle.js"></script>
+<script src="lib/store.js"></script>
+</helmet>
+<dc-import name="Card" style="height: 100%;" kicker="Updates" title="{{ title }}" padding="lg" hint-size="100%,300px">
+  <div style="display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); flex-wrap: wrap;">
+    <div style="display: flex; flex-direction: column; gap: 2px;">
+      <span style="font-size: 14px;">{{ status }}</span>
+      <span style="font-size: 12px; color: var(--sb-text-faint);">Last checked {{ lastChecked }}</span>
+    </div>
+    <div style="display: flex; gap: var(--space-2);">
+      <sc-if value="{{ hasUpdate }}"><dc-import name="Button" variant="primary" size="sm" icon="refresh" label="Restart and update" on-click="{{ install }}" hint-size="150px,28px"></dc-import></sc-if>
+      <dc-import name="Button" variant="secondary" size="sm" icon="refresh" label="Check now" loading-label="Checking…" loading="{{ checking }}" on-click="{{ check }}" hint-size="130px,28px"></dc-import>
+    </div>
+  </div>
+  <div style="display: flex; flex-direction: column; gap: var(--space-3); padding-top: var(--space-3); border-top: 1px solid var(--color-divider);">
+    <dc-import name="Switch" checked="{{ autoCheck }}" label="Check for updates at start" on-change="{{ setAutoCheck }}" hint-size="240px,20px"></dc-import>
+    <dc-import name="Switch" checked="{{ autoInstall }}" label="Install updates automatically on restart" on-change="{{ setAutoInstall }}" hint-size="300px,20px"></dc-import>
+    <span style="font-size: 12px; color: var(--sb-text-faint); text-wrap: pretty;">Updates are signed releases from CI. A new version is announced bottom right; nothing installs without a restart.</span>
+  </div>
+</dc-import>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:560,&quot;height&quot;:320}}">
+class Component extends DCLogic {
+  componentDidMount() {
+    const go = () => { this.unsub = window.SB.subscribe(() => this.forceUpdate()); this.forceUpdate(); };
+    if (window.SB) go(); else this.t = setInterval(() => { if (window.SB) { clearInterval(this.t); go(); } }, 40);
+  }
+  componentWillUnmount() { this.unsub && this.unsub(); clearInterval(this.t); }
+  renderVals() {
+    const SB = window.SB;
+    if (!SB) return {};
+    const st = SB.state.settings;
+    const hasUpdate = st.version !== st.latest;
+    return {
+      title: 'DashCash ' + st.version, hasUpdate, checking: !!st.checking,
+      status: hasUpdate ? 'Version ' + st.latest + ' is available.' : "You're on the latest version.",
+      lastChecked: st.lastChecked,
+      checkLabel: st.checking ? 'Checking…' : 'Check now', checkIcon: 'refresh',
+      check: () => SB.actions.checkForUpdates(true), install: () => SB.actions.installUpdate(),
+      autoCheck: st.autoCheck, autoInstall: st.autoInstall,
+      setAutoCheck: (v) => SB.actions.setSetting('autoCheck', v), setAutoInstall: (v) => SB.actions.setSetting('autoInstall', v)
+    };
+  }
+}
+</script>
+</body>
+</html>

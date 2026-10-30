@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/industry-f2e85e32-8671-471e-b527-852aab1772ed/styles.css">
+<link rel="stylesheet" href="tokens/dashcash-dark.css">
+<script src="_ds/industry-f2e85e32-8671-471e-b527-852aab1772ed/_ds_bundle.js"></script>
+</helmet>
+<span style="font-family: {{ ff }}; font-size: {{ fs }}; font-weight: {{ fw }}; color: {{ fg }}; font-variant-numeric: tabular-nums; white-space: nowrap; line-height: 1.15; letter-spacing: {{ ls }}; opacity: {{ op }};">{{ text }}</span>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:240,&quot;height&quot;:60},&quot;cents&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:123456,&quot;tsType&quot;:&quot;Cents&quot;},&quot;sign&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;auto&quot;,&quot;always&quot;,&quot;none&quot;],&quot;default&quot;:&quot;auto&quot;,&quot;tsType&quot;:&quot;'auto' | 'always' | 'none'&quot;},&quot;size&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;sm&quot;,&quot;md&quot;,&quot;lg&quot;,&quot;xl&quot;],&quot;default&quot;:&quot;lg&quot;,&quot;tsType&quot;:&quot;'sm' | 'md' | 'lg' | 'xl'&quot;},&quot;tone&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;default&quot;,&quot;muted&quot;,&quot;accent&quot;,&quot;auto&quot;,&quot;warning&quot;,&quot;danger&quot;],&quot;default&quot;:&quot;default&quot;,&quot;tsType&quot;:&quot;'default' | 'muted' | 'accent' | 'auto' | 'warning' | 'danger'&quot;},&quot;whole&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;strong&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    const p = this.props;
+    const c = p.cents ?? 0;
+    const nf = new Intl.NumberFormat('de-DE', { minimumFractionDigits: p.whole ? 0 : 2, maximumFractionDigits: p.whole ? 0 : 2 });
+    let text = p.cents == null ? '' : nf.format(Math.abs(c) / 100) + '\u00a0€';
+    const sign = p.sign || 'auto';
+    if (c < 0 && sign !== 'none') text = '\u2212' + text;
+    else if (c > 0 && sign === 'always') text = '+' + text;
+    const size = p.size || 'md';
+    const sizes = { sm: '13px', md: '14px', lg: '22px', xl: '34px' };
+    const heading = size === 'lg' || size === 'xl';
+    const tone = p.tone || 'auto';
+    const polar = p.cents == null || c === 0 ? 'var(--color-text)' : c > 0 ? 'var(--sb-positive)' : 'var(--sb-negative)';
+    const tones = { auto: polar, default: polar, muted: polar, neutral: 'var(--color-text)', positive: 'var(--sb-positive)', negative: 'var(--sb-negative)', accent: 'var(--color-accent-600)', warning: 'var(--sb-warning)', danger: 'var(--sb-danger)' };
+    return {
+      text, fs: sizes[size], fg: tones[tone],
+      ff: heading ? 'var(--font-heading)' : 'var(--font-body)',
+      fw: heading ? '600' : (p.strong ? '500' : '400'),
+      ls: heading ? '-0.01em' : '0',
+      op: tone === 'muted' ? 0.62 : 1
+    };
+  }
+}
+</script>
+</body>
+</html>

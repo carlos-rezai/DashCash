@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/industry-f2e85e32-8671-471e-b527-852aab1772ed/styles.css">
+<link rel="stylesheet" href="tokens/dashcash-dark.css">
+<script src="_ds/industry-f2e85e32-8671-471e-b527-852aab1772ed/_ds_bundle.js"></script>
+</helmet>
+<span class="tag" style="background: {{ bg }}; color: {{ fg }}; border: 1px solid {{ bd }}; gap: 5px; white-space: nowrap; box-sizing: border-box; height: 22px; padding: 0 8px; line-height: 1;">
+  <sc-if value="{{ swatch }}"><span style="width: 8px; height: 8px; flex: none; background: {{ swatch }};"></span></sc-if>
+  <sc-if value="{{ icon }}"><dc-import name="Icon" glyph="{{ icon }}" size="{{ 12 }}" hint-size="12px,12px"></dc-import></sc-if>
+  <span>{{ label }}</span>
+</span>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:200,&quot;height&quot;:40},&quot;label&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Rule · exact&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;tone&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;accent&quot;,&quot;neutral&quot;,&quot;outline&quot;,&quot;warning&quot;,&quot;danger&quot;],&quot;default&quot;:&quot;accent&quot;,&quot;tsType&quot;:&quot;'accent' | 'neutral' | 'outline' | 'warning' | 'danger'&quot;},&quot;icon&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;IconName | undefined&quot;},&quot;swatch&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string | undefined&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    const p = this.props;
+    const t = {
+      accent: ['var(--color-accent-300)', 'var(--color-accent-900)', 'transparent'],
+      neutral: ['var(--color-neutral-300)', 'var(--color-neutral-900)', 'transparent'],
+      outline: ['transparent', 'var(--color-accent-600)', 'var(--color-accent-400)'],
+      milestone: ['var(--sb-milestone-tint)', 'var(--sb-milestone)', 'transparent'],
+      warning: ['var(--sb-warning-tint)', 'var(--sb-warning)', 'transparent'],
+      danger: ['var(--sb-danger-tint)', 'var(--sb-danger)', 'transparent']
+    }[p.tone || 'neutral'];
+    return { bg: t[0], fg: t[1], bd: t[2], label: p.label, icon: p.icon, swatch: p.swatch };
+  }
+}
+</script>
+</body>
+</html>

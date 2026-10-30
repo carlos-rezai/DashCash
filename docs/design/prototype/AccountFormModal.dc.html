@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/industry-f2e85e32-8671-471e-b527-852aab1772ed/styles.css">
+<link rel="stylesheet" href="tokens/dashcash-dark.css">
+<script src="_ds/industry-f2e85e32-8671-471e-b527-852aab1772ed/_ds_bundle.js"></script>
+<script src="lib/store.js"></script>
+</helmet>
+<dc-import name="Modal" open="{{ open }}" title="{{ title }}" subtitle="{{ subtitle }}" on-close="{{ onClose }}" width="{{ 500 }}" hint-size="0px,0px">
+  <sc-if value="{{ confirming }}">
+    <div style="display: flex; gap: 10px; padding: var(--space-4); border: 1px solid var(--sb-danger); background: var(--sb-danger-tint); color: var(--color-text);">
+      <span style="color: var(--sb-danger); display: flex;"><dc-import name="Icon" glyph="alert" size="{{ 18 }}" hint-size="18px,18px"></dc-import></span>
+      <span style="font-size: 14px; text-wrap: pretty;">Delete <strong>{{ form.name }}</strong>? Its imported history and recurring items are removed. This cannot be undone.</span>
+    </div>
+    <div style="display: flex; justify-content: flex-end; gap: var(--space-2);">
+      <dc-import name="Button" variant="secondary" label="Keep account" on-click="{{ cancelDelete }}" hint-size="110px,36px"></dc-import>
+      <dc-import name="Button" variant="danger" icon="trash" label="Delete account" on-click="{{ doDelete }}" hint-size="140px,36px"></dc-import>
+    </div>
+  </sc-if>
+  <sc-if value="{{ editing }}">
+    <div style="display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--space-4);">
+      <div style="grid-column: 1 / -1;">
+        <dc-import name="FormField" label="Name" hint-size="100%,60px">
+          <dc-import name="Input" value="{{ form.name }}" placeholder="e.g. Sparkasse Giro" on-change="{{ setName }}" hint-size="100%,36px"></dc-import>
+        </dc-import>
+      </div>
+      <dc-import name="FormField" label="Type" hint="{{ typeHint }}" hint-size="100%,60px">
+        <dc-import name="Select" value="{{ form.type }}" options="{{ typeOptions }}" on-change="{{ setType }}" hint-size="100%,36px"></dc-import>
+      </dc-import>
+      <dc-import name="FormField" label="{{ balanceLabel }}" hint="{{ balanceHint }}" hint-size="100%,60px">
+        <dc-import name="Input" value="{{ form.balance }}" suffix="€" align="right" numeric="{{ true }}" on-change="{{ setBalance }}" hint-size="100%,36px"></dc-import>
+      </dc-import>
+      <dc-import name="FormField" label="{{ goalLabel }}" hint="{{ goalHint }}" hint-size="100%,60px">
+        <dc-import name="Input" value="{{ form.goal }}" suffix="€" align="right" numeric="{{ true }}" on-change="{{ setGoal }}" hint-size="100%,36px"></dc-import>
+      </dc-import>
+      <sc-if value="{{ isCard }}">
+        <dc-import name="FormField" label="Settled from" hint="Settled to 0 on the 28th as a transfer." hint-size="100%,60px">
+          <dc-import name="Select" value="{{ form.linked }}" options="{{ linkOptions }}" on-change="{{ setLinked }}" hint-size="100%,36px"></dc-import>
+        </dc-import>
+      </sc-if>
+    </div>
+    <div style="display: flex; align-items: center; gap: var(--space-2); padding-top: var(--space-2);">
+      <sc-if value="{{ isEdit }}"><dc-import name="Button" variant="danger" icon="trash" label="Delete" on-click="{{ askDelete }}" hint-size="90px,36px"></dc-import></sc-if>
+      <span style="flex: 1;"></span>
+      <dc-import name="Button" variant="secondary" label="Cancel" on-click="{{ onClose }}" hint-size="80px,36px"></dc-import>
+      <dc-import name="Button" variant="primary" icon="check" label="{{ saveLabel }}" disabled="{{ invalid }}" on-click="{{ save }}" hint-size="130px,36px"></dc-import>
+    </div>
+  </sc-if>
+</dc-import>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:640,&quot;height&quot;:520},&quot;open&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;},&quot;accountId&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;&quot;,&quot;postbank&quot;,&quot;sparkasse&quot;,&quot;renault&quot;,&quot;card&quot;,&quot;darlehen&quot;],&quot;default&quot;:&quot;sparkasse&quot;,&quot;tsType&quot;:&quot;string | undefined&quot;},&quot;onClose&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;() =&gt; void&quot;},&quot;onDeleted&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;() =&gt; void&quot;}}">
+class Component extends DCLogic {
+  state = { form: { name: '', type: 'spending', balance: '', goal: '', linked: 'postbank' }, confirming: false };
+  componentDidMount() {
+    const go = () => { this.unsub = window.SB.subscribe(() => this.forceUpdate()); this.load(); };
+    if (window.SB) go(); else this.t = setInterval(() => { if (window.SB) { clearInterval(this.t); go(); } }, 40);
+  }
+  componentWillUnmount() { this.unsub && this.unsub(); clearInterval(this.t); }
+  componentDidUpdate(prev) { if ((this.props.open && !prev.open) || prev.accountId !== this.props.accountId) this.load(); }
+  load() {
+    const SB = window.SB; if (!SB) return;
+    const a = this.props.accountId && SB.account(this.props.accountId);
+    this.setState({
+      confirming: false,
+      form: a ? { name: a.name, type: a.type, balance: SB.inputEur(a.anchor), goal: SB.inputEur(a.goal), linked: a.linked || 'postbank' }
+        : { name: '', type: 'spending', balance: '', goal: '', linked: 'postbank' }
+    });
+  }
+  set(k, v) { this.setState((s) => ({ form: Object.assign({}, s.form, { [k]: v }) })); }
+  renderVals() {
+    const SB = window.SB, p = this.props, f = this.state.form;
+    if (!SB) return { open: false };
+    const isEdit = !!p.accountId;
+    const kind = SB.TYPES[f.type].goalKind;
+    const balance = SB.parseEur(f.balance), goal = SB.parseEur(f.goal);
+    const goalLabel = { grow: 'Goal · grow by per month', cap: 'Goal · stay under per month', reduce: 'Goal · reduce by per month' }[kind];
+    return {
+      open: !!p.open, onClose: p.onClose, form: f, isEdit, confirming: this.state.confirming, editing: !this.state.confirming,
+      title: this.state.confirming ? 'Delete account' : isEdit ? 'Edit account' : 'New account',
+      subtitle: isEdit ? SB.TYPES[f.type].label + ' · ' + SB.TYPES[f.type].projection : 'History is calculated backwards from the balance you enter.',
+      typeOptions: Object.keys(SB.TYPES).map((k) => ({ value: k, label: SB.TYPES[k].label, color: SB.TYPES[k].color })),
+      typeHint: SB.TYPES[f.type].projection,
+      balanceLabel: f.type === 'mortgage' ? 'Restschuld today' : 'Balance today',
+      balanceHint: isEdit ? 'A change adds a correction dated 26 Oct 2026; older months stay as they are.' : 'The anchor for history and projection.',
+      goalLabel, goalHint: kind === 'cap' ? 'Met when card spending stays under this amount.' : 'Leave empty for no streak.',
+      isCard: f.type === 'card',
+      linkOptions: SB.state.accounts.filter((a) => a.type === 'income' || a.type === 'spending').map((a) => ({ value: a.id, label: a.name })),
+      saveLabel: isEdit ? 'Save changes' : 'Create account',
+      invalid: !f.name.trim() || balance == null,
+      setName: (v) => this.set('name', v), setType: (v) => this.set('type', v), setBalance: (v) => this.set('balance', v),
+      setGoal: (v) => this.set('goal', v), setLinked: (v) => this.set('linked', v),
+      askDelete: () => this.setState({ confirming: true }), cancelDelete: () => this.setState({ confirming: false }),
+      doDelete: () => { SB.actions.deleteAccount(p.accountId); p.onDeleted && p.onDeleted(); p.onClose && p.onClose(); },
+      save: () => {
+        const patch = { name: f.name.trim(), type: f.type, anchor: balance, goal: goal || 0 };
+        if (f.type === 'card') patch.linked = f.linked;
+        if (isEdit) SB.actions.updateAccount(p.accountId, patch);
+        else SB.actions.addAccount(Object.assign(patch, { monthStart: balance, spent: 0, budget: goal || 0 }));
+        p.onClose && p.onClose();
+      }
+    };
+  }
+}
+</script>
+</body>
+</html>

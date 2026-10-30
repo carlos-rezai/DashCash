@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/industry-f2e85e32-8671-471e-b527-852aab1772ed/styles.css">
+<link rel="stylesheet" href="tokens/dashcash-dark.css">
+<script src="_ds/industry-f2e85e32-8671-471e-b527-852aab1772ed/_ds_bundle.js"></script>
+</helmet>
+<span aria-hidden="true" style="display: inline-block; flex: none; width: {{ px }}; height: {{ hpx }}; background: {{ color }}; border-radius: {{ radius }};"></span>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:60,&quot;height&quot;:60},&quot;color&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;default&quot;:&quot;#94bce3&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;size&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:10,&quot;min&quot;:6,&quot;max&quot;:24,&quot;tsType&quot;:&quot;number&quot;},&quot;shape&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;square&quot;,&quot;line&quot;],&quot;default&quot;:&quot;square&quot;,&quot;tsType&quot;:&quot;'square' | 'line'&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    const p = this.props;
+    const s = p.size ?? 10;
+    return { px: s + 'px', hpx: (p.shape === 'line' ? 2 : s) + 'px', radius: p.shape === 'circle' ? '50%' : '0', color: p.color || 'var(--color-accent)' };
+  }
+}
+</script>
+</body>
+</html>

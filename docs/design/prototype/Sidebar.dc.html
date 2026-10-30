@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/industry-f2e85e32-8671-471e-b527-852aab1772ed/styles.css">
+<link rel="stylesheet" href="tokens/dashcash-dark.css">
+<script src="_ds/industry-f2e85e32-8671-471e-b527-852aab1772ed/_ds_bundle.js"></script>
+</helmet>
+<nav aria-label="Main" style="width: {{ w }}; height: 100%; display: flex; flex-direction: column; gap: var(--space-6); padding: var(--space-6) {{ padX }}; background: var(--sb-ground-sunken); border-right: 1px solid var(--color-divider); box-sizing: border-box; overflow: hidden; transition: width 180ms ease;">
+  <div style="display: flex; align-items: flex-start; justify-content: {{ logoJustify }}; gap: 8px; padding: 0 {{ logoPad }};">
+    <div style="display: flex; flex-direction: column; gap: 4px; min-width: 0;">
+      <dc-import name="Logo" variant="{{ logoVariant }}" size="{{ 28 }}" hint-size="150px,28px"></dc-import>
+      <sc-if value="{{ showVersion }}"><span style="padding-left: 37px; font-size: 11px; letter-spacing: 0.04em; color: var(--sb-text-faint); font-variant-numeric: tabular-nums;">{{ versionText }}</span></sc-if>
+    </div>
+  </div>
+  <div style="display: flex; flex-direction: column; gap: 2px;">
+    <sc-for list="{{ items }}" as="n" hint-placeholder-count="5">
+      <dc-import name="NavItem" icon="{{ n.icon }}" label="{{ n.label }}" active="{{ n.active }}" compact="{{ compact }}" on-click="{{ n.go }}" hint-size="100%,38px"></dc-import>
+    </sc-for>
+  </div>
+  <sc-if value="{{ hasUncat }}">
+    <div style="display: flex; flex-direction: column; gap: 6px;">
+      <sc-if value="{{ notCompact }}"><span style="padding: 0 12px; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--sb-text-faint);">To do</span></sc-if>
+      <dc-import name="NavItem" icon="inbox" label="Uncategorised" badge="{{ uncategorised }}" badge-tone="warning" active="{{ uncatActive }}" compact="{{ compact }}" on-click="{{ goUncat }}" hint-size="100%,38px"></dc-import>
+    </div>
+  </sc-if>
+  <div style="margin-top: auto; display: flex; flex-direction: column; gap: 8px;">
+    <dc-import name="NavItem" icon="settings" label="Settings" active="{{ settingsActive }}" compact="{{ compact }}" on-click="{{ goSettings }}" hint-size="100%,38px"></dc-import>
+    <button type="button" onClick="{{ onToggleCompact }}" title="{{ toggleLabel }}" aria-label="{{ toggleLabel }}" style="display: flex; align-items: center; justify-content: {{ logoJustify }}; gap: 10px; height: 38px; padding: 0 {{ toggleX }}; box-sizing: border-box; background: transparent; border: 1px solid transparent; color: var(--sb-text-faint); font: inherit; font-size: 13px; cursor: pointer;" style-hover="background: var(--sb-hover); color: var(--color-text);">
+      <dc-import name="Icon" glyph="{{ toggleIcon }}" size="{{ 16 }}" hint-size="16px,16px"></dc-import>
+    </button>
+  </div>
+</nav>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:208,&quot;height&quot;:900},&quot;active&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;dashboard&quot;,&quot;accounts&quot;,&quot;import&quot;,&quot;compare&quot;,&quot;categories&quot;,&quot;uncategorised&quot;],&quot;default&quot;:&quot;dashboard&quot;,&quot;tsType&quot;:&quot;PageId&quot;},&quot;compact&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;uncategorised&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:7,&quot;min&quot;:0,&quot;tsType&quot;:&quot;number&quot;},&quot;onNavigate&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(page: PageId) =&gt; void&quot;},&quot;onToggleCompact&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;() =&gt; void&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    const p = this.props;
+    const active = p.active || 'dashboard', c = !!p.compact;
+    const nav = (page) => () => p.onNavigate && p.onNavigate(page);
+    const items = [['dashboard', 'Dashboard', 'dashboard'], ['accounts', 'Accounts', 'wallet'], ['import', 'Import', 'upload'], ['compare', 'Compare', 'columns'], ['categories', 'Categories', 'tags']]
+      .map(([id, label, icon]) => ({ label, icon, active: active === id, go: nav(id) }));
+    return {
+      items, compact: c, notCompact: !c, showVersion: !c && !!p.version, versionText: 'Version ' + (p.version || ''),
+      w: c ? '64px' : '208px', padX: c ? '10px' : 'var(--space-3)',
+      logoVariant: c ? 'mark' : 'full', logoJustify: c ? 'center' : 'flex-start', logoPad: c ? '0' : '6px', toggleX: c ? '0' : '12px',
+      toggleIcon: c ? 'chevronRight' : 'chevronLeft', toggleLabel: c ? 'Expand sidebar' : 'Collapse sidebar',
+      onToggleCompact: p.onToggleCompact,
+      uncategorised: p.uncategorised ?? 0, hasUncat: (p.uncategorised ?? 0) > 0, uncatActive: active === 'uncategorised', goUncat: nav('uncategorised'), settingsActive: active === 'settings', goSettings: nav('settings')
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/industry-f2e85e32-8671-471e-b527-852aab1772ed/styles.css">
+<link rel="stylesheet" href="tokens/dashcash-dark.css">
+<script src="_ds/industry-f2e85e32-8671-471e-b527-852aab1772ed/_ds_bundle.js"></script>
+<script src="lib/store.js"></script>
+</helmet>
+<dc-import name="Card" style="height: 100%;" kicker="Reminders" title="Import reminders" padding="lg" hint-size="100%,360px">
+  <div style="display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); flex-wrap: wrap;">
+    <span style="font-size: 13px; color: var(--sb-text-muted); max-width: 440px; text-wrap: pretty;">Balances and headroom only include imported transactions. A reminder shows at start when an account's last import is older than its limit.</span>
+    <dc-import name="Switch" checked="{{ allOn }}" label="Reminders" on-change="{{ setAll }}" hint-size="120px,20px"></dc-import>
+  </div>
+  <table class="table" style="font-size: 14px; opacity: {{ tableOp }};">
+    <thead><tr><th>Account</th><th style="width: 90px;">Remind</th><th style="width: 170px;">After</th><th style="text-align: right;">Last import</th></tr></thead>
+    <tbody>
+      <sc-for list="{{ rows }}" as="r" hint-placeholder-count="5">
+        <tr>
+          <td><div style="display: flex; align-items: center; gap: 8px;"><dc-import name="Swatch" color="{{ r.color }}" shape="circle" size="{{ 9 }}" hint-size="9px,9px"></dc-import><span>{{ r.name }}</span></div></td>
+          <td><dc-import name="Switch" checked="{{ r.on }}" aria-label="{{ r.aria }}" disabled="{{ disabledAll }}" on-change="{{ r.toggle }}" hint-size="34px,18px"></dc-import></td>
+          <td><dc-import name="Select" size="sm" value="{{ r.days }}" options="{{ dayOptions }}" on-change="{{ r.setDays }}" hint-size="150px,28px"></dc-import></td>
+          <td style="text-align: right; color: {{ r.ageColor }}; white-space: nowrap;">{{ r.age }}</td>
+        </tr>
+      </sc-for>
+    </tbody>
+  </table>
+</dc-import>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:640,&quot;height&quot;:420}}">
+class Component extends DCLogic {
+  componentDidMount() {
+    const go = () => { this.unsub = window.SB.subscribe(() => this.forceUpdate()); this.forceUpdate(); };
+    if (window.SB) go(); else this.t = setInterval(() => { if (window.SB) { clearInterval(this.t); go(); } }, 40);
+  }
+  componentWillUnmount() { this.unsub && this.unsub(); clearInterval(this.t); }
+  renderVals() {
+    const SB = window.SB;
+    if (!SB) return { rows: [], dayOptions: [] };
+    const st = SB.state.settings;
+    const rows = SB.state.accounts.map((a) => {
+      const r = st.reminders[a.id] || { on: true, days: 7 };
+      const age = SB.importAge(a);
+      return {
+        name: a.name, color: SB.TYPES[a.type].color, on: !!r.on, days: String(r.days), aria: 'Remind for ' + a.name,
+        age: age.days == null ? 'Never' : age.ago, ageColor: age.stale ? 'var(--sb-warning)' : 'var(--sb-text-muted)',
+        toggle: (v) => SB.actions.setReminder(a.id, { on: v }),
+        setDays: (v) => SB.actions.setReminder(a.id, { days: Number(v) })
+      };
+    });
+    return {
+      rows, allOn: st.remindersOn, disabledAll: !st.remindersOn, tableOp: st.remindersOn ? 1 : 0.5,
+      setAll: (v) => SB.actions.setSetting('remindersOn', v),
+      dayOptions: [3, 7, 14, 30].map((d) => ({ value: String(d), label: d + ' days' }))
+    };
+  }
+}
+</script>
+</body>
+</html>

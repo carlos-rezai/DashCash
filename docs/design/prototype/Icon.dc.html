@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/industry-f2e85e32-8671-471e-b527-852aab1772ed/styles.css">
+<link rel="stylesheet" href="tokens/dashcash-dark.css">
+<script src="_ds/industry-f2e85e32-8671-471e-b527-852aab1772ed/_ds_bundle.js"></script>
+<script src="lib/icons.js"></script>
+</helmet>
+<svg width="{{ px }}" height="{{ px }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style="display: block; flex: none;" dangerouslySetInnerHTML="{{ inner }}"></svg>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:48,&quot;height&quot;:48},&quot;glyph&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;dashboard&quot;,&quot;wallet&quot;,&quot;upload&quot;,&quot;columns&quot;,&quot;tags&quot;,&quot;plus&quot;,&quot;pencil&quot;,&quot;trash&quot;,&quot;chevronDown&quot;,&quot;chevronRight&quot;,&quot;chevronLeft&quot;,&quot;check&quot;,&quot;x&quot;,&quot;arrowLeft&quot;,&quot;arrowRight&quot;,&quot;arrowUp&quot;,&quot;arrowDown&quot;,&quot;file&quot;,&quot;alert&quot;,&quot;repeat&quot;,&quot;transfer&quot;,&quot;inbox&quot;,&quot;search&quot;,&quot;merge&quot;,&quot;flag&quot;,&quot;info&quot;,&quot;link&quot;,&quot;layers&quot;,&quot;target&quot;,&quot;calendar&quot;],&quot;default&quot;:&quot;wallet&quot;,&quot;tsType&quot;:&quot;IconName&quot;},&quot;size&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:16,&quot;min&quot;:12,&quot;max&quot;:48,&quot;tsType&quot;:&quot;number&quot;}}">
+class Component extends DCLogic {
+  componentDidMount() {
+    if (!window.SB_ICONS) this.t = setInterval(() => { if (window.SB_ICONS) { clearInterval(this.t); this.forceUpdate(); } }, 40);
+  }
+  componentWillUnmount() { clearInterval(this.t); }
+  renderVals() {
+    const set = window.SB_ICONS || {};
+    return { px: this.props.size ?? 16, inner: { __html: set[this.props.glyph] || '' } };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/industry-f2e85e32-8671-471e-b527-852aab1772ed/styles.css">
+<link rel="stylesheet" href="tokens/dashcash-dark.css">
+<script src="_ds/industry-f2e85e32-8671-471e-b527-852aab1772ed/_ds_bundle.js"></script>
+<script src="lib/store.js"></script>
+</helmet>
+<dc-import name="Card" kicker="Uncategorised" title="{{ title }}" padding="lg" hint-size="100%,500px">
+  <div style="display: flex; align-items: center; justify-content: space-between; gap: var(--space-3);">
+    <span style="font-size: 13px; color: var(--sb-text-muted);">Pick a category to file a transaction. It leaves this list straight away.</span>
+    <dc-import name="Checkbox" checked="{{ saveRule }}" label="Save as exact rule" on-change="{{ setSaveRule }}" hint-size="150px,20px"></dc-import>
+  </div>
+  <sc-if value="{{ hasRows }}" hint-placeholder-val="{{ true }}">
+    <table class="table" style="font-size: 14px;">
+      <thead><tr><th style="width: 110px;">Date</th><th style="width: 180px;">Account</th><th>Merchant · purpose</th><th style="text-align: right; width: 110px;">Amount</th><th style="width: 240px;">Category</th></tr></thead>
+      <tbody>
+        <sc-for list="{{ rows }}" as="r" hint-placeholder-count="7">
+          <tr>
+            <td style="color: var(--sb-text-muted); white-space: nowrap;">{{ r.date }}</td>
+            <td><div style="display: flex; align-items: center; gap: 8px;"><dc-import name="Swatch" color="{{ r.accColor }}" shape="circle" size="{{ 10 }}" hint-size="10px,2px"></dc-import><span>{{ r.account }}</span></div></td>
+            <td><div style="display: flex; flex-direction: column;"><span>{{ r.merchant }}</span><span style="font-size: 12px; color: var(--sb-text-faint);">{{ r.purpose }}</span></div></td>
+            <td style="text-align: right;"><dc-import name="Amount" cents="{{ r.amount }}" hint-size="80px,18px"></dc-import></td>
+            <td><dc-import name="Select" size="sm" value="" options="{{ catOptions }}" placeholder="Pick a category" on-change="{{ r.assign }}" hint-size="100%,28px"></dc-import></td>
+          </tr>
+        </sc-for>
+      </tbody>
+    </table>
+  </sc-if>
+  <sc-if value="{{ empty }}">
+    <div style="display: flex; flex-direction: column; align-items: center; gap: 8px; padding: var(--space-8) 0; color: var(--sb-text-muted);">
+      <dc-import name="Icon" glyph="check" size="{{ 24 }}" hint-size="24px,24px"></dc-import>
+      <span style="font-family: var(--font-heading); font-weight: 600; font-size: 20px; color: var(--color-text);">All caught up</span>
+      <span style="font-size: 14px;">Every transaction has a category.</span>
+    </div>
+  </sc-if>
+</dc-import>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1160,&quot;height&quot;:600}}">
+class Component extends DCLogic {
+  state = { saveRule: true };
+  componentDidMount() {
+    const go = () => { this.unsub = window.SB.subscribe(() => this.forceUpdate()); this.forceUpdate(); };
+    if (window.SB) go(); else this.t = setInterval(() => { if (window.SB) { clearInterval(this.t); go(); } }, 40);
+  }
+  componentWillUnmount() { this.unsub && this.unsub(); clearInterval(this.t); }
+  renderVals() {
+    const SB = window.SB;
+    if (!SB) return { rows: [], hasRows: true };
+    const list = SB.state.uncategorised;
+    const rows = list.map((t) => {
+      const a = SB.account(t.account);
+      return {
+        date: t.date, account: a ? a.name : 'n/a', accColor: a ? SB.TYPES[a.type].color : 'transparent', merchant: t.merchant, purpose: t.purpose, amount: t.amount,
+        assign: (v) => {
+          if (!v) return;
+          if (this.state.saveRule) { const via = /paypal|klarna/i.test(t.merchant); SB.actions.saveRule({ match: 'exact', pattern: SB.normalise(via ? t.purpose : t.merchant), field: via ? 'Purpose · ' + (/paypal/i.test(t.merchant) ? 'PayPal' : 'Klarna') : 'Merchant', category: v }); }
+          SB.actions.categorise(t.id, v);
+        }
+      };
+    });
+    return {
+      title: list.length ? list.length + (list.length === 1 ? ' transaction left' : ' transactions left') : 'Nothing left',
+      rows, hasRows: list.length > 0, empty: list.length === 0,
+      catOptions: SB.state.categories.map((c) => ({ value: c.id, label: c.name, color: c.color })),
+      saveRule: this.state.saveRule, setSaveRule: (v) => this.setState({ saveRule: v })
+    };
+  }
+}
+</script>
+</body>
+</html>

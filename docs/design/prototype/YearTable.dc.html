@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/industry-f2e85e32-8671-471e-b527-852aab1772ed/styles.css">
+<link rel="stylesheet" href="tokens/dashcash-dark.css">
+<script src="_ds/industry-f2e85e32-8671-471e-b527-852aab1772ed/_ds_bundle.js"></script>
+<script src="lib/reveal.js"></script>
+</helmet>
+<div style="overflow-x: auto; min-width: 0; margin: 0 -4px; padding: 0 4px;">
+  <table class="table" style="font-size: 14px; table-layout: {{ layout }}; min-width: {{ minW }};">
+    <thead>
+      <tr>
+        <th style="width: {{ firstW }}; white-space: nowrap; vertical-align: bottom;">{{ firstLabel }}</th>
+        <sc-for list="{{ cols }}" as="c" hint-placeholder-count="4">
+          <th style="text-align: {{ c.align }}; width: {{ c.width }}; vertical-align: bottom;"><span style="display: inline-flex; align-items: center; justify-content: {{ c.justify }}; gap: 6px; white-space: normal;"><sc-if value="{{ c.color }}"><dc-import name="Swatch" color="{{ c.color }}" shape="circle" size="{{ 9 }}" hint-size="9px,9px"></dc-import></sc-if>{{ c.label }}</span></th>
+        </sc-for>
+      </tr>
+    </thead>
+    <sc-for list="{{ years }}" as="y" hint-placeholder-count="5">
+      <tbody>
+        <tr onClick="{{ y.toggle }}" aria-expanded="{{ y.open }}" style="cursor: pointer;" style-hover="background: var(--sb-hover);">
+          <td>
+            <div style="display: flex; align-items: center; gap: 10px; white-space: nowrap;">
+              <span style="display: flex; color: var(--sb-text-muted); transform: rotate({{ y.rot }}); transition: transform 160ms ease;"><dc-import name="Icon" glyph="chevronRight" size="{{ 16 }}" hint-size="16px,16px"></dc-import></span>
+              <span style="font-family: var(--font-heading); font-weight: 600; font-size: 19px;">{{ y.label }}</span>
+              <sc-if value="{{ y.tag }}"><dc-import name="Tag" label="{{ y.tag }}" tone="{{ y.tagTone }}" icon="{{ y.tagIcon }}" hint-size="70px,20px"></dc-import></sc-if>
+            </div>
+          </td>
+          <sc-for list="{{ y.cells }}" as="c" hint-placeholder-count="4">
+            <td style="text-align: {{ c.align }};">
+              <sc-if value="{{ c.isAmount }}"><dc-import name="Amount" cents="{{ c.cents }}" tone="{{ c.tone }}" sign="{{ c.sign }}" size="{{ c.size }}" strong="{{ true }}" hint-size="90px,18px"></dc-import></sc-if>
+              <sc-if value="{{ c.isIcon }}"><span title="{{ c.title }}" aria-label="{{ c.title }}" style="display: inline-flex; color: {{ c.color }};"><dc-import name="Icon" glyph="{{ c.glyph }}" size="{{ 14 }}" hint-size="14px,14px"></dc-import></span></sc-if>
+              <sc-if value="{{ c.isText }}"><span style="font-size: 13px; color: var(--sb-text-muted); white-space: nowrap;">{{ c.text }}</span></sc-if>
+            </td>
+          </sc-for>
+        </tr>
+        <sc-if value="{{ y.open }}">
+          <sc-for list="{{ y.rows }}" as="r" hint-placeholder-count="12">
+            <tr style="background: {{ r.bg }};">
+              <td style="padding-left: 40px;">
+                <div style="display: flex; align-items: center; gap: 8px; white-space: nowrap;">
+                  <span style="color: {{ r.labelColor }};">{{ r.label }}</span>
+                  <sc-if value="{{ r.tag }}"><dc-import name="Tag" label="{{ r.tag }}" tone="{{ r.tagTone }}" icon="{{ r.tagIcon }}" hint-size="70px,20px"></dc-import></sc-if>
+                </div>
+              </td>
+              <sc-for list="{{ r.cells }}" as="c" hint-placeholder-count="4">
+                <td style="text-align: {{ c.align }};">
+                  <sc-if value="{{ c.isAmount }}"><dc-import name="Amount" cents="{{ c.cents }}" tone="{{ c.tone }}" sign="{{ c.sign }}" size="{{ c.size }}" hint-size="90px,18px"></dc-import></sc-if>
+                  <sc-if value="{{ c.isIcon }}"><span title="{{ c.title }}" aria-label="{{ c.title }}" style="display: inline-flex; color: {{ c.color }};"><dc-import name="Icon" glyph="{{ c.glyph }}" size="{{ 14 }}" hint-size="14px,14px"></dc-import></span></sc-if>
+                  <sc-if value="{{ c.isText }}"><span style="font-size: 13px; color: var(--sb-text-muted); white-space: nowrap;">{{ c.text }}</span></sc-if>
+                </td>
+              </sc-for>
+            </tr>
+          </sc-for>
+        </sc-if>
+      </tbody>
+    </sc-for>
+  </table>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:900,&quot;height&quot;:600},&quot;firstLabel&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Year · month&quot;,&quot;tsType&quot;:&quot;string | undefined&quot;},&quot;columns&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;Array&lt;{ label: string; color?: string; align?: 'left' | 'right'; width?: string }&gt;&quot;},&quot;years&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;Array&lt;{ key: string | number; label: string; tag?: string; tagTone?: TagTone; tagIcon?: IconName; cells: YearTableCell[]; rows: Array&lt;{ label: string; tag?: string; tagTone?: TagTone; tagIcon?: IconName; muted?: boolean; highlight?: 'today' | 'payoff'; cells: YearTableCell[] }&gt; }&gt;&quot;},&quot;defaultOpen&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;Array&lt;string | number&gt;&quot;},&quot;onToggle&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(key: string | number, open: boolean) =&gt; void&quot;}}">
+class Component extends DCLogic {
+  state = { open: (this.props.defaultOpen || []).reduce((o, k) => ((o[k] = true), o), {}) };
+  renderVals() {
+    const p = this.props;
+    const cols = (p.columns || []).map((c) => {
+      const align = c.align || 'right';
+      return { label: c.label, color: c.color, align, justify: align === 'right' ? 'flex-end' : 'flex-start', width: c.width || 'auto' };
+    });
+    const cell = (c, i) => {
+      c = c || { type: 'empty' };
+      const align = cols[i] ? cols[i].align : 'right';
+      return {
+        align, isAmount: c.type === 'amount' && c.cents != null, isIcon: c.type === 'icon' && !!c.glyph, isText: c.type === 'text',
+        cents: c.cents, tone: c.tone || 'auto', sign: c.sign || 'auto', size: c.size || 'md',
+        glyph: c.glyph, color: c.color || 'currentColor', title: c.title || '', text: c.text
+      };
+    };
+    const bgs = { payoff: 'var(--sb-milestone-row)', today: 'var(--color-accent-100)' };
+    const years = (p.years || []).map((y) => {
+      const open = !!this.state.open[y.key];
+      return {
+        label: y.label, tag: y.tag, tagTone: y.tagTone || 'neutral', tagIcon: y.tagIcon || '',
+        open, rot: open ? '90deg' : '0deg', cells: (y.cells || []).map(cell),
+        toggle: (e) => { const tr = e && e.currentTarget; if (!open && tr && window.SB_reveal) window.SB_reveal(tr, tr.parentElement); this.setState((s) => ({ open: Object.assign({}, s.open, { [y.key]: !s.open[y.key] }) })); p.onToggle && p.onToggle(y.key, !open); },
+        rows: (y.rows || []).map((r) => ({
+          label: r.label, tag: r.tag, tagTone: r.tagTone || 'outline', tagIcon: r.tagIcon || '',
+          labelColor: r.muted ? 'var(--sb-text-muted)' : 'var(--color-text)',
+          bg: bgs[r.highlight] || 'var(--sb-ground-sunken)',
+          cells: (r.cells || []).map(cell)
+        }))
+      };
+    });
+    const eq = !!p.equalColumns;
+    return { cols, years, firstLabel: p.firstLabel || 'Year · month', layout: eq ? 'fixed' : 'auto', firstW: eq ? (p.firstWidth || '230px') : '1%', minW: eq ? (230 + cols.length * 130) + 'px' : '0' };
+  }
+}
+</script>
+</body>
+</html>

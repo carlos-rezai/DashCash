@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/industry-f2e85e32-8671-471e-b527-852aab1772ed/styles.css">
+<link rel="stylesheet" href="tokens/dashcash-dark.css">
+<script src="_ds/industry-f2e85e32-8671-471e-b527-852aab1772ed/_ds_bundle.js"></script>
+</helmet>
+<div style="display: flex; flex-direction: column; gap: 6px; padding: var(--space-4); background: var(--sb-card-bg); border: 1px solid var(--sb-card-border); min-width: 0;">
+  <span style="font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--sb-text-muted);">{{ label }}</span>
+  <sc-if value="{{ isMoney }}"><dc-import name="Amount" cents="{{ cents }}" size="lg" tone="{{ tone }}" hint-size="120px,26px"></dc-import></sc-if>
+  <sc-if value="{{ isText }}"><span style="font-family: var(--font-heading); font-weight: 600; font-size: 22px; line-height: 1.15; color: {{ textColor }}; font-variant-numeric: tabular-nums;">{{ value }}</span></sc-if>
+  <sc-if value="{{ hint }}"><span style="font-size: 13px; color: var(--sb-text-muted); text-wrap: pretty;">{{ hint }}</span></sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:240,&quot;height&quot;:120},&quot;label&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Rows&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;value&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;24&quot;,&quot;tsType&quot;:&quot;string | undefined&quot;},&quot;cents&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;Cents | undefined&quot;},&quot;hint&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;5 duplicates skipped&quot;,&quot;tsType&quot;:&quot;string | undefined&quot;},&quot;tone&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;default&quot;,&quot;accent&quot;,&quot;warning&quot;,&quot;danger&quot;],&quot;default&quot;:&quot;default&quot;,&quot;tsType&quot;:&quot;'default' | 'accent' | 'warning' | 'danger'&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    const p = this.props;
+    const isMoney = p.cents != null;
+    const tones = { default: 'var(--color-text)', warning: 'var(--sb-warning)', danger: 'var(--sb-danger)', accent: 'var(--color-accent-600)' };
+    return { label: p.label, value: p.value, cents: p.cents, isMoney, isText: !isMoney, hint: p.hint, tone: p.tone || 'default', textColor: tones[p.tone || 'default'] };
+  }
+}
+</script>
+</body>
+</html>

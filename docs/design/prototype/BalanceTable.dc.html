@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/industry-f2e85e32-8671-471e-b527-852aab1772ed/styles.css">
+<link rel="stylesheet" href="tokens/dashcash-dark.css">
+<script src="_ds/industry-f2e85e32-8671-471e-b527-852aab1772ed/_ds_bundle.js"></script>
+<script src="lib/store.js"></script>
+</helmet>
+<dc-import name="Card" kicker="Month-end balances" title="All accounts, by year" padding="lg" hint-size="100%,420px">
+  <div style="display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; min-height: 30px;">
+    <sc-if value="{{ editing }}">
+      <span style="font-size: 13px; color: var(--sb-text-muted);">Show accounts:</span>
+      <sc-for list="{{ toggles }}" as="t" hint-placeholder-count="5">
+        <dc-import name="Chip" label="{{ t.name }}" swatch="{{ t.color }}" swatch-shape="circle" active="{{ t.active }}" on-click="{{ t.toggle }}" hint-size="150px,28px"></dc-import>
+      </sc-for>
+    </sc-if>
+    <sc-if value="{{ notEditing }}" hint-placeholder-val="{{ true }}"><span style="font-size: 13px; color: var(--sb-text-muted);">{{ shownText }}</span></sc-if>
+    <span style="flex: 1;"></span>
+    <dc-import name="Button" variant="{{ editVariant }}" size="sm" icon="{{ editIcon }}" label="{{ editLabel }}" on-click="{{ toggleEdit }}" hint-size="70px,28px"></dc-import>
+  </div>
+  <dc-import name="YearTable" equal-columns="{{ true }}" columns="{{ columns }}" years="{{ years }}" default-open="{{ defaultOpen }}" hint-size="100%,360px"></dc-import>
+  <span style="font-size: 12px; color: var(--sb-text-faint);">Year rows show the balance at year end. Months after today are projected and shown faded. Net = shown balances minus the mortgage Restschuld.</span>
+</dc-import>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1160,&quot;height&quot;:700}}">
+class Component extends DCLogic {
+  state = (() => { let hidden = {}; try { hidden = JSON.parse(localStorage.getItem('dashcash-balance-table-hidden')) || {}; } catch (e) {} return { hidden, editing: false }; })();
+  componentDidMount() {
+    const go = () => { this.unsub = window.SB.subscribe(() => this.forceUpdate()); this.forceUpdate(); };
+    if (window.SB) go(); else this.t = setInterval(() => { if (window.SB) { clearInterval(this.t); go(); } }, 40);
+  }
+  componentWillUnmount() { this.unsub && this.unsub(); clearInterval(this.t); }
+  renderVals() {
+    const SB = window.SB;
+    if (!SB) return { columns: [], years: [] };
+    const all = SB.state.accounts;
+    const hidden = this.state.hidden;
+    const accs = all.filter((a) => !hidden[a.id]);
+    const S = accs.map((a) => ({ a, s: SB.series(a) }));
+    const pay = SB.payoffIdx(), T = SB.TODAY_IDX;
+    const val = (x, i) => (i < T ? x.s.hist[i] : x.s.proj[i]);
+    const debt = (a) => a.type === 'mortgage';
+    const cell = (x, i, muted) => {
+      const v = val(x, i);
+      return { type: 'amount', cents: v, tone: debt(x.a) ? (v ? (muted ? 'muted' : 'negative') : 'neutral') : muted ? 'muted' : 'auto' };
+    };
+    const netAt = (i) => {
+      let n = 0, any = false;
+      S.forEach((x) => { const v = val(x, i); if (v != null) { any = true; n += debt(x.a) ? -v : v; } });
+      return any ? n : null;
+    };
+    const years = [2024, 2025, 2026, 2027, 2028, 2029, 2030, 2031, 2032].map((y) => {
+      const first = (y - 2024) * 12, last = first + 11;
+      const rows = [];
+      for (let m = 0; m < 12; m++) {
+        const i = first + m, future = i > T, isPay = i === pay;
+        const muted = future && !isPay;
+        rows.push({
+          label: SB.MONTHS[m], muted: future,
+          cells: S.map((x) => cell(x, i, muted)).concat([{ type: 'amount', cents: netAt(i), tone: muted ? 'muted' : 'auto' }]),
+          tag: isPay ? 'Mortgage paid off' : '', tagTone: 'milestone', tagIcon: isPay ? 'flag' : '',
+          highlight: isPay ? 'payoff' : i === T ? 'today' : null
+        });
+      }
+      const kind = last < T ? 'Actual' : first > T ? 'Projected' : 'Actual · projected';
+      const hasPay = pay != null && SB.mYear(pay) === y;
+      return {
+        key: y, label: String(y), rows,
+        tag: hasPay ? 'Payoff ' + SB.mShort(pay) : kind,
+        tagTone: hasPay ? 'milestone' : kind === 'Actual' ? 'neutral' : 'outline', tagIcon: hasPay ? 'flag' : '',
+        cells: S.map((x) => cell(x, last, false)).concat([{ type: 'amount', cents: netAt(last) }])
+      };
+    });
+    const ed = this.state.editing;
+    const toggles = all.map((a) => ({
+      name: a.short || a.name, color: SB.TYPES[a.type].color, active: !hidden[a.id],
+      toggle: () => {
+        const h = Object.assign({}, hidden, { [a.id]: !hidden[a.id] });
+        if (all.every((x) => h[x.id])) return;
+        try { localStorage.setItem('dashcash-balance-table-hidden', JSON.stringify(h)); } catch (e) {}
+        this.setState({ hidden: h });
+      }
+    }));
+    return {
+      columns: accs.map((a) => ({ label: a.short || a.name, color: SB.TYPES[a.type].color })).concat([{ label: accs.length === all.length ? 'Net' : 'Net (shown)' }]),
+      years, defaultOpen: [2026],
+      editing: ed, notEditing: !ed, toggles,
+      shownText: accs.length === all.length ? 'All ' + all.length + ' accounts shown' : accs.length + ' of ' + all.length + ' accounts shown',
+      editLabel: ed ? 'Done' : 'Edit', editIcon: ed ? 'check' : 'pencil', editVariant: ed ? 'primary' : 'secondary',
+      toggleEdit: () => this.setState({ editing: !ed })
+    };
+  }
+}
+</script>
+</body>
+</html>

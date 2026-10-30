@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/industry-f2e85e32-8671-471e-b527-852aab1772ed/styles.css">
+<link rel="stylesheet" href="tokens/dashcash-dark.css">
+<script src="_ds/industry-f2e85e32-8671-471e-b527-852aab1772ed/_ds_bundle.js"></script>
+<script src="lib/store.js"></script>
+</helmet>
+<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: var(--space-6);">
+  <sc-for list="{{ ids }}" as="id" hint-placeholder-count="5">
+    <dc-import name="AccountCard" account-id="{{ id }}" on-open="{{ onOpenAccount }}" on-edit="{{ edit }}" hint-size="100%,330px"></dc-import>
+  </sc-for>
+  <button type="button" onClick="{{ create }}" style="min-height: 330px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; background: transparent; border: 1px dashed var(--color-neutral-400); color: var(--sb-text-muted); font: inherit; font-size: 14px; cursor: pointer;" style-hover="border-color: var(--color-accent); color: var(--color-text); background: var(--sb-hover);">
+    <dc-import name="Icon" glyph="plus" size="{{ 22 }}" hint-size="22px,22px"></dc-import>
+    <span style="font-family: var(--font-heading); font-weight: 600; font-size: 18px;">New account</span>
+    <span style="font-size: 12px; color: var(--sb-text-faint);">Income, spending, savings, credit card or mortgage</span>
+  </button>
+</div>
+<dc-import name="AccountFormModal" open="{{ modalOpen }}" account-id="{{ modalId }}" on-close="{{ close }}" hint-size="0px,0px"></dc-import>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1160,&quot;height&quot;:720},&quot;onOpenAccount&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(accountId: string) =&gt; void&quot;}}">
+class Component extends DCLogic {
+  state = { modalOpen: false, modalId: '' };
+  componentDidMount() {
+    const go = () => { this.unsub = window.SB.subscribe(() => this.forceUpdate()); this.forceUpdate(); };
+    if (window.SB) go(); else this.t = setInterval(() => { if (window.SB) { clearInterval(this.t); go(); } }, 40);
+  }
+  componentWillUnmount() { this.unsub && this.unsub(); clearInterval(this.t); }
+  renderVals() {
+    const SB = window.SB;
+    return {
+      ids: SB ? SB.state.accounts.map((a) => a.id) : [],
+      onOpenAccount: this.props.onOpenAccount,
+      modalOpen: this.state.modalOpen, modalId: this.state.modalId,
+      edit: (id) => this.setState({ modalOpen: true, modalId: id }),
+      create: () => this.setState({ modalOpen: true, modalId: '' }),
+      close: () => this.setState({ modalOpen: false })
+    };
+  }
+}
+</script>
+</body>
+</html>

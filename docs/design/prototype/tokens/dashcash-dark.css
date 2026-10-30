@@ -1,0 +1,135 @@
+/* DashCash dark theme: derived from Industry's steel ramps (accent-900 as ground, accent-100 as paper).
+   Variables only; maps 1:1 to the styled-components DefaultTheme (see README). */
+:root {
+  color-scheme: dark;
+  --color-bg: #1b2a39;
+  --color-surface: #213345;
+  --color-text: #e9f1fa;
+  --color-accent: #749dc4;
+  --color-accent-2: #749dc4;
+  --color-divider: color-mix(in srgb, #e9f1fa 16%, transparent);
+
+  /* Ramps inverted for the dark ground: 100 = subtle tint, 900 = strongest ink */
+  --color-accent-100: #22384d;
+  --color-accent-200: #2c455d;
+  --color-accent-300: #416180;
+  --color-accent-400: #597ea3;
+  --color-accent-500: #749dc4;
+  --color-accent-600: #94bce3;
+  --color-accent-700: #b5d9fd;
+  --color-accent-800: #d6ebff;
+  --color-accent-900: #eef6ff;
+  --color-accent-2-100: #22384d;
+  --color-accent-2-800: #d6ebff;
+
+  --color-neutral-100: #243445;
+  --color-neutral-200: #2d3e50;
+  --color-neutral-300: #3f5063;
+  --color-neutral-400: #5b6a7a;
+  --color-neutral-500: #7a8794;
+  --color-neutral-600: #9aa5b0;
+  --color-neutral-700: #b9c1c9;
+  --color-neutral-800: #d6dce2;
+  --color-neutral-900: #eef2f6;
+
+  --shadow-sm: 0 0 0 1px color-mix(in srgb, #e9f1fa 5%, transparent), 0 1px 2px rgba(5, 10, 16, 0.4);
+  --shadow-md: 0 0 0 1px color-mix(in srgb, #e9f1fa 6%, transparent), 0 6px 18px rgba(5, 10, 16, 0.45);
+  --shadow-lg: 0 0 0 1px color-mix(in srgb, #e9f1fa 8%, transparent), 0 18px 48px rgba(5, 10, 16, 0.55);
+
+  /* DashCash semantic additions: same OKLCH lightness as accent-600 */
+  --sb-ground-sunken: #16222f;
+  --sb-text-muted: color-mix(in srgb, #e9f1fa 62%, transparent);
+  --sb-text-faint: color-mix(in srgb, #e9f1fa 42%, transparent);
+  --sb-hover: color-mix(in srgb, #e9f1fa 6%, transparent);
+  --sb-warning: #e0b469;
+  --sb-warning-tint: color-mix(in srgb, #e0b469 14%, transparent);
+  --sb-danger: #e8877b;
+  --sb-danger-tint: color-mix(in srgb, #e8877b 14%, transparent);
+  /* Money polarity: same OKLCH lightness (~0.74) as accent-600 */
+  --sb-positive: #7cc59a;
+  --sb-positive-tint: color-mix(in srgb, #7cc59a 14%, transparent);
+  /* Milestone (mortgage payoff) = positive green */
+  --sb-milestone: var(--sb-positive);
+  --sb-milestone-tint: color-mix(in srgb, #7cc59a 16%, transparent);
+  --sb-milestone-row: color-mix(in srgb, #7cc59a 12%, var(--sb-ground-sunken));
+  --sb-negative: #e8877b;
+  --sb-negative-tint: color-mix(in srgb, #e8877b 14%, transparent);
+  --sb-backdrop: rgba(9, 15, 22, 0.66);
+
+  /* Data palette: accounts */
+  --sb-acc-income: #cdbb8b;
+  --sb-acc-spending: #d69c8e;
+  --sb-acc-savings: #94bce3;
+  --sb-acc-card: #b3a3d1;
+  --sb-acc-mortgage: #e9f1fa;
+
+  /* Data palette: categories: 40 distinct hues at one lightness (OKLCH L 0.75, chroma up to 0.12).
+     Numbered in golden-angle order (137.5° steps), so consecutive colours are always far apart. */
+  --sb-cat-1: #f08f87; /* h 25 */
+  --sb-cat-2: #5cc697; /* h 163 */
+  --sb-cat-3: #ba9cef; /* h 300 */
+  --sb-cat-4: #d8a44e; /* h 78 */
+  --sb-cat-5: #36c1dd; /* h 215 */
+  --sb-cat-6: #e88db5; /* h 353 */
+  --sb-cat-7: #95bd6a; /* h 130 */
+  --sb-cat-8: #8dabfa; /* h 268 */
+  --sb-cat-9: #ed946c; /* h 45 */
+  --sb-cat-10: #39c6b4; /* h 183 */
+  --sb-cat-11: #d094dd; /* h 320 */
+  --sb-cat-12: #c3ae4c; /* h 98 */
+  --sb-cat-13: #57baef; /* h 235 */
+  --sb-cat-14: #ef8d99; /* h 13 */
+  --sb-cat-15: #72c385; /* h 150 */
+  --sb-cat-16: #aaa1f6; /* h 288 */
+  --sb-cat-17: #e29d56; /* h 65 */
+  --sb-cat-18: #2bc4cf; /* h 203 */
+  --sb-cat-19: #e18fc6; /* h 340 */
+  --sb-cat-20: #a8b85b; /* h 118 */
+  --sb-cat-21: #79b1f9; /* h 255 */
+  --sb-cat-22: #f0907c; /* h 33 */
+  --sb-cat-23: #4ec6a3; /* h 170 */
+  --sb-cat-24: #c399e9; /* h 308 */
+  --sb-cat-25: #d1a84b; /* h 85 */
+  --sb-cat-26: #42bee5; /* h 223 */
+  --sb-cat-27: #ec8daa; /* h 0 */
+  --sb-cat-28: #88c074; /* h 138 */
+  --sb-cat-29: #98a7fa; /* h 275 */
+  --sb-cat-30: #e99863; /* h 53 */
+  --sb-cat-31: #2fc6bf; /* h 190 */
+  --sb-cat-32: #d792d5; /* h 328 */
+  --sb-cat-33: #b9b250; /* h 105 */
+  --sb-cat-34: #64b6f4; /* h 243 */
+  --sb-cat-35: #f08e8e; /* h 20 */
+  --sb-cat-36: #65c590; /* h 158 */
+  --sb-cat-37: #b49ef2; /* h 295 */
+  --sb-cat-38: #dca150; /* h 73 */
+  --sb-cat-39: #30c2d8; /* h 210 */
+  --sb-cat-40: #e68ebc; /* h 348 */
+
+  --sb-sidebar-width: 208px;
+  --sb-sidebar-width-compact: 64px;
+  --sb-page-pad: 24px;
+}
+html, body { margin: 0; height: 100%; background: var(--color-bg); color: var(--color-text); }
+body { -webkit-font-smoothing: antialiased; }
+.blueprint > .corner { display: none; }
+a { color: var(--color-accent-600); }
+a:hover { color: var(--color-accent-700); }
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb { background: var(--color-neutral-300); border: 3px solid var(--color-bg); }
+::-webkit-scrollbar-track { background: transparent; }
+
+/* Table headers never wrap; columns scroll inside their card instead */
+.table th { white-space: nowrap; }
+
+/* Card fill (tweakable: none | surface). Inputs drop to the page ground so they read as inset on a filled card. */
+:root { --sb-card-bg: var(--color-surface); --sb-input-bg: var(--color-bg); --sb-card-border: color-mix(in srgb, #e9f1fa 8%, transparent); --sb-raised-bg: var(--color-surface); }
+.input { background: var(--sb-input-bg); }
+
+/* Disabled controls never react to hover or press */
+.btn:disabled, .btn:disabled:hover, .btn:disabled:active { background: transparent; }
+.btn-primary:disabled, .btn-primary:disabled:hover, .btn-primary:disabled:active { background: var(--color-accent); }
+button:disabled { cursor: not-allowed; }
+
+/* Busy buttons stay at full strength (they are working, not unavailable) */
+.btn[aria-busy="true"]:disabled { opacity: 1; cursor: progress; }

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/industry-f2e85e32-8671-471e-b527-852aab1772ed/styles.css">
+<link rel="stylesheet" href="tokens/dashcash-dark.css">
+<script src="_ds/industry-f2e85e32-8671-471e-b527-852aab1772ed/_ds_bundle.js"></script>
+</helmet>
+<sc-if value="{{ isList }}" hint-placeholder-val="{{ true }}">
+  <dc-import name="PageLayout" title="Accounts" subtitle="Each account has a balance today, a type that decides its projection, and an optional monthly goal." hint-size="100%,800px">
+    <dc-import name="AccountList" on-open-account="{{ openAccount }}" hint-size="100%,700px"></dc-import>
+  </dc-import>
+</sc-if>
+<sc-if value="{{ isDetail }}">
+  <dc-import name="PageLayout" hint-size="100%,900px">
+    <dc-import name="AccountDetail" account-id="{{ accountId }}" on-back="{{ back }}" on-navigate="{{ onNavigate }}" hint-size="100%,900px"></dc-import>
+  </dc-import>
+</sc-if>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1208,&quot;height&quot;:900},&quot;accountId&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;&quot;,&quot;postbank&quot;,&quot;sparkasse&quot;,&quot;renault&quot;,&quot;card&quot;,&quot;darlehen&quot;],&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string | undefined&quot;},&quot;onNavigate&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(page: PageId, accountId?: string) =&gt; void&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    const p = this.props, nav = p.onNavigate || (() => {});
+    return { onNavigate: nav, isList: !p.accountId, isDetail: !!p.accountId, accountId: p.accountId, openAccount: (id) => nav('accounts', id), back: () => nav('accounts') };
+  }
+}
+</script>
+</body>
+</html>

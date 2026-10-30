@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/industry-f2e85e32-8671-471e-b527-852aab1772ed/styles.css">
+<link rel="stylesheet" href="tokens/dashcash-dark.css">
+<script src="_ds/industry-f2e85e32-8671-471e-b527-852aab1772ed/_ds_bundle.js"></script>
+<script src="lib/store.js"></script>
+</helmet>
+<dc-import name="Card" kicker="Imported files" title="{{ title }}" padding="lg" hint-size="100%,420px">
+  <span style="font-size: 13px; color: var(--sb-text-muted);">Original CSVs are kept locally next to the database so you can re-download them. Deleting a file here removes the copy.</span>
+  <div style="overflow-x: auto; min-width: 0;">
+    <table class="table" style="font-size: 14px;">
+      <thead><tr><th>File</th><th>Account</th><th>Covers</th><th style="text-align: right;">Rows</th><th>Imported</th><th style="width: 100px;"></th></tr></thead>
+      <tbody>
+        <sc-for list="{{ rows }}" as="f" hint-placeholder-count="6">
+          <tr>
+            <td><div style="display: flex; align-items: center; gap: 10px; min-width: 0;"><span style="display: flex; color: var(--sb-text-faint);"><dc-import name="Icon" glyph="file" size="{{ 16 }}" hint-size="16px,16px"></dc-import></span><div style="display: flex; flex-direction: column; min-width: 0;"><span>{{ f.label }}</span><span style="font-size: 12px; color: var(--sb-text-faint); overflow-wrap: anywhere;">{{ f.name }} · {{ f.size }}</span></div></div></td>
+            <td><div style="display: flex; align-items: center; gap: 8px; white-space: nowrap;"><dc-import name="Swatch" color="{{ f.color }}" shape="circle" size="{{ 9 }}" hint-size="9px,9px"></dc-import><span>{{ f.account }}</span></div></td>
+            <td style="color: var(--sb-text-muted); white-space: nowrap;">{{ f.range }}</td>
+            <td style="text-align: right; font-variant-numeric: tabular-nums;">{{ f.rows }}</td>
+            <td style="color: var(--sb-text-muted); white-space: nowrap;">{{ f.imported }}</td>
+            <td><div style="display: flex; justify-content: flex-end; gap: 2px;">
+              <dc-import name="Button" variant="ghost" size="sm" icon="download" title="Download CSV" on-click="{{ f.download }}" hint-size="28px,28px"></dc-import>
+              <dc-import name="Button" variant="ghost" size="sm" icon="pencil" title="Edit" on-click="{{ f.edit }}" hint-size="28px,28px"></dc-import>
+              <dc-import name="Button" variant="ghost" size="sm" icon="trash" title="Delete" on-click="{{ f.remove }}" hint-size="28px,28px"></dc-import>
+            </div></td>
+          </tr>
+        </sc-for>
+      </tbody>
+    </table>
+  </div>
+</dc-import>
+<dc-import name="Modal" open="{{ edit.open }}" title="Edit imported file" subtitle="{{ edit.name }}" on-close="{{ close }}" hint-size="0px,0px">
+  <dc-import name="FormField" label="Label" hint-size="100%,60px"><dc-import name="Input" value="{{ edit.label }}" on-change="{{ setLabel }}" hint-size="100%,36px"></dc-import></dc-import>
+  <dc-import name="FormField" label="Account" hint="Moving a file moves its transactions to the other account." hint-size="100%,60px"><dc-import name="Select" value="{{ edit.account }}" options="{{ accountOptions }}" on-change="{{ setAccount }}" hint-size="100%,36px"></dc-import></dc-import>
+  <div style="display: flex; justify-content: flex-end; gap: var(--space-2);">
+    <dc-import name="Button" variant="secondary" label="Cancel" on-click="{{ close }}" hint-size="80px,36px"></dc-import>
+    <dc-import name="Button" variant="primary" icon="check" label="Save" on-click="{{ save }}" hint-size="90px,36px"></dc-import>
+  </div>
+</dc-import>
+<dc-import name="Modal" open="{{ del.open }}" title="Delete imported file" subtitle="{{ del.name }}" on-close="{{ close }}" hint-size="0px,0px">
+  <div style="display: flex; flex-direction: column; gap: 8px;">
+    <sc-for list="{{ delOptions }}" as="o" hint-placeholder-count="2">
+      <button type="button" onClick="{{ o.pick }}" style="display: flex; align-items: flex-start; gap: 10px; padding: 12px; background: {{ o.bg }}; border: 1px solid {{ o.bd }}; color: var(--color-text); font: inherit; text-align: left; cursor: pointer;" style-hover="background: var(--sb-hover);">
+        <span style="width: 16px; height: 16px; margin-top: 2px; flex: none; border: 1.5px solid {{ o.dot }}; border-radius: 50%; box-shadow: inset 0 0 0 3px var(--color-bg); background: {{ o.dotFill }};"></span>
+        <span style="display: flex; flex-direction: column; gap: 2px;"><span style="font-size: 14px;">{{ o.title }}</span><span style="font-size: 12px; color: var(--sb-text-muted);">{{ o.text }}</span></span>
+      </button>
+    </sc-for>
+  </div>
+  <div style="display: flex; justify-content: flex-end; gap: var(--space-2);">
+    <dc-import name="Button" variant="secondary" label="Cancel" on-click="{{ close }}" hint-size="80px,36px"></dc-import>
+    <dc-import name="Button" variant="danger" icon="trash" label="{{ del.cta }}" on-click="{{ doDelete }}" hint-size="140px,36px"></dc-import>
+  </div>
+</dc-import>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1100,&quot;height&quot;:520}}">
+class Component extends DCLogic {
+  state = { edit: { open: false }, del: { open: false, mode: 'file' } };
+  componentDidMount() {
+    const go = () => { this.unsub = window.SB.subscribe(() => this.forceUpdate()); this.forceUpdate(); };
+    if (window.SB) go(); else this.t = setInterval(() => { if (window.SB) { clearInterval(this.t); go(); } }, 40);
+  }
+  componentWillUnmount() { this.unsub && this.unsub(); clearInterval(this.t); }
+  renderVals() {
+    const SB = window.SB;
+    if (!SB) return { rows: [], edit: {}, del: {}, delOptions: [] };
+    const files = SB.state.files;
+    const rows = files.map((f) => {
+      const a = SB.account(f.account);
+      return {
+        name: f.name, label: f.label, size: f.size, account: a ? a.name : 'Deleted account', color: a ? SB.TYPES[a.type].color : 'transparent',
+        range: f.from + ' – ' + f.to, rows: f.rows, imported: f.imported,
+        download: () => {
+          const csv = 'Buchungstag;Betrag;Beguenstigter/Zahlungspflichtiger;Verwendungszweck\n25.10.2026;-6,80;Bäckerei Kamps;Kartenzahlung\n';
+          const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
+          const el = document.createElement('a'); el.href = url; el.download = f.name; el.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
+          SB.actions.notify({ tone: 'success', title: 'Downloaded ' + f.name, autoHide: 4000 });
+        },
+        edit: () => this.setState({ edit: { open: true, id: f.id, name: f.name, label: f.label, account: f.account } }),
+        remove: () => this.setState({ del: { open: true, id: f.id, name: f.name, rows: f.rows, mode: 'file' } })
+      };
+    });
+    const e = this.state.edit, d = this.state.del;
+    const opt = (mode, title, text) => {
+      const sel = d.mode === mode;
+      return { title, text, bg: sel ? 'var(--color-accent-100)' : 'transparent', bd: sel ? 'var(--color-accent-400)' : 'var(--color-divider)', dot: sel ? 'var(--color-accent)' : 'var(--color-neutral-400)', dotFill: sel ? 'var(--color-accent)' : 'transparent', pick: () => this.setState({ del: Object.assign({}, d, { mode }) }) };
+    };
+    const close = () => this.setState({ edit: { open: false }, del: { open: false, mode: 'file' } });
+    return {
+      title: files.length + ' CSV files', rows,       edit: e, del: Object.assign({}, d, { cta: d.mode === 'all' ? 'Delete file and rows' : 'Delete file' }),
+      delOptions: [
+        opt('file', 'Delete the file only', 'The ' + (d.rows || 0) + ' imported transactions stay; you just can\'t re-download this CSV.'),
+        opt('all', 'Delete the file and its transactions', 'Removes ' + (d.rows || 0) + ' transactions. Balances before the anchor are recalculated.')
+      ],
+      accountOptions: SB.state.accounts.map((a) => ({ value: a.id, label: a.name })),
+      close,
+      setLabel: (v) => this.setState({ edit: Object.assign({}, e, { label: v }) }),
+      setAccount: (v) => this.setState({ edit: Object.assign({}, e, { account: v }) }),
+      save: () => { SB.actions.updateFile(e.id, { label: e.label, account: e.account }); close(); },
+      doDelete: () => {
+        SB.actions.deleteFile(d.id); close();
+        SB.actions.notify({ tone: 'success', title: d.mode === 'all' ? 'File and ' + d.rows + ' transactions deleted' : 'File deleted', message: d.mode === 'all' ? undefined : 'Its transactions are kept.', autoHide: 5000 });
+      }
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<title>DashCash · Component inventory</title>
+<link rel="stylesheet" href="_ds/industry-f2e85e32-8671-471e-b527-852aab1772ed/styles.css">
+<link rel="stylesheet" href="tokens/dashcash-dark.css">
+<script src="_ds/industry-f2e85e32-8671-471e-b527-852aab1772ed/_ds_bundle.js"></script>
+<script src="lib/icons.js"></script>
+<script src="lib/store.js"></script>
+</helmet>
+<div style="min-height: 100vh; background: var(--color-bg); color: var(--color-text); font-family: var(--font-body);">
+  <div style="max-width: 1440px; margin: 0 auto; padding: 40px 40px 80px; display: flex; flex-direction: column; gap: 56px;">
+    <header style="display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; flex-wrap: wrap;">
+      <div style="display: flex; flex-direction: column; gap: 10px;">
+        <dc-import name="Logo" size="{{ 36 }}" hint-size="190px,36px"></dc-import>
+        <h1 style="font-size: 42px; margin: 0;">Component inventory</h1>
+        <span style="font-size: 15px; color: var(--sb-text-muted); max-width: 760px;">Every level of the renderer, in isolation: tokens → primitives → components → features → layouts → pages. Each tile is one file and one React component. No level imports from a level above it.</span>
+      </div>
+      <nav style="display: flex; gap: 6px; flex-wrap: wrap;">
+        <a href="#tokens" style="font-size: 13px;">01 Tokens</a><a href="#primitives" style="font-size: 13px;">02 Primitives</a><a href="#components" style="font-size: 13px;">03 Components</a><a href="#features" style="font-size: 13px;">04 Features</a><a href="#layouts" style="font-size: 13px;">05 Layouts</a><a href="#pages" style="font-size: 13px;">06 Pages</a>
+      </nav>
+    </header>
+
+    <section id="tokens" style="display: flex; flex-direction: column; gap: 20px;">
+      <div style="display: flex; align-items: baseline; gap: 14px; border-bottom: 1px solid var(--color-divider); padding-bottom: 10px;"><span style="font-family: var(--font-heading); font-weight: 600; font-size: 15px; color: var(--color-accent-600);">01</span><h2 style="margin: 0; font-size: 30px;">Tokens</h2><span style="font-size: 13px; color: var(--sb-text-faint);">tokens/dashcash-dark.css → theme.ts</span></div>
+      <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px;">
+        <sc-for list="{{ colors }}" as="c" hint-placeholder-count="12">
+          <div style="display: flex; flex-direction: column; gap: 6px;">
+            <div style="height: 44px; background: {{ c.v }}; border: 1px solid var(--color-divider);"></div>
+            <span style="font-size: 12px;">{{ c.name }}</span>
+            <span style="font-size: 11px; color: var(--sb-text-faint);">{{ c.role }}</span>
+          </div>
+        </sc-for>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px;">
+        <div class="blueprint" style="padding: 20px; display: flex; flex-direction: column; gap: 10px;">
+          
+          <span style="font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--sb-text-muted);">Type · Barlow Condensed / Barlow</span>
+          <span style="font-family: var(--font-heading); font-weight: 600; font-size: 42px; line-height: 1;">Display 42</span>
+          <span style="font-family: var(--font-heading); font-weight: 600; font-size: 34px; line-height: 1;">Page title 34</span>
+          <span style="font-family: var(--font-heading); font-weight: 600; font-size: 22px;">Section 22 · Amount lg</span>
+          <span style="font-family: var(--font-heading); font-weight: 600; font-size: 19px;">Card title 19</span>
+          <span style="font-size: 15px;">Body 15, Barlow regular</span>
+          <span style="font-size: 14px;">UI 14, tables, inputs, buttons</span>
+          <span style="font-size: 12px; color: var(--sb-text-muted);">Caption 12, hints, meta</span>
+          <span style="font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--color-accent-600);">Kicker 11 · uppercase</span>
+        </div>
+        <div class="blueprint" style="padding: 20px; display: flex; flex-direction: column; gap: 10px;">
+          
+          <span style="font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--sb-text-muted);">Spacing · 0.85× density</span>
+          <sc-for list="{{ spaces }}" as="s" hint-placeholder-count="6">
+            <div style="display: flex; align-items: center; gap: 12px; font-size: 12px;"><span style="width: 80px; color: var(--sb-text-muted);">{{ s.name }}</span><span style="height: 10px; width: {{ s.v }}; background: var(--color-accent-500);"></span><span style="color: var(--sb-text-faint);">{{ s.px }}</span></div>
+          </sc-for>
+          <span style="font-size: 12px; color: var(--sb-text-faint); padding-top: 8px;">Radius 0 on every framed element (Industry blueprint rule). Borders 1px hairline var(--color-divider). No corner marks.</span>
+        </div>
+      </div>
+    </section>
+
+    <section id="primitives" style="display: flex; flex-direction: column; gap: 20px;">
+      <div style="display: flex; align-items: baseline; gap: 14px; border-bottom: 1px solid var(--color-divider); padding-bottom: 10px;"><span style="font-family: var(--font-heading); font-weight: 600; font-size: 15px; color: var(--color-accent-600);">02</span><h2 style="margin: 0; font-size: 30px;">Primitives</h2><span style="font-size: 13px; color: var(--sb-text-faint);">Use tokens only · renderer/src/primitives</span></div>
+      <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(400px, 1fr)); gap: 24px;">
+        <div style="display: flex; flex-direction: column; gap: 12px; padding: 20px; border: 1px solid var(--color-divider);">
+          <span style="font-size: 12px; color: var(--sb-text-muted);">Button · variant, size, icon, iconRight, disabled</span>
+          <div style="display: flex; gap: 14px; flex-wrap: wrap; align-items: center; padding: 6px;">
+            <dc-import name="Button" variant="primary" icon="upload" label="Import CSV" hint-size="120px,36px"></dc-import>
+            <dc-import name="Button" variant="secondary" icon="pencil" label="Edit" hint-size="70px,36px"></dc-import>
+            <dc-import name="Button" variant="ghost" label="Show mapping" icon-right="chevronDown" hint-size="120px,36px"></dc-import>
+            <dc-import name="Button" variant="danger" icon="trash" label="Delete" hint-size="90px,36px"></dc-import>
+            <dc-import name="Button" variant="secondary" icon="plus" title="Add" hint-size="34px,36px"></dc-import>
+            <dc-import name="Button" variant="primary" label="Disabled" disabled="{{ true }}" hint-size="90px,36px"></dc-import>
+            <dc-import name="Button" variant="secondary" size="sm" icon="plus" label="Small" hint-size="70px,28px"></dc-import>
+          </div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 12px; padding: 20px; border: 1px solid var(--color-divider);">
+          <span style="font-size: 12px; color: var(--sb-text-muted);">Amount · cents, sign, size, tone, German formatting</span>
+          <div style="display: flex; gap: 18px; flex-wrap: wrap; align-items: baseline;">
+            <dc-import name="Amount" cents="{{ 1952960 }}" size="xl" hint-size="160px,40px"></dc-import>
+            <dc-import name="Amount" cents="{{ 123456 }}" size="lg" hint-size="110px,26px"></dc-import>
+            <dc-import name="Amount" cents="{{ 50000 }}" sign="always" tone="auto" hint-size="80px,18px"></dc-import>
+            <dc-import name="Amount" cents="{{ -4218 }}" hint-size="70px,18px"></dc-import>
+            <dc-import name="Amount" cents="{{ 6760 }}" tone="warning" strong="{{ true }}" hint-size="70px,18px"></dc-import>
+            <dc-import name="Amount" cents="{{ -2000 }}" tone="danger" hint-size="70px,18px"></dc-import>
+            <dc-import name="Amount" cents="{{ 3000000 }}" whole="{{ true }}" tone="muted" size="sm" hint-size="70px,16px"></dc-import>
+          </div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 12px; padding: 20px; border: 1px solid var(--color-divider);">
+          <span style="font-size: 12px; color: var(--sb-text-muted);">Tag · tone, icon, swatch</span>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <dc-import name="Tag" label="Rule · exact" tone="accent" hint-size="90px,22px"></dc-import>
+            <dc-import name="Tag" label="Rule · contains" tone="accent" hint-size="100px,22px"></dc-import>
+            <dc-import name="Tag" label="New" tone="neutral" hint-size="40px,22px"></dc-import>
+            <dc-import name="Tag" label="Manual" tone="outline" hint-size="60px,22px"></dc-import>
+            <dc-import name="Tag" label="New bank format" tone="warning" icon="info" hint-size="120px,22px"></dc-import>
+            <dc-import name="Tag" label="Paid off" tone="accent" icon="flag" hint-size="80px,22px"></dc-import>
+            <dc-import name="Tag" label="Groceries" tone="neutral" swatch="var(--sb-cat-2)" hint-size="90px,22px"></dc-import>
+          </div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 12px; padding: 20px; border: 1px solid var(--color-divider);">
+          <span style="font-size: 12px; color: var(--sb-text-muted);">Input · Select · Segmented</span>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <dc-import name="Input" icon="search" placeholder="Search rules" value="{{ demo.q }}" on-change="{{ setQ }}" hint-size="100%,36px"></dc-import>
+            <dc-import name="Input" value="1.529,60" suffix="€" align="right" hint-size="100%,36px"></dc-import>
+            <dc-import name="Select" value="{{ demo.cat }}" options="{{ catOptions }}" placeholder="Uncategorised" show-swatch="{{ true }}" on-change="{{ setCat }}" hint-size="100%,36px"></dc-import>
+            <dc-import name="Segmented" options="{{ rangeOpts }}" value="{{ demo.range }}" on-change="{{ setRange }}" hint-size="200px,28px"></dc-import>
+          </div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 12px; padding: 20px; border: 1px solid var(--color-divider);">
+          <span style="font-size: 12px; color: var(--sb-text-muted);">Checkbox · Switch · Chip · Swatch</span>
+          <div style="display: flex; gap: 16px; flex-wrap: wrap;"><dc-import name="Switch" checked="{{ demo.sw }}" label="Check for updates at start" on-change="{{ setSw }}" hint-size="220px,20px"></dc-import><dc-import name="Switch" checked="{{ false }}" label="Disabled" disabled="{{ true }}" hint-size="120px,20px"></dc-import></div>
+          <div style="display: flex; gap: 16px; flex-wrap: wrap; align-items: center;">
+            <dc-import name="Checkbox" checked="{{ demo.check }}" label="Mark as recurring" on-change="{{ setCheck }}" hint-size="150px,20px"></dc-import>
+            <dc-import name="Chip" label="Sparkasse Giro" meta="1.529,60 €" swatch="var(--sb-acc-spending)" swatch-shape="circle" active="{{ demo.chip }}" on-click="{{ toggleChip }}" hint-size="180px,28px"></dc-import>
+            <dc-import name="Chip" label="Nov 25" disabled="{{ true }}" hint-size="70px,28px"></dc-import>
+          </div>
+          <div style="display: flex; gap: 6px; align-items: center;">
+            <sc-for list="{{ catSwatches }}" as="s" hint-placeholder-count="10"><dc-import name="Swatch" color="{{ s }}" size="{{ 14 }}" hint-size="14px,14px"></dc-import></sc-for>
+          </div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 12px; padding: 20px; border: 1px solid var(--color-divider);">
+          <span style="font-size: 12px; color: var(--sb-text-muted);">Meter · value (solid), projected (dashed), tone</span>
+          <dc-import name="Meter" value="{{ 0.82 }}" hint-size="100%,6px"></dc-import>
+          <dc-import name="Meter" value="{{ 0.15 }}" tone="warning" hint-size="100%,6px"></dc-import>
+          <dc-import name="Meter" value="{{ 0 }}" tone="danger" hint-size="100%,6px"></dc-import>
+          <dc-import name="Meter" value="{{ 0.04 }}" projected="{{ 1 }}" hint-size="100%,6px"></dc-import>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 12px; padding: 20px; border: 1px solid var(--color-divider); grid-column: 1 / -1;">
+          <span style="font-size: 12px; color: var(--sb-text-muted);">Icon · Lucide, stroke 1.5 · glyph, size</span>
+          <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 8px;">
+            <sc-for list="{{ icons }}" as="g" hint-placeholder-count="20">
+              <div style="display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 10px 4px; border: 1px solid var(--color-divider);"><dc-import name="Icon" glyph="{{ g }}" size="{{ 20 }}" hint-size="20px,20px"></dc-import><span style="font-size: 11px; color: var(--sb-text-faint);">{{ g }}</span></div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="components" style="display: flex; flex-direction: column; gap: 20px;">
+      <div style="display: flex; align-items: baseline; gap: 14px; border-bottom: 1px solid var(--color-divider); padding-bottom: 10px;"><span style="font-family: var(--font-heading); font-weight: 600; font-size: 15px; color: var(--color-accent-600);">03</span><h2 style="margin: 0; font-size: 30px;">Components</h2><span style="font-size: 13px; color: var(--sb-text-faint);">Combine primitives · renderer/src/components</span></div>
+      <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(400px, 1fr)); gap: 28px;">
+        <dc-import name="Card" kicker="Card" title="Blueprint card" hint-size="100%,160px"><span style="font-size: 14px; color: var(--sb-text-muted);">Transparent, hairline-bordered, square. padding: none · sm · md · lg.</span></dc-import>
+        <div style="display: flex; flex-direction: column; gap: 14px; padding: 20px; border: 1px solid var(--color-divider);">
+          <span style="font-size: 12px; color: var(--sb-text-muted);">FormField · Modal</span>
+          <dc-import name="FormField" label="Balance today" hint="A change adds a correction at today's date." hint-size="100%,70px"><dc-import name="Input" value="1.529,60" suffix="€" align="right" hint-size="100%,36px"></dc-import></dc-import>
+          <div><dc-import name="Button" variant="secondary" label="Open modal" on-click="{{ openModal }}" hint-size="110px,36px"></dc-import></div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 10px; padding: 20px; border: 1px solid var(--color-divider);">
+          <span style="font-size: 12px; color: var(--sb-text-muted);">Logo · mark 16 / 32 / 64, full, light</span>
+          <div style="display: flex; align-items: center; gap: 18px;">
+            <dc-import name="Logo" variant="mark" size="{{ 16 }}" hint-size="16px,16px"></dc-import>
+            <dc-import name="Logo" variant="mark" size="{{ 32 }}" hint-size="32px,32px"></dc-import>
+            <dc-import name="Logo" variant="mark" size="{{ 64 }}" hint-size="64px,64px"></dc-import>
+            <dc-import name="Logo" size="{{ 30 }}" hint-size="160px,30px"></dc-import>
+          </div>
+          <div style="display: flex; align-items: center; gap: 18px; padding: 14px; background: #f2f2f3;">
+            <dc-import name="Logo" variant="mark" theme="light" size="{{ 32 }}" hint-size="32px,32px"></dc-import>
+            <dc-import name="Logo" theme="light" size="{{ 30 }}" hint-size="160px,30px"></dc-import>
+          </div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 6px; padding: 20px; border: 1px solid var(--color-divider);">
+          <span style="font-size: 12px; color: var(--sb-text-muted);">NavItem · default, active, badge</span>
+          <dc-import name="NavItem" icon="wallet" label="Accounts" hint-size="100%,38px"></dc-import>
+          <dc-import name="NavItem" icon="dashboard" label="Dashboard" active="{{ true }}" hint-size="100%,38px"></dc-import>
+          <dc-import name="NavItem" icon="inbox" label="Uncategorised" badge="{{ 7 }}" badge-tone="warning" hint-size="100%,38px"></dc-import>
+          <div style="width: 44px;"><dc-import name="NavItem" icon="inbox" label="Uncategorised" compact="{{ true }}" badge="{{ 7 }}" badge-tone="warning" hint-size="44px,38px"></dc-import></div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 10px; padding: 20px; border: 1px solid var(--color-divider); grid-column: 1 / -1;">
+          <span style="font-size: 12px; color: var(--sb-text-muted);">PageHeader · Stepper</span>
+          <dc-import name="PageHeader" title="Darlehen" tag="Mortgage" subtitle="Restschuld today 19.000,00 €" back-label="Accounts" on-back="{{ noop }}" hint-size="100%,80px"><dc-import name="Button" variant="secondary" icon="pencil" label="Edit account" hint-size="120px,36px"></dc-import></dc-import>
+          <dc-import name="Stepper" steps="{{ steps }}" current="{{ demo.step }}" on-step="{{ setStep }}" hint-size="100%,46px"></dc-import>
+          <div style="display: flex; gap: 8px;"><dc-import name="Button" size="sm" variant="secondary" label="Next step" on-click="{{ nextStep }}" hint-size="80px,28px"></dc-import></div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 10px; padding: 20px; border: 1px solid var(--color-divider);">
+          <span style="font-size: 12px; color: var(--sb-text-muted);">Accordion · StatTile</span>
+          <dc-import name="Accordion" title="2027" meta="Year end 7.250,00 €" tag="Projected" tag-tone="outline" open="{{ demo.acc }}" on-toggle="{{ toggleAcc }}" hint-size="100%,48px"><span style="font-size: 14px; color: var(--sb-text-muted);">Month rows go here.</span></dc-import>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <dc-import name="StatTile" label="Rows in file" value="24" hint="15 Sep – 25 Oct 2026" hint-size="100%,96px"></dc-import>
+            <dc-import name="StatTile" label="Total spending" cents="{{ -55785 }}" hint="Across the new rows" hint-size="100%,96px"></dc-import>
+          </div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 12px; padding: 20px; border: 1px solid var(--color-divider);">
+          <span style="font-size: 12px; color: var(--sb-text-muted);">Sparkline · solid past, dashed future, today tick</span>
+          <dc-import name="Sparkline" past="{{ spark.past }}" future="{{ spark.future }}" color="var(--sb-acc-savings)" height="{{ 48 }}" hint-size="100%,48px"></dc-import>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 18px; padding: 20px; border: 1px solid var(--color-divider);">
+          <span style="font-size: 12px; color: var(--sb-text-muted);">StreakStrip · the playful layer · broken months, current-month bar (solid so far, dashed with items due)</span>
+          <dc-import name="StreakStrip" current="{{ 8 }}" best="{{ 11 }}" months="{{ demoMonths }}" actual="{{ 1 }}" projected="{{ 1 }}" next-milestone="{{ 12 }}" to-milestone="{{ 4 }}" hint-size="100%,96px"></dc-import>
+          <dc-import name="StreakStrip" current="{{ 6 }}" best="{{ 12 }}" months="{{ demoMonths2 }}" actual="{{ 0.04 }}" projected="{{ 1 }}" next-milestone="{{ 12 }}" to-milestone="{{ 6 }}" hint-size="100%,96px"></dc-import>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 18px; padding: 20px; border: 1px solid var(--color-divider);">
+          <span style="font-size: 12px; color: var(--sb-text-muted);">HeadroomMeter · neutral → warning (below 20%) → danger (≤ 0)</span>
+          <dc-import name="HeadroomMeter" value="{{ 42972 }}" budget="{{ 50000 }}" hint-size="100%,56px"></dc-import>
+          <dc-import name="HeadroomMeter" value="{{ 6760 }}" budget="{{ 45000 }}" hint-size="100%,56px"></dc-import>
+          <dc-import name="HeadroomMeter" value="{{ -2000 }}" budget="{{ 45000 }}" hint-size="100%,56px"></dc-import>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 12px; padding: 20px; border: 1px solid var(--color-divider); grid-column: 1 / -1;">
+          <span style="font-size: 12px; color: var(--sb-text-muted);">Loader · draw, march, orbit, grow · 48 / 28 / 16 (dashes only) · see Loader Options for every context</span>
+          <div style="display: flex; gap: 32px; align-items: flex-end; flex-wrap: wrap;">
+            <dc-import name="Loader" variant="draw" size="{{ 48 }}" delay="{{ 0 }}" hint-size="48px,48px"></dc-import>
+            <dc-import name="Loader" variant="march" size="{{ 48 }}" delay="{{ 0 }}" hint-size="48px,48px"></dc-import>
+            <dc-import name="Loader" variant="orbit" size="{{ 48 }}" delay="{{ 0 }}" hint-size="48px,48px"></dc-import>
+            <dc-import name="Loader" variant="grow" size="{{ 48 }}" delay="{{ 0 }}" hint-size="48px,48px"></dc-import>
+            <dc-import name="Loader" variant="march" size="{{ 28 }}" label="Recalculating…" delay="{{ 0 }}" hint-size="150px,28px"></dc-import>
+            <dc-import name="Loader" variant="march" size="{{ 16 }}" label="Checking…" delay="{{ 0 }}" hint-size="90px,16px"></dc-import>
+            <dc-import name="Button" variant="primary" label="Import 20 rows" loading-label="Importing…" loading="{{ true }}" hint-size="130px,36px"></dc-import>
+          </div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 12px; padding: 20px; border: 1px solid var(--color-divider); grid-column: 1 / -1;">
+          <span style="font-size: 12px; color: var(--sb-text-muted);">Snackbar · success, error, info, warning · SnackbarHost stacks max 3, fixed bottom right (24px), 400px wide</span>
+          <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)); gap: 16px;">
+            <dc-import name="Snackbar" tone="success" title="Imported 20 rows into Sparkasse Giro" message="9 rules matched, 5 duplicates skipped." action-label="View account" on-close="{{ noop }}" hint-size="100%,110px"></dc-import>
+            <dc-import name="Snackbar" tone="error" title="Couldn't read Kontoauszug_Oktober.pdf" message="This isn't a CSV export. Download the CSV from your bank's online banking and try again." action-label="Choose another file" action-icon="upload" on-close="{{ noop }}" hint-size="100%,130px"></dc-import>
+            <dc-import name="Snackbar" tone="info" icon="download" title="DashCash 2.1.0 is available" message="You have 2.0.0. The update installs on restart; your data stays as it is." action-label="Restart and update" action-icon="refresh" secondary-label="Later" on-close="{{ noop }}" hint-size="100%,130px"></dc-import>
+            <dc-import name="Snackbar" tone="warning" icon="calendar" title="Time for a fresh import" message="Visa Card (12 days) and Sparkasse Giro (9 days) haven't been imported for a while. Balances and headroom don't include purchases since then." action-label="Import CSV" action-icon="upload" secondary-label="Later" on-close="{{ noop }}" hint-size="100%,150px"></dc-import>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="features" style="display: flex; flex-direction: column; gap: 20px;">
+      <div style="display: flex; align-items: baseline; gap: 14px; border-bottom: 1px solid var(--color-divider); padding-bottom: 10px;"><span style="font-family: var(--font-heading); font-weight: 600; font-size: 15px; color: var(--color-accent-600);">04</span><h2 style="margin: 0; font-size: 30px;">Features</h2><span style="font-size: 13px; color: var(--sb-text-faint);">Domain UI + logic · renderer/src/features/{saving, accounts, import, compare, categories}</span></div>
+      <span style="font-size: 12px; color: var(--sb-text-muted);">saving / BalanceChart</span>
+      <dc-import name="BalanceChart" hint-size="100%,440px"></dc-import>
+      <span style="font-size: 12px; color: var(--sb-text-muted);">saving / SavingPanel</span>
+      <dc-import name="SavingPanel" hint-size="100%,330px"></dc-import>
+      <span style="font-size: 12px; color: var(--sb-text-muted);">accounts / BalanceTable</span>
+      <dc-import name="BalanceTable" hint-size="100%,420px"></dc-import>
+      <span style="font-size: 12px; color: var(--sb-text-muted);">accounts / AccountCard · AccountFormModal</span>
+      <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px;">
+        <dc-import name="AccountCard" account-id="renault" on-edit="{{ openAccountModal }}" hint-size="100%,330px"></dc-import>
+        <dc-import name="AccountCard" account-id="card" on-edit="{{ openAccountModal }}" hint-size="100%,330px"></dc-import>
+        <dc-import name="AccountCard" account-id="darlehen" on-edit="{{ openAccountModal }}" hint-size="100%,330px"></dc-import>
+      </div>
+      <span style="font-size: 12px; color: var(--sb-text-muted);">import / ImportWizard (starts at step 3 here)</span>
+      <dc-import name="ImportWizard" initial-step="{{ 2 }}" hint-size="100%,700px"></dc-import>
+      <span style="font-size: 12px; color: var(--sb-text-muted);">compare / CompareTable</span>
+      <dc-import name="CompareTable" hint-size="100%,800px"></dc-import>
+      <span style="font-size: 12px; color: var(--sb-text-muted);">categories / CategoryList · RuleList · UncategorisedList</span>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(520px, 1fr)); gap: 24px; align-items: start;">
+        <dc-import name="CategoryList" hint-size="100%,700px"></dc-import>
+        <dc-import name="RuleList" hint-size="100%,700px"></dc-import>
+      </div>
+      <dc-import name="UncategorisedList" hint-size="100%,500px"></dc-import>
+      <span style="font-size: 12px; color: var(--sb-text-muted);">settings / ReminderSettings · UpdateSettings · ImportedFiles · BankProfiles · DataSettings</span>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(460px, 1fr)); gap: 24px; align-items: start;">
+        <dc-import name="ReminderSettings" hint-size="100%,380px"></dc-import>
+        <dc-import name="UpdateSettings" hint-size="100%,300px"></dc-import>
+      </div>
+      <dc-import name="ImportedFiles" hint-size="100%,460px"></dc-import>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(460px, 1fr)); gap: 24px; align-items: start;">
+        <dc-import name="BankProfiles" hint-size="100%,380px"></dc-import>
+        <dc-import name="DataSettings" hint-size="100%,420px"></dc-import>
+      </div>
+      <span style="font-size: 12px; color: var(--sb-text-muted);">accounts / AccountDetail, see <a href="AccountDetail.dc.html">AccountDetail.dc.html</a> (full page width)</span>
+    </section>
+
+    <section id="layouts" style="display: flex; flex-direction: column; gap: 20px;">
+      <div style="display: flex; align-items: baseline; gap: 14px; border-bottom: 1px solid var(--color-divider); padding-bottom: 10px;"><span style="font-family: var(--font-heading); font-weight: 600; font-size: 15px; color: var(--color-accent-600);">05</span><h2 style="margin: 0; font-size: 30px;">Layouts</h2><span style="font-size: 13px; color: var(--sb-text-faint);">Page chrome without data · renderer/src/layouts</span></div>
+      <div style="display: grid; grid-template-columns: 208px 64px minmax(0, 1fr); gap: 24px; align-items: start;">
+        <div style="height: 560px; border: 1px solid var(--color-divider);"><dc-import name="Sidebar" active="dashboard" version="2.0.0" uncategorised="{{ 7 }}" hint-size="208px,560px"></dc-import></div>
+        <div style="height: 560px; border: 1px solid var(--color-divider);"><dc-import name="Sidebar" active="dashboard" compact="{{ true }}" uncategorised="{{ 7 }}" hint-size="64px,560px"></dc-import></div>
+        <div style="padding: 24px; border: 1px dashed var(--color-neutral-400);">
+          <dc-import name="PageLayout" title="PageLayout" subtitle="title · subtitle · primaryAction · children" primary-action="{{ layoutAction }}" hint-size="100%,200px">
+            <div style="height: 120px; border: 1px dashed var(--color-neutral-300); display: grid; place-items: center; font-size: 13px; color: var(--sb-text-faint);">children (features)</div>
+          </dc-import>
+          <p style="font-size: 13px; color: var(--sb-text-muted); margin: 20px 0 0;">AppShell = a fixed 64px rail slot with the Sidebar on top (expanded 208px overlays the content, it never pushes it) + scrolling main column (page padding 24px, centred content column, max-width 1320px). The rail is automatic below a 1200px window and can be toggled; the choice is remembered. See it assembled in <a href="DashCash.dc.html">DashCash.dc.html</a>.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="pages" style="display: flex; flex-direction: column; gap: 20px;">
+      <div style="display: flex; align-items: baseline; gap: 14px; border-bottom: 1px solid var(--color-divider); padding-bottom: 10px;"><span style="font-family: var(--font-heading); font-weight: 600; font-size: 15px; color: var(--color-accent-600);">06</span><h2 style="margin: 0; font-size: 30px;">Pages</h2><span style="font-size: 13px; color: var(--sb-text-faint);">Compose layouts + features only · renderer/src/pages</span></div>
+      <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px;">
+        <sc-for list="{{ pages }}" as="p" hint-placeholder-count="7">
+          <a href="{{ p.href }}" class="blueprint" style="display: flex; flex-direction: column; gap: 6px; padding: 18px; color: var(--color-text); text-decoration: none;">
+            
+            <span style="font-family: var(--font-heading); font-weight: 600; font-size: 19px;">{{ p.name }}</span>
+            <span style="font-size: 13px; color: var(--sb-text-muted);">{{ p.desc }}</span>
+          </a>
+        </sc-for>
+      </div>
+    </section>
+  </div>
+</div>
+<dc-import name="Modal" open="{{ demo.modal }}" title="Modal" subtitle="title · subtitle · width · onClose · children" on-close="{{ closeModal }}" hint-size="0px,0px">
+  <span style="font-size: 14px; color: var(--sb-text-muted);">Backdrop click and Escape close it. Actions sit at the end of the children.</span>
+  <div style="display: flex; justify-content: flex-end; gap: 8px;"><dc-import name="Button" variant="secondary" label="Cancel" on-click="{{ closeModal }}" hint-size="80px,36px"></dc-import><dc-import name="Button" variant="primary" icon="check" label="Confirm" on-click="{{ closeModal }}" hint-size="100px,36px"></dc-import></div>
+</dc-import>
+<dc-import name="AccountFormModal" open="{{ demo.accModal }}" account-id="{{ demo.accId }}" on-close="{{ closeAccountModal }}" hint-size="0px,0px"></dc-import>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { sw: true, q: '', cat: 'groceries', range: '3y', check: true, chip: true, step: 2, acc: true, modal: false, accModal: false, accId: '' };
+  componentDidMount() {
+    const go = () => { this.unsub = window.SB.subscribe(() => this.forceUpdate()); this.forceUpdate(); };
+    if (window.SB) go(); else this.t = setInterval(() => { if (window.SB) { clearInterval(this.t); go(); } }, 40);
+  }
+  componentWillUnmount() { this.unsub && this.unsub(); clearInterval(this.t); }
+  renderVals() {
+    const SB = window.SB, set = (o) => this.setState(o);
+    const colors = [
+      ['--color-bg', 'Ground'], ['--sb-ground-sunken', 'Sidebar, wells'], ['--color-surface', 'Surface'], ['--color-text', 'Ink / paper'],
+      ['--color-accent', 'Accent (primary, fills)'], ['--color-accent-600', 'Accent text, hover'], ['--color-accent-100', 'Selected tint'], ['--color-accent-200', 'Highlight cell'],
+      ['--sb-warning', 'Headroom warning'], ['--sb-danger', 'Headroom ≤ 0, delete'],
+      ['--sb-acc-income', 'Account · Income'], ['--sb-acc-spending', 'Account · Spending'], ['--sb-acc-savings', 'Account · Savings'], ['--sb-acc-card', 'Account · Credit card'], ['--sb-acc-mortgage', 'Account · Mortgage']
+    ].map(([n, role]) => ({ name: n, role, v: 'var(' + n + ')' }));
+    const spaces = [['--space-1', '3.4px'], ['--space-2', '6.8px'], ['--space-3', '10.2px'], ['--space-4', '13.6px'], ['--space-6', '20.4px'], ['--space-8', '27.2px']].map(([n, px]) => ({ name: n, px, v: 'var(' + n + ')' }));
+    const mk = (pattern) => pattern.split('').map((c, i) => ({ label: ['Nov', 'Dec', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep'][i], full: 'Month ' + (i + 1), met: c === '1' }));
+    const ren = SB && SB.account('renault');
+    const rs = ren ? SB.series(ren) : null;
+    return {
+      demo: this.state, colors, spaces,
+      catOptions: SB ? SB.state.categories.map((c) => ({ value: c.id, label: c.name, color: c.color })) : [],
+      catSwatches: Array.from({ length: 10 }, (_, i) => 'var(--sb-cat-' + (i + 1) + ')'),
+      rangeOpts: [{ value: '1y', label: '1Y' }, { value: '3y', label: '3Y' }, { value: 'payoff', label: 'Until payoff' }],
+      icons: Object.keys(window.SB_ICONS || {}),
+      steps: ['File', 'Preview', 'Categories', 'Recurring & transfers', 'Summary'],
+      demoMonths: mk('11011111111'), demoMonths2: mk('10111011111'),
+      spark: rs ? { past: rs.hist.slice(21).concat([rs.today]), future: rs.proj.slice(33, 46) } : { past: [], future: [] },
+      setQ: (v) => set({ q: v }), setCat: (v) => set({ cat: v }), setRange: (v) => set({ range: v }), setCheck: (v) => set({ check: v }), setSw: (v) => set({ sw: v }),
+      toggleChip: () => set({ chip: !this.state.chip }), setStep: (i) => set({ step: i }), nextStep: () => set({ step: (this.state.step + 1) % 5 }),
+      toggleAcc: () => set({ acc: !this.state.acc }), noop: () => {},
+      openModal: () => set({ modal: true }), closeModal: () => set({ modal: false }),
+      openAccountModal: (id) => set({ accModal: true, accId: id }), closeAccountModal: () => set({ accModal: false }),
+      layoutAction: { label: 'Primary action', icon: 'upload', onClick: () => {} },
+      pages: [
+        { name: 'DashCash (app)', desc: 'AppShell + router, all five pages', href: 'DashCash.dc.html' },
+        { name: 'DashboardPage', desc: 'BalanceChart + SavingPanel', href: 'DashboardPage.dc.html' },
+        { name: 'AccountsPage', desc: 'AccountList or AccountDetail', href: 'AccountsPage.dc.html' },
+        { name: 'ImportPage', desc: 'ImportWizard, five steps', href: 'ImportPage.dc.html' },
+        { name: 'ComparePage', desc: 'CompareTable', href: 'ComparePage.dc.html' },
+        { name: 'CategoriesPage', desc: 'CategoryList + RuleList', href: 'CategoriesPage.dc.html' },
+        { name: 'SettingsPage', desc: 'Reminders, updates, files, profiles, data', href: 'SettingsPage.dc.html' },
+        { name: 'UncategorisedPage', desc: 'UncategorisedList (from the sidebar counter)', href: 'UncategorisedPage.dc.html' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

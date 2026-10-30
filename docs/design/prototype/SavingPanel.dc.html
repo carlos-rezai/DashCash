@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/industry-f2e85e32-8671-471e-b527-852aab1772ed/styles.css">
+<link rel="stylesheet" href="tokens/dashcash-dark.css">
+<script src="_ds/industry-f2e85e32-8671-471e-b527-852aab1772ed/_ds_bundle.js"></script>
+<script src="lib/store.js"></script>
+</helmet>
+<dc-import name="Card" kicker="Saving · October 2026" title="Streaks and headroom" padding="lg" hint-size="100%,300px">
+  <p style="margin: 0; font-size: 13px; color: var(--sb-text-muted); max-width: 760px; text-wrap: pretty;">A streak counts the months in a row an account met its goal. Headroom is what you can still spend this month before the goal is missed.</p>
+  <div style="display: grid; grid-template-columns: repeat({{ cols }}, minmax(0, 1fr)); border-top: 1px solid var(--color-divider);">
+    <sc-for list="{{ cells }}" as="c" hint-placeholder-count="5">
+      <div role="button" tabIndex="0" onClick="{{ c.open }}" style="display: flex; flex-direction: column; gap: var(--space-4); padding: var(--space-4) var(--space-4) var(--space-2); border-left: {{ c.bl }}; cursor: pointer; min-width: 0;" style-hover="background: var(--sb-hover);">
+        <div style="display: flex; flex-direction: column; gap: 4px; min-width: 0;">
+          <div style="display: flex; align-items: center; gap: 8px; min-width: 0;">
+            <dc-import name="Swatch" color="{{ c.color }}" size="{{ 10 }}" shape="circle" hint-size="10px,2px"></dc-import>
+            <span style="font-weight: 500; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ c.name }}</span>
+          </div>
+          <span style="font-size: 12px; color: var(--sb-text-faint);">{{ c.goal }}</span>
+        </div>
+        <dc-import name="StreakStrip" current="{{ c.s.current }}" best="{{ c.s.best }}" months="{{ c.s.months }}" actual="{{ c.s.actual }}" projected="{{ c.s.projected }}" next-milestone="{{ c.s.nextMilestone }}" to-milestone="{{ c.s.toMilestone }}" hint-size="100%,96px"></dc-import>
+        <sc-if value="{{ c.h }}">
+          <dc-import name="HeadroomMeter" value="{{ c.h.value }}" budget="{{ c.h.budget }}" tone="{{ c.h.tone }}" hint-size="100%,56px"></dc-import>
+        </sc-if>
+        <sc-if value="{{ c.status }}">
+          <div style="display: flex; flex-direction: column; gap: 6px;">
+            <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 8px;">
+              <span style="font-size: 12px; color: var(--sb-text-muted);">Goal this month</span>
+              <span style="font-size: 14px; font-weight: 500; font-variant-numeric: tabular-nums;">{{ c.status.pct }}</span>
+            </div>
+            <dc-import name="Meter" value="{{ c.status.actual }}" projected="{{ c.status.projected }}" hint-size="100%,6px"></dc-import>
+            <span style="font-size: 12px; color: var(--sb-text-faint);">{{ c.status.note }}</span>
+          </div>
+        </sc-if>
+        <div title="{{ c.importTitle }}" style="display: flex; align-items: center; gap: 6px; margin-top: auto; padding-top: var(--space-2); border-top: 1px solid var(--color-divider); font-size: 12px; color: {{ c.importColor }};">
+          <dc-import name="Icon" glyph="calendar" size="{{ 12 }}" hint-size="12px,12px"></dc-import>
+          <span style="flex: 1; min-width: 0;">{{ c.importLabel }}</span>
+          <sc-if value="{{ c.stale }}"><button type="button" onClick="{{ c.goImport }}" style="background: none; border: 0; padding: 0; font: inherit; font-size: 12px; color: var(--color-accent-600); cursor: pointer; text-decoration: underline; text-underline-offset: 3px;" style-hover="color: var(--color-accent-700);">Import</button></sc-if>
+        </div>
+      </div>
+    </sc-for>
+  </div>
+</dc-import>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1160,&quot;height&quot;:380},&quot;onOpenAccount&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(accountId: string) =&gt; void&quot;},&quot;onNavigate&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(page: PageId, accountId?: string) =&gt; void&quot;}}">
+class Component extends DCLogic {
+  componentDidMount() {
+    const go = () => { this.unsub = window.SB.subscribe(() => this.forceUpdate()); this.forceUpdate(); };
+    if (window.SB) go(); else this.t = setInterval(() => { if (window.SB) { clearInterval(this.t); go(); } }, 40);
+  }
+  componentWillUnmount() { this.unsub && this.unsub(); clearInterval(this.t); }
+  renderVals() {
+    const SB = window.SB;
+    if (!SB) return { cells: [], cols: 5 };
+    const accs = SB.state.accounts.filter((a) => a.goal);
+    const cells = accs.map((a, i) => {
+      const s = SB.streak(a), h = SB.headroom(a);
+      let status = null;
+      if (!h) {
+        const met = s.actual >= 1;
+        status = {
+          actual: s.actual, projected: s.projected,
+          pct: met ? 'Met' : Math.round(s.actual * 100) + '%',
+          note: met ? (a.type === 'mortgage' ? 'Payment booked on 1 Oct' : 'Goal reached for October') : 'On track · ' + (a.dueLabel || 'items still due')
+        };
+      }
+      const age = SB.importAge(a);
+      return {
+        name: a.name, color: SB.TYPES[a.type].color, goal: SB.goalText(a), s, h, status,
+        importLabel: age.label, stale: age.stale,
+        importColor: age.stale ? 'var(--color-accent-600)' : 'var(--sb-text-faint)',
+        importTitle: age.date ? 'Includes transactions imported up to ' + age.date + '. Later purchases are not counted yet.' : 'No CSV imported yet.',
+        goImport: (e) => { e.stopPropagation(); this.props.onNavigate && this.props.onNavigate('import', a.id); },
+        bl: i === 0 ? '0' : '1px solid var(--color-divider)',
+        open: () => this.props.onOpenAccount && this.props.onOpenAccount(a.id)
+      };
+    });
+    return { cells, cols: Math.max(1, cells.length) };
+  }
+}
+</script>
+</body>
+</html>

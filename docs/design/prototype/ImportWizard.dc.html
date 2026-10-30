@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/industry-f2e85e32-8671-471e-b527-852aab1772ed/styles.css">
+<link rel="stylesheet" href="tokens/dashcash-dark.css">
+<script src="_ds/industry-f2e85e32-8671-471e-b527-852aab1772ed/_ds_bundle.js"></script>
+<script src="lib/store.js"></script>
+</helmet>
+<div style="display: flex; flex-direction: column; gap: var(--space-6);">
+  <sc-if value="{{ notDone }}" hint-placeholder-val="{{ true }}">
+    <dc-import name="Stepper" steps="{{ steps }}" current="{{ step }}" on-step="{{ goStep }}" hint-size="100%,46px"></dc-import>
+
+    <sc-if value="{{ s0 }}" hint-placeholder-val="{{ true }}">
+      <div style="display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: var(--space-6); align-items: stretch;">
+        <div style="display: grid; min-width: 0;"><dc-import name="Card" kicker="Step 1" title="Target account" padding="lg" hint-size="100%,360px">
+          <div style="display: flex; flex-direction: column; gap: 6px;">
+            <sc-for list="{{ accountTiles }}" as="t" hint-placeholder-count="5">
+              <button type="button" onClick="{{ t.pick }}" aria-pressed="{{ t.selected }}" style="display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: {{ t.bg }}; border: 1px solid {{ t.bd }}; color: var(--color-text); font: inherit; font-size: 14px; text-align: left; cursor: pointer;" style-hover="background: var(--sb-hover);">
+                <span style="width: 16px; height: 16px; flex: none; border: 1.5px solid {{ t.dot }}; border-radius: 50%; box-shadow: inset 0 0 0 3px var(--color-bg); background: {{ t.dotFill }};"></span>
+                <span style="flex: 1;">{{ t.name }}</span>
+                <span style="font-size: 12px; color: var(--sb-text-faint);">{{ t.type }}</span>
+              </button>
+            </sc-for>
+          </div>
+        </dc-import></div>
+        <div style="display: grid; min-width: 0;"><dc-import name="Card" kicker="Step 1" title="CSV file" padding="lg" hint-size="100%,360px">
+          <sc-if value="{{ noFile }}" hint-placeholder-val="{{ true }}">
+            <button type="button" onClick="{{ chooseFile }}" onDragOver="{{ dragOver }}" onDragLeave="{{ dragLeave }}" onDrop="{{ drop }}" style="box-sizing: border-box; flex: 1; min-height: 190px; width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; background: {{ dropBg }}; border: 1px dashed {{ dropBd }}; color: var(--sb-text-muted); font: inherit; cursor: pointer;" style-hover="border-color: var(--color-accent); color: var(--color-text);">
+              <dc-import name="Icon" glyph="upload" size="{{ 26 }}" hint-size="26px,26px"></dc-import>
+              <span style="font-family: var(--font-heading); font-weight: 600; font-size: 19px; color: var(--color-text);">Drop a bank CSV here</span>
+              <span style="font-size: 13px;">or click to choose a file · any date range, overlaps are fine</span>
+            </button>
+          </sc-if>
+          <sc-if value="{{ file }}">
+            <div onDragOver="{{ dragOver }}" onDragLeave="{{ dragLeave }}" onDrop="{{ drop }}" style="box-sizing: border-box; flex: 1; min-height: 190px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; padding: 0 var(--space-4); border: 1px solid {{ fileBd }}; background: {{ fileBg }}; text-align: center;">
+              <span style="display: flex; color: var(--color-accent-600);"><dc-import name="Icon" glyph="file" size="{{ 26 }}" hint-size="26px,26px"></dc-import></span>
+              <div style="display: flex; flex-direction: column; gap: 2px; max-width: 100%;">
+                <span style="font-size: 14px; overflow-wrap: anywhere;">{{ fileName }}</span>
+                <span style="font-size: 12px; color: var(--sb-text-faint);">8,4 KB · header row read</span>
+              </div>
+              <dc-import name="Tag" label="{{ profileLabel }}" tone="{{ profileTone }}" icon="{{ profileIcon }}" hint-size="160px,22px"></dc-import>
+              <div style="display: flex; gap: var(--space-2);">
+                <dc-import name="Button" variant="secondary" size="sm" icon="upload" label="Replace file" on-click="{{ chooseFile }}" hint-size="110px,28px"></dc-import>
+                <dc-import name="Button" variant="ghost" size="sm" icon="trash" label="Remove" on-click="{{ removeFile }}" hint-size="90px,28px"></dc-import>
+              </div>
+            </div>
+          </sc-if>
+        </dc-import></div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ s1 }}">
+      <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--space-6);">
+        <dc-import name="StatTile" label="Rows in file" value="{{ rowsText }}" hint="{{ rangeText }}" hint-size="100%,96px"></dc-import>
+        <dc-import name="StatTile" label="New rows" value="{{ newText }}" hint="Will be added to the account" hint-size="100%,96px"></dc-import>
+        <dc-import name="StatTile" label="Duplicates skipped" value="{{ dupText }}" hint="Same date, amount, merchant and purpose" hint-size="100%,96px"></dc-import>
+        <dc-import name="StatTile" label="Total spending" cents="{{ spendTotal }}" hint="Across the new rows" hint-size="100%,96px"></dc-import>
+      </div>
+      <div class="blueprint" style="display: flex; align-items: flex-start; gap: var(--space-3); padding: var(--space-4); border-color: var(--sb-warning); background: var(--sb-warning-tint);">
+        
+        <span style="display: flex; color: var(--sb-warning); padding-top: 2px;"><dc-import name="Icon" glyph="alert" size="{{ 18 }}" hint-size="18px,18px"></dc-import></span>
+        <div style="display: flex; flex-direction: column; gap: 2px; font-size: 14px;">
+          <span style="font-weight: 500;">Balance check: difference of {{ balanceDiff }}</span>
+          <span style="color: var(--sb-text-muted);">The CSV states {{ csvBalance }} on 25 Oct 2026; DashCash calculates {{ calcBalance }} for that date. You can import anyway and correct the balance on the account page.</span>
+        </div>
+      </div>
+      <dc-import name="Card" kicker="Column mapping" title="{{ mappingTitle }}" padding="lg" hint-size="100%,120px">
+        <sc-if value="{{ mappingHidden }}">
+          <div style="display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); font-size: 14px; color: var(--sb-text-muted);">
+            <span>The saved profile is used. Mapping is only asked the first time per bank.</span>
+            <dc-import name="Button" variant="ghost" size="sm" label="Show mapping" icon-right="chevronDown" on-click="{{ toggleMapping }}" hint-size="120px,28px"></dc-import>
+          </div>
+        </sc-if>
+        <sc-if value="{{ mappingShown }}">
+          <table class="table">
+            <thead><tr><th>DashCash field</th><th>CSV column</th><th>First row</th></tr></thead>
+            <tbody>
+              <sc-for list="{{ mapping }}" as="m" hint-placeholder-count="5">
+                <tr>
+                  <td>{{ m.field }}</td>
+                  <td style="width: 280px;"><dc-import name="Select" size="sm" value="{{ m.value }}" options="{{ csvColumns }}" on-change="{{ m.set }}" hint-size="100%,28px"></dc-import></td>
+                  <td style="color: var(--sb-text-muted); font-variant-numeric: tabular-nums;">{{ m.example }}</td>
+                </tr>
+              </sc-for>
+            </tbody>
+          </table>
+        </sc-if>
+      </dc-import>
+    </sc-if>
+
+    <sc-if value="{{ s2 }}">
+      <div style="display: flex; align-items: center; gap: var(--space-4); flex-wrap: wrap;">
+        <dc-import name="Segmented" options="{{ filterOpts }}" value="{{ filter }}" on-change="{{ setFilter }}" hint-size="320px,28px"></dc-import>
+        <span style="font-size: 13px; color: var(--sb-text-muted);">{{ catSummary }}</span>
+      </div>
+      <sc-if value="{{ hasMissing }}">
+        <div role="status" style="display: flex; align-items: center; gap: var(--space-3); padding: 10px 16px; border: 1px solid var(--sb-warning); background: var(--sb-warning-tint); color: var(--color-text); font-size: 14px;">
+          <span style="display: flex; color: var(--sb-warning);"><dc-import name="Icon" glyph="alert" size="{{ 18 }}" hint-size="18px,18px"></dc-import></span>
+          <span style="flex: 1; text-wrap: pretty;">{{ missingText }}</span>
+          <sc-if value="{{ notMissingFilter }}"><dc-import name="Button" variant="secondary" size="sm" label="Show them" on-click="{{ showMissing }}" hint-size="100px,28px"></dc-import></sc-if>
+        </div>
+      </sc-if>
+      <dc-import name="Card" padding="none" hint-size="100%,600px">
+        <table class="table">
+          <thead><tr><th style="width: 86px; padding-left: 16px;">Date</th><th>Merchant · purpose</th><th style="text-align: right; width: 110px;">Amount</th><th style="width: 252px;">Category</th><th style="width: 200px;">Source</th></tr></thead>
+          <tbody>
+            <sc-for list="{{ visibleRows }}" as="r" hint-placeholder-count="10">
+              <tr style="background: {{ r.bg }};">
+                <td style="padding-left: 13px; border-left: 3px solid {{ r.edge }}; color: var(--sb-text-muted); white-space: nowrap;">{{ r.date }}</td>
+                <td><div style="display: flex; flex-direction: column;"><span>{{ r.merchant }}</span><span style="font-size: 12px; color: var(--sb-text-faint);">{{ r.purpose }}</span></div></td>
+                <td style="text-align: right;"><dc-import name="Amount" cents="{{ r.amount }}" hint-size="80px,18px"></dc-import></td>
+                <td><div style="display: flex; align-items: center; gap: var(--space-3);"><div style="flex: 1; min-width: 0;"><dc-import name="Select" size="sm" value="{{ r.cat }}" options="{{ catOptions }}" placeholder="Pick a category" tone="{{ r.selTone }}" show-swatch="{{ true }}" on-change="{{ r.setCat }}" hint-size="100%,28px"></dc-import></div><div style="width: 28px; flex: none;"><sc-if value="{{ r.canReset }}"><dc-import name="Button" variant="ghost" size="sm" icon="undo" title="{{ r.resetTitle }}" on-click="{{ r.reset }}" hint-size="28px,28px"></dc-import></sc-if></div></div></td>
+                <td><div style="display: flex; flex-direction: column; gap: 2px; align-items: flex-start;"><dc-import name="Tag" label="{{ r.sourceLabel }}" tone="{{ r.sourceTone }}" hint-size="110px,20px"></dc-import><sc-if value="{{ r.sourceNote }}"><span style="font-size: 11px; color: var(--sb-text-faint);">{{ r.sourceNote }}</span></sc-if></div></td>
+              </tr>
+            </sc-for>
+          </tbody>
+        </table>
+      </dc-import>
+    </sc-if>
+
+    <sc-if value="{{ s3 }}">
+      <div style="display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--space-6); align-items: start;">
+        <dc-import name="Card" kicker="Recurring candidates" title="Same payee, same amount, several months" padding="lg" hint-size="100%,240px">
+          <div style="display: flex; flex-direction: column; border-top: 1px solid var(--color-divider);">
+            <sc-for list="{{ recurring }}" as="c" hint-placeholder-count="2">
+              <div style="display: flex; align-items: center; gap: var(--space-3); padding: 12px 0; border-bottom: 1px solid var(--color-divider);">
+                <span style="display: flex; color: var(--sb-text-faint);"><dc-import name="Icon" glyph="repeat" size="{{ 16 }}" hint-size="16px,16px"></dc-import></span>
+                <div style="flex: 1; min-width: 0; display: flex; flex-direction: column;">
+                  <span style="font-size: 14px;">{{ c.payee }}</span>
+                  <span style="font-size: 12px; color: var(--sb-text-faint);">Seen in {{ c.months }} · {{ c.interval }}, next {{ c.next }}</span>
+                </div>
+                <dc-import name="Amount" cents="{{ c.amount }}" hint-size="80px,18px"></dc-import>
+                <dc-import name="Checkbox" checked="{{ c.on }}" label="Recurring" on-change="{{ c.toggle }}" hint-size="100px,20px"></dc-import>
+              </div>
+            </sc-for>
+          </div>
+        </dc-import>
+        <dc-import name="Card" kicker="Transfer candidates" title="Opposite amounts between your accounts" padding="lg" hint-size="100%,240px">
+          <div style="display: flex; flex-direction: column; border-top: 1px solid var(--color-divider);">
+            <sc-for list="{{ transfers }}" as="x" hint-placeholder-count="2">
+              <div style="display: flex; align-items: center; gap: var(--space-3); padding: 12px 0; border-bottom: 1px solid var(--color-divider);">
+                <div style="flex: 1; min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: var(--space-3); align-items: center;">
+                  <div style="display: flex; flex-direction: column; min-width: 0;"><dc-import name="Amount" cents="{{ x.amount }}" sign="always" hint-size="80px,18px"></dc-import><span style="font-size: 12px; color: var(--sb-text-faint);">{{ x.date }} · {{ x.here }}</span></div>
+                  <span style="display: flex; color: var(--color-accent-600);"><dc-import name="Icon" glyph="transfer" size="{{ 16 }}" hint-size="16px,16px"></dc-import></span>
+                  <div style="display: flex; flex-direction: column; min-width: 0;"><dc-import name="Amount" cents="{{ x.otherAmount }}" sign="always" hint-size="80px,18px"></dc-import><span style="font-size: 12px; color: var(--sb-text-faint);">{{ x.otherDate }} · {{ x.other }}</span></div>
+                </div>
+                <dc-import name="Checkbox" checked="{{ x.on }}" label="Link" on-change="{{ x.toggle }}" hint-size="70px,20px"></dc-import>
+              </div>
+            </sc-for>
+          </div>
+          <span style="font-size: 12px; color: var(--sb-text-faint);">Linked transfers never count as spending on either side.</span>
+        </dc-import>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ s4 }}">
+      <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--space-6);">
+        <dc-import name="StatTile" label="Spending · Oct to date" cents="{{ currSpend }}" hint="{{ spendHint }}" hint-size="100%,96px"></dc-import>
+        <dc-import name="StatTile" label="Income · Oct to date" cents="{{ currIncome }}" hint="{{ incomeHint }}" hint-size="100%,96px"></dc-import>
+        <dc-import name="StatTile" label="Rules to save" value="{{ rulesCount }}" hint="Exact rules from your manual changes" hint-size="100%,96px"></dc-import>
+        <dc-import name="StatTile" label="Left uncategorised" value="{{ uncatText }}" tone="{{ uncatTone }}" hint="Finish later from the sidebar" hint-size="100%,96px"></dc-import>
+      </div>
+      <div style="display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: var(--space-6); align-items: start;">
+        <dc-import name="Card" kicker="Rules" title="Rules that will be saved" padding="lg" hint-size="100%,160px">
+          <sc-if value="{{ noRules }}"><span style="font-size: 14px; color: var(--sb-text-muted);">No new rules. Every categorised row matched an existing rule.</span></sc-if>
+          <div style="display: flex; flex-direction: column;">
+            <sc-for list="{{ newRules }}" as="u" hint-placeholder-count="2">
+              <div style="display: flex; align-items: center; gap: var(--space-3); padding: 8px 0; border-bottom: 1px solid var(--color-divider); font-size: 14px;">
+                <dc-import name="Tag" label="Exact" tone="accent" hint-size="50px,20px"></dc-import>
+                <span style="flex: 1;">{{ u.pattern }}</span>
+                <dc-import name="Icon" glyph="arrowRight" size="{{ 14 }}" hint-size="14px,14px"></dc-import>
+                <dc-import name="Tag" label="{{ u.cat }}" swatch="{{ u.color }}" tone="neutral" hint-size="90px,20px"></dc-import>
+              </div>
+            </sc-for>
+          </div>
+        </dc-import>
+        <dc-import name="Card" kicker="Also" title="Recurring and transfers" padding="lg" hint-size="100%,160px">
+          <div style="display: flex; flex-direction: column; gap: 6px; font-size: 14px; color: var(--sb-text-muted);">
+            <span>{{ recurringSummary }}</span>
+            <span>{{ transferSummary }}</span>
+            <span>Target: {{ accountName }}</span>
+          </div>
+        </dc-import>
+      </div>
+    </sc-if>
+
+    <div style="display: flex; align-items: center; gap: var(--space-3); padding-top: var(--space-4); border-top: 1px solid var(--color-divider);">
+      <sc-if value="{{ canBack }}"><dc-import name="Button" variant="secondary" icon="arrowLeft" label="Back" on-click="{{ back }}" hint-size="80px,36px"></dc-import></sc-if>
+      <span style="flex: 1; font-size: 13px; color: var(--sb-text-faint);">Step {{ stepNo }} of 5</span>
+      <dc-import name="Button" variant="primary" icon-right="{{ nextIcon }}" label="{{ nextLabel }}" disabled="{{ nextDisabled }}" on-click="{{ next }}" hint-size="140px,36px"></dc-import>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ done }}">
+    <dc-import name="Card" kicker="Import complete" title="{{ doneTitle }}" padding="lg" hint-size="100%,220px">
+      <div style="display: flex; align-items: center; gap: var(--space-3); font-size: 14px; color: var(--sb-text-muted);">
+        <span style="width: 32px; height: 32px; display: grid; place-items: center; background: var(--color-accent); color: var(--color-bg);"><dc-import name="Icon" glyph="check" size="{{ 18 }}" hint-size="18px,18px"></dc-import></span>
+        <span>{{ doneText }}</span>
+      </div>
+      <div style="display: flex; gap: var(--space-2); flex-wrap: wrap;">
+        <dc-import name="Button" variant="primary" icon="dashboard" label="Go to dashboard" on-click="{{ toDashboard }}" hint-size="150px,36px"></dc-import>
+        <sc-if value="{{ hasUncat }}"><dc-import name="Button" variant="secondary" icon="inbox" label="Review uncategorised" on-click="{{ toUncat }}" hint-size="180px,36px"></dc-import></sc-if>
+        <dc-import name="Button" variant="ghost" icon="upload" label="Import another file" on-click="{{ restart }}" hint-size="160px,36px"></dc-import>
+      </div>
+    </dc-import>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1160,&quot;height&quot;:860},&quot;initialStep&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:0,&quot;min&quot;:0,&quot;max&quot;:4,&quot;tsType&quot;:&quot;0 | 1 | 2 | 3 | 4&quot;},&quot;initialAccount&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;&quot;,&quot;postbank&quot;,&quot;sparkasse&quot;,&quot;renault&quot;,&quot;card&quot;,&quot;darlehen&quot;],&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string | undefined&quot;},&quot;onNavigate&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(page: PageId) =&gt; void&quot;}}">
+class Component extends DCLogic {
+  state = this.initial();
+  initial() {
+    return { step: this.props.initialStep ?? 0, accountId: this.props.initialAccount || 'sparkasse', file: (this.props.initialStep ?? 0) > 0, drag: false, mappingOpen: false, filter: 'all', rows: null, rec: { c1: true, c2: false }, tr: { x1: true, x2: true }, done: false, mapping: { date: 'Buchungstag', amount: 'Betrag', merchant: 'Beguenstigter/Zahlungspflichtiger', purpose: 'Verwendungszweck', balance: 'Saldo' } };
+  }
+  componentDidMount() {
+    const go = () => { this.unsub = window.SB.subscribe(() => this.forceUpdate()); this.forceUpdate(); };
+    if (window.SB) go(); else this.t = setInterval(() => { if (window.SB) { clearInterval(this.t); go(); } }, 40);
+  }
+  componentWillUnmount() { this.unsub && this.unsub(); clearInterval(this.t); }
+  rows() {
+    if (this.state.rows) return this.state.rows;
+    const r = {};
+    window.SB.importSample.transactions.forEach((t) => { r[t.id] = { cat: t.suggestion || '', source: t.source }; });
+    return r;
+  }
+  // A manual change saves an exact rule; apply it at once to the other rows of this import with the same normalised merchant (unless edited by hand or reset)
+  setCat(id, v) {
+    const SB = window.SB, tx = SB.importSample.transactions, t = tx.find((x) => x.id === id), key = SB.normalise(t.merchant);
+    const rows = Object.assign({}, this.rows());
+    rows[id] = Object.assign({}, rows[id], { cat: v, source: v && v !== t.suggestion ? 'manual' : t.source, optOut: false });
+    const isRule = rows[id].source === 'manual';
+    tx.forEach((u) => {
+      if (u.id === id || SB.normalise(u.merchant) !== key) return;
+      const ru = rows[u.id];
+      if (ru.source === 'manual') return;
+      if (!isRule && ru.optOut) { rows[u.id] = Object.assign({}, ru, { optOut: false }); return; }
+      if (ru.optOut) return;
+      rows[u.id] = isRule ? Object.assign({}, ru, { cat: v, source: 'applied', from: id }) : ru.source === 'applied' && ru.from === id ? Object.assign({}, ru, { cat: u.suggestion || '', source: u.source, from: null }) : ru;
+    });
+    this.setState({ rows });
+  }
+  resetRow(id) {
+    const SB = window.SB, tx = SB.importSample.transactions, t = tx.find((x) => x.id === id), rows = Object.assign({}, this.rows());
+    const wasApplied = rows[id].source === 'applied';
+    rows[id] = Object.assign({}, rows[id], { cat: t.suggestion || '', source: t.source, from: null, optOut: wasApplied });
+    const key = SB.normalise(t.merchant);
+    tx.forEach((u) => { const ru = rows[u.id]; if (ru.source === 'applied' && ru.from === id) rows[u.id] = Object.assign({}, ru, { cat: u.suggestion || '', source: u.source, from: null }); else if (!wasApplied && u.id !== id && ru.optOut && SB.normalise(u.merchant) === key) rows[u.id] = Object.assign({}, ru, { optOut: false }); });
+    this.setState({ rows });
+  }
+  setRow(id, patch) { const rows = Object.assign({}, this.rows()); rows[id] = Object.assign({}, rows[id], patch); this.setState({ rows }); }
+  renderVals() {
+    const SB = window.SB, st = this.state, p = this.props;
+    const steps = ['File', 'Preview', 'Categories', 'Recurring & transfers', 'Summary'];
+    if (!SB) return { steps, step: 0, notDone: true, s0: true };
+    const I = SB.importSample, rows = this.rows();
+    const acc = SB.account(st.accountId) || SB.state.accounts[0];
+    const firstTime = acc && acc.type === 'card';
+    const tx = I.transactions;
+    const ruleIds = tx.filter((t) => t.source !== 'new').map((t) => t.id);
+        const confirmedN = tx.filter((t) => rows[t.id].cat).length;
+    const uncat = tx.length - confirmedN;
+    const nf = (n) => new Intl.NumberFormat('de-DE').format(n);
+    const catOptions = SB.state.categories.filter((c) => c.kind !== 'income').map((c) => ({ value: c.id, label: c.name, color: c.color }));
+    const allRows = tx.map((t) => {
+      const r = rows[t.id];
+      const src = r.source;
+      return {
+        id: t.id, date: t.date, merchant: t.merchant, purpose: t.purpose, amount: t.amount, cat: r.cat, src: r.source,
+        sourceLabel: src === 'exact' || src === 'applied' ? 'Rule · exact' : src === 'contains' ? 'Rule · contains' : src === 'builtin' ? 'Rule · built-in' : src === 'manual' ? 'Manual' : 'New',
+        sourceTone: src === 'manual' ? 'outline' : src === 'new' ? 'neutral' : 'accent',
+        sourceNote: src === 'applied' ? 'Your new rule “' + SB.normalise(t.merchant) + '”' : src === 'manual' ? 'Saves exact rule “' + SB.normalise(t.merchant) + '”' : src === 'new' ? 'No rule yet' : src === 'builtin' ? 'Cash withdrawal, counted as spent on ' + t.date : '“' + t.rule + '”',
+        bg: !r.cat ? 'var(--sb-warning-tint)' : 'transparent',
+        edge: !r.cat ? 'var(--sb-warning)' : 'transparent', selTone: r.cat ? 'default' : 'warning',
+        setCat: (v) => this.setCat(t.id, v),
+        canReset: src === 'manual' || src === 'applied' || (r.cat || '') !== (t.suggestion || ''),
+        resetTitle: t.suggestion ? 'Reset to rule: ' + ((SB.category(t.suggestion) || {}).name || '') : 'Reset to no category',
+        reset: () => this.resetRow(t.id)
+      };
+    });
+    const filter = st.filter;
+    const match = (f, r) => f === 'all' || (f === 'missing' ? !r.cat : ['exact', 'contains', 'builtin', 'applied'].includes(r.src));
+    // Tab membership is snapshotted when a tab is picked, so editing a row never makes it vanish
+    const pin = st.pinned && st.pinned.filter === filter ? st.pinned.ids : null;
+    const visibleRows = allRows.filter((r) => pin ? pin.includes(r.id) : match(filter, r));
+    const pickFilter = (f) => this.setState({ filter: f, pinned: { filter: f, ids: allRows.filter((r) => match(f, r)).map((r) => r.id) } });
+    const missingN = allRows.filter((r) => !r.cat).length;
+    const newRules = tx.filter((t) => rows[t.id].source === 'manual' && rows[t.id].cat).map((t) => { const c = SB.category(rows[t.id].cat); return { pattern: SB.normalise(t.merchant), cat: c ? c.name : '', color: c ? c.color : '' }; })
+      .filter((u, i, a) => a.findIndex((x) => x.pattern === u.pattern) === i);
+    const newCount = I.rows - I.duplicates;
+    const spendTotal = tx.reduce((s, t) => s + (t.amount < 0 ? t.amount : 0), 0);
+    const step = st.step;
+    const recN = Object.values(st.rec).filter(Boolean).length, trN = Object.values(st.tr).filter(Boolean).length;
+    const diff = I.csvBalance - I.calcBalance;
+    const mapFields = [['date', 'Date', '25.10.2026'], ['amount', 'Amount', '-6,80'], ['merchant', 'Merchant', 'Bäckerei Kamps'], ['purpose', 'Purpose', 'Kartenzahlung'], ['balance', 'Balance (optional)', '1.529,60']];
+    const csvCols = ['Buchungstag', 'Valutadatum', 'Betrag', 'Beguenstigter/Zahlungspflichtiger', 'Verwendungszweck', 'Saldo', '(none)'].map((v) => ({ value: v, label: v }));
+    const nextLabels = ['Preview', 'Categories', 'Recurring & transfers', 'Summary', 'Import ' + newCount + ' rows'];
+    return {
+      steps, step, stepNo: step + 1, notDone: !st.done, done: st.done,
+      s0: step === 0, s1: step === 1, s2: step === 2, s3: step === 3, s4: step === 4,
+      goStep: (i) => this.setState({ step: i }),
+      canBack: step > 0, back: () => this.setState({ step: step - 1 }),
+      nextLabel: nextLabels[step], nextIcon: step === 4 ? 'check' : 'arrowRight', nextDisabled: step === 0 && !st.file,
+      next: () => {
+        if (step < 4) return this.setState({ step: step + 1 });
+        newRules.forEach((u) => { const c = SB.state.categories.find((x) => x.name === u.cat); SB.actions.saveRule({ match: 'exact', pattern: u.pattern, field: 'Merchant', category: c && c.id }); });
+        SB.actions.addUncategorised(tx.filter((t) => !rows[t.id].cat).map((t) => ({ id: 'n' + t.id + Date.now(), date: t.date + ' 2026', account: acc.id, merchant: t.merchant, purpose: t.purpose, amount: t.amount })));
+        SB.actions.markImported(acc.id);
+        SB.actions.addFile({ name: I.fileName, label: acc.name + ' ' + I.from.replace(' 2026', '') + '–' + I.to.replace(' 2026', ''), account: acc.id, from: I.from, to: I.to, rows: newCount, imported: '26 Oct 2026', size: '8,4 KB' });
+        SB.actions.dismiss((SB.state.toasts.find((t) => t.key === 'reminder') || {}).id);
+        SB.actions.notify({ tone: 'success', title: 'Imported ' + newCount + ' rows into ' + acc.name, message: uncat ? uncat + ' rows left uncategorised.' : 'Every row is categorised.', autoHide: 6000 });
+        this.setState({ done: true, doneUncat: uncat });
+      },
+      accountTiles: SB.state.accounts.map((a) => {
+        const sel = a.id === st.accountId;
+        return { name: a.name, type: SB.TYPES[a.type].label, selected: sel, bg: sel ? 'var(--color-accent-100)' : 'transparent', bd: sel ? 'var(--color-accent-400)' : 'var(--color-divider)', dot: sel ? 'var(--color-accent)' : 'var(--color-neutral-400)', dotFill: sel ? 'var(--color-accent)' : 'transparent', pick: () => this.setState({ accountId: a.id }) };
+      }),
+      chooseFile: () => this.setState({ file: true }),
+      dragOver: (e) => { e.preventDefault(); if (!st.drag) this.setState({ drag: true }); },
+      dragLeave: () => this.setState({ drag: false }),
+      drop: (e) => {
+        e.preventDefault();
+        const f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+        if (f && !/\.csv$/i.test(f.name)) {
+          this.setState({ drag: false });
+          SB.actions.notify({ key: 'import-error', tone: 'error', title: "Couldn't read " + f.name, message: "This isn't a CSV export. Download the CSV from your bank's online banking and try again." });
+          return;
+        }
+        this.setState({ file: true, drag: false });
+      },
+      dropBg: st.drag ? 'var(--color-accent-100)' : 'transparent', dropBd: st.drag ? 'var(--color-accent)' : 'var(--color-neutral-400)',
+      file: st.file, noFile: !st.file, fileName: I.fileName,
+      removeFile: () => this.setState({ file: false, drag: false }),
+      fileBg: st.drag ? 'var(--color-accent-100)' : 'transparent', fileBd: st.drag ? 'var(--color-accent)' : 'var(--color-divider)',
+      profileLabel: firstTime ? 'New bank format' : I.profile + ' detected', profileTone: firstTime ? 'warning' : 'accent', profileIcon: firstTime ? 'info' : 'check',
+      rowsText: String(I.rows), rangeText: I.from + ' – ' + I.to, newText: String(newCount), dupText: String(I.duplicates), spendTotal,
+      csvBalance: SB.eur(I.csvBalance), calcBalance: SB.eur(I.calcBalance), balanceDiff: SB.eur(diff),
+      mappingTitle: firstTime ? 'Map the columns once for this bank' : 'Saved profile · ' + I.profile,
+      mappingShown: firstTime || st.mappingOpen, mappingHidden: !(firstTime || st.mappingOpen),
+      toggleMapping: () => this.setState({ mappingOpen: true }),
+      mapping: mapFields.map(([k, label, ex]) => ({ field: label, value: st.mapping[k], example: ex, set: (v) => this.setState({ mapping: Object.assign({}, st.mapping, { [k]: v }) }) })),
+      csvColumns: csvCols,
+      filterOpts: [{ value: 'all', label: 'All ' + tx.length }, { value: 'missing', label: 'No category ' + missingN }, { value: 'rules', label: 'From rules ' + allRows.filter((r) => ['exact', 'contains', 'builtin'].includes(r.src)).length }],
+      filter, setFilter: pickFilter,
+      hasMissing: step === 2 && missingN > 0, notMissingFilter: filter !== 'missing', showMissing: () => pickFilter('missing'),
+      missingText: missingN + (missingN === 1 ? ' row has' : ' rows have') + ' no category yet. You can still import: ' + (missingN === 1 ? 'it is' : 'they are') + ' saved as uncategorised and you can finish them later from the sidebar.',
+      catSummary: ruleIds.length + ' matched a rule · ' + (tx.length - ruleIds.length) + ' new',
+      visibleRows, catOptions,
+      recurring: I.recurringCandidates.map((c) => Object.assign({}, c, { on: !!st.rec[c.id], toggle: (v) => this.setState({ rec: Object.assign({}, st.rec, { [c.id]: v }) }) })),
+      transfers: I.transferCandidates.map((x) => Object.assign({}, x, { otherAmount: -x.amount, on: !!st.tr[x.id], toggle: (v) => this.setState({ tr: Object.assign({}, st.tr, { [x.id]: v }) }) })),
+      currSpend: -I.curr.spending, currIncome: I.curr.income,
+      spendHint: 'vs ' + SB.eur(I.prev.spending) + ' in September (' + SB.eur(I.prev.spending - I.curr.spending) + ' less)',
+      incomeHint: 'vs ' + SB.eur(I.prev.income) + ' in September',
+      rulesCount: String(newRules.length), newRules, noRules: !newRules.length,
+      uncatText: nf(uncat), uncatTone: uncat ? 'warning' : 'default',
+      recurringSummary: recN + (recN === 1 ? ' payee' : ' payees') + ' marked as recurring',
+      transferSummary: trN + (trN === 1 ? ' transfer' : ' transfers') + ' linked to your other accounts',
+      accountName: acc ? acc.name : '',
+      doneTitle: 'Imported ' + newCount + ' rows into ' + (acc ? acc.name : ''),
+      doneText: (st.doneUncat ? st.doneUncat + ' rows are left uncategorised. ' : 'Every row is categorised. ') + I.duplicates + ' duplicates were skipped.',
+      hasUncat: !!st.doneUncat,
+      toDashboard: () => p.onNavigate && p.onNavigate('dashboard'),
+      toUncat: () => p.onNavigate && p.onNavigate('uncategorised'),
+      restart: () => this.setState(Object.assign(this.initial(), { step: 0, file: false }))
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/industry-f2e85e32-8671-471e-b527-852aab1772ed/styles.css">
+<link rel="stylesheet" href="tokens/dashcash-dark.css">
+<script src="_ds/industry-f2e85e32-8671-471e-b527-852aab1772ed/_ds_bundle.js"></script>
+</helmet>
+<header style="display: flex; align-items: flex-end; justify-content: space-between; gap: var(--space-4); flex-wrap: wrap;">
+  <div style="display: flex; flex-direction: column; gap: 4px; min-width: 0;">
+    <sc-if value="{{ onBack }}">
+      <button type="button" onClick="{{ onBack }}" style="display: inline-flex; align-items: center; gap: 4px; align-self: flex-start; background: none; border: 0; padding: 0; color: var(--color-accent-600); font: inherit; font-size: 13px; cursor: pointer;" style-hover="color: var(--color-accent-700);">
+        <dc-import name="Icon" glyph="arrowLeft" size="{{ 14 }}" hint-size="14px,14px"></dc-import><span>{{ backLabel }}</span>
+      </button>
+    </sc-if>
+    <div style="display: flex; align-items: center; gap: var(--space-3);">
+      <h1 style="font-size: 34px; margin: 0; letter-spacing: -0.01em;">{{ title }}</h1>
+      <sc-if value="{{ tag }}"><dc-import name="Tag" label="{{ tag }}" tone="{{ tagTone }}" hint-size="70px,20px"></dc-import></sc-if>
+    </div>
+    <sc-if value="{{ subtitle }}"><span style="font-size: 14px; color: var(--sb-text-muted);">{{ subtitle }}</span></sc-if>
+  </div>
+  <div style="display: flex; align-items: center; gap: var(--space-2);">{{ children }}</div>
+</header>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:900,&quot;height&quot;:110},&quot;title&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Dashboard&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;subtitle&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Today · 26 Oct 2026&quot;,&quot;tsType&quot;:&quot;string | undefined&quot;},&quot;tag&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string | undefined&quot;},&quot;tagTone&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;accent&quot;,&quot;neutral&quot;,&quot;outline&quot;,&quot;warning&quot;,&quot;danger&quot;],&quot;default&quot;:&quot;accent&quot;,&quot;tsType&quot;:&quot;TagTone&quot;},&quot;backLabel&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Accounts&quot;,&quot;tsType&quot;:&quot;string | undefined&quot;},&quot;onBack&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(() =&gt; void) | undefined&quot;},&quot;children&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;React.ReactNode&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    const p = this.props;
+    return { title: p.title, subtitle: p.subtitle, onBack: p.onBack, backLabel: p.backLabel || 'Back', tag: p.tag, tagTone: p.tagTone || 'accent' };
+  }
+}
+</script>
+</body>
+</html>

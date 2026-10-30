@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/industry-f2e85e32-8671-471e-b527-852aab1772ed/styles.css">
+<link rel="stylesheet" href="tokens/dashcash-dark.css">
+<script src="_ds/industry-f2e85e32-8671-471e-b527-852aab1772ed/_ds_bundle.js"></script>
+</helmet>
+<div role="{{ role }}" aria-live="{{ live }}" style="width: 100%; display: flex; gap: 12px; padding: 14px 14px 14px 16px; background: var(--sb-raised-bg); background-image: linear-gradient({{ tint }}, {{ tint }}); border: 1px solid {{ bd }}; box-shadow: var(--shadow-lg); box-sizing: border-box;">
+  <span style="display: flex; padding-top: 1px; color: {{ fg }};"><sc-if value="{{ loading }}"><dc-import name="Loader" size="{{ 18 }}" delay="{{ 0 }}" color="currentColor" hint-size="18px,18px"></dc-import></sc-if><sc-if value="{{ notLoading }}"><dc-import name="Icon" glyph="{{ glyph }}" size="{{ 18 }}" hint-size="18px,18px"></dc-import></sc-if></span>
+  <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px;">
+    <span style="font-size: 14px; font-weight: 500; text-wrap: pretty;">{{ title }}</span>
+    <sc-if value="{{ message }}"><span style="font-size: 13px; color: var(--sb-text-muted); text-wrap: pretty;">{{ message }}</span></sc-if>
+    <sc-if value="{{ hasActions }}">
+      <div style="display: flex; gap: var(--space-2); padding-top: 6px; flex-wrap: wrap;">
+        <sc-if value="{{ actionLabel }}"><dc-import name="Button" variant="{{ actionVariant }}" size="sm" icon="{{ actionIcon }}" label="{{ actionLabel }}" on-click="{{ onAction }}" hint-size="120px,28px"></dc-import></sc-if>
+        <sc-if value="{{ secondaryLabel }}"><dc-import name="Button" variant="ghost" size="sm" label="{{ secondaryLabel }}" on-click="{{ onSecondary }}" hint-size="70px,28px"></dc-import></sc-if>
+      </div>
+    </sc-if>
+  </div>
+  <sc-if value="{{ onClose }}"><div style="margin: -6px -6px 0 0;"><dc-import name="Button" variant="ghost" size="sm" icon="x" title="Dismiss" on-click="{{ onClose }}" hint-size="28px,28px"></dc-import></div></sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:420,&quot;height&quot;:160},&quot;tone&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;success&quot;,&quot;error&quot;,&quot;info&quot;,&quot;warning&quot;],&quot;default&quot;:&quot;warning&quot;,&quot;tsType&quot;:&quot;'success' | 'error' | 'info' | 'warning'&quot;},&quot;title&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Time for a fresh import&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;message&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Visa Card (12 days) and Sparkasse Giro (9 days) haven't been imported for over a week.&quot;,&quot;tsType&quot;:&quot;string | undefined&quot;},&quot;icon&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;IconName | undefined&quot;},&quot;actionLabel&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Import&quot;,&quot;tsType&quot;:&quot;string | undefined&quot;},&quot;actionIcon&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;upload&quot;,&quot;tsType&quot;:&quot;IconName | undefined&quot;},&quot;secondaryLabel&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Later&quot;,&quot;tsType&quot;:&quot;string | undefined&quot;},&quot;onAction&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;() =&gt; void&quot;},&quot;onSecondary&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;() =&gt; void&quot;},&quot;onClose&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(() =&gt; void) | undefined&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    const p = this.props;
+    const tone = p.tone || 'info';
+    const T = {
+      success: ['var(--sb-positive)', 'circleCheck', 'var(--sb-positive-tint)'],
+      error: ['var(--sb-danger)', 'circleX', 'var(--sb-danger-tint)'],
+      warning: ['var(--sb-warning)', 'alert', 'var(--sb-warning-tint)'],
+      info: ['var(--color-accent-600)', 'info', 'var(--color-accent-100)']
+    }[tone];
+    return {
+      fg: T[0], glyph: p.icon || T[1], tint: T[2], loading: !!p.loading, notLoading: !p.loading,
+      bd: 'color-mix(in srgb, ' + T[0] + ' 55%, transparent)',
+      role: tone === 'error' || tone === 'warning' ? 'alert' : 'status', live: tone === 'error' ? 'assertive' : 'polite',
+      title: p.title, message: p.message,
+      actionLabel: p.actionLabel, actionIcon: p.actionIcon, onAction: p.onAction,
+      actionVariant: tone === 'info' || tone === 'success' ? 'primary' : 'secondary',
+      secondaryLabel: p.secondaryLabel, onSecondary: p.onSecondary,
+      hasActions: !!(p.actionLabel || p.secondaryLabel), onClose: p.onClose
+    };
+  }
+}
+</script>
+</body>
+</html>

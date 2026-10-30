@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/industry-f2e85e32-8671-471e-b527-852aab1772ed/styles.css">
+<link rel="stylesheet" href="tokens/dashcash-dark.css">
+<script src="_ds/industry-f2e85e32-8671-471e-b527-852aab1772ed/_ds_bundle.js"></script>
+</helmet>
+<button type="button" onClick="{{ onClick }}" aria-current="{{ current }}" aria-label="{{ aria }}" title="{{ tip }}" style="position: relative; display: flex; align-items: center; justify-content: {{ justify }}; gap: 10px; width: 100%; box-sizing: border-box; height: 38px; padding: {{ pad }}; line-height: 1; background: {{ bg }}; color: {{ fg }}; border: 1px solid {{ bd }}; font: inherit; font-size: 14px; text-align: left; cursor: pointer;" style-hover="background: {{ hover }}; color: var(--color-text);">
+  <span style="display: flex; color: {{ iconColor }};"><dc-import name="Icon" glyph="{{ icon }}" size="{{ 18 }}" hint-size="18px,18px"></dc-import></span>
+  <sc-if value="{{ showLabel }}" hint-placeholder-val="{{ true }}"><span style="flex: 1; min-width: 0; white-space: nowrap;">{{ label }}</span></sc-if>
+  <sc-if value="{{ badgeFull }}"><span style="min-width: 22px; padding: 0 6px; font-size: 12px; line-height: 20px; text-align: center; background: {{ badgeBg }}; color: {{ badgeFg }}; font-variant-numeric: tabular-nums;">{{ badge }}</span></sc-if>
+  <sc-if value="{{ badgeDot }}"><span style="position: absolute; top: 3px; right: 3px; min-width: 16px; padding: 0 3px; font-size: 10px; line-height: 15px; text-align: center; background: {{ badgeBg }}; color: {{ badgeFg }}; font-variant-numeric: tabular-nums;">{{ badge }}</span></sc-if>
+</button>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:232,&quot;height&quot;:56},&quot;icon&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;inbox&quot;,&quot;tsType&quot;:&quot;IconName&quot;},&quot;label&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Uncategorised&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;active&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;compact&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;badge&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:7,&quot;tsType&quot;:&quot;number | undefined&quot;},&quot;badgeTone&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;accent&quot;,&quot;warning&quot;],&quot;default&quot;:&quot;warning&quot;,&quot;tsType&quot;:&quot;'accent' | 'warning'&quot;},&quot;onClick&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;() =&gt; void&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    const p = this.props;
+    const a = !!p.active, c = !!p.compact;
+    const warn = p.badgeTone === 'warning';
+    const has = (p.badge ?? 0) > 0;
+    return {
+      icon: p.icon, label: p.label, onClick: p.onClick, current: a ? 'page' : undefined,
+      showLabel: !c, justify: c ? 'center' : 'flex-start', pad: c ? '0' : '0 12px',
+      aria: c ? p.label + (has ? ', ' + p.badge : '') : undefined, tip: c ? p.label : undefined,
+      bg: a ? 'var(--color-accent-100)' : 'transparent',
+      bd: a ? 'var(--color-accent-300)' : 'transparent',
+      hover: a ? 'var(--color-accent-100)' : 'var(--sb-hover)',
+      fg: a ? 'var(--color-text)' : 'var(--sb-text-muted)',
+      iconColor: a ? 'var(--color-accent-600)' : 'currentColor',
+      badgeFull: has && !c, badgeDot: has && c, badge: p.badge,
+      badgeBg: warn ? 'var(--sb-warning-tint)' : 'var(--color-accent-200)',
+      badgeFg: warn ? 'var(--sb-warning)' : 'var(--color-accent-800)'
+    };
+  }
+}
+</script>
+</body>
+</html>

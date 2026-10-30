@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/industry-f2e85e32-8671-471e-b527-852aab1772ed/styles.css">
+<link rel="stylesheet" href="tokens/dashcash-dark.css">
+<script src="_ds/industry-f2e85e32-8671-471e-b527-852aab1772ed/_ds_bundle.js"></script>
+<script src="lib/store.js"></script>
+</helmet>
+<dc-import name="Card" style="height: 100%;" kicker="Bank profiles" title="Saved column mappings" padding="lg" hint-size="100%,320px">
+  <span style="font-size: 13px; color: var(--sb-text-muted); text-wrap: pretty;">Detected from the CSV header row. Deleting a profile asks for the mapping again on the next import from that bank.</span>
+  <div style="display: flex; flex-direction: column; border-top: 1px solid var(--color-divider);">
+    <sc-for list="{{ rows }}" as="p" hint-placeholder-count="4">
+      <div style="display: flex; align-items: center; gap: var(--space-3); padding: 10px 0; border-bottom: 1px solid var(--color-divider);">
+        <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px;">
+          <span style="font-size: 14px;">{{ p.name }}</span>
+          <span style="font-size: 12px; color: var(--sb-text-faint); overflow-wrap: anywhere;">{{ p.columns }}</span>
+          <span style="font-size: 12px; color: var(--sb-text-faint);">{{ p.used }} · last used {{ p.lastUsed }}</span>
+        </div>
+        <dc-import name="Button" variant="ghost" size="sm" icon="trash" title="Delete profile" on-click="{{ p.remove }}" hint-size="28px,28px"></dc-import>
+      </div>
+    </sc-for>
+  </div>
+  <sc-if value="{{ empty }}"><span style="font-size: 14px; color: var(--sb-text-muted);">No saved profiles. The next import will ask for the column mapping.</span></sc-if>
+</dc-import>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:560,&quot;height&quot;:420}}">
+class Component extends DCLogic {
+  componentDidMount() {
+    const go = () => { this.unsub = window.SB.subscribe(() => this.forceUpdate()); this.forceUpdate(); };
+    if (window.SB) go(); else this.t = setInterval(() => { if (window.SB) { clearInterval(this.t); go(); } }, 40);
+  }
+  componentWillUnmount() { this.unsub && this.unsub(); clearInterval(this.t); }
+  renderVals() {
+    const SB = window.SB;
+    if (!SB) return { rows: [] };
+    const rows = SB.state.profiles.map((p) => Object.assign({}, p, {
+      remove: () => { SB.actions.deleteProfile(p.id); SB.actions.notify({ tone: 'success', title: 'Profile “' + p.name + '” deleted', autoHide: 4000 }); }
+    }));
+    return { rows, empty: !rows.length };
+  }
+}
+</script>
+</body>
+</html>

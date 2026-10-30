@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/industry-f2e85e32-8671-471e-b527-852aab1772ed/styles.css">
+<link rel="stylesheet" href="tokens/dashcash-dark.css">
+<script src="_ds/industry-f2e85e32-8671-471e-b527-852aab1772ed/_ds_bundle.js"></script>
+<script src="lib/reveal.js"></script>
+</helmet>
+<section ref="{{ secRef }}" style="border-bottom: 1px solid var(--color-divider);">
+  <button type="button" aria-expanded="{{ open }}" onClick="{{ onToggle }}" style="display: flex; align-items: center; gap: 10px; width: 100%; padding: 12px 4px; background: none; border: 0; color: var(--color-text); font: inherit; cursor: pointer; text-align: left;" style-hover="background: var(--sb-hover);">
+    <span style="display: flex; color: var(--sb-text-muted); transform: rotate({{ rot }}); transition: transform 160ms ease;"><dc-import name="Icon" glyph="chevronRight" size="{{ 16 }}" hint-size="16px,16px"></dc-import></span>
+    <span style="font-family: var(--font-heading); font-weight: 600; font-size: 20px;">{{ title }}</span>
+    <sc-if value="{{ tag }}"><dc-import name="Tag" label="{{ tag }}" tone="{{ tagTone }}" hint-size="70px,20px"></dc-import></sc-if>
+    <span style="margin-left: auto; font-size: 14px; color: var(--sb-text-muted); font-variant-numeric: tabular-nums;">{{ meta }}</span>
+  </button>
+  <sc-if value="{{ open }}"><div style="padding: 0 0 var(--space-4) 30px;">{{ children }}</div></sc-if>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:700,&quot;height&quot;:200},&quot;title&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;2026&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;open&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;},&quot;meta&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Year end 2.859,72 €&quot;,&quot;tsType&quot;:&quot;string | undefined&quot;},&quot;tag&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Actual · projected&quot;,&quot;tsType&quot;:&quot;string | undefined&quot;},&quot;tagTone&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;accent&quot;,&quot;neutral&quot;,&quot;outline&quot;,&quot;warning&quot;,&quot;danger&quot;],&quot;default&quot;:&quot;neutral&quot;,&quot;tsType&quot;:&quot;TagTone&quot;},&quot;onToggle&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;() =&gt; void&quot;},&quot;children&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;React.ReactNode&quot;}}">
+class Component extends DCLogic {
+  secRef = React.createRef();
+  componentDidUpdate(prev) {
+    const el = this.secRef.current;
+    if (this.props.open && !prev.open && el && window.SB_reveal) window.SB_reveal(el.firstElementChild, el);
+  }
+  renderVals() {
+    const p = this.props;
+    return { secRef: this.secRef, open: !!p.open, title: p.title, meta: p.meta, tag: p.tag, tagTone: p.tagTone || 'neutral', onToggle: p.onToggle, rot: p.open ? '90deg' : '0deg' };
+  }
+}
+</script>
+</body>
+</html>

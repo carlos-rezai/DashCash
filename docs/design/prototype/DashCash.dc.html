@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<title>DashCash</title>
+<link rel="stylesheet" href="_ds/industry-f2e85e32-8671-471e-b527-852aab1772ed/styles.css">
+<link rel="stylesheet" href="tokens/dashcash-dark.css">
+<script src="_ds/industry-f2e85e32-8671-471e-b527-852aab1772ed/_ds_bundle.js"></script>
+<script src="lib/icons.js"></script>
+<script src="lib/store.js"></script>
+</helmet>
+<dc-import name="AppShell" version="{{ version }}" active="{{ active }}" uncategorised="{{ uncategorised }}" on-navigate="{{ navigate }}" hint-size="100%,100vh">
+  <sc-if value="{{ isDashboard }}" hint-placeholder-val="{{ true }}"><dc-import name="DashboardPage" chart-range="{{ chartRange }}" on-navigate="{{ navigate }}" hint-size="100%,860px"></dc-import></sc-if>
+  <sc-if value="{{ isAccounts }}"><dc-import name="AccountsPage" account-id="{{ accountId }}" on-navigate="{{ navigate }}" hint-size="100%,860px"></dc-import></sc-if>
+  <sc-if value="{{ isImport }}"><dc-import name="ImportPage" initial-account="{{ accountId }}" on-navigate="{{ navigate }}" hint-size="100%,860px"></dc-import></sc-if>
+  <sc-if value="{{ isCompare }}"><dc-import name="ComparePage" hint-size="100%,860px"></dc-import></sc-if>
+  <sc-if value="{{ isCategories }}"><dc-import name="CategoriesPage" hint-size="100%,860px"></dc-import></sc-if>
+  <sc-if value="{{ isUncategorised }}"><dc-import name="UncategorisedPage" hint-size="100%,700px"></dc-import></sc-if>
+  <sc-if value="{{ isSettings }}"><dc-import name="SettingsPage" hint-size="100%,1200px"></dc-import></sc-if>
+</dc-import>
+<dc-import name="LoadingOverlay" variant="splash" open="{{ booting }}" hint-size="0px,0px"></dc-import>
+<dc-import name="SnackbarHost" items="{{ toasts }}" on-dismiss="{{ dismiss }}" hint-size="0px,0px"></dc-import>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;headroomScenario&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;calm&quot;,&quot;close&quot;,&quot;over&quot;],&quot;default&quot;:&quot;close&quot;,&quot;tsType&quot;:&quot;'calm' | 'close' | 'over'&quot;,&quot;section&quot;:&quot;Prototype scenario&quot;},&quot;chartRange&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;1y&quot;,&quot;3y&quot;,&quot;payoff&quot;],&quot;default&quot;:&quot;payoff&quot;,&quot;tsType&quot;:&quot;'1y' | '3y' | 'payoff'&quot;,&quot;section&quot;:&quot;Prototype scenario&quot;},&quot;demoSnackbar&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;none&quot;,&quot;success&quot;,&quot;error&quot;,&quot;info&quot;,&quot;warning&quot;],&quot;default&quot;:&quot;none&quot;,&quot;tsType&quot;:&quot;'none' | 'success' | 'error' | 'info' | 'warning'&quot;,&quot;section&quot;:&quot;Prototype scenario&quot;},&quot;cardFill&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;surface&quot;,&quot;none&quot;],&quot;default&quot;:&quot;surface&quot;,&quot;tsType&quot;:&quot;'surface' | 'none'&quot;,&quot;section&quot;:&quot;Look&quot;}}">
+class Component extends DCLogic {
+  state = (() => { try { return JSON.parse(localStorage.getItem('dashcash-route')) || { page: 'dashboard', accountId: '' }; } catch (e) { return { page: 'dashboard', accountId: '' }; } })();
+  componentDidMount() {
+    const go = () => { this.unsub = window.SB.subscribe(() => this.forceUpdate()); this.applyScenario(); this.applyCardFill(); this.boot(); this.forceUpdate(); };
+    if (window.SB) go(); else this.t = setInterval(() => { if (window.SB) { clearInterval(this.t); go(); } }, 40);
+  }
+  applyCardFill() {
+    const none = this.props.cardFill === 'none', st = document.documentElement.style;
+    st.setProperty('--sb-card-bg', none ? 'transparent' : 'var(--color-surface)');
+    st.setProperty('--sb-input-bg', none ? 'var(--color-surface)' : 'var(--color-bg)');
+    st.setProperty('--sb-card-border', none ? 'var(--color-divider)' : 'color-mix(in srgb, #e9f1fa 8%, transparent)');
+    st.setProperty('--sb-raised-bg', none ? 'var(--color-bg)' : 'var(--color-surface)');
+  }
+  componentDidUpdate(prev) {
+    if (prev.cardFill !== this.props.cardFill) this.applyCardFill();
+    if (prev.headroomScenario !== this.props.headroomScenario) this.applyScenario();
+    if (prev.demoSnackbar !== this.props.demoSnackbar) this.demo(this.props.demoSnackbar);
+  }
+  boot() {
+    if (window.__sbBooted) { if (!this.state.booted) this.setState({ booted: true }); return; } window.__sbBooted = true;
+    const done = () => { clearTimeout(this.bootFallback); setTimeout(() => this.setState({ booted: true }), 1600); };
+    if (window.__cdLoaderReady) done(); else { window.addEventListener('cd-loader-ready', done, { once: true }); this.bootFallback = setTimeout(() => this.setState({ booted: true }), 4000); }
+    setTimeout(() => this.remind(), 700);
+    setTimeout(() => { const SB = window.SB; if (SB && SB.state.settings.autoCheck) SB.actions.checkForUpdates(false); }, 2600);
+  }
+  remind() {
+    const SB = window.SB, stale = SB.staleAccounts();
+    if (!stale.length) return;
+    const part = (x) => x.a.name + ' (' + (x.age.days == null ? 'never' : x.age.days + ' days') + ')';
+    const names = stale.length === 1 ? part(stale[0]) : stale.slice(0, -1).map(part).join(', ') + ' and ' + part(stale[stale.length - 1]);
+    SB.actions.notify({
+      key: 'reminder', tone: 'warning', icon: 'calendar', title: 'Time for a fresh import',
+      message: names + (stale.length === 1 ? " hasn't" : " haven't") + ' been imported for a while. Balances and headroom don\'t include purchases since then.',
+      actionLabel: stale.length === 1 ? 'Import ' + stale[0].a.name : 'Import CSV', actionIcon: 'upload',
+      onAction: () => this.go('import', stale[0].a.id), secondaryLabel: 'Later'
+    });
+  }
+  demo(kind) {
+    const SB = window.SB; if (!SB || !kind || kind === 'none') return;
+    if (kind === 'warning') return this.remind();
+    if (kind === 'info') return SB.actions.checkForUpdates(false);
+    if (kind === 'success') return SB.actions.notify({ tone: 'success', title: 'Imported 20 rows into Sparkasse Giro', message: '9 rules matched, 5 duplicates skipped.', actionLabel: 'View account', onAction: () => this.go('accounts', 'sparkasse'), autoHide: 8000 });
+    if (kind === 'error') return SB.actions.notify({ tone: 'error', title: "Couldn't read Kontoauszug_Oktober.pdf", message: "This isn't a CSV export. Download the CSV from your bank's online banking and try again.", actionLabel: 'Choose another file', actionIcon: 'upload', onAction: () => this.go('import') });
+  }
+  go(p, accountId) {
+    const route = { page: p, accountId: accountId || '' };
+    try { localStorage.setItem('dashcash-route', JSON.stringify(route)); } catch (e) {}
+    this.setState(route);
+  }
+  componentWillUnmount() { this.unsub && this.unsub(); clearInterval(this.t); }
+  applyScenario() {
+    const SB = window.SB; if (!SB || !SB.account('sparkasse')) return;
+    const spent = { calm: 20000, close: 38240, over: 47000 }[this.props.headroomScenario || 'close'];
+    const a = SB.account('sparkasse');
+    const anchor = a.monthStart + 50000 - spent;
+    if (a.anchor !== anchor) SB.actions.updateAccount('sparkasse', { anchor });
+  }
+  renderVals() {
+    const SB = window.SB, page = this.state.page;
+    return {
+      version: SB ? SB.state.settings.version : '', active: page, accountId: this.state.accountId || '',
+      uncategorised: SB ? SB.state.uncategorised.length : 0,
+      chartRange: this.props.chartRange || 'payoff', booting: !this.state.booted,
+      isDashboard: page === 'dashboard', isAccounts: page === 'accounts', isImport: page === 'import',
+      isCompare: page === 'compare', isCategories: page === 'categories', isUncategorised: page === 'uncategorised', isSettings: page === 'settings',
+      toasts: SB ? SB.state.toasts : [], dismiss: (id) => SB && SB.actions.dismiss(id),
+      navigate: (p, accountId) => this.go(p, accountId)
+    };
+  }
+}
+</script>
+</body>
+</html>

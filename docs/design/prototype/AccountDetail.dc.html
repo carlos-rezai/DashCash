@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/industry-f2e85e32-8671-471e-b527-852aab1772ed/styles.css">
+<link rel="stylesheet" href="tokens/dashcash-dark.css">
+<script src="_ds/industry-f2e85e32-8671-471e-b527-852aab1772ed/_ds_bundle.js"></script>
+<script src="lib/store.js"></script>
+</helmet>
+<div style="display: flex; flex-direction: column; gap: var(--space-6);">
+  <dc-import name="PageHeader" title="{{ name }}" tag="{{ typeLabel }}" subtitle="{{ subtitle }}" back-label="Accounts" on-back="{{ onBack }}" hint-size="100%,80px">
+    <dc-import name="Button" variant="secondary" icon="pencil" label="Edit account" on-click="{{ openEdit }}" hint-size="120px,36px"></dc-import>
+  </dc-import>
+  <div style="display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: var(--space-6); align-items: start;">
+    <dc-import name="Card" kicker="Month-end balances" title="Actual and projected, by year" padding="lg" hint-size="100%,600px">
+      <dc-import name="YearTable" first-label="Year · month" columns="{{ columns }}" years="{{ years }}" default-open="{{ defaultOpen }}" hint-size="100%,520px"></dc-import>
+    </dc-import>
+    <div style="display: flex; flex-direction: column; gap: var(--space-6);">
+      <sc-if value="{{ streak }}">
+        <dc-import name="Card" kicker="Goal" title="{{ goalText }}" padding="lg" hint-size="100%,200px">
+          <dc-import name="StreakStrip" current="{{ streak.current }}" best="{{ streak.best }}" months="{{ streak.months }}" actual="{{ streak.actual }}" projected="{{ streak.projected }}" next-milestone="{{ streak.nextMilestone }}" to-milestone="{{ streak.toMilestone }}" hint-size="100%,96px"></dc-import>
+          <sc-if value="{{ headroom }}"><dc-import name="HeadroomMeter" value="{{ headroom.value }}" budget="{{ headroom.budget }}" tone="{{ headroom.tone }}" hint-size="100%,56px"></dc-import></sc-if>
+          <div style="display: flex; align-items: flex-start; gap: 8px; padding-top: var(--space-3); border-top: 1px solid var(--color-divider);">
+            <span style="display: flex; padding-top: 2px; color: {{ importColor }};"><dc-import name="Icon" glyph="calendar" size="{{ 14 }}" hint-size="14px,14px"></dc-import></span>
+            <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px;">
+              <span style="font-size: 13px; color: {{ importColor }};">{{ importLabel }}</span>
+              <span style="font-size: 12px; color: var(--sb-text-faint); text-wrap: pretty;">{{ importNote }}</span>
+            </div>
+            <sc-if value="{{ stale }}"><dc-import name="Button" variant="secondary" size="sm" icon="upload" label="Import" on-click="{{ goImport }}" hint-size="80px,28px"></dc-import></sc-if>
+          </div>
+        </dc-import>
+      </sc-if>
+      <dc-import name="Card" kicker="Recurring items" title="{{ recurringTitle }}" padding="lg" hint-size="100%,300px">
+        <div style="display: flex; flex-direction: column; border-top: 1px solid var(--color-divider);">
+          <sc-for list="{{ recurring }}" as="r" hint-placeholder-count="4">
+            <div style="display: flex; align-items: center; gap: var(--space-3); padding: 9px 0; border-bottom: 1px solid var(--color-divider);">
+              <span style="display: flex; color: var(--sb-text-faint);"><dc-import name="Icon" glyph="{{ r.icon }}" size="{{ 15 }}" hint-size="15px,15px"></dc-import></span>
+              <div style="flex: 1; min-width: 0; display: flex; flex-direction: column;">
+                <span style="font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ r.name }}</span>
+                <span style="font-size: 12px; color: var(--sb-text-faint);">{{ r.meta }}</span>
+              </div>
+              <dc-import name="Amount" cents="{{ r.amount }}" sign="always" tone="auto" hint-size="90px,18px"></dc-import>
+              <dc-import name="Button" variant="ghost" size="sm" icon="pencil" title="Edit" on-click="{{ r.edit }}" hint-size="28px,28px"></dc-import>
+              <dc-import name="Button" variant="ghost" size="sm" icon="trash" title="Delete" on-click="{{ r.remove }}" hint-size="28px,28px"></dc-import>
+            </div>
+          </sc-for>
+        </div>
+        <div><dc-import name="Button" variant="secondary" size="sm" icon="plus" label="Add recurring item" on-click="{{ addItem }}" hint-size="150px,28px"></dc-import></div>
+      </dc-import>
+      <dc-import name="Card" kicker="Projection" title="Assumptions" padding="lg" hint-size="100%,180px">
+        <ul style="margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 10px;">
+          <sc-for list="{{ assumptions }}" as="t" hint-placeholder-count="3">
+            <li style="display: flex; gap: 10px; font-size: 14px; color: var(--sb-text-muted); text-wrap: pretty;"><span style="width: 6px; height: 6px; margin-top: 8px; flex: none; border: 1px solid var(--color-accent-500);"></span><span>{{ t }}</span></li>
+          </sc-for>
+        </ul>
+      </dc-import>
+    </div>
+  </div>
+</div>
+<dc-import name="AccountFormModal" open="{{ editOpen }}" account-id="{{ accountId }}" on-close="{{ closeEdit }}" on-deleted="{{ onBack }}" hint-size="0px,0px"></dc-import>
+<dc-import name="Modal" open="{{ rec.open }}" title="{{ rec.title }}" subtitle="Applied exactly on its dates in the projection." on-close="{{ closeRec }}" hint-size="0px,0px">
+  <dc-import name="FormField" label="Name" hint-size="100%,60px"><dc-import name="Input" value="{{ rec.name }}" on-change="{{ recName }}" hint-size="100%,36px"></dc-import></dc-import>
+  <div style="display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr); gap: var(--space-3);">
+    <dc-import name="FormField" label="Amount" hint="Negative for money out" hint-size="100%,60px"><dc-import name="Input" value="{{ rec.amount }}" suffix="€" align="right" numeric="{{ true }}" on-change="{{ recAmount }}" hint-size="100%,36px"></dc-import></dc-import>
+    <dc-import name="FormField" label="Interval" hint-size="100%,60px"><dc-import name="Select" value="{{ rec.interval }}" options="{{ intervals }}" on-change="{{ recInterval }}" hint-size="100%,36px"></dc-import></dc-import>
+    <dc-import name="FormField" label="Next date" hint-size="100%,60px"><dc-import name="Input" value="{{ rec.next }}" on-change="{{ recNext }}" hint-size="100%,36px"></dc-import></dc-import>
+  </div>
+  <div style="display: flex; justify-content: flex-end; gap: var(--space-2);">
+    <dc-import name="Button" variant="secondary" label="Cancel" on-click="{{ closeRec }}" hint-size="80px,36px"></dc-import>
+    <dc-import name="Button" variant="primary" icon="check" label="Save item" on-click="{{ saveRec }}" hint-size="110px,36px"></dc-import>
+  </div>
+</dc-import>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1160,&quot;height&quot;:900},&quot;accountId&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;postbank&quot;,&quot;sparkasse&quot;,&quot;renault&quot;,&quot;card&quot;,&quot;darlehen&quot;],&quot;default&quot;:&quot;sparkasse&quot;,&quot;tsType&quot;:&quot;AccountId&quot;},&quot;onBack&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;() =&gt; void&quot;},&quot;onNavigate&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(page: PageId, accountId?: string) =&gt; void&quot;}}">
+class Component extends DCLogic {
+  state = { editOpen: false, rec: { open: false } };
+  componentDidMount() {
+    const go = () => { this.unsub = window.SB.subscribe(() => this.forceUpdate()); this.forceUpdate(); };
+    if (window.SB) go(); else this.t = setInterval(() => { if (window.SB) { clearInterval(this.t); go(); } }, 40);
+  }
+  componentWillUnmount() { this.unsub && this.unsub(); clearInterval(this.t); }
+  setRec(k, v) { this.setState((s) => ({ rec: Object.assign({}, s.rec, { [k]: v }) })); }
+  renderVals() {
+    const SB = window.SB, p = this.props;
+    const id = p.accountId || 'darlehen';
+    const a = SB && SB.account(id);
+    if (!a) return { years: [], recurring: [], assumptions: [], rec: {}, name: '' };
+    const s = SB.series(a), pay = SB.payoffIdx();
+    const val = (i) => (i < SB.TODAY_IDX ? s.hist[i] : s.proj[i]);
+    const debt = a.type === 'mortgage';
+    const balTone = (v, future) => (debt ? (v ? (future ? 'muted' : 'negative') : 'neutral') : future ? 'muted' : 'auto');
+    const years = [2024, 2025, 2026, 2027, 2028, 2029, 2030, 2031, 2032].map((y) => {
+      const rows = [];
+      let metN = 0, goalN = 0;
+      for (let m = 0; m < 12; m++) {
+        const i = (y - 2024) * 12 + m, v = val(i);
+        if (v == null) continue;
+        const prev = i > 0 ? val(i - 1) : null;
+        const isToday = i === SB.TODAY_IDX, isPay = debt && i === pay, future = i > SB.TODAY_IDX;
+        const met = i < SB.TODAY_IDX ? s.met[i] : null;
+        if (a.goal && met != null) { goalN++; if (met) metN++; }
+        const glyph = !a.goal ? '' : isToday ? 'loaderCircle' : met == null ? '' : met ? 'check' : 'x';
+        rows.push({
+          label: SB.MONTHS[m], muted: future,
+          highlight: isPay ? 'payoff' : isToday ? 'today' : null,
+          tag: isPay ? 'Paid off' : '', tagTone: 'milestone', tagIcon: isPay ? 'flag' : '',
+          cells: [
+            { type: 'amount', cents: v, tone: balTone(v, future && !isPay) },
+            { type: 'amount', cents: prev == null ? null : v - prev, sign: 'always', size: 'sm', tone: debt ? 'neutral' : future ? 'muted' : 'auto' },
+            { type: 'icon', glyph, color: isToday ? 'var(--color-accent-600)' : met ? 'var(--sb-positive)' : 'var(--sb-text-faint)',
+              title: isToday ? 'Goal in progress · ' + SB.goalText(a) : met == null ? '' : (met ? 'Goal met' : 'Goal missed') + (prev == null ? '' : ' · changed by ' + SB.eur(v - prev, { sign: true })) }
+          ]
+        });
+      }
+      const yi = (y - 2024) * 12 + 11, py = yi - 12;
+      const kind = yi < SB.TODAY_IDX ? 'Actual' : (y - 2024) * 12 > SB.TODAY_IDX ? 'Projected' : 'Actual · projected';
+      const hasPay = debt && pay != null && SB.mYear(pay) === y;
+      const ye = val(yi), pe = py >= 0 ? val(py) : null;
+      return {
+        key: y, label: String(y), rows,
+        tag: hasPay ? 'Payoff ' + SB.mShort(pay) : kind, tagTone: hasPay ? 'milestone' : kind === 'Actual' ? 'neutral' : 'outline', tagIcon: hasPay ? 'flag' : '',
+        cells: [
+          { type: 'amount', cents: ye, tone: balTone(ye, false) },
+          { type: 'amount', cents: pe == null || ye == null ? null : ye - pe, sign: 'always', size: 'sm', tone: debt ? 'neutral' : 'auto' },
+          goalN ? { type: 'text', text: metN + ' of ' + goalN + ' met' } : { type: 'empty' }
+        ]
+      };
+    }).filter((y) => y.rows.length);
+    const items = SB.state.recurring.filter((r) => r.account === a.id);
+    const recurring = items.map((r) => ({
+      name: r.name, amount: r.amount, meta: r.interval + ' · next ' + r.next,
+      icon: r.kind === 'transfer' ? 'transfer' : 'repeat',
+      edit: () => this.setState({ rec: { open: true, id: r.id, title: 'Edit recurring item', name: r.name, amount: SB.inputEur(r.amount), interval: r.interval, next: r.next, kind: r.kind } }),
+      remove: () => SB.actions.deleteRecurring(r.id)
+    }));
+    const st = a.goal ? SB.streak(a) : null;
+    const rec = this.state.rec;
+    return {
+      accountId: a.id, name: a.name, typeLabel: SB.TYPES[a.type].label,
+      subtitle: (a.type === 'mortgage' ? 'Restschuld today ' : 'Balance today ') + SB.eur(a.anchor) + ' · ' + SB.importAge(a).label,
+      importLabel: SB.importAge(a).label + (SB.importAge(a).date ? ' (' + SB.importAge(a).date + ')' : ''),
+      importNote: SB.headroom(a) ? 'Headroom uses the balance from imported transactions only. Purchases after the last import are not counted until the next one.' : 'Balances include imported transactions only.',
+      importColor: SB.importAge(a).stale ? 'var(--color-accent-600)' : 'var(--sb-text-muted)',
+      stale: SB.importAge(a).stale, goImport: () => p.onNavigate && p.onNavigate('import', a.id),
+      onBack: p.onBack, years, defaultOpen: [2026],
+      columns: [{ label: 'Month-end balance' }, { label: 'Change' }, { label: 'Goal', width: '110px' }],
+      recurring, recurringTitle: items.length + (items.length === 1 ? ' item' : ' items'),
+      assumptions: SB.assumptions(a), streak: st, goalText: SB.goalText(a), headroom: SB.headroom(a),
+      editOpen: this.state.editOpen, openEdit: () => this.setState({ editOpen: true }), closeEdit: () => this.setState({ editOpen: false }),
+      rec, intervals: ['Monthly', 'Quarterly', 'Yearly'].map((v) => ({ value: v, label: v })),
+      addItem: () => this.setState({ rec: { open: true, id: null, title: 'New recurring item', name: '', amount: '', interval: 'Monthly', next: '1 Nov 2026', kind: 'expense' } }),
+      closeRec: () => this.setRec('open', false),
+      recName: (v) => this.setRec('name', v), recAmount: (v) => this.setRec('amount', v), recInterval: (v) => this.setRec('interval', v), recNext: (v) => this.setRec('next', v),
+      saveRec: () => {
+        const amount = SB.parseEur(rec.amount);
+        if (!rec.name || amount == null) return;
+        SB.actions.saveRecurring({ id: rec.id || undefined, account: a.id, name: rec.name, amount, interval: rec.interval, next: rec.next, kind: rec.kind || (amount > 0 ? 'income' : 'expense') });
+        this.setRec('open', false);
+      }
+    };
+  }
+}
+</script>
+</body>
+</html>

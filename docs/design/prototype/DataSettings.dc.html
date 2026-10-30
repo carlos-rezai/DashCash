@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/industry-f2e85e32-8671-471e-b527-852aab1772ed/styles.css">
+<link rel="stylesheet" href="tokens/dashcash-dark.css">
+<script src="_ds/industry-f2e85e32-8671-471e-b527-852aab1772ed/_ds_bundle.js"></script>
+<script src="lib/store.js"></script>
+</helmet>
+<dc-import name="Card" style="height: 100%;" kicker="Data" title="Database and backups" padding="lg" hint-size="100%,320px">
+  <dc-import name="FormField" label="Database folder" hint="{{ folderHint }}" hint-size="100%,80px">
+    <div style="display: flex; gap: var(--space-2); align-items: center;">
+      <div style="flex: 1; min-width: 0;"><dc-import name="Input" icon="database" value="{{ folder }}" on-change="{{ noop }}" hint-size="100%,36px"></dc-import></div>
+      <dc-import name="Button" variant="secondary" icon="folder" label="Change…" on-click="{{ openMove }}" hint-size="110px,36px"></dc-import>
+    </div>
+  </dc-import>
+  <div style="display: flex; gap: var(--space-2); flex-wrap: wrap;">
+    <dc-import name="Button" variant="secondary" size="sm" icon="download" label="Back up now" on-click="{{ backup }}" hint-size="120px,28px"></dc-import>
+    <dc-import name="Button" variant="secondary" size="sm" icon="upload" label="Restore from backup" on-click="{{ restore }}" hint-size="160px,28px"></dc-import>
+    <dc-import name="Button" variant="ghost" size="sm" icon="file" label="Export all transactions (CSV)" on-click="{{ exportAll }}" hint-size="210px,28px"></dc-import>
+  </div>
+  <span style="font-size: 12px; color: var(--sb-text-faint);">Last backup: {{ lastBackup }}</span>
+  <div style="display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-3); padding-top: var(--space-3); border-top: 1px solid var(--color-divider);">
+    <dc-import name="FormField" label="Open at start" hint-size="100%,60px"><dc-import name="Select" value="{{ startPage }}" options="{{ pages }}" on-change="{{ setStart }}" hint-size="100%,36px"></dc-import></dc-import>
+    <dc-import name="FormField" label="Formats" hint="Fixed for v2: amounts in German format, interface in English." hint-size="100%,60px"><span style="font-size: 14px;">1.234,56 € · 26 Oct 2026</span></dc-import>
+  </div>
+</dc-import>
+<dc-import name="LoadingOverlay" open="{{ moving }}" title="Moving the database…" message="DashCash restarts when it's done." hint-size="0px,0px"></dc-import>
+<dc-import name="Modal" open="{{ move.open }}" title="Move the database" subtitle="DashCash copies dashcash.db and its CSV files to the new folder, then restarts." on-close="{{ closeMove }}" hint-size="0px,0px">
+  <dc-import name="FormField" label="New folder" hint="A local or synced folder you can write to, e.g. on another drive." hint-size="100%,80px">
+    <div style="display: flex; gap: var(--space-2); align-items: center;">
+      <div style="flex: 1; min-width: 0;"><dc-import name="Input" value="{{ move.to }}" on-change="{{ setTo }}" hint-size="100%,36px"></dc-import></div>
+      <dc-import name="Button" variant="secondary" icon="folder" label="Browse…" on-click="{{ browse }}" hint-size="110px,36px"></dc-import>
+    </div>
+  </dc-import>
+  <sc-if value="{{ move.isDefault }}"><span style="font-size: 13px; color: var(--sb-text-muted);">This is the default location.</span></sc-if>
+  <div style="display: flex; justify-content: space-between; gap: var(--space-2); flex-wrap: wrap;">
+    <dc-import name="Button" variant="ghost" label="Reset to default" disabled="{{ move.isDefault }}" on-click="{{ resetDefault }}" hint-size="130px,36px"></dc-import>
+    <div style="display: flex; gap: var(--space-2);">
+      <dc-import name="Button" variant="secondary" label="Cancel" on-click="{{ closeMove }}" hint-size="80px,36px"></dc-import>
+      <dc-import name="Button" variant="primary" icon="check" label="Move and restart" disabled="{{ move.invalid }}" on-click="{{ doMove }}" hint-size="150px,36px"></dc-import>
+    </div>
+  </div>
+</dc-import>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:560,&quot;height&quot;:440}}">
+class Component extends DCLogic {
+  state = { move: { open: false, to: '' } };
+  componentDidMount() {
+    const go = () => { this.unsub = window.SB.subscribe(() => this.forceUpdate()); this.forceUpdate(); };
+    if (window.SB) go(); else this.t = setInterval(() => { if (window.SB) { clearInterval(this.t); go(); } }, 40);
+  }
+  componentWillUnmount() { this.unsub && this.unsub(); clearInterval(this.t); }
+  renderVals() {
+    const SB = window.SB;
+    if (!SB) return { pages: [] };
+    const st = SB.state.settings;
+    return {
+      moving: !!this.state.moving,
+      folder: st.dataPath.replace(/\\dashcash\.db$/i, ''), noop: () => {},
+      folderHint: 'Stored on this computer only. dashcash.db and the imported CSVs live here.',
+      move: (() => { const m = this.state.move, def = 'C:\\Users\\you\\AppData\\Roaming\\DashCash', cur = st.dataPath.replace(/\\dashcash\.db$/i, ''); return Object.assign({}, m, { isDefault: (m.to || '').replace(/\\$/, '') === def, invalid: !(m.to || '').trim() || m.to.replace(/\\$/, '') === cur }); })(),
+      openMove: () => this.setState({ move: { open: true, to: st.dataPath.replace(/\\dashcash\.db$/i, '') } }),
+      closeMove: () => this.setState({ move: { open: false, to: '' } }),
+      setTo: (v) => this.setState({ move: Object.assign({}, this.state.move, { to: v }) }),
+      browse: () => this.setState({ move: Object.assign({}, this.state.move, { to: 'D:\\Finanzen\\DashCash' }) }),
+      resetDefault: () => this.setState({ move: Object.assign({}, this.state.move, { to: 'C:\\Users\\you\\AppData\\Roaming\\DashCash' }) }),
+      doMove: () => {
+        const to = this.state.move.to.replace(/\\$/, '');
+        SB.actions.setSetting('dataPath', to + '\\dashcash.db');
+        this.setState({ move: { open: false, to: '' }, moving: true });
+        setTimeout(() => this.setState({ moving: false }), 1800);
+        setTimeout(() => SB.actions.notify({ tone: 'success', title: 'Database moved', message: 'Now stored in ' + to + '. The old copy was removed.', autoHide: 6000 }), 1800);
+      },
+      path: st.dataPath, lastBackup: st.lastBackup, startPage: st.startPage,
+      pages: [['dashboard', 'Dashboard'], ['accounts', 'Accounts'], ['import', 'Import'], ['compare', 'Compare']].map(([value, label]) => ({ value, label })),
+      setStart: (v) => SB.actions.setSetting('startPage', v),
+      backup: () => { SB.actions.setSetting('lastBackup', '26 Oct 2026'); SB.actions.notify({ tone: 'success', title: 'Backup saved', message: 'dashcash-backup-2026-10-26.db in your Documents folder.', autoHide: 5000 }); },
+      restore: () => SB.actions.notify({ tone: 'warning', title: 'Restore replaces all current data', message: 'Pick a backup file. DashCash restarts after restoring.', actionLabel: 'Choose backup', actionIcon: 'upload', secondaryLabel: 'Cancel' }),
+      exportAll: () => SB.actions.notify({ tone: 'success', title: 'Exported 1.204 transactions', message: 'dashcash-transactions-2026-10-26.csv', autoHide: 5000 })
+    };
+  }
+}
+</script>
+</body>
+</html>

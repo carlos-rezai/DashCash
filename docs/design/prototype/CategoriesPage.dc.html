@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/industry-f2e85e32-8671-471e-b527-852aab1772ed/styles.css">
+<link rel="stylesheet" href="tokens/dashcash-dark.css">
+<script src="_ds/industry-f2e85e32-8671-471e-b527-852aab1772ed/_ds_bundle.js"></script>
+</helmet>
+<dc-import name="PageLayout" title="Categories" subtitle="Categories with colour and usage, and the one rule list that fills them." hint-size="100%,900px">
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(520px, 1fr)); gap: var(--space-6); align-items: start;">
+    <div style="display: grid; min-width: 0;"><dc-import name="CategoryList" hint-size="100%,760px"></dc-import></div>
+    <div style="display: grid; min-width: 0;"><dc-import name="RuleList" hint-size="100%,760px"></dc-import></div>
+  </div>
+</dc-import>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1208,&quot;height&quot;:900}}"></script>
+</body>
+</html>

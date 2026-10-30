@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/industry-f2e85e32-8671-471e-b527-852aab1772ed/styles.css">
+<link rel="stylesheet" href="tokens/dashcash-dark.css">
+<script src="_ds/industry-f2e85e32-8671-471e-b527-852aab1772ed/_ds_bundle.js"></script>
+</helmet>
+<label style="position: relative; display: flex; align-items: center; width: {{ w }}; color: var(--sb-text-muted);">
+  <sc-if value="{{ icon }}"><span style="position: absolute; left: 10px; top: 0; bottom: 0; display: flex; align-items: center; pointer-events: none;"><dc-import name="Icon" glyph="{{ icon }}" size="{{ 15 }}" hint-size="15px,15px"></dc-import></span></sc-if>
+  <input class="input" type="{{ type }}" value="{{ value }}" placeholder="{{ placeholder }}" onChange="{{ change }}" inputMode="{{ inputMode }}" style="padding-left: {{ pl }}; padding-right: {{ pr }}; text-align: {{ align }}; font-variant-numeric: tabular-nums; box-sizing: border-box; height: {{ h }}; min-height: {{ h }}; padding-top: 0; padding-bottom: 0; line-height: 1.2; font-size: {{ fs }};">
+  <sc-if value="{{ suffix }}"><span style="position: absolute; right: 10px; top: 0; bottom: 0; display: flex; align-items: center; font-size: {{ fs }}; line-height: 1; pointer-events: none;">{{ suffix }}</span></sc-if>
+</label>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:280,&quot;height&quot;:60},&quot;value&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;placeholder&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Search rules&quot;,&quot;tsType&quot;:&quot;string | undefined&quot;},&quot;icon&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;search&quot;,&quot;tsType&quot;:&quot;IconName | undefined&quot;},&quot;suffix&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string | undefined&quot;},&quot;align&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;left&quot;,&quot;right&quot;],&quot;default&quot;:&quot;left&quot;,&quot;tsType&quot;:&quot;'left' | 'right'&quot;},&quot;size&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;sm&quot;,&quot;md&quot;],&quot;default&quot;:&quot;md&quot;,&quot;tsType&quot;:&quot;'sm' | 'md'&quot;},&quot;numeric&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;width&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;100%&quot;,&quot;tsType&quot;:&quot;string | undefined&quot;},&quot;type&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;'text' | 'date'&quot;},&quot;onChange&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(value: string) =&gt; void&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    const p = this.props;
+    return {
+      type: p.type || 'text', value: p.value ?? '', placeholder: p.placeholder || '',
+      icon: p.icon, suffix: p.suffix,
+      pl: p.icon ? '32px' : '10px', pr: p.suffix ? '28px' : '10px',
+      align: p.align || 'left', w: p.width || '100%', h: p.size === 'sm' ? '28px' : '36px', fs: p.size === 'sm' ? '13px' : '14px',
+      inputMode: p.numeric ? 'decimal' : 'text',
+      change: (e) => p.onChange && p.onChange(e.target.value)
+    };
+  }
+}
+</script>
+</body>
+</html>

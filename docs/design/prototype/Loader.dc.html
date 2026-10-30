@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/industry-f2e85e32-8671-471e-b527-852aab1772ed/styles.css">
+<link rel="stylesheet" href="tokens/dashcash-dark.css">
+<script src="_ds/industry-f2e85e32-8671-471e-b527-852aab1772ed/_ds_bundle.js"></script>
+<style>
+@keyframes cd-draw-c { 0%, 47.9% { stroke-dashoffset: 1; opacity: 0; } 48% { stroke-dashoffset: 1; opacity: 1; } 78% { stroke-dashoffset: 0; opacity: 1; } 86% { stroke-dashoffset: 0; opacity: 1; } 100% { stroke-dashoffset: 0; opacity: 0; } }
+@keyframes cd-draw-l { 0% { stroke-dashoffset: 1; opacity: 1; } 24% { stroke-dashoffset: 0; } 86% { stroke-dashoffset: 0; opacity: 1; } 100% { stroke-dashoffset: 0; opacity: 0; } }
+@keyframes cd-d1 { 0%, 24% { opacity: 0; } 30% { opacity: 1; } 86% { opacity: 1; } 100% { opacity: 0; } }
+@keyframes cd-d2 { 0%, 32% { opacity: 0; } 38% { opacity: 1; } 86% { opacity: 1; } 100% { opacity: 0; } }
+@keyframes cd-d3 { 0%, 40% { opacity: 0; } 46% { opacity: 1; } 86% { opacity: 1; } 100% { opacity: 0; } }
+@keyframes cd-march { 0% { opacity: 0.2; } 25% { opacity: 1; } 55%, 100% { opacity: 0.2; } }
+@keyframes cd-spin { to { transform: rotate(360deg); } }
+@keyframes cd-g1 { 0%, 12% { opacity: 0.18; } 20% { opacity: 1; } 86% { opacity: 1; } 100% { opacity: 0.18; } }
+@keyframes cd-g2 { 0%, 34% { opacity: 0.18; } 42% { opacity: 1; } 86% { opacity: 1; } 100% { opacity: 0.18; } }
+@keyframes cd-g3 { 0%, 56% { opacity: 0.18; } 64% { opacity: 1; } 86% { opacity: 1; } 100% { opacity: 0.18; } }
+@keyframes cd-breathe { 0%, 100% { opacity: 1; } 50% { opacity: 0.45; } }
+@keyframes cd-fade-in { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .cd-anim { animation: none !important; stroke-dashoffset: 0 !important; opacity: 1 !important; transform: none !important; } .cd-mark { animation: cd-breathe 2.4s ease-in-out infinite !important; } }
+</style>
+</helmet>
+<span role="status" aria-live="polite" aria-label="{{ aria }}" style="display: inline-flex; align-items: center; gap: {{ gap }}; color: {{ color }}; vertical-align: middle; line-height: 1;">
+  {{ mark }}
+  <sc-if value="{{ label }}"><span style="font-size: {{ fs }}; color: {{ labelColor }}; opacity: {{ labelOp }};">{{ label }}</span></sc-if>
+</span>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:240,&quot;height&quot;:120},&quot;variant&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;draw&quot;,&quot;march&quot;,&quot;orbit&quot;,&quot;grow&quot;],&quot;default&quot;:&quot;draw&quot;,&quot;tsType&quot;:&quot;'draw' | 'march' | 'orbit' | 'grow'&quot;},&quot;size&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:32,&quot;min&quot;:12,&quot;max&quot;:160,&quot;tsType&quot;:&quot;number&quot;},&quot;label&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string | undefined&quot;},&quot;delay&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:300,&quot;min&quot;:0,&quot;max&quot;:2000,&quot;unit&quot;:&quot;ms&quot;,&quot;tsType&quot;:&quot;number&quot;},&quot;dashesOnly&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;color&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;default&quot;:&quot;var(--color-accent-600)&quot;,&quot;tsType&quot;:&quot;string | undefined&quot;},&quot;labelColor&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;string | undefined&quot;}}">
+let __cdId = 0;
+class Component extends DCLogic {
+  state = { shown: !(this.props.delay ?? 300) };
+  uid = 'cdl' + (++__cdId);
+  componentDidMount() { window.__cdLoaderReady = true; window.dispatchEvent(new Event('cd-loader-ready')); const d = this.props.delay ?? 300; if (d) this.t = setTimeout(() => this.setState({ shown: true }), d); }
+  componentWillUnmount() { clearTimeout(this.t); }
+  renderVals() {
+    const p = this.props, h = React.createElement;
+    const size = p.size ?? 32, variant = p.variant || 'draw', small = size <= 20 || p.dashesOnly;
+    const sw = size <= 20 ? 3.2 : size <= 32 ? 2.6 : 2.2, D = 1.6;
+    const k = 0.70710678, P = (t) => [16 + k * t, 16 - k * t];
+    const seg = (a, b) => { const [x1, y1] = P(a), [x2, y2] = P(b); return 'M' + x1.toFixed(3) + ' ' + y1.toFixed(3) + ' L' + x2.toFixed(3) + ' ' + y2.toFixed(3); };
+    const u = 13 / 9, dashes = small ? [seg(-13, -5.5), seg(-3, 4.5), seg(7, 14.5)] : [seg(u, 3 * u), seg(4 * u, 6 * u), seg(7 * u, 13 + sw / 2)];
+    const A = (name, extra) => Object.assign({ animation: name + ' ' + D + 's ' + (extra || 'ease-in-out') + ' infinite' }, {});
+    const dashAnim = (i) => {
+      if (variant === 'draw') return A('cd-d' + (i + 1));
+      if (variant === 'grow') return A('cd-g' + (i + 1));
+      if (variant === 'march' || small) return Object.assign(A('cd-march'), { animationDelay: (i * D / 6).toFixed(2) + 's' });
+      return {};
+    };
+    const st = { stroke: 'currentColor', strokeWidth: sw, fill: 'none' };
+    const kids = [];
+    if (!small) {
+      const cutId = this.uid + '-cut';
+      kids.push(h('defs', { key: 'd' }, h('clipPath', { id: cutId }, h('path', { d: 'M-2 -2 H34 V34 H-2 Z M16 16 L32.66 16 L23.46 25.2 L16 25.2 Z', clipRule: 'evenodd' }))));
+      const cStyle = variant === 'draw' ? Object.assign({ strokeDasharray: '1 1.05' }, A('cd-draw-c')) : {};
+      const arc = h('path', Object.assign({ key: 'c', d: 'M25.2 6.8 A13 13 0 1 0 29 16', pathLength: 1, clipPath: 'url(#' + cutId + ')', className: 'cd-anim', style: cStyle }, st));
+      kids.push(variant === 'orbit' ? h('g', { key: 'cg', className: 'cd-anim', style: { transformOrigin: '16px 16px', transformBox: 'view-box', animation: 'cd-spin ' + D + 's linear infinite' } }, arc) : arc);
+      const lStyle = variant === 'draw' ? Object.assign({ strokeDasharray: '1 1.05' }, A('cd-draw-l')) : {};
+      kids.push(h('path', Object.assign({ key: 'l', d: 'M3.3 19 L8.5 16.5 L12.5 19.5 L16 16', pathLength: 1, strokeLinejoin: 'miter', className: 'cd-anim', style: lStyle }, st)));
+    }
+    dashes.forEach((d, i) => kids.push(h('path', Object.assign({ key: 'x' + i, d, className: 'cd-anim', style: dashAnim(i) }, st, small ? { strokeWidth: 5.2 } : {}))));
+    const mark = this.state.shown ? h('svg', { width: size, height: size, viewBox: small ? '0 0 32 32' : '0 0 32 32', className: 'cd-mark', 'aria-hidden': true, style: { display: 'block', flex: 'none', overflow: 'visible', animation: 'cd-fade-in 200ms ease-out' } }, kids) : h('span', { style: { display: 'block', width: size, height: size, flex: 'none' } });
+    return {
+      mark, label: p.label, aria: p.label || 'Loading',
+      color: p.color || 'var(--color-accent-600)', labelColor: p.labelColor || 'var(--sb-text-muted)', labelOp: this.state.shown ? 1 : 0,
+      fs: size >= 48 ? '15px' : '13px', gap: size >= 48 ? '14px' : '8px'
+    };
+  }
+}
+</script>
+</body>
+</html>

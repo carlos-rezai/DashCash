@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/industry-f2e85e32-8671-471e-b527-852aab1772ed/styles.css">
+<link rel="stylesheet" href="tokens/dashcash-dark.css">
+<script src="_ds/industry-f2e85e32-8671-471e-b527-852aab1772ed/_ds_bundle.js"></script>
+<script src="lib/store.js"></script>
+</helmet>
+<dc-import name="Card" kicker="Timeline" title="Balance over time" padding="lg" hint-size="100%,420px">
+  <div style="display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap;">
+    <div style="order: 2; margin-left: auto;"><dc-import name="Segmented" options="{{ rangeOpts }}" value="{{ range }}" on-change="{{ setRange }}" hint-size="200px,28px"></dc-import></div>
+    <sc-for list="{{ legend }}" as="l" hint-placeholder-count="5">
+      <dc-import name="Chip" label="{{ l.name }}" meta="{{ l.meta }}" swatch="{{ l.color }}" swatch-shape="circle" active="{{ l.active }}" on-click="{{ l.toggle }}" hint-size="160px,28px"></dc-import>
+    </sc-for>
+  </div>
+  <div ref="{{ setRef }}" style="position: relative; width: 100%; height: {{ hpx }};" onMouseLeave="{{ leave }}">
+    <svg width="{{ W }}" height="{{ H }}" style="display: block; overflow: visible; font-family: var(--font-body);">
+      <rect x="{{ todayX }}" y="{{ mt }}" width="{{ futureW }}" height="{{ ph }}" fill="var(--sb-ground-sunken)" opacity="0.55"></rect>
+      <sc-for list="{{ grid }}" as="g" hint-placeholder-count="5">
+        <line x1="{{ ml }}" x2="{{ gridEnd }}" y1="{{ g.y }}" y2="{{ g.y }}" stroke="{{ g.stroke }}" strokeWidth="1"></line>
+      </sc-for>
+      <sc-for list="{{ xticks }}" as="t" hint-placeholder-count="8">
+        <line x1="{{ t.x }}" x2="{{ t.x }}" y1="{{ axisY }}" y2="{{ t.y2 }}" stroke="var(--color-divider)" strokeWidth="1"></line>
+      </sc-for>
+      <sc-if value="{{ payoff }}">
+        <rect x="{{ payoff.bx }}" y="{{ mt }}" width="{{ payoff.bw }}" height="{{ ph }}" fill="var(--sb-milestone-tint)"></rect>
+        <line x1="{{ payoff.x }}" x2="{{ payoff.x }}" y1="{{ payoff.y1 }}" y2="{{ axisY }}" stroke="var(--sb-milestone)" strokeWidth="1.25" strokeDasharray="3 3"></line>
+      </sc-if>
+      <line x1="{{ todayX }}" x2="{{ todayX }}" y1="20" y2="{{ axisY }}" stroke="var(--color-text)" strokeWidth="1" opacity="0.7"></line>
+      <text x="{{ todayLabelX }}" y="14" fill="var(--color-text)" fontSize="12" textAnchor="end" style="font-weight: 500;">Today · 26 Oct</text>
+      <text x="{{ actualLabelX }}" y="{{ zoneLabelY }}" fill="var(--sb-text-faint)" fontSize="10" textAnchor="end" style="letter-spacing: 0.1em;">ACTUAL</text>
+      <text x="{{ projLabelX }}" y="{{ zoneLabelY }}" fill="var(--sb-text-faint)" fontSize="10" textAnchor="start" style="letter-spacing: 0.1em;">PROJECTED</text>
+      <sc-for list="{{ lines }}" as="s" hint-placeholder-count="5">
+        <path d="{{ s.solid }}" fill="none" stroke="{{ s.color }}" strokeWidth="{{ s.sw }}" strokeLinejoin="round"></path>
+        <path d="{{ s.dashed }}" fill="none" stroke="{{ s.color }}" strokeWidth="{{ s.sw }}" strokeDasharray="5 4" strokeLinejoin="round" opacity="0.9"></path>
+        <circle cx="{{ todayX }}" cy="{{ s.ty }}" r="4" fill="var(--color-bg)" stroke="{{ s.color }}" strokeWidth="1.5"></circle>
+      </sc-for>
+      <sc-if value="{{ payoffDot }}">
+        <circle cx="{{ payoffDot.x }}" cy="{{ payoffDot.y }}" r="5" fill="var(--sb-milestone)" stroke="var(--color-bg)" strokeWidth="2"></circle>
+      </sc-if>
+      <sc-if value="{{ hover }}">
+        <line x1="{{ hover.x }}" x2="{{ hover.x }}" y1="{{ mt }}" y2="{{ axisY }}" stroke="var(--color-accent-500)" strokeWidth="1"></line>
+        <sc-for list="{{ hover.dots }}" as="d"><circle cx="{{ hover.x }}" cy="{{ d.y }}" r="3" fill="{{ d.color }}"></circle></sc-for>
+      </sc-if>
+      <rect x="{{ ml }}" y="{{ mt }}" width="{{ pw }}" height="{{ ph }}" fill="transparent" onMouseMove="{{ move }}" style="cursor: crosshair;"></rect>
+    </svg>
+    <sc-for list="{{ grid }}" as="g" hint-placeholder-count="5"><span style="position: absolute; left: 0; width: {{ g.lw }}; top: {{ g.top }}; text-align: right; font-size: 11px; line-height: 14px; color: var(--sb-text-faint); font-variant-numeric: tabular-nums; pointer-events: none; white-space: nowrap;">{{ g.label }}</span></sc-for>
+    <sc-for list="{{ xticks }}" as="t" hint-placeholder-count="8"><span style="position: absolute; left: {{ t.left }}; top: {{ t.top }}; width: 80px; margin-left: -40px; text-align: center; font-size: 11px; color: {{ t.color }}; pointer-events: none; white-space: nowrap;">{{ t.label }}</span></sc-for>
+    <sc-if value="{{ payoff }}"><span style="position: absolute; top: 3px; left: {{ payoff.left }}; transform: {{ payoff.shift }}; display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 500; color: var(--sb-milestone); pointer-events: none; white-space: nowrap;"><dc-import name="Icon" glyph="flag" size="{{ 12 }}" hint-size="12px,12px"></dc-import>{{ payoff.label }}</span></sc-if>
+    <sc-if value="{{ hover }}">
+      <div style="position: absolute; top: {{ hover.top }}; left: {{ hover.left }}; width: 230px; pointer-events: none; padding: 10px 12px; background: var(--color-bg); border: 1px solid var(--color-accent-300); box-shadow: var(--shadow-md); display: flex; flex-direction: column; gap: 6px;">
+        <div style="display: flex; justify-content: space-between; gap: 8px; font-size: 12px;">
+          <span style="font-weight: 500;">{{ hover.month }}</span>
+          <span style="color: var(--sb-text-muted);">{{ hover.status }}</span>
+        </div>
+        <sc-for list="{{ hover.rows }}" as="r">
+          <div style="display: flex; align-items: center; gap: 8px; font-size: 13px;">
+            <span style="width: 8px; height: 8px; border-radius: 50%; background: {{ r.color }}; flex: none;"></span>
+            <span style="flex: 1; color: var(--sb-text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ r.name }}</span>
+            <span style="font-variant-numeric: tabular-nums; color: {{ r.valueColor }};">{{ r.value }}</span>
+          </div>
+        </sc-for>
+      </div>
+    </sc-if>
+  </div>
+</dc-import>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1160,&quot;height&quot;:460},&quot;defaultRange&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;1y&quot;,&quot;3y&quot;,&quot;payoff&quot;],&quot;default&quot;:&quot;3y&quot;,&quot;tsType&quot;:&quot;'1y' | '3y' | 'payoff'&quot;},&quot;height&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:300,&quot;min&quot;:200,&quot;max&quot;:500,&quot;tsType&quot;:&quot;number&quot;}}">
+class Component extends DCLogic {
+  state = (() => { let saved = {}; try { saved = JSON.parse(localStorage.getItem('dashcash-timeline-view')) || {}; } catch (e) {} return { range: saved.range || this.props.defaultRange || 'payoff', hidden: saved.hidden || {}, hover: null, w: 1000 }; })();
+  save(patch) { const v = Object.assign({ range: this.state.range, hidden: this.state.hidden }, patch); try { localStorage.setItem('dashcash-timeline-view', JSON.stringify(v)); } catch (e) {} }
+  componentDidMount() {
+    const go = () => { this.unsub = window.SB.subscribe(() => this.forceUpdate()); this.forceUpdate(); };
+    if (window.SB) go(); else this.t = setInterval(() => { if (window.SB) { clearInterval(this.t); go(); } }, 40);
+  }
+  componentWillUnmount() { this.unsub && this.unsub(); clearInterval(this.t); this.ro && this.ro.disconnect(); }
+  setRef = (el) => {
+    if (!el || el === this.el) return;
+    this.el = el; this.ro && this.ro.disconnect();
+    this.ro = new ResizeObserver(() => { const w = el.clientWidth; if (w && Math.abs(w - this.state.w) > 2) this.setState({ w }); });
+    this.ro.observe(el);
+  };
+  renderVals() {
+    const SB = window.SB;
+    const H = this.props.height ?? 300, ml = 72, mr = 16, mt = 30, mb = 30, W = this.state.w;
+    const pw = Math.max(100, W - ml - mr), ph = H - mt - mb;
+    const range = this.state.range;
+    const base = { W, H, hpx: H + 'px', ml, mt, pw, ph, axisY: mt + ph, gridEnd: ml + pw, setRef: this.setRef, leave: () => this.setState({ hover: null }) };
+    if (!SB) return Object.assign(base, { legend: [], lines: [], grid: [], xticks: [] });
+    const pay = SB.payoffIdx();
+    const [from, to] = { '1y': [27, 39], '3y': [21, 57], payoff: [0, Math.min(SB.LAST_IDX, (pay ?? 55) + 3)] }[range];
+    const tX = 32 + 26 / 31;
+    const X = (i) => ml + ((i - from) / (to - from)) * pw;
+    const accounts = SB.state.accounts;
+    const visible = accounts.filter((a) => !this.state.hidden[a.id]);
+    const data = visible.map((a) => {
+      const s = SB.series(a);
+      const past = [], fut = [[tX, s.today]];
+      for (let i = Math.max(from, 0); i <= Math.min(32, to); i++) if (s.hist[i] != null) past.push([i, s.hist[i]]);
+      past.push([tX, s.today]);
+      for (let i = 33; i <= to; i++) if (s.proj[i] != null) fut.push([i, s.proj[i]]);
+      return { a, s, past, fut };
+    });
+    const vals = data.flatMap((d) => d.past.concat(d.fut).map((p) => p[1]));
+    let min = Math.min(0, ...vals), max = Math.max(1, ...vals);
+    const steps = [5000, 10000, 20000, 25000, 50000, 100000, 200000, 250000, 500000, 1000000, 2000000, 5000000];
+    const step = steps.find((s) => (max - min) / s <= 5) || 10000000;
+    const yMin = Math.floor(min / step) * step, yMax = Math.ceil(max / step) * step || step;
+    const Y = (v) => mt + ph - ((v - yMin) / (yMax - yMin)) * ph;
+    const path = (pts) => (pts.length ? 'M' + pts.map(([i, v]) => X(i).toFixed(1) + ',' + Y(v).toFixed(1)).join('L') : '');
+    const nf0 = new Intl.NumberFormat('de-DE', { maximumFractionDigits: 0 });
+    const grid = [];
+    for (let v = yMin; v <= yMax + 1; v += step) grid.push({ y: Y(v), top: Y(v) - 7 + 'px', lw: ml - 10 + 'px', label: nf0.format(v / 100) + '\u00a0€', stroke: v === 0 ? 'var(--color-neutral-400)' : 'var(--color-divider)' });
+    const every = range === '1y' ? 1 : range === '3y' ? 3 : 6;
+    const xticks = [];
+    for (let i = from; i <= to; i++) if (i % every === 0) xticks.push({ x: X(i), y2: mt + ph + 4, left: X(i) + 'px', top: mt + ph + 8 + 'px', label: i % 12 === 0 ? SB.mShort(i) + ' ' + SB.mYear(i) : SB.mShort(i), color: i % 12 === 0 ? 'var(--sb-text-muted)' : 'var(--sb-text-faint)' });
+    const lines = data.map((d) => ({ color: SB.TYPES[d.a.type].color, solid: path(d.past), dashed: path(d.fut), ty: Y(d.s.today), sw: d.a.type === 'mortgage' ? 2 : 1.6 }));
+    const todayX = X(tX);
+    let payoff = null, payoffDot = null;
+    const mort = accounts.find((a) => a.type === 'mortgage');
+    if (pay != null && mort) {
+      const label = 'Mortgage paid off · ' + SB.mLabel(pay);
+      if (pay <= to) {
+        const x = X(pay), bx = X(pay - 0.5), bw = X(pay + 0.5) - bx;
+        const anchorEnd = x > ml + pw - 180;
+        payoff = { x, bx, bw, y1: 20, left: (anchorEnd ? x - 6 : x + 6) + 'px', shift: anchorEnd ? 'translateX(-100%)' : 'none', label };
+        if (!this.state.hidden[mort.id]) payoffDot = { x, y: Y(0) };
+      } else {
+        payoff = { x: -999, bx: -999, bw: 0, y1: 0, left: ml + pw + 'px', shift: 'translateX(-100%)', label: label + ' →' };
+      }
+    }
+    let hover = null;
+    const hv = this.state.hover;
+    if (hv != null && hv >= from && hv <= to) {
+      const x = X(hv);
+      const rows = data.map((d) => {
+        const v = hv <= 32 ? d.s.hist[hv] : d.s.proj[hv];
+        const debt = d.a.type === 'mortgage';
+        const valueColor = !v ? 'var(--color-text)' : debt || v < 0 ? 'var(--sb-negative)' : 'var(--sb-positive)';
+        return { name: d.a.name, color: SB.TYPES[d.a.type].color, value: SB.eur(v), valueColor, y: v == null ? -99 : Y(v) };
+      });
+      hover = {
+        x, rows, dots: rows.map((r) => ({ y: r.y, color: r.color })),
+        month: SB.mLabel(hv) + ' · month end', status: hv <= 32 ? 'Actual' : 'Projected',
+        left: (x + 14 + 230 > W ? x - 244 : x + 14) + 'px', top: mt + 4 + 'px'
+      };
+      if (hv === pay) hover.status = 'Payoff month';
+    }
+    const legend = accounts.map((a) => ({
+      name: a.name, color: SB.TYPES[a.type].color, meta: SB.eur(a.anchor), active: !this.state.hidden[a.id],
+      toggle: () => {
+        const hidden = Object.assign({}, this.state.hidden, { [a.id]: !this.state.hidden[a.id] });
+        if (accounts.every((x) => hidden[x.id])) return;
+        this.save({ hidden });
+        this.setState({ hidden });
+      }
+    }));
+    const opts = [{ value: '1y', label: '1Y' }, { value: '3y', label: '3Y' }, { value: 'payoff', label: 'Until payoff' }];
+    return Object.assign(base, {
+      legend, lines, grid, xticks, payoff, payoffDot, hover,
+      todayX, futureW: Math.max(0, ml + pw - todayX), todayLabelX: todayX - 6,
+      actualLabelX: todayX - 8, projLabelX: todayX + 8, zoneLabelY: mt + 14,
+      rangeOpts: opts, range,
+      setRange: (v) => { this.save({ range: v }); this.setState({ range: v, hover: null }); },
+      move: (e) => {
+        const r = e.currentTarget.getBoundingClientRect();
+        const i = Math.round(from + ((e.clientX - r.left) / r.width) * (to - from));
+        if (i !== this.state.hover) this.setState({ hover: Math.max(from, Math.min(to, i)) });
+      }
+    });
+  }
+}
+</script>
+</body>
+</html>

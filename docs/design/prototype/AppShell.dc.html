@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/industry-f2e85e32-8671-471e-b527-852aab1772ed/styles.css">
+<link rel="stylesheet" href="tokens/dashcash-dark.css">
+<script src="_ds/industry-f2e85e32-8671-471e-b527-852aab1772ed/_ds_bundle.js"></script>
+</helmet>
+<div style="position: relative; display: grid; grid-template-columns: 64px minmax(0, 1fr); height: {{ h }}; min-height: 600px; background: var(--color-bg); color: var(--color-text); font-family: var(--font-body);">
+  <div aria-hidden="true"></div>
+  <div style="position: absolute; z-index: 20; left: 0; top: 0; bottom: 0; width: {{ sideW }}; display: flex; flex-direction: column; box-shadow: {{ sideShadow }}; transition: width 180ms ease, box-shadow 180ms ease;">
+    <dc-import name="Sidebar" style="flex: 1; height: 100%; min-height: 0;" version="{{ version }}" active="{{ active }}" compact="{{ compact }}" uncategorised="{{ uncategorised }}" on-navigate="{{ onNavigate }}" on-toggle-compact="{{ toggle }}" hint-size="64px,100%"></dc-import>
+  </div>
+  <main ref="{{ mainRef }}" style="overflow: auto; overflow-anchor: none; min-width: 0;">
+    <div style="max-width: 1320px; margin: 0 auto; padding: 24px 24px 48px; box-sizing: border-box;">{{ children }}</div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1440,&quot;height&quot;:900},&quot;active&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;dashboard&quot;,&quot;accounts&quot;,&quot;import&quot;,&quot;compare&quot;,&quot;categories&quot;,&quot;uncategorised&quot;],&quot;default&quot;:&quot;dashboard&quot;,&quot;tsType&quot;:&quot;PageId&quot;},&quot;uncategorised&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:7,&quot;tsType&quot;:&quot;number&quot;},&quot;height&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;100vh&quot;,&quot;tsType&quot;:&quot;string | undefined&quot;},&quot;onNavigate&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(page: PageId, accountId?: string) =&gt; void&quot;},&quot;children&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;React.ReactNode&quot;}}">
+class Component extends DCLogic {
+  state = (() => {
+    let pref = null;
+    try { pref = JSON.parse(localStorage.getItem('dashcash-sidebar-compact')); } catch (e) {}
+    return { pref, narrow: typeof window !== 'undefined' && window.innerWidth < 1200 };
+  })();
+  mainRef = (el) => { this.main = el; };
+  componentDidMount() {
+    this.onResize = () => { const n = window.innerWidth < 1200; if (n !== this.state.narrow) this.setState({ narrow: n }); };
+    window.addEventListener('resize', this.onResize);
+  }
+  componentWillUnmount() { window.removeEventListener('resize', this.onResize); }
+  componentDidUpdate(prev) { if (prev.active !== this.props.active && this.main) this.main.scrollTop = 0; }
+  renderVals() {
+    const p = this.props;
+    const compact = this.state.pref == null ? this.state.narrow : this.state.pref;
+    return {
+      active: p.active, version: p.version, uncategorised: p.uncategorised, onNavigate: p.onNavigate, mainRef: this.mainRef, h: p.height || '100vh',
+      compact, sideW: compact ? '64px' : '208px', sideShadow: compact ? 'none' : 'var(--shadow-lg)',
+      toggle: () => { const v = !compact; try { localStorage.setItem('dashcash-sidebar-compact', JSON.stringify(v)); } catch (e) {} this.setState({ pref: v }); }
+    };
+  }
+}
+</script>
+</body>
+</html>

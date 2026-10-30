@@ -1,0 +1,14 @@
+/* DashCash Loader keyframes. 1,6 s loop, ease-in-out. Final motion: draw (8a): line, then dashes, then the C from the tip of the last dash. Alternatives: march, orbit, grow. */
+@keyframes cd-draw-c { 0%, 47.9% { stroke-dashoffset: 1; opacity: 0; } 48% { stroke-dashoffset: 1; opacity: 1; } 78% { stroke-dashoffset: 0; opacity: 1; } 86% { stroke-dashoffset: 0; opacity: 1; } 100% { stroke-dashoffset: 0; opacity: 0; } }
+@keyframes cd-draw-l { 0% { stroke-dashoffset: 1; opacity: 1; } 24% { stroke-dashoffset: 0; } 86% { stroke-dashoffset: 0; opacity: 1; } 100% { stroke-dashoffset: 0; opacity: 0; } }
+@keyframes cd-d1 { 0%, 24% { opacity: 0; } 30% { opacity: 1; } 86% { opacity: 1; } 100% { opacity: 0; } }
+@keyframes cd-d2 { 0%, 32% { opacity: 0; } 38% { opacity: 1; } 86% { opacity: 1; } 100% { opacity: 0; } }
+@keyframes cd-d3 { 0%, 40% { opacity: 0; } 46% { opacity: 1; } 86% { opacity: 1; } 100% { opacity: 0; } }
+@keyframes cd-march { 0% { opacity: 0.2; } 25% { opacity: 1; } 55%, 100% { opacity: 0.2; } }
+@keyframes cd-spin { to { transform: rotate(360deg); } }
+@keyframes cd-g1 { 0%, 12% { opacity: 0.18; } 20% { opacity: 1; } 86% { opacity: 1; } 100% { opacity: 0.18; } }
+@keyframes cd-g2 { 0%, 34% { opacity: 0.18; } 42% { opacity: 1; } 86% { opacity: 1; } 100% { opacity: 0.18; } }
+@keyframes cd-g3 { 0%, 56% { opacity: 0.18; } 64% { opacity: 1; } 86% { opacity: 1; } 100% { opacity: 0.18; } }
+@keyframes cd-breathe { 0%, 100% { opacity: 1; } 50% { opacity: 0.45; } }
+@keyframes cd-fade-in { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .cd-anim { animation: none !important; stroke-dashoffset: 0 !important; opacity: 1 !important; transform: none !important; } .cd-mark { animation: cd-breathe 2.4s ease-in-out infinite !important; } }

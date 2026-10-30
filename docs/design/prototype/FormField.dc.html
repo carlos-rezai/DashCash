@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/industry-f2e85e32-8671-471e-b527-852aab1772ed/styles.css">
+<link rel="stylesheet" href="tokens/dashcash-dark.css">
+<script src="_ds/industry-f2e85e32-8671-471e-b527-852aab1772ed/_ds_bundle.js"></script>
+</helmet>
+<div class="field" style="display: flex; flex-direction: column; gap: 5px; min-width: 0;">
+  <span style="font-size: 12px; letter-spacing: 0.04em; color: var(--sb-text-muted);">{{ label }}</span>
+  {{ children }}
+  <sc-if value="{{ hint }}"><span style="font-size: 12px; color: {{ hintColor }}; text-wrap: pretty;">{{ hint }}</span></sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:320,&quot;height&quot;:110},&quot;label&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Balance today&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;hint&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Editing adds a correction at today's date.&quot;,&quot;tsType&quot;:&quot;string | undefined&quot;},&quot;error&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string | undefined&quot;},&quot;children&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;React.ReactNode&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    const p = this.props;
+    return { label: p.label, hint: p.error || p.hint, hintColor: p.error ? 'var(--sb-danger)' : 'var(--sb-text-faint)' };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/industry-f2e85e32-8671-471e-b527-852aab1772ed/styles.css">
+<link rel="stylesheet" href="tokens/dashcash-dark.css">
+<script src="_ds/industry-f2e85e32-8671-471e-b527-852aab1772ed/_ds_bundle.js"></script>
+<script src="lib/store.js"></script>
+</helmet>
+<dc-import name="Card" kicker="Rules" title="{{ title }}" padding="lg" hint-size="100%,700px">
+  <div style="display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap;">
+    <div style="flex: 1; min-width: 200px;"><dc-import name="Input" icon="search" value="{{ query }}" placeholder="Search pattern or category" size="sm" on-change="{{ setQuery }}" hint-size="100%,28px"></dc-import></div>
+    <dc-import name="Segmented" options="{{ filterOpts }}" value="{{ filter }}" on-change="{{ setFilter }}" hint-size="220px,28px"></dc-import>
+  </div>
+  <span style="font-size: 13px; color: var(--sb-text-muted);">Matching runs on the normalised merchant name (lower case, legal suffixes and reference numbers removed). For PayPal and Klarna it uses the purpose text.</span>
+  <table class="table" style="font-size: 14px;">
+    <thead><tr><th style="width: 90px;">Match</th><th>Pattern</th><th>Field</th><th>Category</th><th style="text-align: right;">Hits</th><th style="width: 72px;"></th></tr></thead>
+    <tbody>
+      <sc-for list="{{ rows }}" as="r" hint-placeholder-count="10">
+        <tr>
+          <td><dc-import name="Tag" label="{{ r.matchLabel }}" tone="{{ r.matchTone }}" hint-size="60px,20px"></dc-import></td>
+          <td style="font-variant-numeric: tabular-nums;"><div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;"><span>{{ r.pattern }}</span><sc-if value="{{ r.builtIn }}"><dc-import name="Tag" label="Built-in" tone="outline" hint-size="60px,20px"></dc-import></sc-if></div></td>
+          <td style="color: var(--sb-text-muted);">{{ r.field }}</td>
+          <td><div style="display: flex; align-items: center; gap: 8px;"><dc-import name="Swatch" color="{{ r.color }}" size="{{ 10 }}" hint-size="10px,10px"></dc-import><span>{{ r.cat }}</span></div></td>
+          <td style="text-align: right; color: var(--sb-text-muted); font-variant-numeric: tabular-nums;">{{ r.hits }}</td>
+          <td><div style="display: flex; justify-content: flex-end; gap: 2px;">
+            <dc-import name="Button" variant="ghost" size="sm" icon="pencil" title="Edit rule" on-click="{{ r.edit }}" hint-size="28px,28px"></dc-import>
+            <dc-import name="Button" variant="ghost" size="sm" icon="trash" title="{{ r.removeTitle }}" disabled="{{ r.builtIn }}" on-click="{{ r.remove }}" hint-size="28px,28px"></dc-import>
+          </div></td>
+        </tr>
+      </sc-for>
+    </tbody>
+  </table>
+  <sc-if value="{{ empty }}"><span style="font-size: 14px; color: var(--sb-text-muted);">No rules match “{{ query }}”.</span></sc-if>
+</dc-import>
+<dc-import name="Modal" open="{{ edit.open }}" title="Edit rule" subtitle="Applies to future imports; past transactions keep their category." on-close="{{ close }}" hint-size="0px,0px">
+  <dc-import name="FormField" label="Match type" hint="{{ edit.hint }}" hint-size="100%,60px"><dc-import name="Segmented" size="md" options="{{ matchOpts }}" value="{{ edit.match }}" on-change="{{ setMatch }}" hint-size="200px,28px"></dc-import></dc-import>
+  <dc-import name="FormField" label="Pattern" hint-size="100%,60px"><dc-import name="Input" value="{{ edit.pattern }}" on-change="{{ setPattern }}" hint-size="100%,36px"></dc-import></dc-import>
+  <div style="display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--space-3);">
+    <dc-import name="FormField" label="Field" hint-size="100%,60px"><dc-import name="Select" value="{{ edit.field }}" options="{{ fieldOpts }}" on-change="{{ setField }}" hint-size="100%,36px"></dc-import></dc-import>
+    <dc-import name="FormField" label="Category" hint-size="100%,60px"><dc-import name="Select" value="{{ edit.category }}" options="{{ catOpts }}" show-swatch="{{ true }}" on-change="{{ setCat }}" hint-size="100%,36px"></dc-import></dc-import>
+  </div>
+  <div style="display: flex; justify-content: flex-end; gap: var(--space-2);">
+    <dc-import name="Button" variant="secondary" label="Cancel" on-click="{{ close }}" hint-size="80px,36px"></dc-import>
+    <dc-import name="Button" variant="primary" icon="check" label="Save rule" on-click="{{ save }}" hint-size="110px,36px"></dc-import>
+  </div>
+</dc-import>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:720,&quot;height&quot;:800}}">
+class Component extends DCLogic {
+  state = { query: '', filter: 'all', edit: { open: false } };
+  componentDidMount() {
+    const go = () => { this.unsub = window.SB.subscribe(() => this.forceUpdate()); this.forceUpdate(); };
+    if (window.SB) go(); else this.t = setInterval(() => { if (window.SB) { clearInterval(this.t); go(); } }, 40);
+  }
+  componentWillUnmount() { this.unsub && this.unsub(); clearInterval(this.t); }
+  setEdit(k, v) { this.setState((s) => ({ edit: Object.assign({}, s.edit, { [k]: v }) })); }
+  renderVals() {
+    const SB = window.SB, st = this.state;
+    if (!SB) return { rows: [], edit: {} };
+    const q = st.query.trim().toLowerCase();
+    const all = SB.state.rules;
+    const list = all.filter((r) => (st.filter === 'all' || r.match === st.filter) && (!q || r.pattern.toLowerCase().includes(q) || ((SB.category(r.category) || {}).name || '').toLowerCase().includes(q)));
+    const rows = list.map((r) => {
+      const c = SB.category(r.category) || { name: 'None', color: 'transparent' };
+      return {
+        matchLabel: r.match === 'exact' ? 'Exact' : 'Contains', matchTone: r.match === 'exact' ? 'accent' : 'outline',
+        pattern: r.pattern, field: r.field, builtIn: !!r.builtIn, removeTitle: r.builtIn ? 'Built-in cash rule, cannot be deleted' : 'Delete rule', cat: c.name, color: c.color, hits: r.hits,
+        edit: () => this.setState({ edit: Object.assign({ open: true }, r) }),
+        remove: () => SB.actions.deleteRule(r.id)
+      };
+    });
+    const e = st.edit;
+    return {
+      title: all.length + ' rules · one list', rows, empty: !rows.length && !!q, query: st.query, filter: st.filter,
+      filterOpts: [{ value: 'all', label: 'All' }, { value: 'exact', label: 'Exact' }, { value: 'contains', label: 'Contains' }],
+      matchOpts: [{ value: 'exact', label: 'Exact' }, { value: 'contains', label: 'Contains' }],
+      fieldOpts: ['Merchant', 'Purpose · PayPal', 'Purpose · Klarna'].map((v) => ({ value: v, label: v })),
+      catOpts: SB.state.categories.map((c) => ({ value: c.id, label: c.name, color: c.color })),
+      edit: Object.assign({}, e, { hint: e.match === 'exact' ? 'A merchant you approved once.' : 'A keyword anywhere in the field, e.g. AMAZON.' }),
+      setQuery: (v) => this.setState({ query: v }), setFilter: (v) => this.setState({ filter: v }),
+      setMatch: (v) => this.setEdit('match', v), setPattern: (v) => this.setEdit('pattern', v), setField: (v) => this.setEdit('field', v), setCat: (v) => this.setEdit('category', v),
+      close: () => this.setState({ edit: { open: false } }),
+      save: () => { const { open, ...rule } = e; SB.actions.saveRule(rule); this.setState({ edit: { open: false } }); }
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/industry-f2e85e32-8671-471e-b527-852aab1772ed/styles.css">
+<link rel="stylesheet" href="tokens/dashcash-dark.css">
+<script src="_ds/industry-f2e85e32-8671-471e-b527-852aab1772ed/_ds_bundle.js"></script>
+</helmet>
+<ol style="display: grid; grid-template-columns: repeat({{ count }}, minmax(0, 1fr)); gap: 0; margin: 0; padding: 0; list-style: none; border: 1px solid var(--color-divider);">
+  <sc-for list="{{ items }}" as="s" hint-placeholder-count="5">
+    <li style="display: flex; min-width: 0;">
+      <button type="button" onClick="{{ s.go }}" disabled="{{ s.locked }}" aria-current="{{ s.aria }}" style="flex: 1; min-width: 0; overflow: hidden; display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: {{ s.bg }}; border: 0; border-left: {{ s.bl }}; box-shadow: {{ s.bar }}; color: {{ s.fg }}; font: inherit; font-size: 14px; text-align: left; cursor: {{ s.cursor }};">
+        <span style="width: 24px; height: 24px; flex: none; display: grid; place-items: center; border: 1px solid {{ s.numBd }}; background: {{ s.numBg }}; color: {{ s.numFg }}; font-family: var(--font-heading); font-weight: 600; font-size: 13px;">
+          <sc-if value="{{ s.done }}"><dc-import name="Icon" glyph="check" size="{{ 13 }}" hint-size="13px,13px"></dc-import></sc-if>
+          <sc-if value="{{ s.notDone }}"><span>{{ s.n }}</span></sc-if>
+        </span>
+        <span style="min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ s.label }}</span>
+      </button>
+    </li>
+  </sc-for>
+</ol>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1000,&quot;height&quot;:70},&quot;steps&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;string[]&quot;},&quot;current&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:2,&quot;min&quot;:0,&quot;max&quot;:4,&quot;tsType&quot;:&quot;number&quot;},&quot;onStep&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(index: number) =&gt; void&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    const p = this.props;
+    const cur = p.current ?? 0;
+    const steps = p.steps || [];
+    const items = steps.map((label, i) => {
+      const done = i < cur, active = i === cur;
+      return {
+        label, n: i + 1, done, notDone: !done, locked: i > cur, aria: active ? 'step' : undefined,
+        go: () => i < cur && p.onStep && p.onStep(i),
+        cursor: i < cur ? 'pointer' : 'default',
+        bg: active ? 'var(--color-accent-100)' : 'transparent',
+        bl: i === 0 ? '0' : '1px solid var(--color-divider)',
+        bar: active ? 'inset 0 -2px 0 var(--color-accent)' : 'none',
+        fg: i > cur ? 'var(--sb-text-faint)' : 'var(--color-text)',
+        numBd: active || done ? 'var(--color-accent)' : 'var(--color-divider)',
+        numBg: done ? 'var(--color-accent)' : 'transparent',
+        numFg: done ? 'var(--color-bg)' : active ? 'var(--color-accent-700)' : 'var(--sb-text-faint)'
+      };
+    });
+    return { items, count: steps.length || 1 };
+  }
+}
+</script>
+</body>
+</html>

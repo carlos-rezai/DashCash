@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="stylesheet" href="_ds/industry-f2e85e32-8671-471e-b527-852aab1772ed/styles.css">
+<link rel="stylesheet" href="tokens/dashcash-dark.css">
+<script src="_ds/industry-f2e85e32-8671-471e-b527-852aab1772ed/_ds_bundle.js"></script>
+<script src="lib/icons.js"></script>
+<style>body{margin:0;background:var(--color-bg);color:var(--color-text);font-family:var(--font-body);} a{color:var(--color-accent-600);} a:hover{color:var(--color-accent-700);}</style>
+</helmet>
+<section style="display: flex; flex-direction: column; gap: 24px; padding: 48px 48px 0;">
+  <div style="display: flex; flex-direction: column; gap: 6px;">
+    <span style="font-family: var(--font-heading); font-size: 32px; font-weight: 600;">In context</span>
+    <span style="font-size: 14px; color: var(--sb-text-muted);">Every place a loader appears, using the motion picked here. Below 20 px the mark is reduced to its three dashes.</span>
+  </div>
+  <dc-import name="Segmented" size="md" options="{{ variantOpts }}" value="{{ v }}" on-change="{{ setV }}" hint-size="360px,36px"></dc-import>
+  <div style="display: grid; grid-template-columns: repeat(3, 420px); gap: 24px;">
+    <div style="display: flex; flex-direction: column; gap: 10px;">
+      <span style="font-size: 12px; color: var(--sb-text-muted);">App start · full-screen splash</span>
+      <div style="height: 260px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; background: var(--color-bg); border: 1px solid var(--color-divider);">
+        <dc-import name="Loader" variant="{{ v }}" size="{{ 72 }}" delay="{{ 0 }}" hint-size="72px,72px"></dc-import>
+        <span style="font-family: var(--font-heading); font-size: 26px; font-weight: 600; letter-spacing: 0.02em;">DashCash</span>
+        <span style="font-size: 13px; color: var(--sb-text-muted);">Opening your accounts…</span>
+      </div>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 10px;">
+      <span style="font-size: 12px; color: var(--sb-text-muted);">Full-screen overlay · restore, move database, update</span>
+      <div style="position: relative; height: 260px; border: 1px solid var(--color-divider); overflow: hidden;">
+        <div style="position: absolute; inset: 16px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; opacity: 0.5;">
+          <div style="background: var(--sb-card-bg); border: 1px solid var(--sb-card-border);"></div>
+          <div style="background: var(--sb-card-bg); border: 1px solid var(--sb-card-border);"></div>
+        </div>
+        <div style="position: absolute; inset: 0; background: var(--sb-backdrop); display: grid; place-items: center;">
+          <div style="display: flex; flex-direction: column; align-items: center; gap: 14px; padding: 24px 28px; background: var(--sb-raised-bg); border: 1px solid var(--sb-card-border); box-shadow: var(--shadow-lg);">
+            <dc-import name="Loader" variant="{{ v }}" size="{{ 48 }}" delay="{{ 0 }}" hint-size="48px,48px"></dc-import>
+            <span style="font-size: 14px;">Moving the database…</span>
+            <span style="font-size: 12px; color: var(--sb-text-faint);">DashCash restarts when it's done.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 10px;">
+      <span style="font-size: 12px; color: var(--sb-text-muted);">Card / section · recalculating</span>
+      <div style="position: relative; height: 260px;">
+        <dc-import name="Card" kicker="Balance" title="All accounts" padding="lg" style="height: 100%;" hint-size="100%,260px">
+          <div style="flex: 1; display: grid; place-items: center; background: var(--sb-ground-sunken);">
+            <dc-import name="Loader" variant="{{ v }}" size="{{ 32 }}" label="Recalculating projection…" delay="{{ 0 }}" hint-size="220px,32px"></dc-import>
+          </div>
+        </dc-import>
+      </div>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 10px;">
+      <span style="font-size: 12px; color: var(--sb-text-muted);">Import progress · steps while reading</span>
+      <dc-import name="Card" kicker="Step 2" title="Reading Umsaetze_Sparkasse.csv" padding="lg" hint-size="100%,220px">
+        <div style="display: flex; flex-direction: column; gap: 10px; font-size: 14px;">
+          <div style="display: flex; align-items: center; gap: 10px;"><span style="display: flex; color: var(--sb-positive);"><dc-import name="Icon" glyph="check" size="{{ 16 }}" hint-size="16px,16px"></dc-import></span><span>Header row read · Sparkasse detected</span></div>
+          <div style="display: flex; align-items: center; gap: 10px;"><span style="display: flex; color: var(--sb-positive);"><dc-import name="Icon" glyph="check" size="{{ 16 }}" hint-size="16px,16px"></dc-import></span><span>25 rows parsed</span></div>
+          <div style="display: flex; align-items: center; gap: 10px;"><dc-import name="Loader" variant="{{ v }}" size="{{ 16 }}" delay="{{ 0 }}" hint-size="16px,16px"></dc-import><span>Checking duplicates and matching rules…</span></div>
+          <div style="display: flex; align-items: center; gap: 10px; color: var(--sb-text-faint);"><span style="width: 16px; height: 16px; display: grid; place-items: center;"><span style="width: 5px; height: 5px; background: currentColor;"></span></span><span>Comparing the balance</span></div>
+        </div>
+      </dc-import>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 10px;">
+      <span style="font-size: 12px; color: var(--sb-text-muted);">Buttons · md and sm, primary and secondary</span>
+      <div style="display: flex; flex-direction: column; gap: 14px; padding: 20px; border: 1px solid var(--color-divider);">
+        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+          <dc-import name="Button" variant="primary" label="Import 20 rows" loading-label="Importing…" loading="{{ true }}" loader-variant="{{ v }}" hint-size="130px,36px"></dc-import>
+          <dc-import name="Button" variant="primary" icon="check" label="Move and restart" hint-size="150px,36px"></dc-import>
+        </div>
+        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+          <dc-import name="Button" variant="secondary" size="sm" icon="refresh" label="Check now" loading-label="Checking…" loading="{{ true }}" loader-variant="{{ v }}" hint-size="110px,28px"></dc-import>
+          <dc-import name="Button" variant="secondary" size="sm" icon="refresh" label="Check now" hint-size="110px,28px"></dc-import>
+        </div>
+        <span style="font-size: 12px; color: var(--sb-text-faint);">Busy: label changes to the -ing form, the icon becomes the loader, width stays, full strength, no hover.</span>
+      </div>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 10px;">
+      <span style="font-size: 12px; color: var(--sb-text-muted);">Inline and snackbar</span>
+      <div style="display: flex; flex-direction: column; gap: 16px; padding: 20px; border: 1px solid var(--color-divider);">
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 14px;"><span>Updates</span><dc-import name="Loader" variant="{{ v }}" size="{{ 14 }}" label="Checking…" delay="{{ 0 }}" hint-size="90px,14px"></dc-import></div>
+        <div style="display: flex; gap: 12px; padding: 14px 14px 14px 16px; background: var(--sb-raised-bg); background-image: linear-gradient(var(--color-accent-100), var(--color-accent-100)); border: 1px solid color-mix(in srgb, var(--color-accent-600) 55%, transparent); box-shadow: var(--shadow-lg);">
+          <dc-import name="Loader" variant="{{ v }}" size="{{ 18 }}" delay="{{ 0 }}" hint-size="18px,18px"></dc-import>
+          <div style="display: flex; flex-direction: column; gap: 4px;"><span style="font-size: 14px; font-weight: 500;">Installing 2.1.0…</span><span style="font-size: 13px; color: var(--sb-text-muted);">DashCash restarts in a moment.</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<section style="display: flex; flex-direction: column; gap: 24px; padding: 48px;">
+  <div style="display: flex; flex-direction: column; gap: 6px;">
+    <span style="font-family: var(--font-heading); font-size: 32px; font-weight: 600;">Loading motion: four options</span>
+    <span style="font-size: 14px; color: var(--sb-text-muted);">All loop calmly at 1,6 s, indeterminate, and appear only after 300 ms in the app (no flash on quick tasks). Reduced motion: the mark breathes gently instead.</span>
+  </div>
+  <div style="display: flex; flex-wrap: wrap; gap: 24px;">
+    <sc-for list="{{ options }}" as="o" hint-placeholder-count="4">
+      <div id="{{ o.id }}" style="width: 300px; display: flex; flex-direction: column; gap: 20px; padding: 24px; border: 1px solid var(--color-divider);">
+        <div style="display: flex; align-items: center; justify-content: space-between;">
+          <span style="font-size: 12px; padding: 2px 8px; border: 1px solid var(--color-accent-400); color: var(--color-accent-600);">{{ o.id }}</span>
+          <span style="font-family: var(--font-heading); font-size: 22px; font-weight: 600;">{{ o.name }}</span>
+        </div>
+        <div style="height: 120px; display: grid; place-items: center; background: var(--sb-ground-sunken);">
+          <dc-import name="Loader" variant="{{ o.v }}" size="{{ 96 }}" delay="{{ 0 }}" hint-size="96px,96px"></dc-import>
+        </div>
+        <div style="display: flex; align-items: flex-end; justify-content: space-around; gap: 12px;">
+          <dc-import name="Loader" variant="{{ o.v }}" size="{{ 48 }}" delay="{{ 0 }}" hint-size="48px,48px"></dc-import>
+          <dc-import name="Loader" variant="{{ o.v }}" size="{{ 28 }}" delay="{{ 0 }}" hint-size="28px,28px"></dc-import>
+          <dc-import name="Loader" variant="{{ o.v }}" size="{{ 16 }}" delay="{{ 0 }}" hint-size="16px,16px"></dc-import>
+        </div>
+        <span style="font-size: 14px; color: var(--sb-text-muted); text-wrap: pretty;">{{ o.text }}</span>
+      </div>
+    </sc-for>
+  </div>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { v: 'march' };
+  renderVals() {
+    const options = [
+      { id: '8a', v: 'draw', name: 'Draw', text: 'Dash first, cash second: the solid line draws, the three dashes appear one by one, then the C traces in from the tip of the last dash. Then it all fades and starts again. The most expressive; best for the splash.' },
+      { id: '8b', v: 'march', name: 'Dashes march', text: 'The C and the past stay still; the three dashes pulse outward in turn, like the future being projected. Calmest, and works down to 14 px.' },
+      { id: '8c', v: 'orbit', name: 'Orbit', text: 'The C turns around the fixed line like a classic spinner. Instantly reads as loading, but the opening moving away from the dashes breaks the mark.' },
+      { id: '8d', v: 'grow', name: 'Grow', text: 'Dashes light up one after another and stay lit, like a progress bar for the future, then reset. Feels purposeful; good for import steps.' }
+    ];
+    return {
+      options, v: this.state.v, setV: (v) => this.setState({ v }),
+      variantOpts: options.map((o) => ({ value: o.v, label: o.id + ' ' + o.name }))
+    };
+  }
+}
+</script>
+</body>
+</html>

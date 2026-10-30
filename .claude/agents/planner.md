@@ -103,9 +103,15 @@ Never push: the issue-loop pushes the branch.
 ## Questions the sources do not settle
 
 Some questions no source answers. Take your recommended answer, record it
-in the design log's Questions and Answers as **Assumption:** with the
-reason, and carry on: the issue-loop builds on it as decided. Make each one
-easy to find and easy to overturn later.
+in the design log as **Assumption:** with the reason, and carry on: the
+issue-loop builds on it as decided. Make each one easy to find and easy to
+overturn later.
+
+- **grill-me**: in the Questions and Answers of the entry you are writing.
+- **write-a-prd** onwards: the design log's original sections are
+  immutable. Append a section `### Assumptions from <skill>` at the end of
+  the file and record it there, never in the existing Questions and
+  Answers.
 
 ## Report
 

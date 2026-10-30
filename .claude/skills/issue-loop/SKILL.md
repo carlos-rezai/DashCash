@@ -120,8 +120,8 @@ Fill `<path>`, `<feature>`, `<nn>`, `<description>` and `<range>`.
 
 ### RED
 
-> Run the `tdd` skill for the ticket `<path>` in this repository and follow
-> it to its end.
+> Read `.claude/skills/tdd/SKILL.md` and follow it to its end, for the
+> ticket `<path>` in this repository.
 >
 > Nobody is present. Where the skill asks the user to confirm the interface or
 > the behaviour list: the ticket's **What to build** and the PRD's
@@ -147,8 +147,8 @@ Fill `<path>`, `<feature>`, `<nn>`, `<description>` and `<range>`.
 
 ### GREEN
 
-> Run the `build` skill for the ticket `<path>` in this repository and follow
-> it to its end.
+> Read `.claude/skills/build/SKILL.md` and follow it to its end, for the
+> ticket `<path>` in this repository.
 >
 > Nobody is present. The skill's definition of done is the review: when every
 > box holds, commit without waiting —

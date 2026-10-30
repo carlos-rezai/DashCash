@@ -104,8 +104,8 @@ Fill `<folder>`, `<feature>`, `<nn>` and `<description>`.
 
 ### PLAN
 
-> Run the `request-refactor-plan` skill for the feature folder
-> `docs/features/<folder>/` in this repository and follow it to its end.
+> Read `.claude/skills/request-refactor-plan/SKILL.md` and follow it to its
+> end, for the feature folder `docs/features/<folder>/` in this repository.
 >
 > Nobody is present. Where the skill interviews the user, the evidence
 > answers:
@@ -134,8 +134,9 @@ Fill `<folder>`, `<feature>`, `<nn>` and `<description>`.
 
 ### STEP
 
-> Run the `refactor` skill on `docs/features/<folder>/refactor-plan.md` in
-> this repository, for step `<nn> <description>` only.
+> Read `.claude/skills/refactor/SKILL.md` and follow it on
+> `docs/features/<folder>/refactor-plan.md` in this repository, for step
+> `<nn> <description>` only.
 >
 > Nobody is present. A green `npm run verify` is the approval the skill
 > waits for: when it is green, tick the step in the plan and commit both:

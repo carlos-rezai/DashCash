@@ -89,7 +89,11 @@ gh pr create --base main --title "feat: [<feature>] <description>" --body-file <
 ```
 
 The body: the feature folder, one line per ticket, and that the agents wrote
-both the code and its tests.
+both the code and its tests. Then a section `## Assumptions`: every line
+marked `**Assumption:**` in the feature's `design-log.md`, verbatim, each
+with its place in the file (heading and line number). Read them from the
+design log, not from memory, so a resumed run lists them too. If there are
+none, write `None`.
 
 Then follow `.claude/skills/pr-review/SKILL.md` for this PR, kind `feature`.
 It ends with the PR approved and waiting for the human's merge, or stopped.

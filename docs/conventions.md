@@ -6,15 +6,17 @@
 
 grill-me → design-log → ubiquitous-language
 → write-a-prd → prd-to-plan → prd-to-issues
-   (unattended: the `planner` agent, which logs every answer the
-   sources do not settle as an assumption)
+   (unattended: a fresh `planner` agent per skill, which logs every
+   answer the sources do not settle as an assumption)
 → issue-loop: tdd → build → review per ticket (unattended)
 → feature PR: pr-review by the reviewer agent → human merges
 → refactor-loop: request-refactor-plan → refactor per step (unattended)
 → refactor PR: pr-review by the reviewer agent → human merges
 
 `/feature-pipeline <name>` runs the whole chain and pauses only for the
-two merges; write `merged` to continue.
+two merges; write `merged` to continue. Until a CI workflow runs on pull
+requests, it runs only the planning, and the feature is built
+interactively with `tdd` and `build`.
 
 - Every change belongs to a ticket in `docs/features/`.
 - TDD stops at RED: show the failing test, wait for a go (issue-loop: the ticket is the go).
@@ -36,7 +38,7 @@ two merges; write `merged` to continue.
 - CI runs on every push to `feat/*` and `refactor/*` (`verify`) and on every PR into `main` (`verify:full`, end-to-end tests included).
 - A PR into `main` needs every ticket in its folder at `status: done`, and a refactor PR every step of `refactor-plan.md` ticked **(enforced)**.
 - PRs land as merge commits, never squashed, so every ticket commit stays readable.
-- PR description: the feature folder and one line per ticket.
+- PR description: the feature folder and one line per ticket; a feature PR also lists the design log's assumptions under "Assumptions".
 
 ## Commit messages
 

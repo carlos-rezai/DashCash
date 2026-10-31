@@ -18,6 +18,7 @@ const VERIFY_GATES = [
   'lint',
   'typecheck',
   'test',
+  'check:commits',
   'check:data-files',
 ];
 
@@ -26,6 +27,7 @@ const GATE_COMMANDS: Record<string, string> = {
   lint: 'eslint . --max-warnings 0',
   typecheck: 'tsc',
   test: 'vitest run',
+  'check:commits': 'node scripts/checkCommits/checkCommits.ts',
   'check:data-files': 'node scripts/checkDataFiles/checkDataFiles.ts',
 };
 

@@ -21,6 +21,8 @@
     "check:data-files": "node scripts/checkDataFiles/checkDataFiles.ts"
   },
   "devDependencies": {
+    "@commitlint/lint": "21.2.4",
+    "@commitlint/load": "21.2.4",
     "@eslint/js": "10.0.1",
     "@types/node": "24.19.2",
     "@vitest/eslint-plugin": "1.6.28",

@@ -276,7 +276,8 @@ A gate script for pull requests into `main`: on `feat/<NN>-<feature>` the
 folder holds at least one **Ticket** and every **Ticket status** reads
 `done` (a trailing template comment ignored); on
 `refactor/<NN>-<feature>` `refactor-plan.md` exists with no unticked
-**Refactor step**; any other branch fails; the PR title follows the
+**Refactor step**; on `renovate/*` the title has type `chore`; any other
+branch fails; the PR title follows the
 **Commit header** grammar without a number, `@`/`#` rule included, and a
 missing title fails. The title comes from `PR_TITLE`, set by the workflow
 from the event, never inside the shell command. The `pull-request` job
@@ -338,8 +339,8 @@ deletion or force push, no bypass actors. The apply script plans its
 always patch the repository to merge commits only) and sends them from a
 thin entry run only by the human. The wiring test also checks that the
 required check names the `pull-request` job and that `merge` is the only
-merge method. CODEOWNERS names the owner for `*` and each "Ask first"
-gate file; the PR template holds the feature folder, one line per ticket
+merge method. CODEOWNERS names the owner for `*`, each "Ask first"
+gate file and `/.claude/`; the PR template holds the feature folder, one line per ticket
 and `## Assumptions`.
 
 ### Acceptance criteria

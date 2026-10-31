@@ -13,10 +13,14 @@ grill-me → design-log → ubiquitous-language
 → refactor-loop: request-refactor-plan → refactor per step (unattended)
 → refactor PR: pr-review by the reviewer agent → human merges
 
-`/feature-pipeline <name>` runs the whole chain and pauses only for the
-two merges; write `merged` to continue. Until a CI workflow runs on pull
-requests, it runs only the planning, and the feature is built
-interactively with `tdd` and `build`.
+`/feature-pipeline <name>` runs the whole chain and pauses for the two
+merges; write `merged` to continue. It also pauses after the planning when
+a ticket names a gate file, since that ticket is the approval to change it,
+or anything under `.claude/`, which the human builds: read those tickets
+and the design log's assumptions, then write `go`.
+`/feature-pipeline <name> build` skips that pause. Until a CI workflow runs
+on pull requests, the pipeline builds the tickets and stops before the
+feature PR.
 
 - Every change belongs to a ticket in `docs/features/`.
 - TDD stops at RED: show the failing test, wait for a go (issue-loop: the ticket is the go).

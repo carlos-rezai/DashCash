@@ -250,9 +250,11 @@ checked by a tool or script, and each check must itself be tested.
     Source: "A PR into `main` needs every ticket in its folder at
     `status: done`, and a refactor PR every step of `refactor-plan.md`
     ticked **(enforced)**" (`docs/conventions.md`).
-37. *A PR from any other branch?* **Assumption:** fails `check:pr`. Reason:
-    "Every change belongs to a ticket in `docs/features/`". 02 (Renovate)
-    revisits this for dependency PRs.
+37. *A PR from any other branch?* Settled by the human (2026-10-31):
+    `renovate/*` passes when the PR title has type `chore` and no number,
+    so 02 (Renovate) does not change this gate. Any other branch fails
+    `check:pr`, because "Every change belongs to a ticket in
+    `docs/features/`".
 
 **Data-file check**
 
@@ -553,12 +555,12 @@ Alternatives:
   on any violation and exits 0 silently otherwise; ESLint's `no-console`
   allows only `warn` and `error`. Reason: the build skill bans
   `console.log` (Q18), and a gate must still explain its failure.
-- **A10. Ask-first for the gate files of 01.** **Assumption:** the tickets
-  of this feature are the human's go for creating the gate files `CLAUDE.md`
-  lists under "Ask first"; changing them after 01 still needs the human's
-  go. Reason: the files do not exist yet and creating them is the feature's
-  scope; `docs/conventions.md` (Workflow) makes the ticket the go in the
-  issue-loop.
+- **A10. Ask-first for the gate files of 01.** Settled by the human
+  (2026-10-31): a ticket whose What to build or Acceptance criteria name a
+  gate file is the approval to create or change exactly that file, for that
+  ticket only; every other change to a gate file still needs asking.
+  Recorded in `CLAUDE.md` under "Ask first" and in the issue-loop's RED and
+  GREEN prompts.
 
 ### Assumptions from prd-to-plan
 

@@ -247,8 +247,8 @@ log Q50). The agents' token cannot reach the branch-protection API.
     **Commit header** grammar without a number, including the `@`/`#` rule,
     so that the merge commit's title follows the convention too.
 66. As the developer, I want a pull request from any branch that is not
-    `feat/*` or `refactor/*` rejected, so that every change belongs to a
-    ticket.
+    `feat/*`, `refactor/*` or `renovate/*` rejected, so that every change
+    belongs to a ticket or is a dependency update.
 67. As an AI agent mid-feature, I want the **Pull-request check** to run
     only in CI's pull-request job, not in **Verify** or **Verify full**, so
     that open tickets never fail my local run.
@@ -483,6 +483,7 @@ file system, prints and sets the exit code (Q21).
     `# …` comment, as in the conventions' template, is ignored).
   - `refactor/<NN>-<feature>`: `refactor-plan.md` exists and has no `- [ ]`
     step.
+  - `renovate/*`: no folder check; the title must have type `chore` (Q37).
   - Any other branch, or no branch: a violation (Q37).
   - Title: linted with the commitlint config, and it must carry no number;
     a missing title is a violation.
@@ -546,7 +547,8 @@ file system, prints and sets the exit code (Q21).
   `npm run check:pr`, the required check names the `pull-request` job,
   `merge` is the only merge method, and `.nvmrc` equals `engines.node`.
 - CODEOWNERS: the owner (`carlos-rezai`, from the `origin` remote) for `*`
-  and, explicitly, for each gate file of `CLAUDE.md`'s "Ask first" list.
+  and, explicitly, for each gate file of `CLAUDE.md`'s "Ask first" list
+  and for `/.claude/`.
 - PR template: feature folder, one line per ticket, `## Assumptions`.
 
 **Out of the agents' hands**

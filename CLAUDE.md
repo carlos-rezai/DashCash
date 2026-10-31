@@ -12,6 +12,8 @@ DashCash: local-only Electron app for personal finances (CSV import, account his
 ## Ask first
 
 - Before changing gate files: `.github/`, `eslint.config.*`, `.prettierrc*`, `tsconfig*.json`, `.dependency-cruiser.*`, `vitest.config.*`, `playwright.config.*`, `stryker.config.*`, `quality/`, and the `verify*` / `test*` scripts.
+  - Exception: a ticket whose What to build or Acceptance criteria name a gate file is the approval to create or change exactly that file, for that ticket only. Every other change to a gate file still needs asking.
+- Before changing anything under `.claude/`: skills, agents, hooks, `settings.json`. A ticket never counts as approval for `.claude/`.
 - Before adding `eslint-disable`, `@ts-ignore`, `@ts-expect-error`, `.skip`, `.only` or a retry.
 - Before a larger change: write a short plan and wait.
 - When the spec is unclear or contradicts itself.

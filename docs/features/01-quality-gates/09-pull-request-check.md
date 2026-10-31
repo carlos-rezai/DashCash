@@ -29,6 +29,8 @@ step's `env`, never inside the shell command (Q32). Neither **Verify** nor
       correctly; a folder without a **Ticket** fails.
 - [ ] On `refactor/<NN>-<feature>`: all **Refactor steps** ticked passes; an
       unticked step fails; a missing `refactor-plan.md` fails.
+- [ ] On `renovate/*`: a title of type `chore` without a number passes,
+      with no folder or plan check; a title of any other type fails.
 - [ ] Any other branch, or no branch, fails.
 - [ ] A title following the **Commit header** grammar without a number
       passes; a title with a number, with `@` or `#`, or no title fails.

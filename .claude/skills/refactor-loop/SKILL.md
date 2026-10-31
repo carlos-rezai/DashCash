@@ -125,6 +125,10 @@ Fill `<folder>`, `<feature>`, `<nn>` and `<description>`.
 > leave `npm run verify` green on its own and fits in one sitting of a
 > Sonnet agent with a fresh context: one move, one module.
 >
+> Never plan a step that changes a gate file or anything under `.claude/`
+> (CLAUDE.md, "Ask first"). If the evidence points at one, record it under
+> Further Notes for the human instead.
+>
 > You are on an up-to-date `main`; branch from it as the skill says. Commit
 > as the skill says. Never `--no-verify`. If a hook refuses, stop and report
 > what it said.
@@ -149,6 +153,9 @@ Fill `<folder>`, `<feature>`, `<nn>` and `<description>`.
 > goes into the plan's Further Notes, not into the code. If the step
 > cannot be made green, stop and report what is red and why, leaving the
 > tree as it is.
+>
+> Nobody can answer "Ask first" (CLAUDE.md): where it applies, stop and
+> report instead of asking. A refactor plan is never the approval.
 >
 > Your context is the budget: read the plan's Decision Document and this
 > step, and open only the units the step touches.

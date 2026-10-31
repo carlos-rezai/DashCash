@@ -24,7 +24,7 @@ Q48–Q53):
   sends each planned request with `gh api`, the body on standard input.
 - The gate wiring test also reads the **Ruleset** (P2).
 - `.github/CODEOWNERS`: the owner `carlos-rezai` for `*` and, explicitly,
-  for each gate file of `CLAUDE.md`'s "Ask first" list.
+  for each gate file of `CLAUDE.md`'s "Ask first" list and for `/.claude/`.
 - `.github/pull_request_template.md`: the feature folder, one line per
   ticket, and `## Assumptions`.
 

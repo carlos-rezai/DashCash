@@ -35,7 +35,7 @@ config and test.
       tree.
 - [x] `verify` runs `lint` after `format:check`; the gate wiring test
       expects it there.
-- [ ] CI's `verify` job is green.
+- [x] CI's `verify` job is green.
 
 ## Blocked by
 

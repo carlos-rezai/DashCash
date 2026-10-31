@@ -1,5 +1,5 @@
 ---
-status: in-progress
+status: done
 ---
 # Formatting
 
@@ -22,15 +22,15 @@ tests.
 
 ## Acceptance criteria
 
-- [ ] `.prettierrc.json` sets `singleQuote: true` on Prettier's defaults; a
+- [x] `.prettierrc.json` sets `singleQuote: true` on Prettier's defaults; a
       double-quoted TypeScript sample is reported as unformatted, its
       single-quoted twin as formatted.
-- [ ] `.prettierignore` leaves out `*.md`, `docs/design/`,
+- [x] `.prettierignore` leaves out `*.md`, `docs/design/`,
       `package-lock.json` and build and test output; Prettier reports each
       of them as ignored and never checks or rewrites them.
-- [ ] `npm run format:check` fails on any file Prettier would change and
+- [x] `npm run format:check` fails on any file Prettier would change and
       passes on the tree; `npm run format` fixes formatting in place.
-- [ ] `verify` runs `format:check` first; the gate wiring test expects it
+- [x] `verify` runs `format:check` first; the gate wiring test expects it
       there and fails when it moves or goes.
 - [ ] CI's `verify` job is green.
 

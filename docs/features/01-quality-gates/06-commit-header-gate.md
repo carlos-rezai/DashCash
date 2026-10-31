@@ -32,27 +32,27 @@ branch passes it (P3).
 
 ## Acceptance criteria
 
-- [ ] `commitlint.config.test.ts`, through `@commitlint/lint` with the
+- [x] `commitlint.config.test.ts`, through `@commitlint/lint` with the
       loaded config and headers given as literal strings: accepts the
       examples of `docs/conventions.md` (Commit messages) and the header
       forms the issue-loop writes (`test: … , RED`, `feat: …`,
       `fix: [<feature>] <nn> address review`, `docs: [<feature>] add
       tickets`).
-- [ ] It rejects an unknown type, a feature that is not kebab-case, a one-
+- [x] It rejects an unknown type, a feature that is not kebab-case, a one-
       or three-digit number, a header that does not match the pattern at all
       (the message shows the expected format), a body and a footer.
-- [ ] Merge commits, `Revert` commits and `fixup!`/`squash!` commits are
+- [x] Merge commits, `Revert` commits and `fixup!`/`squash!` commits are
       ignored.
-- [ ] `resolveBranchName`'s pure tests cover `GITHUB_HEAD_REF`, then
+- [x] `resolveBranchName`'s pure tests cover `GITHUB_HEAD_REF`, then
       `GITHUB_REF_NAME`, then the current branch, with empty values
       skipped.
-- [ ] `readBranchRange`'s tests, against a temporary repository with a fake
+- [x] `readBranchRange`'s tests, against a temporary repository with a fake
       `origin/main`, read the branch's commits, an empty range, and throw
       the "fetch `origin/main`" error when the ref is missing.
-- [ ] `npm run check:commits` passes on `main` (empty range), exits 1 with
+- [x] `npm run check:commits` passes on `main` (empty range), exits 1 with
       the "fetch `origin/main`" message when the ref is missing, and passes
       on the branch's own history.
-- [ ] `verify` runs `check:commits` after `test`; the gate wiring test
+- [x] `verify` runs `check:commits` after `test`; the gate wiring test
       expects it there.
 - [ ] CI's `verify` job is green.
 

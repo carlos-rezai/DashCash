@@ -16,9 +16,10 @@
     "lint": "eslint . --max-warnings 0",
     "typecheck": "tsc",
     "test": "vitest run",
-    "verify": "npm run format:check && npm run lint && npm run typecheck && npm run test && npm run check:data-files",
+    "verify": "npm run format:check && npm run lint && npm run typecheck && npm run test && npm run check:commits && npm run check:data-files",
     "verify:full": "npm run verify",
-    "check:data-files": "node scripts/checkDataFiles/checkDataFiles.ts"
+    "check:data-files": "node scripts/checkDataFiles/checkDataFiles.ts",
+    "check:commits": "node scripts/checkCommits/checkCommits.ts"
   },
   "devDependencies": {
     "@commitlint/lint": "21.2.4",

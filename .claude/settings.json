@@ -1,4 +1,19 @@
 {
+  "permissions": {
+    "allow": [
+      "Bash(gh pr checks:*)",
+      "Bash(gh pr comment:*)",
+      "Bash(gh pr create:*)",
+      "Bash(gh pr view:*)",
+      "Bash(gh run list:*)",
+      "Bash(gh run view:*)",
+      "Bash(gh run watch:*)",
+      "Bash(git push:*)"
+    ],
+    "deny": [
+      "Bash(gh pr merge:*)"
+    ]
+  },
   "hooks": {
     "PreToolUse": [
       {

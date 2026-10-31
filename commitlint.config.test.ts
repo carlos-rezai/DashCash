@@ -53,6 +53,9 @@ const NUMBERS_NOT_TWO_DIGITS = [
   'feat: [csv-import] 002 add duplicate detection',
   'test: [csv-import] 2 add duplicate detection, RED',
   'fix: [csv-import] 102 address review',
+  'feat: [csv-import] 2',
+  'fix: [csv-import] 102',
+  'docs: [csv-import] 7',
 ];
 
 const HEADERS_OFF_PATTERN = [
@@ -64,6 +67,7 @@ const HEADERS_OFF_PATTERN = [
   'feat:[csv-import] 02 add duplicate detection',
   'feat: csv-import 02 add duplicate detection',
   'feat: [csv-import]02 add duplicate detection',
+  'feat: [csv-import] 02',
 ];
 
 // Messages git or GitHub write themselves; the default ignores skip them,

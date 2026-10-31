@@ -5,7 +5,7 @@
 // ticket number is exactly two digits; the description never starts with a
 // number of its own, so a one- or three-digit ticket number is rejected.
 const HEADER_PATTERN =
-  /^([a-z]+): \[([a-z0-9]+(?:-[a-z0-9]+)*)\] (?:(\d{2}) )?(?!\d+ )(.+?)(?:, (RED))?$/;
+  /^([a-z]+): \[([a-z0-9]+(?:-[a-z0-9]+)*)\] (?:(\d{2}) )?(?!\d+(?: |$))(.+?)(?:, (RED))?$/;
 
 const EXPECTED_FORMAT = '<type>: [<feature>] [<nn>] <description>[, RED]';
 

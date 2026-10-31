@@ -16,6 +16,14 @@ and an entry that reads the title from `PR_TITLE`, the branch through
 `resolveBranchName`, lints the title with the commitlint config and reports
 through `reportViolations`.
 
+On `renovate/*` the title is `chore: <description>`, without `[<feature>]`
+and without a number, because Renovate titles carry no feature. Every other
+description rule of the commitlint config still applies to it: lower case,
+no trailing full stop, at most 50 characters, and no `@` or `#` anywhere.
+The `@` rule stays: feature 02 configures Renovate to use
+`depNameSanitized`, so a scoped package such as `@types/node` never puts an
+`@` in the title.
+
 `check:pr` runs only in CI's `pull-request` job, after
 `npm run verify:full`, with `PR_TITLE` set from the event's title in the
 step's `env`, never inside the shell command (Q32). Neither **Verify** nor
@@ -29,11 +37,15 @@ step's `env`, never inside the shell command (Q32). Neither **Verify** nor
       correctly; a folder without a **Ticket** fails.
 - [ ] On `refactor/<NN>-<feature>`: all **Refactor steps** ticked passes; an
       unticked step fails; a missing `refactor-plan.md` fails.
-- [ ] On `renovate/*`: a title of type `chore` without a number passes,
-      with no folder or plan check; a title of any other type fails.
+- [ ] On `renovate/*`: a title `chore: <description>` passes, with no
+      folder or plan check; a title of any other type, a title with
+      `[<feature>]` or a number, and a title whose description breaks a
+      description rule (upper case, trailing full stop, more than 50
+      characters, `@` or `#`) fail.
 - [ ] Any other branch, or no branch, fails.
-- [ ] A title following the **Commit header** grammar without a number
-      passes; a title with a number, with `@` or `#`, or no title fails.
+- [ ] On `feat/*` and `refactor/*`: a title following the **Commit
+      header** grammar without a number passes; a title with a number or
+      with `@` or `#` fails. On any branch, no title fails.
 - [ ] The gate wiring test fails when `verify` or `verify:full` runs
       `check:pr`, when the `pull-request` job stops running `npm run
       check:pr` after `npm run verify:full`, and when the title reaches the

@@ -1,5 +1,5 @@
 ---
-status: in-progress
+status: done
 ---
 # Project lint rules
 
@@ -28,14 +28,14 @@ existing code passes.
 
 ## Acceptance criteria
 
-- [ ] One violating and one clean sample per project rule: `any`;
+- [x] One violating and one clean sample per project rule: `any`;
       `console.log` rejected while `console.error` and `console.warn` pass;
       `@ts-ignore` and `@ts-expect-error`; `.only` and `.skip` in a test;
       an unused `eslint-disable` directive.
-- [ ] `Date.now()` and `new Date()` fail under a `packages/domain` path,
+- [x] `Date.now()` and `new Date()` fail under a `packages/domain` path,
       with the "today is a parameter" message; `new Date(value)` passes
       there; both pass outside `packages/domain`.
-- [ ] `npm run lint` passes on the tree.
+- [x] `npm run lint` passes on the tree.
 - [ ] CI's `verify` job is green.
 
 ## Blocked by

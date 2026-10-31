@@ -483,10 +483,15 @@ file system, prints and sets the exit code (Q21).
     `# …` comment, as in the conventions' template, is ignored).
   - `refactor/<NN>-<feature>`: `refactor-plan.md` exists and has no `- [ ]`
     step.
-  - `renovate/*`: no folder check; the title must have type `chore` (Q37).
+  - `renovate/*`: no folder check; the title is `chore: <description>`,
+    without `[<feature>]` and without a number, and the description keeps
+    every description rule of the commitlint config: lower case, no
+    trailing full stop, at most 50 characters, no `@` or `#` (Q37, refined
+    by `09-pull-request-check.md`).
   - Any other branch, or no branch: a violation (Q37).
-  - Title: linted with the commitlint config, and it must carry no number;
-    a missing title is a violation.
+  - Title on `feat/*` and `refactor/*`: linted with the commitlint config,
+    and it must carry no number. A missing title is a violation on any
+    branch.
   - The entry reads the title from `PR_TITLE` and the branch through
     `resolveBranchName`; the workflow sets `PR_TITLE` from the event, never
     inside the shell command (Q32).

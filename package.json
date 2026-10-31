@@ -1,0 +1,25 @@
+{
+  "name": "dashcash",
+  "private": true,
+  "license": "MIT",
+  "type": "module",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "engines": {
+    "node": "24.14.0"
+  },
+  "scripts": {
+    "typecheck": "tsc",
+    "test": "vitest run",
+    "verify": "npm run typecheck && npm run test",
+    "verify:full": "npm run verify"
+  },
+  "devDependencies": {
+    "@types/node": "24.19.2",
+    "typescript": "6.0.3",
+    "vitest": "5.0.5",
+    "yaml": "2.9.1"
+  }
+}

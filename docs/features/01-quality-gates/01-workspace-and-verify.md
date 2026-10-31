@@ -1,5 +1,5 @@
 ---
-status: open
+status: done
 ---
 # Workspace, verify and CI
 
@@ -34,30 +34,30 @@ I1).
 
 ## Acceptance criteria
 
-- [ ] The root `package.json` is private, `"type": "module"`, MIT, with the
+- [x] The root `package.json` is private, `"type": "module"`, MIT, with the
       workspaces `apps/*` and `packages/*` and `engines.node` `24.14.0`;
       no **Workspace member** has a `package.json`.
-- [ ] `.nvmrc` reads `24.14.0`; `.npmrc` sets `engine-strict=true` and
+- [x] `.nvmrc` reads `24.14.0`; `.npmrc` sets `engine-strict=true` and
       `save-exact=true`, so `npm ci` installs from the committed lockfile on
       Node `24.14.0` and refuses another Node version.
-- [ ] `npm run typecheck` runs `tsc` on the root project, which extends a
+- [x] `npm run typecheck` runs `tsc` on the root project, which extends a
       strict base configuration (`strict`, `noUncheckedIndexedAccess` and
       the other options of the PRD) and type-checks the JavaScript configs
       too (A6); it is green.
-- [ ] `npm test` runs every `*.test.ts` and `*.test.tsx` once, never a
+- [x] `npm test` runs every `*.test.ts` and `*.test.tsx` once, never a
       `*.spec.ts`, and is green.
-- [ ] `npm run verify` runs `typecheck`, then `test`, chained with `&&`,
+- [x] `npm run verify` runs `typecheck`, then `test`, chained with `&&`,
       stops at the first failure with a non-zero exit, and runs in
       `cmd.exe` and in CI; no npm script holds `$(...)`, a glob or a pipe.
-- [ ] `npm run verify:full` runs `npm run verify`.
-- [ ] `.github/workflows/ci.yml` replaces `.github/.gitkeep`: job `verify`
+- [x] `npm run verify:full` runs `npm run verify`.
+- [x] `.github/workflows/ci.yml` replaces `.github/.gitkeep`: job `verify`
       on push to `feat/**` and `refactor/**` runs `npm run verify`; job
       `pull-request` on pull requests into `main` runs
       `npm run verify:full` on GitHub's default merge ref (A3); both check
       out the full history, set up Node from `.nvmrc` with the npm cache,
       run `npm ci`, use `ubuntu-latest` and reference actions by version
       tag.
-- [ ] The gate wiring test fails when a gate is removed from `verify` or
+- [x] The gate wiring test fails when a gate is removed from `verify` or
       reordered, when `verify:full` stops running `verify`, when either CI
       job stops running its command, and when `.nvmrc` and `engines.node`
       differ.

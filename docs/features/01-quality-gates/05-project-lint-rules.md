@@ -36,7 +36,7 @@ existing code passes.
       with the "today is a parameter" message; `new Date(value)` passes
       there; both pass outside `packages/domain`.
 - [x] `npm run lint` passes on the tree.
-- [ ] CI's `verify` job is green.
+- [x] CI's `verify` job is green.
 
 ## Blocked by
 

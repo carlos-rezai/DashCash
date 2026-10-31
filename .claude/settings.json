@@ -10,9 +10,7 @@
       "Bash(gh run watch:*)",
       "Bash(git push:*)"
     ],
-    "deny": [
-      "Bash(gh pr merge:*)"
-    ]
+    "deny": ["Bash(gh pr merge:*)"]
   },
   "hooks": {
     "PreToolUse": [

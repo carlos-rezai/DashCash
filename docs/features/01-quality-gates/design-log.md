@@ -582,3 +582,31 @@ Alternatives:
   by rewriting pushed history. Reason: PRD Further Notes says every commit
   on the branch must satisfy the gates; force pushes are what the
   **Ruleset** blocks on `main` and what the conventions never ask for.
+
+### Assumptions from prd-to-issues
+
+- **I1. The RED step of the first ticket.** **Assumption:** the RED
+  commit of `01-workspace-and-verify.md` brings the root `package.json`
+  with the test tooling (`vitest`, `yaml`) and the lockfile, so the gate
+  wiring test runs and fails on the missing wiring; the GREEN step adds
+  the rest. Reason: no test runner exists yet, and a test that cannot run
+  is not RED for the right reason (`.claude/skills/tdd/SKILL.md`).
+- **I2. Shared violation output.** **Assumption:** the type `Violation`
+  and the A9 output (one `<subject>: <reason>` line per violation on
+  standard error, exit 1, or exit 0 silently) live in one module,
+  `scripts/reportViolations/`, created by `03-data-file-check.md` and used
+  by every later gate entry. This adds a second module beyond the Files
+  table to A8's `readBranchRange`. Reason: A9 fixes one output for five
+  gate scripts; five copies could drift, the same reason A7 and A8 give.
+- **I3. The docs-drift ticket last.** **Assumption:** the docs-drift
+  check (plan Phase 5) is the last ticket, `13-docs-drift-check.md`,
+  after the **Ruleset** ticket, and carries the PRD's handover note as
+  the final ticket (user story 95). Reason: `docs/ubiquitous-language.md`
+  names `.github/rulesets/main.json`, which only the **Ruleset** ticket
+  creates, so the gate could not pass on today's docs any earlier; its
+  place in **Verify** (last, Q23) does not change.
+- **I4. Place of the gate wiring test.** **Assumption:** the gate wiring
+  test is `gateWiring.test.ts` at the repository root. Reason: it tests
+  root files (`package.json`, `.nvmrc`, the workflow, the **Ruleset**)
+  and has no module of its own; Q22 puts the tests of root configs at the
+  root beside them.

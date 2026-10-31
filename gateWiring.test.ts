@@ -13,10 +13,17 @@ type Workflow = {
 
 // The gates of Verify, in their fixed order. Every ticket that adds a gate
 // inserts it here at its place.
-const VERIFY_GATES = ['format:check', 'typecheck', 'test', 'check:data-files'];
+const VERIFY_GATES = [
+  'format:check',
+  'lint',
+  'typecheck',
+  'test',
+  'check:data-files',
+];
 
 const GATE_COMMANDS: Record<string, string> = {
   'format:check': 'prettier --check .',
+  lint: 'eslint . --max-warnings 0',
   typecheck: 'tsc',
   test: 'vitest run',
   'check:data-files': 'node scripts/checkDataFiles/checkDataFiles.ts',

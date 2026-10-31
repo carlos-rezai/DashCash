@@ -503,3 +503,59 @@ Alternatives:
 - Out of scope, by decision: local git hooks (Q54); changes to `CLAUDE.md`'s
   "Ask first" list (for example adding `commitlint.config.*` and
   `scripts/check*`), which is the human's file to change.
+
+### Assumptions from write-a-prd
+
+- **A1. Missing `origin/main`.** **Assumption:** when `origin/main` cannot
+  be resolved, the commit and ticket checks fail with a message telling the
+  caller to fetch `origin/main`; they never pass. Reason: a gate that passes
+  when it cannot run is a skipped gate; the sources only say `verify` needs
+  `origin/main` (Trade-offs).
+- **A2. Ignored commits in the ticket check.** **Assumption:** the ticket
+  check skips exactly the commits commitlint's default ignores skip, using
+  commitlint's own ignore function. Reason: Q31 ignores merge, revert and
+  fixup commits for the grammar; the same generated commits carry no
+  feature, so Q33 would otherwise fail on every merge of `main` (Q49) and on
+  the PR job's merge commit.
+- **A3. Pull-request job ref.** **Assumption:** the `pull-request` job runs
+  on GitHub's default merge ref (the branch merged into the current
+  `main`), with the branch name from `GITHUB_HEAD_REF`. Reason: Q49 wants
+  "green against the current `main`"; the synthetic merge commit is covered
+  by A2.
+- **A4. Gate wiring test.** **Assumption:** the consistency test of Q51
+  also checks that `verify` runs Q23's nine gates in order, `verify:full`
+  runs `verify`, the `verify` job runs `npm run verify`, the `pull-request`
+  job runs `npm run verify:full` and `npm run check:pr`, and `.nvmrc`
+  equals `engines.node`. Reason: Q3 wants every check tested, and a gate
+  dropped from the wiring would stop enforcing without any test failing.
+- **A5. Chaining in `verify`.** **Assumption:** `verify` chains the gate
+  scripts with `&&` in `package.json`. Reason: `&&` behaves the same in
+  `cmd.exe` and POSIX sh (Q14 rules out `$(...)`, globs and pipes, not
+  `&&`), fails fast as Q23 asks, and needs no runner dependency.
+- **A6. JavaScript configs in the typecheck.** **Assumption:** the root
+  TypeScript project sets `allowJs` and `checkJs` so the JavaScript tool
+  configs (Q19) are type-checked and linted with type information. Reason:
+  Q13 puts "root configs" in the root project, and Q19 writes most of them
+  in JavaScript.
+- **A7. One source for the header grammar.** **Assumption:** the header
+  pattern lives only in the commitlint config's parser preset, with the
+  `, RED` suffix captured as its own part; the ticket check and the
+  pull-request check read the pattern from there. Reason: commits, ticket
+  references and PR titles share one grammar (Q27, Q32, Q33); a second copy
+  could drift.
+- **A8. Shared `readBranchRange` module.** **Assumption:** the commit and
+  ticket checks share one module that resolves the branch name (Q35 order)
+  and reads the branch range (Q24). Reason: two gates read the same range;
+  one tested module keeps them identical. It is the only module beyond the
+  Files table.
+- **A9. Gate script output.** **Assumption:** each gate script prints one
+  line per violation, `<subject>: <reason>`, with `console.error`, exits 1
+  on any violation and exits 0 silently otherwise; ESLint's `no-console`
+  allows only `warn` and `error`. Reason: the build skill bans
+  `console.log` (Q18), and a gate must still explain its failure.
+- **A10. Ask-first for the gate files of 01.** **Assumption:** the tickets
+  of this feature are the human's go for creating the gate files `CLAUDE.md`
+  lists under "Ask first"; changing them after 01 still needs the human's
+  go. Reason: the files do not exist yet and creating them is the feature's
+  scope; `docs/conventions.md` (Workflow) makes the ticket the go in the
+  issue-loop.

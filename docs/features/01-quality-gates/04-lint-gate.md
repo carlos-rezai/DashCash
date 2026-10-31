@@ -1,5 +1,5 @@
 ---
-status: in-progress
+status: done
 ---
 # Lint gate
 
@@ -25,15 +25,15 @@ config and test.
 
 ## Acceptance criteria
 
-- [ ] A sample breaking a typescript-eslint strict type-checked rule (for
+- [x] A sample breaking a typescript-eslint strict type-checked rule (for
       example a floating promise) is reported; its clean twin is not.
-- [ ] A sample that differs from Prettier's output only in formatting
+- [x] A sample that differs from Prettier's output only in formatting
       raises no ESLint report.
-- [ ] Files under `docs/` (the prototype's JavaScript included) are
+- [x] Files under `docs/` (the prototype's JavaScript included) are
       ignored.
-- [ ] `npm run lint` fails on any error or any warning and passes on the
+- [x] `npm run lint` fails on any error or any warning and passes on the
       tree.
-- [ ] `verify` runs `lint` after `format:check`; the gate wiring test
+- [x] `verify` runs `lint` after `format:check`; the gate wiring test
       expects it there.
 - [ ] CI's `verify` job is green.
 

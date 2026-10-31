@@ -61,7 +61,7 @@ I1).
       reordered, when `verify:full` stops running `verify`, when either CI
       job stops running its command, and when `.nvmrc` and `engines.node`
       differ.
-- [ ] A push of the branch runs the `verify` job green in CI.
+- [x] A push of the branch runs the `verify` job green in CI.
 
 ## Blocked by
 

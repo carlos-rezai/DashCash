@@ -32,7 +32,7 @@ tests.
       passes on the tree; `npm run format` fixes formatting in place.
 - [x] `verify` runs `format:check` first; the gate wiring test expects it
       there and fails when it moves or goes.
-- [ ] CI's `verify` job is green.
+- [x] CI's `verify` job is green.
 
 ## Blocked by
 

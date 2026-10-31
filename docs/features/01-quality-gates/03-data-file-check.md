@@ -37,7 +37,7 @@ there is none (A9). Every later gate entry reports through it.
       output.
 - [x] `verify` runs `check:data-files` after `test`; the gate wiring test
       expects it there.
-- [ ] CI's `verify` job is green.
+- [x] CI's `verify` job is green.
 
 ## Blocked by
 

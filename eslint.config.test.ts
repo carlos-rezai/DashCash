@@ -11,13 +11,14 @@ import { delimiter, dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { ESLint } from 'eslint';
 import { check, format, resolveConfig } from 'prettier';
+import tseslint from 'typescript-eslint';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 type PackageJson = {
   scripts: Record<string, string | undefined>;
 };
 
-type Report = { ruleId: string | null; message: string };
+type Report = { ruleId: string | null; message: string; severity: number };
 
 const ROOT = fileURLToPath(new URL('.', import.meta.url));
 
@@ -86,13 +87,41 @@ const LINTED_PATHS = [
   'packages/domain/src/money/moneySample.ts',
 ];
 
-async function lintSample(code: string): Promise<Report[]> {
-  const eslint = new ESLint({ cwd: ROOT });
-  const [result] = await eslint.lintText(code, { filePath: SAMPLE_PATH });
+async function lintWith(
+  eslint: ESLint,
+  code: string,
+  filePath: string,
+): Promise<Report[]> {
+  const [result] = await eslint.lintText(code, { filePath });
   if (result === undefined) {
     throw new Error('ESLint returned no result for the sample');
   }
-  return result.messages.map(({ ruleId, message }) => ({ ruleId, message }));
+  return result.messages.map(({ ruleId, message, severity }) => ({
+    ruleId,
+    message,
+    severity,
+  }));
+}
+
+async function lintSample(code: string): Promise<Report[]> {
+  return lintWith(new ESLint({ cwd: ROOT }), code, SAMPLE_PATH);
+}
+
+// No tsconfig includes packages/domain yet (its project joins through a
+// project reference once the domain has code), so typed linting cannot parse
+// a sample there. The domain rule is syntax only: these samples are linted
+// with the real config and type information switched off, at paths inside
+// and outside packages/domain.
+async function lintUntyped(code: string, path: string): Promise<Report[]> {
+  const eslint = new ESLint({
+    cwd: ROOT,
+    overrideConfig: [tseslint.configs.disableTypeChecked],
+  });
+  return lintWith(eslint, code, join(ROOT, path));
+}
+
+function ruleIds(reports: Report[]): (string | null)[] {
+  return reports.map(({ ruleId }) => ruleId);
 }
 
 // Runs an npm script's command the way `npm run` does: through the shell,
@@ -160,6 +189,153 @@ describe('eslint config', { timeout: 60_000 }, () => {
     const eslint = new ESLint({ cwd: ROOT });
 
     expect(await eslint.isPathIgnored(join(ROOT, path))).toBe(false);
+  });
+});
+
+// Project rules: one violating and one clean sample each. Every sample is
+// text passed to lintText, never committed code.
+const EXPLICIT_ANY = `export function isText(value: any): boolean {
+  return typeof value === 'string';
+}
+`;
+
+const UNKNOWN_INSTEAD_OF_ANY = `export function isText(value: unknown): boolean {
+  return typeof value === 'string';
+}
+`;
+
+const CONSOLE_LOG = `export function report(): void {
+  console.log('loaded');
+}
+`;
+
+const CONSOLE_ERROR_AND_WARN = `export function report(): void {
+  console.error('failed');
+  console.warn('slow');
+}
+`;
+
+const TS_IGNORE = `// @ts-ignore: the sample assigns a number to a string
+export const label: string = 1;
+`;
+
+const TS_EXPECT_ERROR = `// @ts-expect-error: the sample assigns a number to a string
+export const label: string = 1;
+`;
+
+const WITHOUT_TS_COMMENT = `export const label = 'one';
+`;
+
+const FOCUSED_TEST = `import { expect, it } from 'vitest';
+
+it.only('adds', () => {
+  expect(1 + 1).toBe(2);
+});
+`;
+
+const DISABLED_TEST = `import { expect, it } from 'vitest';
+
+it.skip('adds', () => {
+  expect(1 + 1).toBe(2);
+});
+`;
+
+const PLAIN_TEST = `import { expect, it } from 'vitest';
+
+it('adds', () => {
+  expect(1 + 1).toBe(2);
+});
+`;
+
+const UNUSED_DISABLE_DIRECTIVE = `// eslint-disable-next-line no-console
+export const value = 1;
+`;
+
+const USED_DISABLE_DIRECTIVE = `// eslint-disable-next-line no-debugger
+debugger;
+`;
+
+const DATE_NOW = `export const today = Date.now();
+`;
+
+const NEW_DATE = `export const today = new Date();
+`;
+
+const NEW_DATE_FROM_VALUE = `export function parseDate(value: string): Date {
+  return new Date(value);
+}
+`;
+
+const DOMAIN_PATH = 'packages/domain/src/money/domainSample.ts';
+const OUTSIDE_DOMAIN_PATH = 'packages/contract/src/contractSample.ts';
+
+const TODAY_IS_A_PARAMETER = /today is a parameter/i;
+
+describe('project rules', { timeout: 60_000 }, () => {
+  it('reports an explicit any and passes unknown', async () => {
+    expect(ruleIds(await lintSample(EXPLICIT_ANY))).toContain(
+      '@typescript-eslint/no-explicit-any',
+    );
+    expect(await lintSample(UNKNOWN_INSTEAD_OF_ANY)).toEqual([]);
+  });
+
+  it('reports console.log and passes console.error and console.warn', async () => {
+    expect(ruleIds(await lintSample(CONSOLE_LOG))).toContain('no-console');
+    expect(await lintSample(CONSOLE_ERROR_AND_WARN)).toEqual([]);
+  });
+
+  it('reports @ts-ignore and @ts-expect-error and passes code without them', async () => {
+    expect(ruleIds(await lintSample(TS_IGNORE))).toContain(
+      '@typescript-eslint/ban-ts-comment',
+    );
+    expect(ruleIds(await lintSample(TS_EXPECT_ERROR))).toContain(
+      '@typescript-eslint/ban-ts-comment',
+    );
+    expect(await lintSample(WITHOUT_TS_COMMENT)).toEqual([]);
+  });
+
+  it('reports .only in a test and passes a plain test', async () => {
+    expect(ruleIds(await lintSample(FOCUSED_TEST))).toContain(
+      'vitest/no-focused-tests',
+    );
+    expect(await lintSample(PLAIN_TEST)).toEqual([]);
+  });
+
+  it('reports .skip in a test and passes a plain test', async () => {
+    expect(ruleIds(await lintSample(DISABLED_TEST))).toContain(
+      'vitest/no-disabled-tests',
+    );
+    expect(await lintSample(PLAIN_TEST)).toEqual([]);
+  });
+
+  it('reports an unused eslint-disable directive as an error and passes a used one', async () => {
+    const unused = (await lintSample(UNUSED_DISABLE_DIRECTIVE)).filter(
+      ({ ruleId, message }) =>
+        ruleId === null && message.includes('Unused eslint-disable directive'),
+    );
+    expect(unused.map(({ severity }) => severity)).toEqual([2]);
+    expect(await lintSample(USED_DISABLE_DIRECTIVE)).toEqual([]);
+  });
+
+  it.each([
+    ['Date.now()', DATE_NOW],
+    ['new Date()', NEW_DATE],
+  ])(
+    'reports %s under packages/domain with the today message, and passes it outside',
+    async (_name, code) => {
+      const today = (await lintUntyped(code, DOMAIN_PATH)).filter(
+        ({ message }) => TODAY_IS_A_PARAMETER.test(message),
+      );
+      expect(
+        today.map(({ ruleId, severity }) => ({ ruleId, severity })),
+      ).toEqual([{ ruleId: 'no-restricted-syntax', severity: 2 }]);
+      expect(await lintUntyped(code, OUTSIDE_DOMAIN_PATH)).toEqual([]);
+      expect(await lintSample(code)).toEqual([]);
+    },
+  );
+
+  it('passes new Date(value) under packages/domain', async () => {
+    expect(await lintUntyped(NEW_DATE_FROM_VALUE, DOMAIN_PATH)).toEqual([]);
   });
 });
 

@@ -559,3 +559,26 @@ Alternatives:
   go. Reason: the files do not exist yet and creating them is the feature's
   scope; `docs/conventions.md` (Workflow) makes the ticket the go in the
   issue-loop.
+
+### Assumptions from prd-to-plan
+
+- **P1. Vitest and the wiring test in the first phase.** **Assumption:**
+  the first phase brings Vitest and the gate wiring test with the
+  workspace, the typecheck and CI, ahead of Prettier and the data-file
+  check, unlike the order in the Implementation Plan above. Reason: `tsc`
+  fails on a project without inputs and `vitest run` fails without tests
+  (Q6), so the first green **Verify** needs a config and a test; the
+  wiring test (A4) is the natural first test.
+- **P2. The wiring test grows phase by phase.** **Assumption:** each phase
+  inserts its gate into `verify` at its Q23 place and extends the wiring
+  test's expected list, so the test always pins exactly the gates present
+  and their relative order; it checks the **Ruleset** from the phase that
+  adds it. Reason: A4 describes the final state only; a test that expected
+  all nine gates from the start would be red until the last phase.
+- **P3. Commit history before the commit gate.** **Assumption:** the
+  commit and ticket gates check the whole **Branch range** when they land,
+  so every commit made before them already keeps the grammar, the
+  50-character limit included; a violation is fixed by a new commit, never
+  by rewriting pushed history. Reason: PRD Further Notes says every commit
+  on the branch must satisfy the gates; force pushes are what the
+  **Ruleset** blocks on `main` and what the conventions never ask for.

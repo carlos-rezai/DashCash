@@ -13,9 +13,10 @@ type Workflow = {
 
 // The gates of Verify, in their fixed order. Every ticket that adds a gate
 // inserts it here at its place.
-const VERIFY_GATES = ['typecheck', 'test'];
+const VERIFY_GATES = ['format:check', 'typecheck', 'test'];
 
 const GATE_COMMANDS: Record<string, string> = {
+  'format:check': 'prettier --check .',
   typecheck: 'tsc',
   test: 'vitest run',
 };

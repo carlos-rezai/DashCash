@@ -1,5 +1,5 @@
 ---
-status: in-progress
+status: done
 ---
 # Data-file check
 
@@ -25,17 +25,17 @@ there is none (A9). Every later gate entry reports through it.
 
 ## Acceptance criteria
 
-- [ ] `findDataFiles`'s table-driven tests cover `*.db`, `*.db-*`,
+- [x] `findDataFiles`'s table-driven tests cover `*.db`, `*.db-*`,
       `*.sqlite`, `*.sqlite-*` and `*.csv` outside `fixtures/`,
       upper-case extensions such as `.CSV`, journal and WAL files, CSV files
       under `fixtures/` (allowed), `.env` and `.env.*` anywhere (rejected)
       and `.env.example` (allowed).
-- [ ] `reportViolations`'s tests cover the line format, exit code 1 with
+- [x] `reportViolations`'s tests cover the line format, exit code 1 with
       violations and exit code 0 without output.
-- [ ] A forced (`git add -f`) data file fails `npm run check:data-files`
+- [x] A forced (`git add -f`) data file fails `npm run check:data-files`
       and is named in the output; a tree without one exits 0 without
       output.
-- [ ] `verify` runs `check:data-files` after `test`; the gate wiring test
+- [x] `verify` runs `check:data-files` after `test`; the gate wiring test
       expects it there.
 - [ ] CI's `verify` job is green.
 

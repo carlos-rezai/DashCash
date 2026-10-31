@@ -15,8 +15,9 @@
     "format:check": "prettier --check .",
     "typecheck": "tsc",
     "test": "vitest run",
-    "verify": "npm run format:check && npm run typecheck && npm run test",
-    "verify:full": "npm run verify"
+    "verify": "npm run format:check && npm run typecheck && npm run test && npm run check:data-files",
+    "verify:full": "npm run verify",
+    "check:data-files": "node scripts/checkDataFiles/checkDataFiles.ts"
   },
   "devDependencies": {
     "@types/node": "24.19.2",

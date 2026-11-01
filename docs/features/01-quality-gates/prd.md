@@ -282,7 +282,7 @@ log Q50). The agents' token cannot reach the branch-protection API.
     `feature-checklist.md` from `docs/` are checked correctly.
 76. As the developer, I want inline-code paths that start with a top-level
     folder (`.claude/`, `.github/`, `apps/`, `packages/`, `e2e/`,
-    `fixtures/`, `quality/`, `scripts/`, `docs/`) checked from the
+    `fixtures/`, `gates/`, `quality/`, `scripts/`, `docs/`) checked from the
     repository root, so that the folder structure in the docs stays true.
 77. As the developer, I want fenced code blocks, URLs and spans with
     placeholders (`<`, `>`, `*`, `{`, `…`, spaces) skipped, so that example

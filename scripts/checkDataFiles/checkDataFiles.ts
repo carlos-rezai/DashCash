@@ -1,6 +1,6 @@
 import { listTrackedPaths } from '../runGit/runGit.ts';
 import {
-  reportViolations,
+  runGate,
   type Violation,
 } from '../reportViolations/reportViolations.ts';
 
@@ -27,8 +27,9 @@ export function findDataFiles(trackedPaths: readonly string[]): string[] {
 }
 
 if (import.meta.main) {
-  const violations: Violation[] = findDataFiles(
-    listTrackedPaths(process.cwd()),
-  ).map((subject) => ({ subject, reason: 'data file is tracked' }));
-  process.exitCode = reportViolations(violations);
+  await runGate(() =>
+    findDataFiles(listTrackedPaths(process.cwd())).map(
+      (subject): Violation => ({ subject, reason: 'data file is tracked' }),
+    ),
+  );
 }

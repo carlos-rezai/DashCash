@@ -436,7 +436,7 @@ file system, prints and sets the exit code (Q21).
     `GITHUB_HEAD_REF`, then `GITHUB_REF_NAME`, then the current branch
     (Q35); empty values are skipped.
   - `readBranchRange(cwd): { branch; commits: { hash; message }[] }`:
-    `git merge-base origin/main HEAD`..`HEAD` (Q24). When `origin/main`
+    `origin/main..HEAD` (Q24). When `origin/main`
     cannot be resolved it throws an error telling the caller to fetch
     `origin/main`, and the entries exit 1 with that message (A1).
 - **Commit convention** (commitlint config, Q27–Q31):

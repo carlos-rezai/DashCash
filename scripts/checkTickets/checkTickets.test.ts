@@ -458,4 +458,16 @@ describe('check:tickets', { timeout: 60_000 }, () => {
       'refactor: [sample] 01 extract the parser:',
     );
   });
+
+  it('exits 1 telling to fetch origin/main when the ref is missing', () => {
+    git(repo, 'switch', '--quiet', '-c', 'feat/01-sample');
+    commit(repo, 'feat: [sample] 01 add sample');
+    git(repo, 'update-ref', '-d', 'refs/remotes/origin/main');
+
+    const result = runScript('check:tickets', repo);
+
+    expect(result.status).toBe(1);
+    expect(result.stdout).toBe('');
+    expect(result.stderr).toMatch(/fetch.*origin\/main/i);
+  });
 });

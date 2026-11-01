@@ -76,7 +76,7 @@ existing test keeps its assertions.
 Each step is one `refactor:` commit with the step's number and description.
 Run `npm run verify` before committing; every step must leave it green.
 
-- [ ] 01 test check tickets without origin main
+- [x] 01 test check tickets without origin main
 - [ ] 02 test check pr reading the branch from git
 - [ ] 03 add sample repository test support
 - [ ] 04 add run npm script test support

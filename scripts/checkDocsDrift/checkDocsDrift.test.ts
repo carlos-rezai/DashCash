@@ -32,6 +32,7 @@ const TOP_LEVEL_FOLDERS = [
   'packages/',
   'e2e/',
   'fixtures/',
+  'gates/',
   'quality/',
   'scripts/',
   'docs/',

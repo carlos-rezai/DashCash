@@ -54,7 +54,7 @@ branch passes it (P3).
       on the branch's own history.
 - [x] `verify` runs `check:commits` after `test`; the gate wiring test
       expects it there.
-- [ ] CI's `verify` job is green.
+- [x] CI's `verify` job is green.
 
 ## Blocked by
 

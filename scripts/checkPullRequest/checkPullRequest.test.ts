@@ -464,4 +464,23 @@ describe('check:pr', { timeout: 60_000 }, () => {
     expect(result.status).toBe(1);
     expect(result.stderr).not.toBe('');
   });
+
+  it('reads the branch from git when the GitHub variables are empty', () => {
+    git(repo, 'switch', '--quiet', '--create', 'feat/01-sample');
+
+    const result = runScript('check:pr', repo, { PR_TITLE: FEATURE_TITLE });
+
+    expect(result.status, result.stderr).toBe(0);
+    expect(result.stdout).toBe('');
+    expect(result.stderr).toBe('');
+  });
+
+  it('names the branch read from git when no pull request may come from it', () => {
+    git(repo, 'switch', '--quiet', '--create', 'topic/sample');
+
+    const result = runScript('check:pr', repo, { PR_TITLE: FEATURE_TITLE });
+
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain('topic/sample');
+  });
 });

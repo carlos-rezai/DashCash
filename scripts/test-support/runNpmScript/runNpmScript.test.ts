@@ -1,15 +1,16 @@
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { delimiter, join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   commit,
   initSampleRepository,
   installGateScripts,
+  ROOT,
   setOriginMain,
   writeTreeFile,
 } from '../sampleRepository/sampleRepository.ts';
-import { runNpmScript } from './runNpmScript.ts';
+import { prependRootBin, runNpmScript } from './runNpmScript.ts';
 
 const BAD_TITLE = 'feat: [sample] 01 add sample';
 
@@ -78,22 +79,16 @@ describe('runNpmScript', { timeout: 60_000 }, () => {
       expect(result.status, result.output).toBe(0);
     });
 
-    it('finds the root tools when the variable is spelled in odd case', () => {
-      writeTreeFile(folder, 'sample.json', '{ "sample": 1 }\n');
-      const pathKey = Object.keys(process.env).find(
-        (key) => key.toUpperCase() === 'PATH',
-      );
-      const original = pathKey === undefined ? '' : process.env[pathKey];
-      for (const key of Object.keys(process.env)) {
-        if (key.toUpperCase() === 'PATH') {
-          vi.stubEnv(key, undefined);
-        }
-      }
-      vi.stubEnv('pAtH', original);
+    it('prepends the root tools to an odd-case path variable under its own key', () => {
+      const rootBin = join(ROOT, 'node_modules', '.bin');
 
-      const result = runNpmScript('format:check', folder, { rootBin: true });
+      const env = prependRootBin({ pAtH: 'sample-bin', SAMPLE: 'kept' });
 
-      expect(result.status, result.output).toBe(0);
+      expect(env.pAtH).toBe(`${rootBin}${delimiter}sample-bin`);
+      expect(
+        Object.keys(env).filter((key) => key.toUpperCase() === 'PATH'),
+      ).toEqual(['pAtH']);
+      expect(env.SAMPLE).toBe('kept');
     });
   });
 });

@@ -27,7 +27,7 @@ const packageJson = JSON.parse(
 
 // Puts the root node_modules/.bin first on the PATH, whatever the case of the
 // variable's name (Windows spells it Path).
-function prependRootBin(env: NodeJS.ProcessEnv): NodeJS.ProcessEnv {
+export function prependRootBin(env: NodeJS.ProcessEnv): NodeJS.ProcessEnv {
   const pathKey =
     Object.keys(env).find((key) => key.toUpperCase() === 'PATH') ?? 'PATH';
   return {

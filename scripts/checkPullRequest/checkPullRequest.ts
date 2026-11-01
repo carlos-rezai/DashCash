@@ -33,7 +33,7 @@ export type PullRequestInput = {
   lintTitle: (header: string) => Promise<Violation[]>;
 };
 
-function checkTickets(
+function findUnfinishedTickets(
   folderPath: string,
   input: PullRequestInput,
   subject: string,
@@ -47,7 +47,7 @@ function checkTickets(
     .map((path) => ({ subject, reason: `${path} is not status: done` }));
 }
 
-function checkRefactorSteps(
+function findUntickedRefactorSteps(
   folderPath: string,
   input: PullRequestInput,
   subject: string,
@@ -114,11 +114,15 @@ export async function checkPullRequest(
   const featureBranch = parseFeatureBranch(branch);
   if (featureBranch?.kind === 'feat') {
     violations.push(
-      ...checkTickets(featureFolderPath(featureBranch.folder), input, subject),
+      ...findUnfinishedTickets(
+        featureFolderPath(featureBranch.folder),
+        input,
+        subject,
+      ),
     );
   } else if (featureBranch?.kind === 'refactor') {
     violations.push(
-      ...checkRefactorSteps(
+      ...findUntickedRefactorSteps(
         featureFolderPath(featureBranch.folder),
         input,
         subject,

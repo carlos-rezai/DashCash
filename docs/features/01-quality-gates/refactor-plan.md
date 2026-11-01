@@ -103,7 +103,7 @@ Run `npm run verify` before committing; every step must leave it green.
 - [x] 25 add read branch name to read branch range
 - [x] 26 use read branch name in check pull request
 - [x] 27 move ticket status reading into read tickets
-- [ ] 28 rename pull request ticket and step checks
+- [x] 28 rename pull request ticket and step checks
 - [ ] 29 classify the pull request branch once
 - [ ] 30 rename feature folder path to verb first
 - [ ] 31 rename refactor plan path to verb first

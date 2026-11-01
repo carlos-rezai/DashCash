@@ -43,7 +43,7 @@ by the human by hand.
 
 ## Acceptance criteria
 
-- [ ] A test feeds the hook sample inputs and checks the exit code:
+- [x] A test feeds the hook sample inputs and checks the exit code:
       `Edit` and `Write` of `.claude/settings.json`, a skill, an agent and
       a hook, given as absolute paths with `\` and with `/` and as a
       relative path, exit 2; `.claudeignore`, `docs/.claude.md` and a
@@ -52,7 +52,7 @@ by the human by hand.
       `writeFileSync`, `sed -i`, `cp`, `echo > …`) exit 2;
       `git diff .claude/settings.json` and `git status` exit 0; a command
       naming `.claudeignore` exits 0.
-- [ ] `.claude/settings.json` runs the hook for `Edit|Write`, and the
+- [x] `.claude/settings.json` runs the hook for `Edit|Write`, and the
       `Bash` hook still runs.
 - [ ] In a Claude Code session, an `Edit` of a file under `.claude/` is
       refused with the hook's message.

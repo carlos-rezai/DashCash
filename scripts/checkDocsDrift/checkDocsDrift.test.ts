@@ -231,6 +231,37 @@ describe('findDocsDrift', () => {
         'docs/conventions.md: scripts/after/after.ts',
       ]);
     });
+
+    it('keeps a tilde fence open at a backtick fence line inside it', () => {
+      const text = ['~~~', '```', '`scripts/inside/inside.ts`', '~~~', ''].join(
+        '\n',
+      );
+
+      expect(driftSubjects('docs/conventions.md', text, [])).toEqual([]);
+    });
+
+    it('keeps a fence open at a shorter fence line of the same character', () => {
+      const text = [
+        '````',
+        '```',
+        '`scripts/inside/inside.ts`',
+        '````',
+        '',
+      ].join('\n');
+
+      expect(driftSubjects('docs/conventions.md', text, [])).toEqual([]);
+    });
+  });
+
+  describe('duplicate mentions', () => {
+    it('reports a missing path once per doc when the doc names it twice', () => {
+      const text =
+        'See [the file](gone.md) and `docs/gone.md` for the details.\n';
+
+      expect(driftSubjects('docs/conventions.md', text, [])).toEqual([
+        'docs/conventions.md: gone.md',
+      ]);
+    });
   });
 
   describe('URLs', () => {
@@ -257,6 +288,18 @@ describe('findDocsDrift', () => {
         driftSubjects('docs/conventions.md', `Example: ${span}.\n`, [
           'docs/conventions.md',
         ]),
+      ).toEqual([]);
+    });
+  });
+
+  describe('placeholder link targets', () => {
+    it('skips a link whose target holds a placeholder', () => {
+      expect(
+        driftSubjects(
+          'docs/conventions.md',
+          'Example: [a ticket](features/<NN>-name/).\n',
+          ['docs/conventions.md'],
+        ),
       ).toEqual([]);
     });
   });

@@ -16,12 +16,14 @@
     "lint": "eslint . --max-warnings 0",
     "typecheck": "tsc",
     "test": "vitest run",
-    "verify": "npm run format:check && npm run lint && npm run typecheck && npm run test && npm run check:commits && npm run check:data-files",
+    "verify": "npm run format:check && npm run lint && npm run typecheck && npm run test && npm run check:commits && npm run check:tickets && npm run check:data-files",
     "verify:full": "npm run verify",
     "check:data-files": "node scripts/checkDataFiles/checkDataFiles.ts",
-    "check:commits": "node scripts/checkCommits/checkCommits.ts"
+    "check:commits": "node scripts/checkCommits/checkCommits.ts",
+    "check:tickets": "node scripts/checkTickets/checkTickets.ts"
   },
   "devDependencies": {
+    "@commitlint/is-ignored": "21.2.3",
     "@commitlint/lint": "21.2.4",
     "@commitlint/load": "21.2.4",
     "@eslint/js": "10.0.1",

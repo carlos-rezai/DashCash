@@ -23,21 +23,21 @@ after `check:commits`.
 
 ## Acceptance criteria
 
-- [ ] One passing and one failing case per rule: the feature names a
+- [x] One passing and one failing case per rule: the feature names a
       **Feature folder**; `feat`, `fix` and `test` carry a **Ticket number**
       naming a **Ticket** `<nn>-<name>.md` in it; `refactor` carries a
       number naming a **Refactor step** (`- [ ] <nn> …` or `- [x] <nn> …`)
       in its `refactor-plan.md`; `docs`, `chore` and `ci` may omit the
       number, and one they carry must name a **Ticket**.
-- [ ] A **Planning commit** passes; a merge commit is skipped; an
+- [x] A **Planning commit** passes; a merge commit is skipped; an
       unparsable header raises no ticket violation.
-- [ ] On `feat/<NN>-<feature>` and `refactor/<NN>-<feature>` a commit
+- [x] On `feat/<NN>-<feature>` and `refactor/<NN>-<feature>` a commit
       naming another feature fails; on other branches the feature is not
       compared.
-- [ ] The entry reads paths and contents from `HEAD`, not the working tree:
+- [x] The entry reads paths and contents from `HEAD`, not the working tree:
       an uncommitted ticket file does not count.
-- [ ] `npm run check:tickets` passes on the branch's own history.
-- [ ] `verify` runs `check:tickets` after `check:commits`; the gate wiring
+- [x] `npm run check:tickets` passes on the branch's own history.
+- [x] `verify` runs `check:tickets` after `check:commits`; the gate wiring
       test expects it there.
 - [ ] CI's `verify` job is green.
 

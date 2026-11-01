@@ -1,6 +1,6 @@
 import load from '@commitlint/load';
-import config from '../../commitlint.config.js';
 import { lintCommitMessages } from '../checkCommits/checkCommits.ts';
+import { parseCommitHeader } from '../parseCommitHeader/parseCommitHeader.ts';
 import { resolveBranchName } from '../readBranchRange/readBranchRange.ts';
 import {
   featureFolderPath,
@@ -17,7 +17,6 @@ import {
 } from '../reportViolations/reportViolations.ts';
 import { listHeadPaths, readHeadFile, runGit } from '../runGit/runGit.ts';
 
-const HEADER_PATTERN = config.parserPreset.parserOpts.headerPattern;
 const RENOVATE_BRANCH = /^renovate\/.+$/;
 const RENOVATE_TITLE = /^chore: (.*)$/;
 const STATUS_LINE = /^status:[ \t]*([^\s#]*)/m;
@@ -97,7 +96,7 @@ async function checkPlainTitle(
   lintTitle: PullRequestInput['lintTitle'],
 ): Promise<Violation[]> {
   const violations = await lintTitle(title);
-  if (HEADER_PATTERN.exec(title)?.[3] !== undefined) {
+  if (parseCommitHeader(title)?.ticket !== undefined) {
     violations.push({
       subject: title,
       reason: 'a pull-request title carries no ticket number',

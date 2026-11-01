@@ -1,28 +1,18 @@
-import { spawnSync } from 'node:child_process';
-import {
-  cpSync,
-  mkdtempSync,
-  readFileSync,
-  rmSync,
-  symlinkSync,
-  writeFileSync,
-} from 'node:fs';
+import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { fileURLToPath } from 'node:url';
 import load from '@commitlint/load';
 import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import {
+  commit,
+  initSampleRepository,
+  installGateScripts,
+  ROOT,
+  runSampleGit as git,
+  setOriginMain,
+} from '../test-support/sampleRepository/sampleRepository.ts';
+import { runNpmScript as runScript } from '../test-support/runNpmScript/runNpmScript.ts';
 import { lintCommitMessages } from './checkCommits.ts';
-
-type PackageJson = {
-  scripts: Record<string, string | undefined>;
-};
-
-const ROOT = fileURLToPath(new URL('../../', import.meta.url));
-
-const packageJson = JSON.parse(
-  readFileSync(join(ROOT, 'package.json'), 'utf8'),
-) as PackageJson;
 
 const EXPECTED_FORMAT = '<type>: [<feature>]';
 
@@ -107,81 +97,13 @@ describe('lintCommitMessages', () => {
   });
 });
 
-// Environment without the GIT_* variables a git hook sets, so the commands
-// below act on the temporary repository only, never on this one.
-function cleanEnv(): NodeJS.ProcessEnv {
-  return Object.fromEntries(
-    Object.entries(process.env).filter(([key]) => !key.startsWith('GIT_')),
-  );
-}
-
-function git(cwd: string, ...args: string[]): void {
-  const result = spawnSync('git', args, {
-    cwd,
-    encoding: 'utf8',
-    env: cleanEnv(),
-  });
-  if (result.status !== 0) {
-    throw new Error(`git ${args.join(' ')} failed: ${result.stderr}`);
-  }
-}
-
-function commit(cwd: string, message: string): void {
-  git(cwd, 'commit', '--allow-empty', '--quiet', '-m', message);
-}
-
-// A fake origin/main: a remote-tracking ref set by hand, no remote needed.
-function setOriginMain(cwd: string): void {
-  git(cwd, 'update-ref', 'refs/remotes/origin/main', 'HEAD');
-}
-
-// Runs an npm script's command the way `npm run` does: through the shell, in
-// the given folder.
-function runScript(
-  name: string,
-  cwd: string,
-): { status: number | null; stdout: string; stderr: string } {
-  const script = packageJson.scripts[name];
-  if (script === undefined) {
-    throw new Error(`npm script ${name} is missing`);
-  }
-  const result = spawnSync(script, {
-    cwd,
-    shell: true,
-    encoding: 'utf8',
-    env: cleanEnv(),
-  });
-  return {
-    status: result.status,
-    stdout: result.stdout,
-    stderr: result.stderr,
-  };
-}
-
 describe('check:commits', { timeout: 60_000 }, () => {
   let repo: string;
 
   beforeEach(() => {
-    // A fresh repository with this repository's gate scripts, commitlint
-    // config and installed packages beside it, all untracked. node_modules
-    // is a link, which removing the folder deletes without following.
     repo = mkdtempSync(join(tmpdir(), 'dashcash-commits-'));
-    symlinkSync(
-      join(ROOT, 'node_modules'),
-      join(repo, 'node_modules'),
-      'junction',
-    );
-    writeFileSync(join(repo, 'package.json'), '{ "type": "module" }\n');
-    cpSync(join(ROOT, 'scripts'), join(repo, 'scripts'), { recursive: true });
-    cpSync(
-      join(ROOT, 'commitlint.config.js'),
-      join(repo, 'commitlint.config.js'),
-    );
-    git(repo, 'init', '--quiet', '--initial-branch=main');
-    git(repo, 'config', 'user.name', 'Sample Author');
-    git(repo, 'config', 'user.email', 'author@example.invalid');
-    git(repo, 'config', 'commit.gpgsign', 'false');
-    git(repo, 'config', 'core.hooksPath', 'no-hooks');
+    installGateScripts(repo);
+    initSampleRepository(repo);
     // main's own history is outside every Branch range, so it may break the
     // convention without failing the check.
     commit(repo, 'Initial commit');

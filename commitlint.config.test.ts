@@ -56,6 +56,14 @@ const NUMBERS_NOT_TWO_DIGITS = [
   'feat: [csv-import] 2',
   'fix: [csv-import] 102',
   'docs: [csv-import] 7',
+  'feat: [x] 2',
+  'fix: [x] 102',
+  'docs: [x] 7',
+  'feat: [x] 02',
+  'test: [x] 2, RED',
+  'test: [x] 102, RED',
+  'test: [x] 002, RED',
+  'feat: [x] 02, RED',
 ];
 
 const HEADERS_OFF_PATTERN = [

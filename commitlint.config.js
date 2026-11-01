@@ -2,10 +2,13 @@
 //   <type>: [<feature>] [<nn>] <description>[, RED]
 // The parser preset holds the full pattern. The type is any lower-case word,
 // so that type-enum names an unknown type; the feature is kebab-case; the
-// ticket number is exactly two digits; the description never starts with a
-// number of its own, so a one- or three-digit ticket number is rejected.
+// ticket number is exactly two digits; the description starts with a
+// lower-case letter, because docs/conventions.md requires a lower-case
+// imperative description. Requiring a letter first means a ticket number that
+// is not exactly two digits can never be read as the start of the description,
+// so it is rejected.
 const HEADER_PATTERN =
-  /^([a-z]+): \[([a-z0-9]+(?:-[a-z0-9]+)*)\] (?:(\d{2}) )?(?!\d+(?: |$))(.+?)(?:, (RED))?$/;
+  /^([a-z]+): \[([a-z0-9]+(?:-[a-z0-9]+)*)\] (?:(\d{2}) )?([a-z].*?)(?:, (RED))?$/;
 
 const EXPECTED_FORMAT = '<type>: [<feature>] [<nn>] <description>[, RED]';
 

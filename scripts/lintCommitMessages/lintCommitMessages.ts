@@ -1,10 +1,16 @@
 import lint from '@commitlint/lint';
-import type load from '@commitlint/load';
+import load from '@commitlint/load';
 import type { Violation } from '../reportViolations/reportViolations.ts';
 import { readCommitHeader } from '../parseCommitHeader/parseCommitHeader.ts';
 
 type Config = Awaited<ReturnType<typeof load>>;
 type LintOptions = NonNullable<Parameters<typeof lint>[2]>;
+
+// Loads the root commitlint config, which the commit gate and the Pull-request
+// check both lint against.
+export function loadCommitConfig(cwd: string): Promise<Config> {
+  return load({}, { cwd, file: 'commitlint.config.js' });
+}
 
 // Lints every commit message against the loaded commitlint config and returns
 // one violation per failed rule, named by the commit's header.

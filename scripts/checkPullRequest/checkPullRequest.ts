@@ -1,5 +1,7 @@
-import load from '@commitlint/load';
-import { lintCommitMessages } from '../lintCommitMessages/lintCommitMessages.ts';
+import {
+  lintCommitMessages,
+  loadCommitConfig,
+} from '../lintCommitMessages/lintCommitMessages.ts';
 import { parseCommitHeader } from '../parseCommitHeader/parseCommitHeader.ts';
 import { resolveBranchName } from '../readBranchRange/readBranchRange.ts';
 import {
@@ -148,7 +150,7 @@ export async function checkPullRequest(
 if (import.meta.main) {
   await runGate(async () => {
     const cwd = process.cwd();
-    const loaded = await load({}, { cwd, file: 'commitlint.config.js' });
+    const loaded = await loadCommitConfig(cwd);
     return checkPullRequest({
       branch: resolveBranchName(
         process.env,

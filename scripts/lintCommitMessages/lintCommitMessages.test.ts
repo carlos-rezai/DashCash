@@ -1,7 +1,7 @@
 import load from '@commitlint/load';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { ROOT } from '../test-support/sampleRepository/sampleRepository.ts';
-import { lintCommitMessages } from './lintCommitMessages.ts';
+import { lintCommitMessages, loadCommitConfig } from './lintCommitMessages.ts';
 
 const EXPECTED_FORMAT = '<type>: [<feature>]';
 
@@ -14,6 +14,14 @@ const CONVENTIONAL_HEADERS = [
   'fix: [sample] 01 address review',
   'docs: [sample] 01 tick ci criterion',
 ];
+
+describe('loadCommitConfig', () => {
+  it('loads the root commitlint config with its header format rule', async () => {
+    const config = await loadCommitConfig(ROOT);
+
+    expect(config.rules).toHaveProperty('header-format');
+  });
+});
 
 describe('lintCommitMessages', () => {
   let config: Awaited<ReturnType<typeof load>>;

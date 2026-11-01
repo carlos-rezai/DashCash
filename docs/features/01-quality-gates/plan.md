@@ -34,9 +34,9 @@ Durable decisions that apply across all phases:
   reason: string }`. Output: one `<subject>: <reason>` line per violation
   on standard error, exit 1; otherwise exit 0 silently.
 - **Tool configs**: at the repository root where the tools find them, as
-  JavaScript ES modules except the Vitest config (Q19); each config is
-  tested beside it through the tool's Node API, with violating code written
-  to a temporary folder or passed as text, never committed (Q22).
+  JavaScript ES modules except the Vitest config (Q19); each config's test
+  lives in `gates/<gate>/` and runs the tool's Node API, with violating code
+  written to a temporary folder or passed as text, never committed (Q22).
 - **Header grammar**: one pattern, in the commitlint config's parser preset,
   with the parts `type`, `scope`, `ticket`, `subject`, `red`; every other
   gate reads it from there (A7).

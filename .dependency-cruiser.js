@@ -1,5 +1,5 @@
-// Layer rules across packages and processes. The renderer's own layer ladder
-// is added by the next ticket.
+// Layer rules across packages and processes, and the renderer's own Layer
+// ladder.
 
 // Tests, stories and test-support/ may reach for dev tooling such as vitest;
 // everything else is Shipping code and keeps to its boundary.
@@ -7,6 +7,33 @@ const NOT_SHIPPING =
   '(\\.(test|spec|stories)\\.[cm]?[jt]sx?$|(^|/)test-support/|^e2e/)';
 
 const ELECTRON = '(^|/)node_modules/electron(/|$)';
+
+const RENDERER = '^apps/desktop/src/renderer';
+
+// The Layer ladder, bottom to top: a Layer imports only from the Layers below
+// it, and from its own.
+const LADDER = [
+  'tokens',
+  'primitives',
+  'components',
+  'features',
+  'layouts',
+  'pages',
+  'App',
+];
+
+// Folders beside the ladder: every Layer may import them; they import only
+// each other, tokens/, the contract and the domain.
+const SHARED = ['api', 'hooks', 'utils', 'types', 'assets', 'styles'];
+
+/** @type {import('dependency-cruiser').IForbiddenRuleType[]} */
+const ladderRules = LADDER.slice(0, -1).map((layer, index) => ({
+  name: `renderer-${layer}-not-to-higher-layer`,
+  comment: `${layer}/ imports only from its own Layer and the Layers below it.`,
+  severity: 'error',
+  from: { path: `${RENDERER}/${layer}/` },
+  to: { path: `${RENDERER}/(${LADDER.slice(index + 1).join('|')})/` },
+}));
 
 /** @type {import('dependency-cruiser').IConfiguration} */
 export default {
@@ -66,6 +93,31 @@ export default {
       severity: 'error',
       from: { pathNot: NOT_SHIPPING },
       to: { path: '(^|/)test-support/' },
+    },
+    ...ladderRules,
+    {
+      name: 'renderer-shared-not-to-ladder',
+      comment:
+        'The shared folders import only each other, tokens/, the contract and the domain.',
+      severity: 'error',
+      from: { path: `${RENDERER}/(${SHARED.join('|')})/` },
+      to: { path: `${RENDERER}/(${LADDER.slice(1).join('|')})/` },
+    },
+    {
+      name: 'feature-module-only-through-index',
+      comment:
+        'A feature module under features/<x>/ is reachable from outside it only through features/<x>/index.ts.',
+      severity: 'error',
+      from: { path: `${RENDERER}/features/([^/]+)/` },
+      to: { path: `${RENDERER}/features/(?!$1/)[^/]+/(?!index[.]ts$)` },
+    },
+    {
+      name: 'feature-module-only-through-index-from-outside-features',
+      comment:
+        'Outside features/, a feature module is reached only through features/<x>/index.ts.',
+      severity: 'error',
+      from: { path: `${RENDERER}/`, pathNot: `${RENDERER}/features/` },
+      to: { path: `${RENDERER}/features/[^/]+/(?!index[.]ts$)` },
     },
   ],
   options: {

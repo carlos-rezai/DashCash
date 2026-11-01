@@ -1,5 +1,5 @@
 ---
-status: in-progress
+status: done
 ---
 # Renderer layer ladder
 
@@ -26,16 +26,16 @@ Implementation Decisions, "Layer rules"; design log Q40, Q42), added to
 
 ## Acceptance criteria
 
-- [ ] For each **Layer**: an import from a layer below and from the same
+- [x] For each **Layer**: an import from a layer below and from the same
       layer is allowed, an import from a layer above is forbidden.
-- [ ] An import of `features/<x>/index.ts` from another feature module or a
+- [x] An import of `features/<x>/index.ts` from another feature module or a
       page is allowed; an import of any other file inside `features/<x>/`
       from outside it is forbidden.
-- [ ] Each layer may import a shared folder; a shared folder may import
+- [x] Each layer may import a shared folder; a shared folder may import
       another shared folder, `tokens/`, the contract and the domain, and is
       forbidden to import any ladder layer above `tokens/`.
-- [ ] Every case runs in a temporary tree cruised with the real config.
-- [ ] `npm run lint:deps` passes on the tree.
+- [x] Every case runs in a temporary tree cruised with the real config.
+- [x] `npm run lint:deps` passes on the tree.
 - [ ] CI's `verify` job is green.
 
 ## Blocked by

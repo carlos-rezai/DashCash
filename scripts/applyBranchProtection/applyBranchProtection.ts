@@ -51,7 +51,7 @@ export function resolveEndpoint(
   return endpoint.replace('{owner}', owner).replace('{repo}', name);
 }
 
-function gh(args: readonly string[], input?: string): string {
+function runGh(args: readonly string[], input?: string): string {
   return execFileSync('gh', args, {
     encoding: 'utf8',
     input,
@@ -62,7 +62,7 @@ function gh(args: readonly string[], input?: string): string {
 // Run by the human, with a gh login that has admin rights on the repository.
 if (import.meta.main) {
   try {
-    const repository = gh([
+    const repository = runGh([
       'repo',
       'view',
       '--json',
@@ -74,11 +74,11 @@ if (import.meta.main) {
       readFileSync('.github/rulesets/main.json', 'utf8'),
     ) as { name: string };
     const existing = JSON.parse(
-      gh(['api', resolveEndpoint(`${REPOSITORY}/rulesets`, repository)]),
+      runGh(['api', resolveEndpoint(`${REPOSITORY}/rulesets`, repository)]),
     ) as ExistingRuleset[];
     for (const request of planRulesetRequests(ruleset, existing)) {
       const endpoint = resolveEndpoint(request.endpoint, repository);
-      gh(
+      runGh(
         ['api', '--method', request.method, endpoint, '--input', '-'],
         JSON.stringify(request.body),
       );

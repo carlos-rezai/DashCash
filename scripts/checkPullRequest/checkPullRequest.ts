@@ -12,7 +12,7 @@ import {
 } from '../readRefactorSteps/readRefactorSteps.ts';
 import { listTickets } from '../readTickets/readTickets.ts';
 import {
-  reportViolations,
+  runGate,
   type Violation,
 } from '../reportViolations/reportViolations.ts';
 import { listHeadPaths, readHeadFile, runGit } from '../runGit/runGit.ts';
@@ -147,10 +147,10 @@ export async function checkPullRequest(
 }
 
 if (import.meta.main) {
-  try {
+  await runGate(async () => {
     const cwd = process.cwd();
     const loaded = await load({}, { cwd, file: 'commitlint.config.js' });
-    const violations = await checkPullRequest({
+    return checkPullRequest({
       branch: resolveBranchName(
         process.env,
         runGit(cwd, ['branch', '--show-current']).trim(),
@@ -160,9 +160,5 @@ if (import.meta.main) {
       readFile: (path) => readHeadFile(cwd, path),
       lintTitle: (header) => lintCommitMessages([header], loaded),
     });
-    process.exitCode = reportViolations(violations);
-  } catch (error) {
-    console.error(error instanceof Error ? error.message : String(error));
-    process.exitCode = 1;
-  }
+  });
 }

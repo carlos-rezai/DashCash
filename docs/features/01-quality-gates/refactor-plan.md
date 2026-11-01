@@ -92,7 +92,7 @@ Run `npm run verify` before committing; every step must leave it green.
 - [x] 14 add run gate to report violations
 - [x] 15 run check commits through run gate
 - [x] 16 run check tickets through run gate
-- [ ] 17 run check pull request through run gate
+- [x] 17 run check pull request through run gate
 - [ ] 18 run check data files through run gate
 - [ ] 19 run check docs drift through run gate
 - [ ] 20 extract commit header parsing from check tickets

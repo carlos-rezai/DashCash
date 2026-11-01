@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   hasRefactorStep,
   readRefactorSteps,
-  refactorPlanPath,
+  buildRefactorPlanPath,
 } from './readRefactorSteps.ts';
 
 const PLAN = [
@@ -18,9 +18,9 @@ const PLAN = [
   '',
 ].join('\n');
 
-describe('refactorPlanPath', () => {
+describe('buildRefactorPlanPath', () => {
   it('puts the plan inside the folder', () => {
-    expect(refactorPlanPath('docs/features/01-sample')).toBe(
+    expect(buildRefactorPlanPath('docs/features/01-sample')).toBe(
       'docs/features/01-sample/refactor-plan.md',
     );
   });

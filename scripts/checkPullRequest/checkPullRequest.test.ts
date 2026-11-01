@@ -1,33 +1,22 @@
-import { spawnSync } from 'node:child_process';
-import {
-  cpSync,
-  mkdirSync,
-  mkdtempSync,
-  readFileSync,
-  rmSync,
-  symlinkSync,
-  writeFileSync,
-} from 'node:fs';
+import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { dirname, join } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { join } from 'node:path';
 import load from '@commitlint/load';
 import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { lintCommitMessages } from '../checkCommits/checkCommits.ts';
+import { lintCommitMessages } from '../lintCommitMessages/lintCommitMessages.ts';
 import type { Violation } from '../reportViolations/reportViolations.ts';
+import { runNpmScript as runScript } from '../test-support/runNpmScript/runNpmScript.ts';
+import {
+  commitFiles,
+  initSampleRepository,
+  installGateScripts,
+  ROOT,
+  runSampleGit as git,
+  setOriginMain,
+} from '../test-support/sampleRepository/sampleRepository.ts';
 import { checkPullRequest } from './checkPullRequest.ts';
 
-type PackageJson = {
-  scripts: Record<string, string | undefined>;
-};
-
 type Files = Record<string, string>;
-
-const ROOT = fileURLToPath(new URL('../../', import.meta.url));
-
-const packageJson = JSON.parse(
-  readFileSync(join(ROOT, 'package.json'), 'utf8'),
-) as PackageJson;
 
 // The front matter as the conventions' ticket template writes it.
 const TEMPLATE_COMMENT = '   # open | in-progress | done';
@@ -333,91 +322,18 @@ describe('checkPullRequest', () => {
   });
 });
 
-// Environment without the GIT_* variables a git hook sets, so the commands
-// below act on the temporary repository only, and without the pull-request
-// variables of the CI run that executes these tests; each test sets its own.
-function cleanEnv(extra: Record<string, string>): NodeJS.ProcessEnv {
-  const env = Object.fromEntries(
-    Object.entries(process.env).filter(
-      ([key]) => !key.startsWith('GIT_') && key !== 'PR_TITLE',
-    ),
-  );
-  return { ...env, GITHUB_HEAD_REF: '', GITHUB_REF_NAME: '', ...extra };
-}
-
-function git(cwd: string, ...args: string[]): void {
-  const result = spawnSync('git', args, {
-    cwd,
-    encoding: 'utf8',
-    env: cleanEnv({}),
-  });
-  if (result.status !== 0) {
-    throw new Error(`git ${args.join(' ')} failed: ${result.stderr}`);
-  }
-}
-
-// Writes the files and commits them, and only them.
-function commitFiles(cwd: string, message: string, files: Files): void {
-  for (const [file, content] of Object.entries(files)) {
-    const path = join(cwd, file);
-    mkdirSync(dirname(path), { recursive: true });
-    writeFileSync(path, content);
-  }
-  git(cwd, 'add', '--', ...Object.keys(files));
-  git(cwd, 'commit', '--quiet', '-m', message);
-}
-
-// Runs an npm script's command the way `npm run` does: through the shell, in
-// the given folder, with the given variables.
-function runScript(
-  name: string,
-  cwd: string,
-  env: Record<string, string>,
-): { status: number | null; stdout: string; stderr: string } {
-  const script = packageJson.scripts[name];
-  if (script === undefined) {
-    throw new Error(`npm script ${name} is missing`);
-  }
-  const result = spawnSync(script, {
-    cwd,
-    shell: true,
-    encoding: 'utf8',
-    env: cleanEnv(env),
-  });
-  return {
-    status: result.status,
-    stdout: result.stdout,
-    stderr: result.stderr,
-  };
-}
-
 describe('check:pr', { timeout: 60_000 }, () => {
   let repo: string;
 
   beforeEach(() => {
     // A fresh repository on GitHub's merge ref stand-in (main), with this
     // repository's gate scripts, commitlint config and installed packages
-    // beside it, all untracked. node_modules is a link, which removing the
-    // folder deletes without following.
+    // beside it, all untracked.
     repo = mkdtempSync(join(tmpdir(), 'dashcash-pr-'));
-    symlinkSync(
-      join(ROOT, 'node_modules'),
-      join(repo, 'node_modules'),
-      'junction',
-    );
-    writeFileSync(join(repo, 'package.json'), '{ "type": "module" }\n');
-    cpSync(join(ROOT, 'scripts'), join(repo, 'scripts'), { recursive: true });
-    cpSync(
-      join(ROOT, 'commitlint.config.js'),
-      join(repo, 'commitlint.config.js'),
-    );
-    git(repo, 'init', '--quiet', '--initial-branch=main');
-    git(repo, 'config', 'user.name', 'Sample Author');
-    git(repo, 'config', 'user.email', 'author@example.invalid');
-    git(repo, 'config', 'commit.gpgsign', 'false');
-    git(repo, 'config', 'core.hooksPath', 'no-hooks');
+    installGateScripts(repo);
+    initSampleRepository(repo);
     commitFiles(repo, 'docs: [sample] add tickets', DONE_FEATURE);
-    git(repo, 'update-ref', 'refs/remotes/origin/main', 'HEAD');
+    setOriginMain(repo);
   });
 
   afterEach(() => {
@@ -426,8 +342,10 @@ describe('check:pr', { timeout: 60_000 }, () => {
 
   it('passes the title from PR_TITLE on the branch from GITHUB_HEAD_REF', () => {
     const result = runScript('check:pr', repo, {
-      PR_TITLE: FEATURE_TITLE,
-      GITHUB_HEAD_REF: 'feat/01-sample',
+      env: {
+        PR_TITLE: FEATURE_TITLE,
+        GITHUB_HEAD_REF: 'feat/01-sample',
+      },
     });
 
     expect(result.status, result.stderr).toBe(0);
@@ -437,7 +355,9 @@ describe('check:pr', { timeout: 60_000 }, () => {
 
   it('fails without PR_TITLE and names the reason', () => {
     const result = runScript('check:pr', repo, {
-      GITHUB_HEAD_REF: 'feat/01-sample',
+      env: {
+        GITHUB_HEAD_REF: 'feat/01-sample',
+      },
     });
 
     expect(result.status).toBe(1);
@@ -447,8 +367,10 @@ describe('check:pr', { timeout: 60_000 }, () => {
   it('fails a title from PR_TITLE that carries a number', () => {
     const title = 'feat: [sample] 01 add sample';
     const result = runScript('check:pr', repo, {
-      PR_TITLE: title,
-      GITHUB_HEAD_REF: 'feat/01-sample',
+      env: {
+        PR_TITLE: title,
+        GITHUB_HEAD_REF: 'feat/01-sample',
+      },
     });
 
     expect(result.status).toBe(1);
@@ -457,11 +379,36 @@ describe('check:pr', { timeout: 60_000 }, () => {
 
   it('fails on a branch from which no pull request may come', () => {
     const result = runScript('check:pr', repo, {
-      PR_TITLE: FEATURE_TITLE,
-      GITHUB_HEAD_REF: 'main',
+      env: {
+        PR_TITLE: FEATURE_TITLE,
+        GITHUB_HEAD_REF: 'main',
+      },
     });
 
     expect(result.status).toBe(1);
     expect(result.stderr).not.toBe('');
+  });
+
+  it('reads the branch from git when the GitHub variables are empty', () => {
+    git(repo, 'switch', '--quiet', '--create', 'feat/01-sample');
+
+    const result = runScript('check:pr', repo, {
+      env: { PR_TITLE: FEATURE_TITLE },
+    });
+
+    expect(result.status, result.stderr).toBe(0);
+    expect(result.stdout).toBe('');
+    expect(result.stderr).toBe('');
+  });
+
+  it('names the branch read from git when no pull request may come from it', () => {
+    git(repo, 'switch', '--quiet', '--create', 'topic/sample');
+
+    const result = runScript('check:pr', repo, {
+      env: { PR_TITLE: FEATURE_TITLE },
+    });
+
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain('topic/sample');
   });
 });

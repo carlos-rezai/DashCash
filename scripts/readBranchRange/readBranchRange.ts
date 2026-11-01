@@ -26,6 +26,18 @@ export function resolveBranchName(
   );
 }
 
+// The branch name for the given environment, falling back to the repository's
+// current branch.
+export function readBranchName(
+  cwd: string,
+  env: Readonly<Record<string, string | undefined>>,
+): string | undefined {
+  return resolveBranchName(
+    env,
+    runGit(cwd, ['branch', '--show-current']).trim(),
+  );
+}
+
 function hasBaseRef(cwd: string): boolean {
   try {
     runGit(cwd, ['rev-parse', '--verify', '--quiet', `${BASE_REF}^{commit}`]);
@@ -42,10 +54,7 @@ export function readBranchRange(cwd: string): BranchRange {
       `${BASE_REF} is missing: fetch ${BASE_REF} first (git fetch origin main)`,
     );
   }
-  const branch = resolveBranchName(
-    process.env,
-    runGit(cwd, ['branch', '--show-current']).trim(),
-  );
+  const branch = readBranchName(cwd, process.env);
   const log = runGit(cwd, [
     'log',
     `--format=%H${FIELD_SEPARATOR}%B${RECORD_SEPARATOR}`,

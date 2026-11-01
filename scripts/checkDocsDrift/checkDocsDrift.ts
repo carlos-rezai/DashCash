@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { posix } from 'node:path';
 import {
-  reportViolations,
+  runGate,
   type Violation,
 } from '../reportViolations/reportViolations.ts';
 import { listTrackedPaths } from '../runGit/runGit.ts';
@@ -28,7 +28,7 @@ const PLACEHOLDER = /[<>*{…\s]/;
 const MISSING_REASON = 'path does not exist';
 
 // Returns the doc's lines outside fenced code blocks.
-function linesOutsideFences(text: string): string[] {
+function readLinesOutsideFences(text: string): string[] {
   const lines: string[] = [];
   let fence: string | undefined;
   for (const line of text.split(/\r?\n/)) {
@@ -81,9 +81,9 @@ function nameSpan(span: string): NamedPath | undefined {
   return { written: span, resolved: posix.normalize(span) };
 }
 
-function namedPaths(doc: Doc): NamedPath[] {
+function collectNamedPaths(doc: Doc): NamedPath[] {
   const named: NamedPath[] = [];
-  for (const line of linesOutsideFences(doc.text)) {
+  for (const line of readLinesOutsideFences(doc.text)) {
     for (const match of line.matchAll(LINK)) {
       const path = nameLink(doc.path, match[1] ?? '');
       if (path !== undefined) {
@@ -100,13 +100,8 @@ function namedPaths(doc: Doc): NamedPath[] {
   return named;
 }
 
-// Returns one violation per path a doc names that git does not track, as a
-// file or as a folder holding a tracked file.
-export function findDocsDrift(
-  docs: readonly Doc[],
-  trackedPaths: readonly string[],
-): Violation[] {
-  const tracked = new Set(trackedPaths);
+// Collects every folder that holds a tracked file, directly or in a subfolder.
+function collectTrackedFolders(trackedPaths: readonly string[]): Set<string> {
   const folders = new Set<string>();
   for (const path of trackedPaths) {
     for (
@@ -117,11 +112,22 @@ export function findDocsDrift(
       folders.add(folder);
     }
   }
+  return folders;
+}
+
+// Returns one violation per path a doc names that git does not track, as a
+// file or as a folder holding a tracked file.
+export function findDocsDrift(
+  docs: readonly Doc[],
+  trackedPaths: readonly string[],
+): Violation[] {
+  const tracked = new Set(trackedPaths);
+  const folders = collectTrackedFolders(trackedPaths);
 
   const violations: Violation[] = [];
   for (const doc of docs) {
     const reported = new Set<string>();
-    for (const { written, resolved } of namedPaths(doc)) {
+    for (const { written, resolved } of collectNamedPaths(doc)) {
       const path = resolved.replace(/\/+$/, '');
       if (!reported.has(path) && !tracked.has(path) && !folders.has(path)) {
         reported.add(path);
@@ -144,9 +150,11 @@ function isCheckedDoc(path: string): boolean {
 }
 
 if (import.meta.main) {
-  const trackedPaths = listTrackedPaths(process.cwd());
-  const docs: Doc[] = trackedPaths
-    .filter(isCheckedDoc)
-    .map((path) => ({ path, text: readFileSync(path, 'utf8') }));
-  process.exitCode = reportViolations(findDocsDrift(docs, trackedPaths));
+  await runGate(() => {
+    const trackedPaths = listTrackedPaths(process.cwd());
+    const docs: Doc[] = trackedPaths
+      .filter(isCheckedDoc)
+      .map((path) => ({ path, text: readFileSync(path, 'utf8') }));
+    return findDocsDrift(docs, trackedPaths);
+  });
 }

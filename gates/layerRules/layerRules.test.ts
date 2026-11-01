@@ -1,19 +1,18 @@
-import { spawnSync } from 'node:child_process';
 import {
   copyFileSync,
   mkdirSync,
   mkdtempSync,
-  readFileSync,
   rmSync,
   writeFileSync,
 } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { delimiter, dirname, join } from 'node:path';
+import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { cruise } from 'dependency-cruiser';
 import type { ICruiseResult } from 'dependency-cruiser';
 import extractDepcruiseOptions from 'dependency-cruiser/config-utl/extract-depcruise-options';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { runNpmScript } from '../../scripts/test-support/runNpmScript/runNpmScript.ts';
 
 // The dependency-cruiser config: the workspace boundaries, test-support/, and
 // the renderer's Layer rules (the Layer ladder, the feature module's single
@@ -21,18 +20,10 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 // small copy of the repository's folders in a temporary folder, cruised from
 // its own root with the real config.
 
-type PackageJson = {
-  scripts: Record<string, string | undefined>;
-};
-
 type Tree = Record<string, string>;
 
 const ROOT = fileURLToPath(new URL('../..', import.meta.url));
 const CONFIG = join(ROOT, '.dependency-cruiser.js');
-
-const packageJson = JSON.parse(
-  readFileSync(join(ROOT, 'package.json'), 'utf8'),
-) as PackageJson;
 
 // The folders lint:deps cruises. A tree passes the ones it has.
 const CRUISED_FOLDERS = ['apps', 'packages', 'scripts', 'e2e'];
@@ -281,31 +272,12 @@ async function expectErrorFrom(tree: Tree, from: string): Promise<void> {
   ).toContain('error');
 }
 
-// Runs an npm script's command the way `npm run` does: through the shell,
-// with the root node_modules/.bin on the PATH.
 function runScript(
   name: string,
   cwd: string,
 ): { status: number | null; output: string } {
-  const script = packageJson.scripts[name];
-  if (script === undefined) {
-    throw new Error(`npm script ${name} is missing`);
-  }
-  const pathKey =
-    Object.keys(process.env).find((key) => key.toUpperCase() === 'PATH') ??
-    'PATH';
-  const result = spawnSync(script, {
-    cwd,
-    shell: true,
-    encoding: 'utf8',
-    env: {
-      ...process.env,
-      [pathKey]: [join(ROOT, 'node_modules', '.bin'), process.env[pathKey]]
-        .filter((part) => part !== undefined)
-        .join(delimiter),
-    },
-  });
-  return { status: result.status, output: result.stdout + result.stderr };
+  const { status, output } = runNpmScript(name, cwd, { rootBin: true });
+  return { status, output };
 }
 
 describe('dependency-cruiser config', { timeout: 60_000 }, () => {

@@ -5,7 +5,7 @@ const REFACTOR_STEP = /^- \[( |x)\] (\d+)(?: .*)?$/gm;
 export type RefactorStep = { number: string; ticked: boolean };
 
 // The repository path of a Feature folder's refactor plan.
-export function refactorPlanPath(folderPath: string): string {
+export function buildRefactorPlanPath(folderPath: string): string {
   return `${folderPath}/${REFACTOR_PLAN}`;
 }
 

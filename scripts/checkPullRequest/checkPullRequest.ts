@@ -1,27 +1,26 @@
-import load from '@commitlint/load';
-import config from '../../commitlint.config.js';
-import { lintCommitMessages } from '../checkCommits/checkCommits.ts';
-import { resolveBranchName } from '../readBranchRange/readBranchRange.ts';
 import {
-  featureFolderPath,
+  lintCommitMessages,
+  loadCommitConfig,
+} from '../lintCommitMessages/lintCommitMessages.ts';
+import { parseCommitHeader } from '../parseCommitHeader/parseCommitHeader.ts';
+import { readBranchName } from '../readBranchRange/readBranchRange.ts';
+import {
+  buildFeatureFolderPath,
   parseFeatureBranch,
 } from '../readFeatureFolders/readFeatureFolders.ts';
 import {
   readRefactorSteps,
-  refactorPlanPath,
+  buildRefactorPlanPath,
 } from '../readRefactorSteps/readRefactorSteps.ts';
-import { listTickets } from '../readTickets/readTickets.ts';
+import { listTickets, readTicketStatus } from '../readTickets/readTickets.ts';
 import {
-  reportViolations,
+  runGate,
   type Violation,
 } from '../reportViolations/reportViolations.ts';
-import { listHeadPaths, readHeadFile, runGit } from '../runGit/runGit.ts';
+import { listHeadPaths, readHeadFile } from '../runGit/runGit.ts';
 
-const HEADER_PATTERN = config.parserPreset.parserOpts.headerPattern;
 const RENOVATE_BRANCH = /^renovate\/.+$/;
 const RENOVATE_TITLE = /^chore: (.*)$/;
-const STATUS_LINE = /^status:[ \t]*([^\s#]*)/m;
-const FRONT_MATTER = /^---\r?\n([\s\S]*?)\r?\n---/;
 // A stand-in feature, so that a Renovate description meets the description
 // rules of the commitlint config without a feature of its own.
 const STAND_IN_FEATURE = 'renovate';
@@ -34,12 +33,7 @@ export type PullRequestInput = {
   lintTitle: (header: string) => Promise<Violation[]>;
 };
 
-function ticketStatus(content: string): string | undefined {
-  const frontMatter = FRONT_MATTER.exec(content)?.[1] ?? '';
-  return STATUS_LINE.exec(frontMatter)?.[1];
-}
-
-function checkTickets(
+function findUnfinishedTickets(
   folderPath: string,
   input: PullRequestInput,
   subject: string,
@@ -49,16 +43,16 @@ function checkTickets(
     return [{ subject, reason: `no ticket in ${folderPath}` }];
   }
   return tickets
-    .filter((path) => ticketStatus(input.readFile(path)) !== 'done')
+    .filter((path) => readTicketStatus(input.readFile(path)) !== 'done')
     .map((path) => ({ subject, reason: `${path} is not status: done` }));
 }
 
-function checkRefactorSteps(
+function findUntickedRefactorSteps(
   folderPath: string,
   input: PullRequestInput,
   subject: string,
 ): Violation[] {
-  const planPath = refactorPlanPath(folderPath);
+  const planPath = buildRefactorPlanPath(folderPath);
   if (!input.trackedPaths.includes(planPath)) {
     return [{ subject, reason: `${planPath} is missing` }];
   }
@@ -97,7 +91,7 @@ async function checkPlainTitle(
   lintTitle: PullRequestInput['lintTitle'],
 ): Promise<Violation[]> {
   const violations = await lintTitle(title);
-  if (HEADER_PATTERN.exec(title)?.[3] !== undefined) {
+  if (parseCommitHeader(title)?.ticket !== undefined) {
     violations.push({
       subject: title,
       reason: 'a pull-request title carries no ticket number',
@@ -118,19 +112,24 @@ export async function checkPullRequest(
     violations.push({ subject: '(no title)', reason: 'the title is missing' });
   }
   const featureBranch = parseFeatureBranch(branch);
+  const isRenovateBranch = RENOVATE_BRANCH.test(branch ?? '');
   if (featureBranch?.kind === 'feat') {
     violations.push(
-      ...checkTickets(featureFolderPath(featureBranch.folder), input, subject),
-    );
-  } else if (featureBranch?.kind === 'refactor') {
-    violations.push(
-      ...checkRefactorSteps(
-        featureFolderPath(featureBranch.folder),
+      ...findUnfinishedTickets(
+        buildFeatureFolderPath(featureBranch.folder),
         input,
         subject,
       ),
     );
-  } else if (!RENOVATE_BRANCH.test(branch ?? '')) {
+  } else if (featureBranch?.kind === 'refactor') {
+    violations.push(
+      ...findUntickedRefactorSteps(
+        buildFeatureFolderPath(featureBranch.folder),
+        input,
+        subject,
+      ),
+    );
+  } else if (!isRenovateBranch) {
     violations.push({
       subject: branch ?? '(no branch)',
       reason:
@@ -138,7 +137,7 @@ export async function checkPullRequest(
     });
   }
   if (title !== undefined && title !== '') {
-    const titleViolations = RENOVATE_BRANCH.test(branch ?? '')
+    const titleViolations = isRenovateBranch
       ? await checkRenovateTitle(title, lintTitle)
       : await checkPlainTitle(title, lintTitle);
     violations.push(...titleViolations);
@@ -147,22 +146,15 @@ export async function checkPullRequest(
 }
 
 if (import.meta.main) {
-  try {
+  await runGate(async () => {
     const cwd = process.cwd();
-    const loaded = await load({}, { cwd, file: 'commitlint.config.js' });
-    const violations = await checkPullRequest({
-      branch: resolveBranchName(
-        process.env,
-        runGit(cwd, ['branch', '--show-current']).trim(),
-      ),
+    const loaded = await loadCommitConfig(cwd);
+    return checkPullRequest({
+      branch: readBranchName(cwd, process.env),
       title: process.env['PR_TITLE'],
       trackedPaths: listHeadPaths(cwd),
       readFile: (path) => readHeadFile(cwd, path),
       lintTitle: (header) => lintCommitMessages([header], loaded),
     });
-    process.exitCode = reportViolations(violations);
-  } catch (error) {
-    console.error(error instanceof Error ? error.message : String(error));
-    process.exitCode = 1;
-  }
+  });
 }

@@ -1,28 +1,18 @@
-import { spawnSync } from 'node:child_process';
-import {
-  cpSync,
-  mkdirSync,
-  mkdtempSync,
-  readFileSync,
-  rmSync,
-  symlinkSync,
-  writeFileSync,
-} from 'node:fs';
+import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { dirname, join } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import {
+  commit,
+  commitFiles,
+  initSampleRepository,
+  installGateScripts,
+  runSampleGit as git,
+  setOriginMain,
+  writeTreeFile,
+} from '../test-support/sampleRepository/sampleRepository.ts';
+import { runNpmScript as runScript } from '../test-support/runNpmScript/runNpmScript.ts';
 import { checkTicketReferences } from './checkTickets.ts';
-
-type PackageJson = {
-  scripts: Record<string, string | undefined>;
-};
-
-const ROOT = fileURLToPath(new URL('../../', import.meta.url));
-
-const packageJson = JSON.parse(
-  readFileSync(join(ROOT, 'package.json'), 'utf8'),
-) as PackageJson;
 
 // A committed tree with two Feature folders. 01-sample holds Tickets 01 and
 // 02, a file 04 that is no Ticket, and a refactor plan whose Refactor steps
@@ -270,82 +260,6 @@ describe('checkTicketReferences', () => {
   });
 });
 
-// Environment without the GIT_* variables a git hook sets, so the commands
-// below act on the temporary repository only, never on this one, and with
-// the GitHub branch variables emptied, so the branch comes from the
-// temporary repository, not from the CI run that executes these tests.
-function cleanEnv(): NodeJS.ProcessEnv {
-  return {
-    ...Object.fromEntries(
-      Object.entries(process.env).filter(([key]) => !key.startsWith('GIT_')),
-    ),
-    GITHUB_HEAD_REF: '',
-    GITHUB_REF_NAME: '',
-  };
-}
-
-function git(cwd: string, ...args: string[]): void {
-  const result = spawnSync('git', args, {
-    cwd,
-    encoding: 'utf8',
-    env: cleanEnv(),
-  });
-  if (result.status !== 0) {
-    throw new Error(`git ${args.join(' ')} failed: ${result.stderr}`);
-  }
-}
-
-function commit(cwd: string, message: string): void {
-  git(cwd, 'commit', '--allow-empty', '--quiet', '-m', message);
-}
-
-function writeTreeFile(root: string, file: string, content: string): void {
-  const path = join(root, file);
-  mkdirSync(dirname(path), { recursive: true });
-  writeFileSync(path, content);
-}
-
-// Writes the files and commits them, and only them.
-function commitFiles(
-  cwd: string,
-  message: string,
-  files: Record<string, string>,
-): void {
-  for (const [file, content] of Object.entries(files)) {
-    writeTreeFile(cwd, file, content);
-  }
-  git(cwd, 'add', '--', ...Object.keys(files));
-  commit(cwd, message);
-}
-
-// A fake origin/main: a remote-tracking ref set by hand, no remote needed.
-function setOriginMain(cwd: string): void {
-  git(cwd, 'update-ref', 'refs/remotes/origin/main', 'HEAD');
-}
-
-// Runs an npm script's command the way `npm run` does: through the shell, in
-// the given folder.
-function runScript(
-  name: string,
-  cwd: string,
-): { status: number | null; stdout: string; stderr: string } {
-  const script = packageJson.scripts[name];
-  if (script === undefined) {
-    throw new Error(`npm script ${name} is missing`);
-  }
-  const result = spawnSync(script, {
-    cwd,
-    shell: true,
-    encoding: 'utf8',
-    env: cleanEnv(),
-  });
-  return {
-    status: result.status,
-    stdout: result.stdout,
-    stderr: result.stderr,
-  };
-}
-
 const SAMPLE_TICKETS = {
   'docs/features/01-sample/prd.md': '# Sample PRD\n',
   'docs/features/01-sample/01-first-slice.md':
@@ -356,26 +270,9 @@ describe('check:tickets', { timeout: 60_000 }, () => {
   let repo: string;
 
   beforeEach(() => {
-    // A fresh repository with this repository's gate scripts, commitlint
-    // config and installed packages beside it, all untracked. node_modules
-    // is a link, which removing the folder deletes without following.
     repo = mkdtempSync(join(tmpdir(), 'dashcash-tickets-'));
-    symlinkSync(
-      join(ROOT, 'node_modules'),
-      join(repo, 'node_modules'),
-      'junction',
-    );
-    writeFileSync(join(repo, 'package.json'), '{ "type": "module" }\n');
-    cpSync(join(ROOT, 'scripts'), join(repo, 'scripts'), { recursive: true });
-    cpSync(
-      join(ROOT, 'commitlint.config.js'),
-      join(repo, 'commitlint.config.js'),
-    );
-    git(repo, 'init', '--quiet', '--initial-branch=main');
-    git(repo, 'config', 'user.name', 'Sample Author');
-    git(repo, 'config', 'user.email', 'author@example.invalid');
-    git(repo, 'config', 'commit.gpgsign', 'false');
-    git(repo, 'config', 'core.hooksPath', 'no-hooks');
+    installGateScripts(repo);
+    initSampleRepository(repo);
     // main's own history is outside every Branch range, so it may name
     // nothing without failing the check.
     commitFiles(repo, 'Initial commit', { 'README.md': '# Sample\n' });
@@ -457,5 +354,17 @@ describe('check:tickets', { timeout: 60_000 }, () => {
     expect(result.stderr).not.toContain(
       'refactor: [sample] 01 extract the parser:',
     );
+  });
+
+  it('exits 1 telling to fetch origin/main when the ref is missing', () => {
+    git(repo, 'switch', '--quiet', '-c', 'feat/01-sample');
+    commit(repo, 'feat: [sample] 01 add sample');
+    git(repo, 'update-ref', '-d', 'refs/remotes/origin/main');
+
+    const result = runScript('check:tickets', repo);
+
+    expect(result.status).toBe(1);
+    expect(result.stdout).toBe('');
+    expect(result.stderr).toMatch(/fetch.*origin\/main/i);
   });
 });

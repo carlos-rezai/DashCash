@@ -1,4 +1,3 @@
-import { spawnSync } from 'node:child_process';
 import {
   copyFileSync,
   mkdirSync,
@@ -8,21 +7,14 @@ import {
   writeFileSync,
 } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { basename, delimiter, dirname, join } from 'node:path';
+import { basename, dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { check, getFileInfo, resolveConfig } from 'prettier';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-
-type PackageJson = {
-  scripts: Record<string, string | undefined>;
-};
+import { runNpmScript } from '../../scripts/test-support/runNpmScript/runNpmScript.ts';
 
 const ROOT = fileURLToPath(new URL('../..', import.meta.url));
 const IGNORE_FILE = join(ROOT, '.prettierignore');
-
-const packageJson = JSON.parse(
-  readFileSync(join(ROOT, 'package.json'), 'utf8'),
-) as PackageJson;
 
 const DOUBLE_QUOTED = 'const greeting = "hello";\n';
 const SINGLE_QUOTED = "const greeting = 'hello';\n";
@@ -84,31 +76,12 @@ function readTreeFile(root: string, file: string): string {
   return readFileSync(join(root, file), 'utf8');
 }
 
-// Runs an npm script's command the way `npm run` does: through the shell,
-// with the root node_modules/.bin on the PATH.
 function runScript(
   name: string,
   cwd: string,
 ): { status: number | null; output: string } {
-  const script = packageJson.scripts[name];
-  if (script === undefined) {
-    throw new Error(`npm script ${name} is missing`);
-  }
-  const pathKey =
-    Object.keys(process.env).find((key) => key.toUpperCase() === 'PATH') ??
-    'PATH';
-  const result = spawnSync(script, {
-    cwd,
-    shell: true,
-    encoding: 'utf8',
-    env: {
-      ...process.env,
-      [pathKey]: [join(ROOT, 'node_modules', '.bin'), process.env[pathKey]]
-        .filter((part) => part !== undefined)
-        .join(delimiter),
-    },
-  });
-  return { status: result.status, output: result.stdout + result.stderr };
+  const { status, output } = runNpmScript(name, cwd, { rootBin: true });
+  return { status, output };
 }
 
 describe('prettier config', () => {

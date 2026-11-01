@@ -41,7 +41,17 @@ export function planRulesetRequests(
   ];
 }
 
-function gh(args: readonly string[], input?: string): string {
+// Fills the {owner} and {repo} placeholders of an endpoint from the
+// repository's `owner/name`.
+export function resolveEndpoint(
+  endpoint: string,
+  nameWithOwner: string,
+): string {
+  const [owner = '', name = ''] = nameWithOwner.split('/');
+  return endpoint.replace('{owner}', owner).replace('{repo}', name);
+}
+
+function runGh(args: readonly string[], input?: string): string {
   return execFileSync('gh', args, {
     encoding: 'utf8',
     input,
@@ -52,7 +62,7 @@ function gh(args: readonly string[], input?: string): string {
 // Run by the human, with a gh login that has admin rights on the repository.
 if (import.meta.main) {
   try {
-    const repository = gh([
+    const repository = runGh([
       'repo',
       'view',
       '--json',
@@ -60,19 +70,15 @@ if (import.meta.main) {
       '--jq',
       '.nameWithOwner',
     ]).trim();
-    const resolve = (endpoint: string): string => {
-      const [owner = '', name = ''] = repository.split('/');
-      return endpoint.replace('{owner}', owner).replace('{repo}', name);
-    };
     const ruleset = JSON.parse(
       readFileSync('.github/rulesets/main.json', 'utf8'),
     ) as { name: string };
     const existing = JSON.parse(
-      gh(['api', resolve(`${REPOSITORY}/rulesets`)]),
+      runGh(['api', resolveEndpoint(`${REPOSITORY}/rulesets`, repository)]),
     ) as ExistingRuleset[];
     for (const request of planRulesetRequests(ruleset, existing)) {
-      const endpoint = resolve(request.endpoint);
-      gh(
+      const endpoint = resolveEndpoint(request.endpoint, repository);
+      runGh(
         ['api', '--method', request.method, endpoint, '--input', '-'],
         JSON.stringify(request.body),
       );

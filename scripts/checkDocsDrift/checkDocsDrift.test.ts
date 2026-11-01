@@ -1,27 +1,16 @@
-import { spawnSync } from 'node:child_process';
-import {
-  cpSync,
-  mkdirSync,
-  mkdtempSync,
-  readFileSync,
-  rmSync,
-  writeFileSync,
-} from 'node:fs';
+import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { dirname, join } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { runNpmScript as runScript } from '../test-support/runNpmScript/runNpmScript.ts';
+import {
+  initSampleRepository,
+  installGateScripts,
+  ROOT,
+  runSampleGit as git,
+  writeTreeFile,
+} from '../test-support/sampleRepository/sampleRepository.ts';
 import { findDocsDrift } from './checkDocsDrift.ts';
-
-type PackageJson = {
-  scripts: Record<string, string | undefined>;
-};
-
-const ROOT = fileURLToPath(new URL('../../', import.meta.url));
-
-const packageJson = JSON.parse(
-  readFileSync(join(ROOT, 'package.json'), 'utf8'),
-) as PackageJson;
 
 // The top-level folders whose inline-code paths the check resolves from the
 // repository root (user story 76).
@@ -345,54 +334,6 @@ describe('findDocsDrift', () => {
   });
 });
 
-// Environment without the GIT_* variables a git hook sets, so the commands
-// below act on the given repository only.
-function cleanEnv(): NodeJS.ProcessEnv {
-  return Object.fromEntries(
-    Object.entries(process.env).filter(([key]) => !key.startsWith('GIT_')),
-  );
-}
-
-function git(cwd: string, ...args: string[]): void {
-  const result = spawnSync('git', args, {
-    cwd,
-    encoding: 'utf8',
-    env: cleanEnv(),
-  });
-  if (result.status !== 0) {
-    throw new Error(`git ${args.join(' ')} failed: ${result.stderr}`);
-  }
-}
-
-function writeTreeFile(root: string, file: string, content: string): void {
-  const path = join(root, file);
-  mkdirSync(dirname(path), { recursive: true });
-  writeFileSync(path, content);
-}
-
-// Runs an npm script's command the way `npm run` does: through the shell, in
-// the given folder.
-function runScript(
-  name: string,
-  cwd: string,
-): { status: number | null; stdout: string; stderr: string } {
-  const script = packageJson.scripts[name];
-  if (script === undefined) {
-    throw new Error(`npm script ${name} is missing`);
-  }
-  const result = spawnSync(script, {
-    cwd,
-    shell: true,
-    encoding: 'utf8',
-    env: cleanEnv(),
-  });
-  return {
-    status: result.status,
-    stdout: result.stdout,
-    stderr: result.stderr,
-  };
-}
-
 describe('check:docs-drift', { timeout: 30_000 }, () => {
   let tree: string;
 
@@ -400,9 +341,8 @@ describe('check:docs-drift', { timeout: 30_000 }, () => {
     // A fresh repository with this repository's gate scripts beside it, so
     // the npm script's relative path resolves; the scripts stay untracked.
     tree = mkdtempSync(join(tmpdir(), 'dashcash-docs-drift-'));
-    cpSync(join(ROOT, 'scripts'), join(tree, 'scripts'), { recursive: true });
-    writeTreeFile(tree, 'package.json', '{ "type": "module" }\n');
-    git(tree, 'init', '--quiet');
+    installGateScripts(tree);
+    initSampleRepository(tree);
     writeTreeFile(
       tree,
       'README.md',
@@ -430,19 +370,7 @@ describe('check:docs-drift', { timeout: 30_000 }, () => {
       'e2e/.gitkeep',
     );
     // Committed, so a test can delete a file with a plain `git rm`.
-    git(
-      tree,
-      '-c',
-      'user.name=Sample Author',
-      '-c',
-      'user.email=author@example.invalid',
-      '-c',
-      'commit.gpgsign=false',
-      'commit',
-      '--quiet',
-      '--message',
-      'add sample docs',
-    );
+    git(tree, 'commit', '--quiet', '--message', 'add sample docs');
   });
 
   afterEach(() => {

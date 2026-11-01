@@ -1,27 +1,15 @@
-import { spawnSync } from 'node:child_process';
-import {
-  cpSync,
-  mkdirSync,
-  mkdtempSync,
-  readFileSync,
-  rmSync,
-  writeFileSync,
-} from 'node:fs';
+import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { dirname, join } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { runNpmScript as runScript } from '../test-support/runNpmScript/runNpmScript.ts';
+import {
+  initSampleRepository,
+  installGateScripts,
+  runSampleGit as git,
+  writeTreeFile,
+} from '../test-support/sampleRepository/sampleRepository.ts';
 import { findDataFiles } from './checkDataFiles.ts';
-
-type PackageJson = {
-  scripts: Record<string, string | undefined>;
-};
-
-const ROOT = fileURLToPath(new URL('../../', import.meta.url));
-
-const packageJson = JSON.parse(
-  readFileSync(join(ROOT, 'package.json'), 'utf8'),
-) as PackageJson;
 
 // Tracked paths the check must reject: databases with their journal and WAL
 // files, CSV files outside fixtures/, upper-case extensions, and every .env
@@ -97,54 +85,6 @@ describe('findDataFiles', () => {
   });
 });
 
-// Environment without the GIT_* variables a git hook sets, so the commands
-// below act on the temporary repository only, never on this one.
-function cleanEnv(): NodeJS.ProcessEnv {
-  return Object.fromEntries(
-    Object.entries(process.env).filter(([key]) => !key.startsWith('GIT_')),
-  );
-}
-
-function git(cwd: string, ...args: string[]): void {
-  const result = spawnSync('git', args, {
-    cwd,
-    encoding: 'utf8',
-    env: cleanEnv(),
-  });
-  if (result.status !== 0) {
-    throw new Error(`git ${args.join(' ')} failed: ${result.stderr}`);
-  }
-}
-
-function writeTreeFile(root: string, file: string, content: string): void {
-  const path = join(root, file);
-  mkdirSync(dirname(path), { recursive: true });
-  writeFileSync(path, content);
-}
-
-// Runs an npm script's command the way `npm run` does: through the shell, in
-// the given folder.
-function runScript(
-  name: string,
-  cwd: string,
-): { status: number | null; stdout: string; stderr: string } {
-  const script = packageJson.scripts[name];
-  if (script === undefined) {
-    throw new Error(`npm script ${name} is missing`);
-  }
-  const result = spawnSync(script, {
-    cwd,
-    shell: true,
-    encoding: 'utf8',
-    env: cleanEnv(),
-  });
-  return {
-    status: result.status,
-    stdout: result.stdout,
-    stderr: result.stderr,
-  };
-}
-
 describe('check:data-files', { timeout: 30_000 }, () => {
   let tree: string;
 
@@ -152,9 +92,8 @@ describe('check:data-files', { timeout: 30_000 }, () => {
     // A fresh repository with this repository's gate scripts beside it, so
     // the npm script's relative path resolves; the scripts stay untracked.
     tree = mkdtempSync(join(tmpdir(), 'dashcash-data-files-'));
-    cpSync(join(ROOT, 'scripts'), join(tree, 'scripts'), { recursive: true });
-    writeTreeFile(tree, 'package.json', '{ "type": "module" }\n');
-    git(tree, 'init', '--quiet');
+    installGateScripts(tree);
+    initSampleRepository(tree);
     writeTreeFile(tree, '.gitignore', '*.db\n*.csv\n.env\n');
     writeTreeFile(tree, 'README.md', '# Sample\n');
     git(tree, 'add', '.gitignore', 'README.md');

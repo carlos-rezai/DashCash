@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
-  featureFolderPath,
+  buildFeatureFolderPath,
   findFeatureFolder,
   parseFeatureBranch,
 } from './readFeatureFolders.ts';
@@ -41,9 +41,9 @@ describe('parseFeatureBranch', () => {
   });
 });
 
-describe('featureFolderPath', () => {
+describe('buildFeatureFolderPath', () => {
   it('puts the folder under docs/features', () => {
-    expect(featureFolderPath('01-sample')).toBe('docs/features/01-sample');
+    expect(buildFeatureFolderPath('01-sample')).toBe('docs/features/01-sample');
   });
 });
 

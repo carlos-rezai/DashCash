@@ -24,7 +24,7 @@ export function parseFeatureBranch(
 }
 
 // The repository path of a Feature folder, from its name.
-export function featureFolderPath(folder: string): string {
+export function buildFeatureFolderPath(folder: string): string {
   return `${FEATURES_FOLDER}/${folder}`;
 }
 

@@ -1,30 +1,16 @@
-import { spawnSync } from 'node:child_process';
-import {
-  mkdirSync,
-  mkdtempSync,
-  readFileSync,
-  rmSync,
-  writeFileSync,
-} from 'node:fs';
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { delimiter, dirname, join } from 'node:path';
+import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { ESLint } from 'eslint';
 import { check, format, resolveConfig } from 'prettier';
 import tseslint from 'typescript-eslint';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-
-type PackageJson = {
-  scripts: Record<string, string | undefined>;
-};
+import { runNpmScript } from '../../scripts/test-support/runNpmScript/runNpmScript.ts';
 
 type Report = { ruleId: string | null; message: string; severity: number };
 
 const ROOT = fileURLToPath(new URL('../..', import.meta.url));
-
-const packageJson = JSON.parse(
-  readFileSync(join(ROOT, 'package.json'), 'utf8'),
-) as PackageJson;
 
 // Samples are linted as if they were this file: typed linting needs a path
 // the root project includes, and lintText lints the text given, not the file
@@ -124,31 +110,12 @@ function ruleIds(reports: Report[]): (string | null)[] {
   return reports.map(({ ruleId }) => ruleId);
 }
 
-// Runs an npm script's command the way `npm run` does: through the shell,
-// with the root node_modules/.bin on the PATH.
 function runScript(
   name: string,
   cwd: string,
 ): { status: number | null; output: string } {
-  const script = packageJson.scripts[name];
-  if (script === undefined) {
-    throw new Error(`npm script ${name} is missing`);
-  }
-  const pathKey =
-    Object.keys(process.env).find((key) => key.toUpperCase() === 'PATH') ??
-    'PATH';
-  const result = spawnSync(script, {
-    cwd,
-    shell: true,
-    encoding: 'utf8',
-    env: {
-      ...process.env,
-      [pathKey]: [join(ROOT, 'node_modules', '.bin'), process.env[pathKey]]
-        .filter((part) => part !== undefined)
-        .join(delimiter),
-    },
-  });
-  return { status: result.status, output: result.stdout + result.stderr };
+  const { status, output } = runNpmScript(name, cwd, { rootBin: true });
+  return { status, output };
 }
 
 function writeTreeFile(root: string, file: string, content: string): void {

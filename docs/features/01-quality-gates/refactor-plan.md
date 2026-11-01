@@ -87,7 +87,7 @@ Run `npm run verify` before committing; every step must leave it green.
 - [x] 09 use test support in check data files tests
 - [x] 10 use test support in check docs drift tests
 - [x] 11 use run npm script in formatting gate tests
-- [ ] 12 use run npm script in lint gate tests
+- [x] 12 use run npm script in lint gate tests
 - [ ] 13 use run npm script in layer rule tests
 - [ ] 14 add run gate to report violations
 - [ ] 15 run check commits through run gate

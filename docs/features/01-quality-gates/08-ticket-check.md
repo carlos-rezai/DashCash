@@ -39,7 +39,7 @@ after `check:commits`.
 - [x] `npm run check:tickets` passes on the branch's own history.
 - [x] `verify` runs `check:tickets` after `check:commits`; the gate wiring
       test expects it there.
-- [ ] CI's `verify` job is green.
+- [x] CI's `verify` job is green.
 
 ## Blocked by
 

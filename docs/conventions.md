@@ -80,6 +80,7 @@ packages/domain/src/       money/ import/ rules/ projection/ saving/ test-suppor
 packages/contract/src/     typed IPC channels
 e2e/                       Playwright flows
 fixtures/                  invented test data only
+gates/                     tests proving configuration gates, one folder per gate
 quality/                   audit exceptions, flaky quarantine, license allowlist
 scripts/
 docs/                      concept.md, conventions.md, quality-gates.md, ubiquitous-language.md,
@@ -115,6 +116,11 @@ status: open   # open | in-progress | done
 - Components: PascalCase folder with `Name.tsx`, `Name.styles.ts`, `Name.test.tsx`, `Name.stories.tsx` (story required for primitives, components and feature components **(enforced)**).
 - Everything else: camelCase folder with `name.ts` and `name.test.ts`, e.g. `domain/src/projection/mortgagePlan/`.
 - Tests sit next to their module; only end-to-end tests live in `e2e/`.
+- Tool configuration stays at the repository root, where the tools look
+  for it. No test lives at the root.
+- A test that proves a configuration gate lives in `gates/<gate>/`, e.g.
+  `gates/formatting/formatting.test.ts`. An executable gate is a script in
+  `scripts/<module>/` with its test beside it.
 - No `index.ts` per module. Category folders (`primitives/`, `components/`, `utils/`, `tokens/`) have one barrel each.
 - Each feature has one `index.ts`; never import from inside another feature **(enforced)**.
 - `test-support/` is never imported by shipping code **(enforced)**.

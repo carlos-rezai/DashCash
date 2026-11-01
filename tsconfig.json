@@ -5,5 +5,11 @@
     "checkJs": true,
     "types": ["node"]
   },
-  "include": ["*.ts", "*.js", ".dependency-cruiser.js", "scripts"]
+  "include": [
+    "*.ts",
+    "*.js",
+    ".dependency-cruiser.js",
+    "scripts",
+    "gates/**/*.ts"
+  ]
 }

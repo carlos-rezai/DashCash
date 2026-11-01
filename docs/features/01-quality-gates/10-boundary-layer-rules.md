@@ -41,7 +41,7 @@ adds the renderer **Layer** ladder to the same config and test.
 - [x] `npm run lint:deps` passes on the tree.
 - [x] `verify` runs `lint:deps` after `typecheck`; the gate wiring test
       expects it there.
-- [ ] CI's `verify` job is green.
+- [x] CI's `verify` job is green.
 
 ## Blocked by
 

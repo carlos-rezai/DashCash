@@ -385,6 +385,20 @@ describe('check:docs-drift', { timeout: 30_000 }, () => {
       'apps/desktop/notes.md',
       'e2e/.gitkeep',
     );
+    // Committed, so a test can delete a file with a plain `git rm`.
+    git(
+      tree,
+      '-c',
+      'user.name=Sample Author',
+      '-c',
+      'user.email=author@example.invalid',
+      '-c',
+      'commit.gpgsign=false',
+      'commit',
+      '--quiet',
+      '--message',
+      'add sample docs',
+    );
   });
 
   afterEach(() => {

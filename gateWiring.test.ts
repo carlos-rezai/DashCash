@@ -22,6 +22,7 @@ const VERIFY_GATES = [
   'format:check',
   'lint',
   'typecheck',
+  'lint:deps',
   'test',
   'check:commits',
   'check:tickets',
@@ -32,6 +33,8 @@ const GATE_COMMANDS: Record<string, string> = {
   'format:check': 'prettier --check .',
   lint: 'eslint . --max-warnings 0',
   typecheck: 'tsc',
+  'lint:deps':
+    'depcruise --config .dependency-cruiser.js apps packages scripts e2e',
   test: 'vitest run',
   'check:commits': 'node scripts/checkCommits/checkCommits.ts',
   'check:tickets': 'node scripts/checkTickets/checkTickets.ts',

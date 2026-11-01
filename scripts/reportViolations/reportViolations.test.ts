@@ -105,10 +105,8 @@ describe('runGate', () => {
   });
 
   it('writes a rejected non-error value as a string and sets exit code 1', async () => {
-    // JavaScript can reject with any value; the cast lets the test do that.
-    const plainFailure = 'plain failure' as unknown as Error;
-
-    await runGate(() => Promise.reject(plainFailure));
+    // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors -- the test rejects with a non-Error on purpose
+    await runGate(() => Promise.reject('plain failure'));
 
     expect(errorSpy.mock.calls).toEqual([['plain failure']]);
     expect(process.exitCode).toBe(1);

@@ -114,7 +114,7 @@ Run `npm run verify` before committing; every step must leave it green.
 - [x] 36 rename git env helper to verb first
 - [x] 37 rename gh helper to verb first
 - [x] 38 remove the obsolete scripts gitkeep
-- [ ] 39 mark the plain rejection lint exception
+- [x] 39 mark the plain rejection lint exception
 
 ### What each step does
 

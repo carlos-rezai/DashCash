@@ -106,7 +106,7 @@ Run `npm run verify` before committing; every step must leave it green.
 - [x] 28 rename pull request ticket and step checks
 - [x] 29 classify the pull request branch once
 - [x] 30 rename feature folder path to verb first
-- [ ] 31 rename refactor plan path to verb first
+- [x] 31 rename refactor plan path to verb first
 - [ ] 32 rename check tickets helpers to verb first
 - [ ] 33 extract tracked folders in docs drift
 - [ ] 34 rename docs drift helpers to verb first

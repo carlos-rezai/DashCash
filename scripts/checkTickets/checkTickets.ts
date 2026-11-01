@@ -12,7 +12,7 @@ import {
 } from '../readFeatureFolders/readFeatureFolders.ts';
 import {
   hasRefactorStep,
-  refactorPlanPath,
+  buildRefactorPlanPath,
 } from '../readRefactorSteps/readRefactorSteps.ts';
 import {
   parseCommitHeader,
@@ -38,7 +38,7 @@ function ticketReason(
   }
   const folderPath = buildFeatureFolderPath(folder);
   if (type === 'refactor') {
-    const planPath = refactorPlanPath(folderPath);
+    const planPath = buildRefactorPlanPath(folderPath);
     const plan = trackedPaths.includes(planPath) ? readFile(planPath) : '';
     return hasRefactorStep(plan, ticket)
       ? undefined

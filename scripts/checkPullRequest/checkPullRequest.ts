@@ -10,7 +10,7 @@ import {
 } from '../readFeatureFolders/readFeatureFolders.ts';
 import {
   readRefactorSteps,
-  refactorPlanPath,
+  buildRefactorPlanPath,
 } from '../readRefactorSteps/readRefactorSteps.ts';
 import { listTickets, readTicketStatus } from '../readTickets/readTickets.ts';
 import {
@@ -52,7 +52,7 @@ function findUntickedRefactorSteps(
   input: PullRequestInput,
   subject: string,
 ): Violation[] {
-  const planPath = refactorPlanPath(folderPath);
+  const planPath = buildRefactorPlanPath(folderPath);
   if (!input.trackedPaths.includes(planPath)) {
     return [{ subject, reason: `${planPath} is missing` }];
   }

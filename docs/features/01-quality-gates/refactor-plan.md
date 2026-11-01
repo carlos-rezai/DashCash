@@ -98,7 +98,7 @@ Run `npm run verify` before committing; every step must leave it green.
 - [x] 20 extract commit header parsing from check tickets
 - [x] 21 parse the pull request title header
 - [x] 22 read the commit header in check commits
-- [ ] 23 move commit linting into its own module
+- [x] 23 move commit linting into its own module
 - [ ] 24 share commitlint config loading
 - [ ] 25 add read branch name to read branch range
 - [ ] 26 use read branch name in check pull request

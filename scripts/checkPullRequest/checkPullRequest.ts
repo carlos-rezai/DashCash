@@ -1,5 +1,5 @@
 import load from '@commitlint/load';
-import { lintCommitMessages } from '../checkCommits/checkCommits.ts';
+import { lintCommitMessages } from '../lintCommitMessages/lintCommitMessages.ts';
 import { parseCommitHeader } from '../parseCommitHeader/parseCommitHeader.ts';
 import { resolveBranchName } from '../readBranchRange/readBranchRange.ts';
 import {

@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import load from '@commitlint/load';
 import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { lintCommitMessages } from '../checkCommits/checkCommits.ts';
+import { lintCommitMessages } from '../lintCommitMessages/lintCommitMessages.ts';
 import type { Violation } from '../reportViolations/reportViolations.ts';
 import { runNpmScript as runScript } from '../test-support/runNpmScript/runNpmScript.ts';
 import {

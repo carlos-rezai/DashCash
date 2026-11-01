@@ -1,5 +1,5 @@
 ---
-status: in-progress
+status: done
 ---
 # Commit description rules
 
@@ -25,14 +25,14 @@ commit already on the branch passes them (P3).
 
 ## Acceptance criteria
 
-- [ ] A description ending in a full stop is rejected.
-- [ ] A 50-character description passes and a 51-character one is
+- [x] A description ending in a full stop is rejected.
+- [x] A 50-character description passes and a 51-character one is
       rejected; a 50-character description followed by `, RED` on a
       `test:` commit passes.
-- [ ] `, RED` on a `feat:`, `fix:` or `docs:` commit is rejected.
-- [ ] An `@` or a `#` in the header, the body or a trailer (such as
+- [x] `, RED` on a `feat:`, `fix:` or `docs:` commit is rejected.
+- [x] An `@` or a `#` in the header, the body or a trailer (such as
       `Co-Authored-By: Name <a@b.example>`) is rejected.
-- [ ] `npm run check:commits` passes on the branch's own history.
+- [x] `npm run check:commits` passes on the branch's own history.
 - [ ] CI's `verify` job is green.
 
 Note: the lower-case description rule is not part of this ticket. Ticket

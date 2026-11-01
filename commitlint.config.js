@@ -28,6 +28,20 @@ const projectPlugin = {
         `header must follow the format "${EXPECTED_FORMAT}", for example "feat: [csv-import] 02 add duplicate detection"`,
       ];
     },
+    // Overrides the built-in, which reads the whole header and so would miss
+    // a full stop in front of the ", RED" suffix.
+    'subject-full-stop': (parsed) => [
+      !(parsed.subject ?? '').endsWith('.'),
+      'the description must not end with a full stop',
+    ],
+    'red-only-on-test': (parsed) => [
+      parsed.red !== 'RED' || parsed.type === 'test',
+      'the ", RED" suffix is only allowed on test: commits',
+    ],
+    'no-at-or-hash': (parsed) => [
+      !/[@#]/.test(parsed.raw ?? ''),
+      'the message must not contain "@" or "#": GitHub turns them into mentions and links',
+    ],
   },
 };
 
@@ -42,6 +56,10 @@ export default {
   rules: {
     'header-format': [2, 'always'],
     'type-enum': [2, 'always', TYPES],
+    'subject-full-stop': [2, 'never'],
+    'subject-max-length': [2, 'always', 50],
+    'red-only-on-test': [2, 'always'],
+    'no-at-or-hash': [2, 'always'],
     'body-empty': [2, 'always'],
     'footer-empty': [2, 'always'],
   },

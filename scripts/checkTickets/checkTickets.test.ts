@@ -26,8 +26,10 @@ const packageJson = JSON.parse(
 
 // A committed tree with two Feature folders. 01-sample holds Tickets 01 and
 // 02, a file 04 that is no Ticket, and a refactor plan whose Refactor steps
-// are 01 (ticked) and 06 (open); step 05 is only mentioned in prose.
-// 02-other holds Tickets 01 and 03 and no refactor plan.
+// are 01 (ticked), 06 (open), 080 (open) and a step 07 ticked with an
+// upper-case X, which is no Refactor step; step 05 is only mentioned in prose.
+// 02-other holds Tickets 01 and 03 and no refactor plan. The folder draft has
+// no number, so it is no Feature folder.
 const TREE: Record<string, string> = {
   'README.md': '# Sample\n',
   'docs/features/01-sample/prd.md': '# Sample PRD\n',
@@ -39,13 +41,17 @@ const TREE: Record<string, string> = {
   'docs/features/01-sample/refactor-plan.md':
     '# Refactor plan\n\n' +
     '- [x] 01 extract the parser\n' +
-    '- [ ] 06 rename the sample\n\n' +
+    '- [ ] 06 rename the sample\n' +
+    '- [ ] 080 split the sample\n' +
+    '- [X] 07 tidy the sample\n\n' +
     'Step 05 waits for the next feature.\n',
   'docs/features/02-other/prd.md': '# Other PRD\n',
   'docs/features/02-other/01-other-slice.md':
     '---\nstatus: open\n---\n# Other slice\n',
   'docs/features/02-other/03-third-slice.md':
     '---\nstatus: open\n---\n# Third slice\n',
+  'docs/features/draft/01-draft-slice.md':
+    '---\nstatus: open\n---\n# Draft slice\n',
 };
 
 const TRACKED_PATHS = Object.keys(TREE);
@@ -83,7 +89,11 @@ const RULE_CASES: { rule: string; passing: string[]; failing: string[] }[] = [
   {
     rule: 'the feature names a Feature folder',
     passing: ['docs: [sample] add prd', 'docs: [other] add prd'],
-    failing: ['docs: [missing] add prd', 'docs: [ample] add prd'],
+    failing: [
+      'docs: [missing] add prd',
+      'docs: [ample] add prd',
+      'docs: [draft] add prd',
+    ],
   },
   {
     rule: 'feat carries a Ticket number naming a Ticket in its folder',
@@ -121,6 +131,8 @@ const RULE_CASES: { rule: string; passing: string[]; failing: string[] }[] = [
       'refactor: [sample] extract the parser',
       'refactor: [sample] 02 rename the sample',
       'refactor: [sample] 05 rename the sample',
+      'refactor: [sample] 08 split the sample',
+      'refactor: [sample] 07 tidy the sample',
       'refactor: [other] 01 extract the parser',
     ],
   },
@@ -174,6 +186,7 @@ describe('checkTicketReferences', () => {
   it.each([
     "Merge branch 'main' into feat/01-sample",
     "Merge remote-tracking branch 'origin/main' into feat/01-sample",
+    "feat: [missing] 01 add sample\n\nMerge branch 'main' into feat/01-sample",
   ])('skips the merge commit %s', (message) => {
     expect(failingHeaders([message], 'feat/01-sample')).toEqual([]);
   });

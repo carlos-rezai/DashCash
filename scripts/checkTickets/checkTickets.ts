@@ -56,7 +56,7 @@ function isTicket(folderPath: string, number: string, path: string): boolean {
 }
 
 function isRefactorStep(plan: string, number: string): boolean {
-  return new RegExp(`^- [[][ xX]] ${number}(?: |$)`, 'm').test(plan);
+  return new RegExp(`^- [[][ x]] ${number}(?: |$)`, 'm').test(plan);
 }
 
 function ticketReason(

@@ -24,17 +24,17 @@ only ticket 12 creates, so the gate passes on today's docs only after it
 
 ## Acceptance criteria
 
-- [ ] `findDocsDrift`'s tests cover relative Markdown links resolved from
+- [x] `findDocsDrift`'s tests cover relative Markdown links resolved from
       the linking file's folder (such as `feature-checklist.md` from
       `docs/`), links with an `#anchor` or a query, inline-code paths that
       start with a top-level folder resolved from the root, fenced code
       blocks skipped, URLs skipped, a span with each placeholder character
       (`<`, `>`, `*`, `{`, `…`, a space) skipped, and a folder that counts
       because git tracks its `.gitkeep`.
-- [ ] A renamed or deleted path named in a doc fails
+- [x] A renamed or deleted path named in a doc fails
       `npm run check:docs-drift`, naming the doc and the path.
-- [ ] `npm run check:docs-drift` passes on today's docs.
-- [ ] `verify` runs `check:docs-drift` last; the gate wiring test expects
+- [x] `npm run check:docs-drift` passes on today's docs.
+- [x] `verify` runs `check:docs-drift` last; the gate wiring test expects
       it there.
 - [ ] CI's `verify` job is green.
 

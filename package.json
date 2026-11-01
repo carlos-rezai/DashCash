@@ -17,9 +17,10 @@
     "typecheck": "tsc",
     "lint:deps": "depcruise --config .dependency-cruiser.js apps packages scripts e2e",
     "test": "vitest run",
-    "verify": "npm run format:check && npm run lint && npm run typecheck && npm run lint:deps && npm run test && npm run check:commits && npm run check:tickets && npm run check:data-files",
+    "verify": "npm run format:check && npm run lint && npm run typecheck && npm run lint:deps && npm run test && npm run check:commits && npm run check:tickets && npm run check:data-files && npm run check:docs-drift",
     "verify:full": "npm run verify",
     "check:data-files": "node scripts/checkDataFiles/checkDataFiles.ts",
+    "check:docs-drift": "node scripts/checkDocsDrift/checkDocsDrift.ts",
     "check:commits": "node scripts/checkCommits/checkCommits.ts",
     "check:tickets": "node scripts/checkTickets/checkTickets.ts",
     "check:pr": "node scripts/checkPullRequest/checkPullRequest.ts"

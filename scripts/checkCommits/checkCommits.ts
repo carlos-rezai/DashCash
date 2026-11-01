@@ -4,6 +4,7 @@ import {
   runGate,
   type Violation,
 } from '../reportViolations/reportViolations.ts';
+import { readCommitHeader } from '../parseCommitHeader/parseCommitHeader.ts';
 import { readBranchRange } from '../readBranchRange/readBranchRange.ts';
 
 type Config = Awaited<ReturnType<typeof load>>;
@@ -23,7 +24,7 @@ export async function lintCommitMessages(
       ignores: config.ignores,
       defaultIgnores: config.defaultIgnores,
     });
-    const subject = message.trim().split('\n')[0] ?? '';
+    const subject = readCommitHeader(message);
     for (const error of result.errors) {
       violations.push({ subject, reason: error.message });
     }

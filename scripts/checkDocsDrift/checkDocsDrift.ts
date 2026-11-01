@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { posix } from 'node:path';
 import {
-  reportViolations,
+  runGate,
   type Violation,
 } from '../reportViolations/reportViolations.ts';
 import { listTrackedPaths } from '../runGit/runGit.ts';
@@ -144,9 +144,11 @@ function isCheckedDoc(path: string): boolean {
 }
 
 if (import.meta.main) {
-  const trackedPaths = listTrackedPaths(process.cwd());
-  const docs: Doc[] = trackedPaths
-    .filter(isCheckedDoc)
-    .map((path) => ({ path, text: readFileSync(path, 'utf8') }));
-  process.exitCode = reportViolations(findDocsDrift(docs, trackedPaths));
+  await runGate(() => {
+    const trackedPaths = listTrackedPaths(process.cwd());
+    const docs: Doc[] = trackedPaths
+      .filter(isCheckedDoc)
+      .map((path) => ({ path, text: readFileSync(path, 'utf8') }));
+    return findDocsDrift(docs, trackedPaths);
+  });
 }

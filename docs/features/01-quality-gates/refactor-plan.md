@@ -113,7 +113,7 @@ Run `npm run verify` before committing; every step must leave it green.
 - [x] 35 extract endpoint resolution in branch protection
 - [x] 36 rename git env helper to verb first
 - [x] 37 rename gh helper to verb first
-- [ ] 38 remove the obsolete scripts gitkeep
+- [x] 38 remove the obsolete scripts gitkeep
 
 ### What each step does
 

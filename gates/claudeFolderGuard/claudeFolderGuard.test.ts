@@ -132,6 +132,8 @@ describe('Bash', () => {
       'echo invented | tee .claude/settings.json',
       `rm ${POSIX_ROOT}/.claude/agents/builder.md`,
       `del ${WINDOWS_ROOT}\\.claude\\agents\\builder.md`,
+      'rm -rf .claude;echo',
+      'rm -rf .claude&&x',
     ])('%s', (command) => {
       const result = runHook(bashInput(command), POSIX_ROOT);
 
@@ -151,6 +153,19 @@ describe('Bash', () => {
       const result = runHook(bashInput(command), POSIX_ROOT);
 
       expect(result.status).toBe(2);
+    });
+  });
+
+  describe('blocks a read-only git command that writes a file with --output', () => {
+    it.each([
+      'git diff --output=.claude/x.md',
+      'git log --output=.claude/x.md',
+      'git show --output=.claude/x.md',
+    ])('%s', (command) => {
+      const result = runHook(bashInput(command), POSIX_ROOT);
+
+      expect(result.status).toBe(2);
+      expect(result.stderr).toMatch(/^BLOCKED: /);
     });
   });
 

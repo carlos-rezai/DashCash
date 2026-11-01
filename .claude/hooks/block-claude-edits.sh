@@ -30,11 +30,14 @@ function underClaude(filePath, cwd, root) {
   return rel === ".claude" || rel.startsWith(".claude/");
 }
 
-// A path under .claude/: ".claude" followed by a separator, a quote, a space
-// or the end, and not part of a longer name such as "x.claude/".
-const NAMES_CLAUDE = /(^|[^\w.-])\.claude([\\/\s"\x27]|$)/;
+// A path under .claude/: ".claude" followed by a separator, a quote, a space,
+// a shell operator or the end, and not part of a longer name such as
+// "x.claude/".
+const NAMES_CLAUDE = /(^|[^\w.-])\.claude([\\/\s"\x27;&|<>)]|$)/;
 const READ_ONLY_GIT = /^\s*git\s+(status|diff|log|show|add)(\s[^\n]*)?$/;
 const SHELL_OPERATOR = /[|;&<>`\n]|\$\(/;
+// git diff, log and show write a file with --output, so it is never read-only.
+const WRITES_OUTPUT = /--output/;
 
 let s = "";
 process.stdin.on("data", (d) => (s += d)).on("end", () => {
@@ -54,7 +57,10 @@ process.stdin.on("data", (d) => (s += d)).on("end", () => {
     return;
   }
   if (typeof input.command === "string" && NAMES_CLAUDE.test(input.command)) {
-    const readOnly = READ_ONLY_GIT.test(input.command) && !SHELL_OPERATOR.test(input.command);
+    const readOnly =
+      READ_ONLY_GIT.test(input.command) &&
+      !SHELL_OPERATOR.test(input.command) &&
+      !WRITES_OUTPUT.test(input.command);
     if (!readOnly) {
       process.stdout.write("Bash command naming .claude/: " + input.command);
       return;

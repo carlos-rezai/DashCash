@@ -57,6 +57,7 @@ export default {
     'header-format': [2, 'always'],
     'type-enum': [2, 'always', TYPES],
     'subject-full-stop': [2, 'never'],
+    'subject-case': [2, 'always', 'lower-case'],
     'subject-max-length': [2, 'always', 50],
     'red-only-on-test': [2, 'always'],
     'no-at-or-hash': [2, 'always'],

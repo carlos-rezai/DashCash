@@ -98,6 +98,15 @@ const DESCRIPTIONS_ENDING_IN_FULL_STOP = [
   'test: [csv-import] 02 add duplicate detection., RED',
 ];
 
+// The first letter is lower case in each; a later letter is not.
+const DESCRIPTIONS_NOT_LOWER_CASE = [
+  'feat: [csv-import] 02 add CSV Duplicate Detection',
+  'feat: [csv-import] 02 add duplicate Detection',
+  'docs: [csv-import] add PRD',
+  'test: [csv-import] 02 add duplicate detectioN, RED',
+  'Feat: [csv-import] 02 add duplicate detection',
+];
+
 const DESCRIPTIONS_OVER_50 = [
   `feat: [csv-import] 02 ${DESCRIPTION_OF_51}`,
   `docs: [csv-import] ${DESCRIPTION_OF_51}`,
@@ -189,6 +198,22 @@ describe('commitlint config', () => {
     it.each(DESCRIPTIONS_ENDING_IN_FULL_STOP)('%s', async (header) => {
       expect(await errorNames(header)).toContain('subject-full-stop');
     });
+  });
+
+  describe('rejects a description that is not all lower case', () => {
+    it.each(DESCRIPTIONS_NOT_LOWER_CASE)('%s', async (header) => {
+      const result = await lintMessage(header);
+
+      expect(result.valid).toBe(false);
+      expect(result.errors).not.toEqual([]);
+    });
+
+    it.each(DESCRIPTIONS_NOT_LOWER_CASE.slice(0, 4))(
+      'names the subject-case rule: %s',
+      async (header) => {
+        expect(await errorNames(header)).toContain('subject-case');
+      },
+    );
   });
 
   describe('rejects a description over 50 characters', () => {

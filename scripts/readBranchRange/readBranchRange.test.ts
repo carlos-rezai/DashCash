@@ -1,8 +1,13 @@
-import { spawnSync } from 'node:child_process';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import {
+  commit,
+  initSampleRepository,
+  runSampleGit as git,
+  setOriginMain,
+} from '../test-support/sampleRepository/sampleRepository.ts';
 import { readBranchRange, resolveBranchName } from './readBranchRange.ts';
 
 describe('resolveBranchName', () => {
@@ -57,44 +62,6 @@ describe('resolveBranchName', () => {
   });
 });
 
-// Environment without the GIT_* variables a git hook sets, so the commands
-// below act on the temporary repository only, never on this one.
-function cleanEnv(): NodeJS.ProcessEnv {
-  return Object.fromEntries(
-    Object.entries(process.env).filter(([key]) => !key.startsWith('GIT_')),
-  );
-}
-
-function git(cwd: string, ...args: string[]): string {
-  const result = spawnSync('git', args, {
-    cwd,
-    encoding: 'utf8',
-    env: cleanEnv(),
-  });
-  if (result.status !== 0) {
-    throw new Error(`git ${args.join(' ')} failed: ${result.stderr}`);
-  }
-  return result.stdout.trim();
-}
-
-// Commits without changes and returns the new commit's hash. Each paragraph
-// becomes its own -m, so a second one is the body.
-function commit(cwd: string, ...paragraphs: string[]): string {
-  git(
-    cwd,
-    'commit',
-    '--allow-empty',
-    '--quiet',
-    ...paragraphs.flatMap((paragraph) => ['-m', paragraph]),
-  );
-  return git(cwd, 'rev-parse', 'HEAD');
-}
-
-// A fake origin/main: a remote-tracking ref set by hand, no remote needed.
-function setOriginMain(cwd: string): void {
-  git(cwd, 'update-ref', 'refs/remotes/origin/main', 'HEAD');
-}
-
 function trimMessages(
   commits: readonly { hash: string; message: string }[],
 ): { hash: string; message: string }[] {
@@ -113,11 +80,7 @@ describe('readBranchRange', { timeout: 30_000 }, () => {
     vi.stubEnv('GITHUB_HEAD_REF', '');
     vi.stubEnv('GITHUB_REF_NAME', '');
     repo = mkdtempSync(join(tmpdir(), 'dashcash-branch-range-'));
-    git(repo, 'init', '--quiet', '--initial-branch=main');
-    git(repo, 'config', 'user.name', 'Sample Author');
-    git(repo, 'config', 'user.email', 'author@example.invalid');
-    git(repo, 'config', 'commit.gpgsign', 'false');
-    git(repo, 'config', 'core.hooksPath', 'no-hooks');
+    initSampleRepository(repo);
     commit(repo, 'Initial commit');
     commit(repo, 'chore: set up sample repository');
     setOriginMain(repo);

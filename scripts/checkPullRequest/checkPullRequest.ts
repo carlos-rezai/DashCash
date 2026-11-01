@@ -112,6 +112,7 @@ export async function checkPullRequest(
     violations.push({ subject: '(no title)', reason: 'the title is missing' });
   }
   const featureBranch = parseFeatureBranch(branch);
+  const isRenovateBranch = RENOVATE_BRANCH.test(branch ?? '');
   if (featureBranch?.kind === 'feat') {
     violations.push(
       ...findUnfinishedTickets(
@@ -128,7 +129,7 @@ export async function checkPullRequest(
         subject,
       ),
     );
-  } else if (!RENOVATE_BRANCH.test(branch ?? '')) {
+  } else if (!isRenovateBranch) {
     violations.push({
       subject: branch ?? '(no branch)',
       reason:
@@ -136,7 +137,7 @@ export async function checkPullRequest(
     });
   }
   if (title !== undefined && title !== '') {
-    const titleViolations = RENOVATE_BRANCH.test(branch ?? '')
+    const titleViolations = isRenovateBranch
       ? await checkRenovateTitle(title, lintTitle)
       : await checkPlainTitle(title, lintTitle);
     violations.push(...titleViolations);

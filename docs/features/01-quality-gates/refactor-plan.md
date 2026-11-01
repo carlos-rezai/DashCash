@@ -114,6 +114,7 @@ Run `npm run verify` before committing; every step must leave it green.
 - [x] 36 rename git env helper to verb first
 - [x] 37 rename gh helper to verb first
 - [x] 38 remove the obsolete scripts gitkeep
+- [ ] 39 mark the plain rejection lint exception
 
 ### What each step does
 
@@ -286,6 +287,17 @@ rename the private `gh` to `runGh`.
 scripts folder, which now holds tracked modules. Verify that no doc names
 it (the docs-drift check would fail).
 
+**39 mark the plain rejection lint exception.** In
+`scripts/reportViolations/reportViolations.test.ts`, the `runGate` test
+that rejects with a non-`Error` value gets past
+`@typescript-eslint/prefer-promise-reject-errors` with a cast
+(`'plain failure' as unknown as Error`). Replace the cast with an
+`eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors`
+on the rejecting line, with a reason comment saying the test rejects with a
+non-`Error` on purpose. The test name, the rejected value and every
+`expect` stay as they are. The human approved this one exception (see
+Further Notes).
+
 ## Decision Document
 
 - **Scope.** The feature's own code: the gate scripts and their shared
@@ -430,3 +442,10 @@ For the human; none of these is a step, because each touches a gate file,
   feature folders (PRDs, plans, tickets, refactor plans) are never checked.
   That is the gate as specified (ubiquitous language, **Docs drift**); a
   wider scope would be a new ticket.
+- **Step 39 comes from the PR review.** After round 1 of the refactor PR
+  review, the human approved one `eslint-disable-next-line` for
+  `@typescript-eslint/prefer-promise-reject-errors` in the `runGate` test
+  that rejects with a non-`Error` value (CLAUDE.md, "Ask first"). The cast
+  that step 14 used to get past the rule hid the exception; design log Q18
+  wants approved exceptions visible. The approval covers that one line
+  only.

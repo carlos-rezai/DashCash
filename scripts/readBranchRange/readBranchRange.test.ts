@@ -8,7 +8,11 @@ import {
   runSampleGit as git,
   setOriginMain,
 } from '../test-support/sampleRepository/sampleRepository.ts';
-import { readBranchRange, resolveBranchName } from './readBranchRange.ts';
+import {
+  readBranchName,
+  readBranchRange,
+  resolveBranchName,
+} from './readBranchRange.ts';
 
 describe('resolveBranchName', () => {
   it.each([
@@ -59,6 +63,33 @@ describe('resolveBranchName', () => {
     },
   ])('$case', ({ env, current, expected }) => {
     expect(resolveBranchName(env, current)).toBe(expected);
+  });
+});
+
+describe('readBranchName', { timeout: 30_000 }, () => {
+  let repo: string;
+
+  beforeEach(() => {
+    repo = mkdtempSync(join(tmpdir(), 'dashcash-branch-name-'));
+    initSampleRepository(repo);
+    commit(repo, 'Initial commit');
+    git(repo, 'switch', '--quiet', '-c', 'feat/01-sample');
+  });
+
+  afterEach(() => {
+    rmSync(repo, { recursive: true, force: true });
+  });
+
+  it('reads the current branch when the GitHub variables are empty', () => {
+    const env = { GITHUB_HEAD_REF: '', GITHUB_REF_NAME: '' };
+
+    expect(readBranchName(repo, env)).toBe('feat/01-sample');
+  });
+
+  it('takes GITHUB_HEAD_REF when it is set', () => {
+    const env = { GITHUB_HEAD_REF: 'feat/02-other', GITHUB_REF_NAME: '' };
+
+    expect(readBranchName(repo, env)).toBe('feat/02-other');
   });
 });
 

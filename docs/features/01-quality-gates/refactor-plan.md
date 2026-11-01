@@ -82,7 +82,7 @@ Run `npm run verify` before committing; every step must leave it green.
 - [x] 04 add run npm script test support
 - [x] 05 use test support in read branch range tests
 - [x] 06 use test support in check commits tests
-- [ ] 07 use test support in check tickets tests
+- [x] 07 use test support in check tickets tests
 - [ ] 08 use test support in check pull request tests
 - [ ] 09 use test support in check data files tests
 - [ ] 10 use test support in check docs drift tests

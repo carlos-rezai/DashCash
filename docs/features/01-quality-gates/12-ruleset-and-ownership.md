@@ -42,7 +42,7 @@ handover note sits in the final ticket, `13-docs-drift-check.md` (Q50).
       allows a merge method other than `merge`.
 - [x] `.github/CODEOWNERS` and `.github/pull_request_template.md` exist
       with the content above.
-- [ ] `npm run verify` and CI's `verify` job are green.
+- [x] `npm run verify` and CI's `verify` job are green.
 
 ## Blocked by
 

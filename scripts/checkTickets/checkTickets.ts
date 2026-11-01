@@ -1,5 +1,4 @@
 import isIgnored from '@commitlint/is-ignored';
-import config from '../../commitlint.config.js';
 import {
   runGate,
   type Violation,
@@ -15,30 +14,18 @@ import {
   hasRefactorStep,
   refactorPlanPath,
 } from '../readRefactorSteps/readRefactorSteps.ts';
+import {
+  parseCommitHeader,
+  readCommitHeader,
+  type CommitHeader,
+} from '../parseCommitHeader/parseCommitHeader.ts';
 import { hasTicket } from '../readTickets/readTickets.ts';
 import { listHeadPaths, readHeadFile } from '../runGit/runGit.ts';
 
-const HEADER_PATTERN = config.parserPreset.parserOpts.headerPattern;
 const TICKET_REQUIRED = ['feat', 'fix', 'test', 'refactor'];
 
-type ParsedHeader = {
-  type: string;
-  feature: string;
-  ticket: string | undefined;
-};
-
-function parseHeader(message: string): ParsedHeader | undefined {
-  const header = message.trim().split('\n')[0] ?? '';
-  const match = HEADER_PATTERN.exec(header);
-  if (match === null) {
-    return undefined;
-  }
-  const [, type = '', feature = '', ticket] = match;
-  return { type, feature, ticket };
-}
-
 function ticketReason(
-  parsed: ParsedHeader,
+  parsed: CommitHeader,
   trackedPaths: readonly string[],
   readFile: (path: string) => string,
   folder: string,
@@ -77,11 +64,11 @@ export function checkTicketReferences(
     if (isIgnored(message)) {
       continue;
     }
-    const parsed = parseHeader(message);
+    const header = readCommitHeader(message);
+    const parsed = parseCommitHeader(header);
     if (parsed === undefined) {
       continue;
     }
-    const subject = message.trim().split('\n')[0] ?? '';
     const folder = findFeatureFolder(parsed.feature, trackedPaths);
     let reason: string | undefined;
     if (folder === undefined) {
@@ -95,7 +82,7 @@ export function checkTicketReferences(
       reason = ticketReason(parsed, trackedPaths, readFile, folder);
     }
     if (reason !== undefined) {
-      violations.push({ subject, reason });
+      violations.push({ subject: header, reason });
     }
   }
   return violations;

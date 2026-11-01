@@ -36,7 +36,7 @@ Implementation Decisions, "Layer rules"; design log Q40, Q42), added to
       forbidden to import any ladder layer above `tokens/`.
 - [x] Every case runs in a temporary tree cruised with the real config.
 - [x] `npm run lint:deps` passes on the tree.
-- [ ] CI's `verify` job is green.
+- [x] CI's `verify` job is green.
 
 ## Blocked by
 

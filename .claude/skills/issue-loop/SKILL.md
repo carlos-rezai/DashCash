@@ -33,8 +33,11 @@ The next ticket is the lowest-numbered file in the feature folder with
 Stop, before dispatching anything, when the next ticket
 
 - has `status: in-progress` — a previous run stopped inside it,
-- binds nothing under `apps/` or `packages/` (a prototype amendment, a
-  docs-only ticket), or
+- binds nothing outside `docs/` (a prototype amendment, a docs-only
+  ticket). A ticket that builds gates (`scripts/`, `.github/`, root
+  configuration files) is buildable,
+- binds anything under `.claude/` — a ticket never approves `.claude/`, so
+  it is the human's turn, or
 - does not exist — every open ticket waits on an open blocker.
 
 When no ticket is open at all, go to **Feature pull request**.
@@ -73,6 +76,10 @@ ticket path and the range from the commit before RED to `HEAD`.
 `git push -u origin HEAD`, then wait for the CI run on that commit: `gh run watch` on the
 latest run of the branch. A red run stops the loop: report which job failed.
 
+If no workflow ran for the pushed commit because none exists yet (no file
+in `.github/workflows/` at `HEAD`), skip the wait and write `no CI yet` in
+the ticket's report line. Once a workflow exists, the wait applies.
+
 ### 6. Next
 
 Back to 1.
@@ -104,6 +111,7 @@ When the loop stops — the PR approved, or a failed step — report one line pe
 ticket taken and the reason it stopped:
 
 ```
+01     RED 9f8e7d (52k)  GREEN 6c5b4a (70k)  REVIEW approve (30k)  no CI yet
 02     RED a1b2c3 (84k)  GREEN d4e5f6 (61k)  REVIEW approve (38k)  CI green
 PR 12  REVIEW round 1 changes (55k)  round 2 approve (24k)
 ```
@@ -135,6 +143,9 @@ Fill `<path>`, `<feature>`, `<nn>`, `<description>` and `<range>`.
 > for the terms the ticket bolds rather than reading it; open only the units
 > the tests touch.
 >
+> Nobody can answer "Ask first" (CLAUDE.md): where it applies and the ticket
+> is not the approval, stop and report instead of asking.
+>
 > When every new test is confirmed RED for the right reason, set the ticket to
 > `status: in-progress`, then commit: `git add` only the files you wrote and
 > the ticket, then
@@ -162,6 +173,9 @@ Fill `<path>`, `<feature>`, `<nn>`, `<description>` and `<range>`.
 > the spec; open the PRD's Implementation Decisions section only when a test
 > leaves a shape undecided.
 >
+> Nobody can answer "Ask first" (CLAUDE.md): where it applies and the ticket
+> is not the approval, stop and report instead of asking.
+>
 > Report: the commit hash — or the reason you stopped short.
 
 ### REVIEW
@@ -187,7 +201,12 @@ Fill `<path>`, `<feature>`, `<nn>`, `<description>` and `<range>`.
 >
 > <the reviewer's list>
 >
-> Make exactly these changes, nothing else. When `npm run verify` is green,
+> Make exactly these changes, nothing else.
+>
+> Nobody can answer "Ask first" (CLAUDE.md): where it applies and the ticket
+> is not the approval, stop and report instead of asking.
+>
+> When `npm run verify` is green,
 > commit: `git commit -m "fix: [<feature>] <nn> address review"`. Do not push.
 > Never `--no-verify`. If you cannot make a change, stop and report why.
 >

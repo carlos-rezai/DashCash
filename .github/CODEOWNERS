@@ -1,0 +1,15 @@
+# The owner reviews everything, and every gate file explicitly (CLAUDE.md,
+# "Ask first").
+*                        @carlos-rezai
+/.github/                @carlos-rezai
+/.claude/                @carlos-rezai
+/eslint.config.*         @carlos-rezai
+/.prettierrc*            @carlos-rezai
+/tsconfig*.json          @carlos-rezai
+/.dependency-cruiser.*   @carlos-rezai
+/vitest.config.*         @carlos-rezai
+/playwright.config.*     @carlos-rezai
+/stryker.config.*        @carlos-rezai
+/quality/                @carlos-rezai
+# The verify* and test* scripts live here.
+/package.json            @carlos-rezai

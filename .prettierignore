@@ -1,0 +1,20 @@
+# Markdown and the design sources
+*.md
+docs/design/
+
+# Lockfile
+package-lock.json
+
+# Build and package output
+dist/
+out/
+release/
+.vite/
+storybook-static/
+
+# Test and quality output
+coverage/
+playwright-report/
+test-results/
+.stryker-tmp/
+reports/

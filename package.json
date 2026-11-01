@@ -1,0 +1,44 @@
+{
+  "name": "dashcash",
+  "private": true,
+  "license": "MIT",
+  "type": "module",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "engines": {
+    "node": "24.14.0"
+  },
+  "scripts": {
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "lint": "eslint . --max-warnings 0",
+    "typecheck": "tsc",
+    "lint:deps": "depcruise --config .dependency-cruiser.js apps packages scripts e2e",
+    "test": "vitest run",
+    "verify": "npm run format:check && npm run lint && npm run typecheck && npm run lint:deps && npm run test && npm run check:commits && npm run check:tickets && npm run check:data-files && npm run check:docs-drift",
+    "verify:full": "npm run verify",
+    "check:data-files": "node scripts/checkDataFiles/checkDataFiles.ts",
+    "check:docs-drift": "node scripts/checkDocsDrift/checkDocsDrift.ts",
+    "check:commits": "node scripts/checkCommits/checkCommits.ts",
+    "check:tickets": "node scripts/checkTickets/checkTickets.ts",
+    "check:pr": "node scripts/checkPullRequest/checkPullRequest.ts"
+  },
+  "devDependencies": {
+    "@commitlint/is-ignored": "21.2.3",
+    "@commitlint/lint": "21.2.4",
+    "@commitlint/load": "21.2.4",
+    "@eslint/js": "10.0.1",
+    "@types/node": "24.19.2",
+    "@vitest/eslint-plugin": "1.6.28",
+    "dependency-cruiser": "18.7.0",
+    "eslint": "10.14.0",
+    "eslint-config-prettier": "10.1.8",
+    "prettier": "3.9.10",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.72.1",
+    "vitest": "5.0.5",
+    "yaml": "2.9.1"
+  }
+}

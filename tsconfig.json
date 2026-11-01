@@ -1,0 +1,15 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "allowJs": true,
+    "checkJs": true,
+    "types": ["node"]
+  },
+  "include": [
+    "*.ts",
+    "*.js",
+    ".dependency-cruiser.js",
+    "scripts",
+    "gates/**/*.ts"
+  ]
+}

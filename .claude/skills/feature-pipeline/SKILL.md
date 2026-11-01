@@ -1,6 +1,6 @@
 ---
 name: feature-pipeline
-description: Run one feature end to end, unattended: one planner per planning skill → issue-loop → feature PR → refactor-loop → refactor PR, pausing only for the human to merge each PR and write "merged". Until a CI workflow exists, it runs only the planning.
+description: Run one feature end to end, unattended: one planner per planning skill → issue-loop → feature PR → refactor-loop → refactor PR, pausing for the human to merge each PR and write "merged", and for a "go" before the build when a ticket names a gate file. Until a CI workflow runs on pull requests, it stops before the feature PR.
 disable-model-invocation: true
 ---
 
@@ -8,8 +8,9 @@ disable-model-invocation: true
 
 One feature from its checklist row to `refactored`, in your session. Every
 stage runs unattended; the pipeline pauses only at the two merges, which are
-the human's. A stage that stops short stops the pipeline: report it with the
-stage's own report and stop.
+the human's, and before the build when a ticket names a gate file. A stage
+that stops short stops the pipeline: report it with the stage's own report
+and stop.
 
 ## The feature
 
@@ -35,16 +36,38 @@ handoff between them. After each, verify before the next: the branch is
 `feat/<NN>-<feature>`, `git log -1 --format=%s` reads its commit, the tree
 is clean. Anything else stops the pipeline with that planner's report.
 
-## 2. Build
+### Gate approval
 
-First check that `.github/workflows/` holds a workflow that runs on pull
-requests (`pull_request` under `on:`). If none does, stop here and report:
-the tickets are planned, with the last planner's list; this feature is
-built interactively with the `tdd` and `build` skills; the full pipeline
-starts once CI exists.
+A ticket that names a gate file is the approval to change it (CLAUDE.md,
+"Ask first"), and no human has read the tickets yet. Check every ticket in
+the feature folder: does its **What to build** or **Acceptance criteria**
+name a gate file from `CLAUDE.md`'s "Ask first" list, or anything under
+`.claude/`?
+
+- None does: continue into **2**.
+- At least one does: pause before **2**. Report those tickets, each with
+  the gate files it names; list the tickets naming anything under
+  `.claude/` separately, as "built by the human, issue-loop will stop
+  here". Add every line marked `**Assumption:**` in the feature's
+  `design-log.md`, with its place in the file. Ask the human to
+  read them and write `go`. End the turn and wait; do not poll. On `go`,
+  continue into **2**. If the human corrects a ticket instead, wait for
+  `go` after the correction.
+
+A run started with `build` skips this pause: a human who starts the build
+stage directly has decided to build.
+
+## 2. Build
 
 Follow `.claude/skills/issue-loop/SKILL.md` for `<NN>-<feature>`. It ends
 with the feature PR approved by `pr-review`.
+
+Before the loop opens the feature PR, check that `.github/workflows/` holds
+a workflow that runs on pull requests (`pull_request` under `on:`). The
+feature that builds CI creates it on the way. If none does by then, stop
+there, before the PR, and report: the tickets are built, with the
+issue-loop report; the feature PR waits until a workflow runs on pull
+requests.
 
 ## 3. Merge
 

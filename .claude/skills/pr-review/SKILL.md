@@ -7,11 +7,12 @@ disable-model-invocation: true
 # PR Review
 
 The last gate before the human merges. The per-ticket and per-step reviews
-judged slices; this one judges the pull request whole. Nobody is watching: a
-fresh `reviewer` subagent reviews, fresh `builder` or `refactorer` subagents
-fix, the driver — your session — posts every verdict on the PR, so the PR
-carries the full record. The review is comment-only: the PR is opened with
-the same GitHub account, which cannot approve its own PR.
+judged slices; this one judges only what no slice could see. Nobody is
+watching: a fresh `reviewer` subagent reviews, fresh `builder` or
+`refactorer` subagents fix, the driver — your session — posts every verdict
+on the PR, so the PR carries the full record. The review is comment-only:
+the PR is opened with the same GitHub account, which cannot approve its own
+PR.
 
 ## Input
 
@@ -22,13 +23,17 @@ that opened the PR.
 ## 1. CI
 
 `gh pr checks <pr> --watch`. A red check stops: report which one failed.
+A green run means `verify:full` passed; the reviewer does not run it again.
 
 ## 2. Review
 
 Dispatch a fresh `reviewer` with the FEATURE or REFACTOR prompt, the range
 `origin/main...HEAD` on the first round; on the second, the range of the fix
-commits and the round-1 findings, each to be checked off as fixed or not. Post its answer verbatim on the PR:
-`gh pr comment <pr> --body-file <tmp>`, headed `Review round <n>`.
+commits and the round-1 findings, each to be checked off as fixed or not.
+
+Post its answer on the PR as plain Markdown, headed `Review round <n>`:
+`gh pr comment <pr> --body-file <tmp>`. Write the answer into the file as
+it came, with no table, no quote markers and no other wrapping.
 
 - **APPROVE**: done. Report the PR link and that it waits for the merge.
 - **CHANGES** on round 1: go to **3**.
@@ -39,7 +44,9 @@ commits and the round-1 findings, each to be checked off as fixed or not. Post i
 
 - **Feature PR**: group the findings by the ticket number each one names.
   Per ticket, dispatch a fresh `builder` with issue-loop's FIX prompt and
-  that ticket's findings, and verify `git log -1 --format=%s` reads
+  that ticket's findings, adding: "Where the fix changes what the ticket,
+  `prd.md` or `plan.md` says, update that text in the same commit; never
+  edit `design-log.md`." Verify `git log -1 --format=%s` reads
   `fix: [<feature>] <nn> address review` and the tree is clean.
 - **Refactor PR**: append each finding to `refactor-plan.md` as a new
   unticked step, numbered on from the last, description under 50
@@ -50,34 +57,53 @@ commits and the round-1 findings, each to be checked off as fixed or not. Post i
 `git push`, then post on the PR one line per finding: `<n>. fixed in <sha>`.
 Back to **1** for round 2.
 
+## Verdict format
+
+Both prompts ask for this format, so every comment reads the same:
+
+- First line: `APPROVE` or `CHANGES`.
+- One line on what you checked, for example: "CI green; 14 tickets, 95
+  user stories, 69 files".
+- Each required change as a numbered item of at most three lines: what is
+  wrong, where (file:line), the fix, and for a feature PR its ticket
+  (`<nn>`).
+- Points that are not required changes: one line each, under `Notes`.
+- No praise, no list of what checks out beyond the one line above.
+
 ## The prompts
 
 ### FEATURE
 
 > Review pull request `<pr>`: the feature `docs/features/<folder>/` as
-> implemented in `git diff <range>`. Each ticket was reviewed alone; you
-> judge the feature whole.
+> implemented in `git diff <range>`. Every ticket was already reviewed on
+> its own, and CI has run `verify:full` green. Do not re-check each
+> ticket's acceptance criteria and do not run `verify`. Review only what a
+> single ticket's review cannot see.
 >
 > Check, and cite file and line for every finding:
 >
-> - every user story of `prd.md` is met, and every main user flow it names
->   has its end-to-end test in `e2e/`
-> - every ticket in the folder is `status: done`
-> - the tickets fit together: one name per concept, no duplicated logic
->   across tickets, no dead code or leftovers from earlier slices
-> - every screen the feature touches matches `docs/design/` 1:1, every
->   state the prototype shows has a story
-> - `docs/conventions.md` and CLAUDE.md: layers, filing, naming, `Cents`
->   for money
+> - the PRD as a whole: every user story of `prd.md` is covered by some
+>   ticket, and every main user flow it names has its end-to-end test in
+>   `e2e/`
+> - across tickets: one name per concept, no duplicated or drifted logic,
+>   no dead code or leftovers from earlier slices, no contradiction between
+>   tickets
+> - conventions that changed during the feature: every earlier ticket
+>   follows the version in force at the end
+> - docs that drifted from the code: ticket texts, `prd.md` and `plan.md`
+>   still say what was built (`design-log.md` is immutable and exempt)
+> - the screens the feature touches, together: consistent with each other
+>   and with `docs/design/`
 >
 > Name the ticket each finding belongs to (`<nn>`). Change no files.
-> Answer with `APPROVE`, or `CHANGES` followed by a numbered list of what
-> must change, why, and its ticket. Style preferences are not changes.
+> Answer in the verdict format of `.claude/skills/pr-review/SKILL.md`.
+> Style preferences are not changes.
 
 ### REFACTOR
 
 > Review pull request `<pr>`: the refactor of `docs/features/<folder>/` as
 > implemented in `git diff <range>`, against its plan `refactor-plan.md`.
+> CI has run `verify:full` green; do not run `verify`.
 >
 > Check, and cite file and line for every finding:
 >
@@ -89,6 +115,5 @@ Back to **1** for round 2.
 >   for money
 > - UI still matches `docs/design/` 1:1
 >
-> Change no files. Answer with `APPROVE`, or `CHANGES` followed by a
-> numbered list of what must change and why. Style preferences are not
-> changes.
+> Change no files. Answer in the verdict format of
+> `.claude/skills/pr-review/SKILL.md`. Style preferences are not changes.

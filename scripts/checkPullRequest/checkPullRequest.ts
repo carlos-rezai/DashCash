@@ -12,7 +12,7 @@ import {
   readRefactorSteps,
   refactorPlanPath,
 } from '../readRefactorSteps/readRefactorSteps.ts';
-import { listTickets } from '../readTickets/readTickets.ts';
+import { listTickets, readTicketStatus } from '../readTickets/readTickets.ts';
 import {
   runGate,
   type Violation,
@@ -21,8 +21,6 @@ import { listHeadPaths, readHeadFile } from '../runGit/runGit.ts';
 
 const RENOVATE_BRANCH = /^renovate\/.+$/;
 const RENOVATE_TITLE = /^chore: (.*)$/;
-const STATUS_LINE = /^status:[ \t]*([^\s#]*)/m;
-const FRONT_MATTER = /^---\r?\n([\s\S]*?)\r?\n---/;
 // A stand-in feature, so that a Renovate description meets the description
 // rules of the commitlint config without a feature of its own.
 const STAND_IN_FEATURE = 'renovate';
@@ -35,11 +33,6 @@ export type PullRequestInput = {
   lintTitle: (header: string) => Promise<Violation[]>;
 };
 
-function ticketStatus(content: string): string | undefined {
-  const frontMatter = FRONT_MATTER.exec(content)?.[1] ?? '';
-  return STATUS_LINE.exec(frontMatter)?.[1];
-}
-
 function checkTickets(
   folderPath: string,
   input: PullRequestInput,
@@ -50,7 +43,7 @@ function checkTickets(
     return [{ subject, reason: `no ticket in ${folderPath}` }];
   }
   return tickets
-    .filter((path) => ticketStatus(input.readFile(path)) !== 'done')
+    .filter((path) => readTicketStatus(input.readFile(path)) !== 'done')
     .map((path) => ({ subject, reason: `${path} is not status: done` }));
 }
 

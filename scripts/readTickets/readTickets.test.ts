@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { hasTicket, listTickets } from './readTickets.ts';
+import { hasTicket, listTickets, readTicketStatus } from './readTickets.ts';
 
 const FOLDER = 'docs/features/01-sample';
 const tracked = [
@@ -38,5 +38,32 @@ describe('hasTicket', () => {
     ['a Ticket of another folder', '05'],
   ])('does not find %s', (_case, number) => {
     expect(hasTicket(FOLDER, number, tracked)).toBe(false);
+  });
+});
+
+describe('readTicketStatus', () => {
+  it.each(['done', 'open', 'in-progress'])('reads status: %s', (status) => {
+    const content = ['---', `status: ${status}`, '---', '# Title', ''].join(
+      '\n',
+    );
+    expect(readTicketStatus(content)).toBe(status);
+  });
+
+  it('reads the status word before the template comment', () => {
+    expect(
+      readTicketStatus(
+        '---\nstatus: done   # open | in-progress | done\n---\n# Title\n',
+      ),
+    ).toBe('done');
+  });
+
+  it('reads nothing from a file without front matter', () => {
+    expect(readTicketStatus('# Title\n\nstatus: done\n')).toBeUndefined();
+  });
+
+  it('ignores a status line outside the front matter', () => {
+    expect(
+      readTicketStatus('---\ntitle: x\n---\nstatus: done\n'),
+    ).toBeUndefined();
   });
 });

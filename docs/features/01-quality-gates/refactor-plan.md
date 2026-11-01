@@ -102,7 +102,7 @@ Run `npm run verify` before committing; every step must leave it green.
 - [x] 24 share commitlint config loading
 - [x] 25 add read branch name to read branch range
 - [x] 26 use read branch name in check pull request
-- [ ] 27 move ticket status reading into read tickets
+- [x] 27 move ticket status reading into read tickets
 - [ ] 28 rename pull request ticket and step checks
 - [ ] 29 classify the pull request branch once
 - [ ] 30 rename feature folder path to verb first

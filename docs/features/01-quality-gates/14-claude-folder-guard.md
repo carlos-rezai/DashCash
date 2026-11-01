@@ -1,5 +1,5 @@
 ---
-status: in-progress
+status: done
 ---
 # Claude folder guard
 
@@ -56,7 +56,7 @@ by the human by hand.
       `Bash` hook still runs.
 - [x] In a Claude Code session, an `Edit` of a file under `.claude/` is
       refused with the hook's message.
-- [ ] `npm run verify` and CI's `verify` job are green.
+- [x] `npm run verify` and CI's `verify` job are green.
 
 ## Blocked by
 

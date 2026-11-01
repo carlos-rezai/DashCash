@@ -28,7 +28,7 @@ const PLACEHOLDER = /[<>*{…\s]/;
 const MISSING_REASON = 'path does not exist';
 
 // Returns the doc's lines outside fenced code blocks.
-function linesOutsideFences(text: string): string[] {
+function readLinesOutsideFences(text: string): string[] {
   const lines: string[] = [];
   let fence: string | undefined;
   for (const line of text.split(/\r?\n/)) {
@@ -81,9 +81,9 @@ function nameSpan(span: string): NamedPath | undefined {
   return { written: span, resolved: posix.normalize(span) };
 }
 
-function namedPaths(doc: Doc): NamedPath[] {
+function collectNamedPaths(doc: Doc): NamedPath[] {
   const named: NamedPath[] = [];
-  for (const line of linesOutsideFences(doc.text)) {
+  for (const line of readLinesOutsideFences(doc.text)) {
     for (const match of line.matchAll(LINK)) {
       const path = nameLink(doc.path, match[1] ?? '');
       if (path !== undefined) {
@@ -127,7 +127,7 @@ export function findDocsDrift(
   const violations: Violation[] = [];
   for (const doc of docs) {
     const reported = new Set<string>();
-    for (const { written, resolved } of namedPaths(doc)) {
+    for (const { written, resolved } of collectNamedPaths(doc)) {
       const path = resolved.replace(/\/+$/, '');
       if (!reported.has(path) && !tracked.has(path) && !folders.has(path)) {
         reported.add(path);

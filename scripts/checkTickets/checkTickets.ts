@@ -6,6 +6,7 @@ import {
 } from '../reportViolations/reportViolations.ts';
 import { readBranchRange } from '../readBranchRange/readBranchRange.ts';
 import {
+  FEATURES_FOLDER,
   featureFolderPath,
   findFeatureFolder,
   parseFeatureBranch,
@@ -84,7 +85,7 @@ export function checkTicketReferences(
     const folder = findFeatureFolder(parsed.feature, trackedPaths);
     let reason: string | undefined;
     if (folder === undefined) {
-      reason = `no feature folder docs/features/<nn>-${parsed.feature}`;
+      reason = `no feature folder ${FEATURES_FOLDER}/<nn>-${parsed.feature}`;
     } else if (
       branchFeature !== undefined &&
       parsed.feature !== branchFeature

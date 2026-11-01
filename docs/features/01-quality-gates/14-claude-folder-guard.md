@@ -54,7 +54,7 @@ by the human by hand.
       naming `.claudeignore` exits 0.
 - [x] `.claude/settings.json` runs the hook for `Edit|Write`, and the
       `Bash` hook still runs.
-- [ ] In a Claude Code session, an `Edit` of a file under `.claude/` is
+- [x] In a Claude Code session, an `Edit` of a file under `.claude/` is
       refused with the hook's message.
 - [ ] `npm run verify` and CI's `verify` job are green.
 

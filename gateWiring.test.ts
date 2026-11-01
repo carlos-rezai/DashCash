@@ -19,6 +19,7 @@ const VERIFY_GATES = [
   'typecheck',
   'test',
   'check:commits',
+  'check:tickets',
   'check:data-files',
 ];
 
@@ -28,6 +29,7 @@ const GATE_COMMANDS: Record<string, string> = {
   typecheck: 'tsc',
   test: 'vitest run',
   'check:commits': 'node scripts/checkCommits/checkCommits.ts',
+  'check:tickets': 'node scripts/checkTickets/checkTickets.ts',
   'check:data-files': 'node scripts/checkDataFiles/checkDataFiles.ts',
 };
 

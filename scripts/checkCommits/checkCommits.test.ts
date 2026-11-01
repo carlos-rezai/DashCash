@@ -241,6 +241,30 @@ describe('check:commits', { timeout: 60_000 }, () => {
     expect(result.stderr).not.toContain('feat: [sample] 01 add sample:');
   });
 
+  it('fails on branch commits that break a description rule and names them', () => {
+    const breaking = [
+      'feat: [sample] 01 add sample, RED',
+      'fix: [sample] 01 thank sample@example.invalid',
+      'docs: [sample] add prd.',
+      'docs: [sample] add a description that is fifty-one characters long',
+    ];
+    git(repo, 'switch', '--quiet', '-c', 'feat/01-sample');
+    commit(repo, 'test: [sample] 01 add sample tests, RED');
+    for (const header of breaking) {
+      commit(repo, header);
+    }
+
+    const result = runScript('check:commits', repo);
+
+    expect(result.status).toBe(1);
+    for (const header of breaking) {
+      expect(result.stderr).toContain(`${header}:`);
+    }
+    expect(result.stderr).not.toContain(
+      'test: [sample] 01 add sample tests, RED:',
+    );
+  });
+
   it('exits 1 telling to fetch origin/main when the ref is missing', () => {
     git(repo, 'switch', '--quiet', '-c', 'feat/01-sample');
     commit(repo, 'feat: [sample] 01 add sample');

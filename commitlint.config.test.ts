@@ -88,6 +88,53 @@ const IGNORED_MESSAGES = [
   'squash! feat: [csv-import] 02 add duplicate detection',
 ];
 
+// Descriptions at and just over the limit of 50 characters.
+const DESCRIPTION_OF_50 = 'add a description that is exactly fifty chars long';
+const DESCRIPTION_OF_51 = 'add a description that is fifty-one characters long';
+
+const DESCRIPTIONS_ENDING_IN_FULL_STOP = [
+  'feat: [csv-import] 02 add duplicate detection.',
+  'docs: [csv-import] add prd.',
+  'test: [csv-import] 02 add duplicate detection., RED',
+];
+
+const DESCRIPTIONS_OVER_50 = [
+  `feat: [csv-import] 02 ${DESCRIPTION_OF_51}`,
+  `docs: [csv-import] ${DESCRIPTION_OF_51}`,
+  `test: [csv-import] 02 ${DESCRIPTION_OF_51}, RED`,
+];
+
+const RED_ON_OTHER_TYPES = [
+  'feat: [csv-import] 02 add duplicate detection, RED',
+  'fix: [csv-import] 02 address review, RED',
+  'docs: [csv-import] add prd, RED',
+  'refactor: [csv-import] 03 extract the profile parser, RED',
+  'chore: [csv-import] turn off commit attribution, RED',
+  'ci: [csv-import] pin workflow actions, RED',
+];
+
+// An @ or a # in each part of a message: header, body and trailer.
+const MESSAGES_WITH_AT_OR_HASH = [
+  ['an @ in the header', 'feat: [csv-import] 02 thank sample@example.invalid'],
+  ['a # in the header', 'fix: [csv-import] 02 close issue #12'],
+  [
+    'an @ in the body',
+    'feat: [csv-import] 02 add duplicate detection\n\nasked for by @sample',
+  ],
+  [
+    'a # in the body',
+    'feat: [csv-import] 02 add duplicate detection\n\nsee issue #12',
+  ],
+  [
+    'an @ in a trailer',
+    'feat: [csv-import] 02 add duplicate detection\n\nCo-Authored-By: Name <a@b.example>',
+  ],
+  [
+    'a # in a trailer',
+    'feat: [csv-import] 02 add duplicate detection\n\nRefs: #12',
+  ],
+];
+
 let config: Config;
 
 beforeAll(async () => {
@@ -124,6 +171,41 @@ describe('commitlint config', () => {
 
       expect(result.errors).toEqual([]);
       expect(result.valid).toBe(true);
+    });
+
+    it.each([
+      `feat: [csv-import] 02 ${DESCRIPTION_OF_50}`,
+      `docs: [csv-import] ${DESCRIPTION_OF_50}`,
+      `test: [csv-import] 02 ${DESCRIPTION_OF_50}, RED`,
+    ])('a description of 50 characters: %s', async (header) => {
+      const result = await lintMessage(header);
+
+      expect(result.errors).toEqual([]);
+      expect(result.valid).toBe(true);
+    });
+  });
+
+  describe('rejects a description ending in a full stop', () => {
+    it.each(DESCRIPTIONS_ENDING_IN_FULL_STOP)('%s', async (header) => {
+      expect(await errorNames(header)).toContain('subject-full-stop');
+    });
+  });
+
+  describe('rejects a description over 50 characters', () => {
+    it.each(DESCRIPTIONS_OVER_50)('%s', async (header) => {
+      expect(await errorNames(header)).toContain('subject-max-length');
+    });
+  });
+
+  describe('rejects the RED suffix on a commit other than test', () => {
+    it.each(RED_ON_OTHER_TYPES)('%s', async (header) => {
+      expect(await errorNames(header)).toContain('red-only-on-test');
+    });
+  });
+
+  describe('rejects an @ or a # anywhere in the message', () => {
+    it.each(MESSAGES_WITH_AT_OR_HASH)('%s', async (_part, message) => {
+      expect(await errorNames(message)).toContain('no-at-or-hash');
     });
   });
 

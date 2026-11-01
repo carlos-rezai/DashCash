@@ -33,7 +33,7 @@ commit already on the branch passes them (P3).
 - [x] An `@` or a `#` in the header, the body or a trailer (such as
       `Co-Authored-By: Name <a@b.example>`) is rejected.
 - [x] `npm run check:commits` passes on the branch's own history.
-- [ ] CI's `verify` job is green.
+- [x] CI's `verify` job is green.
 
 Note: the lower-case description rule is not part of this ticket. Ticket
 06's `header-format` rule already covers it: the header pattern in

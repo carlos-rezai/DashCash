@@ -23,7 +23,7 @@
 | **Gate** (new) | A check that must pass before a change can reach `main`. | Guard, hook, policy |
 | **Verify** (new) | `npm run verify`: the one entry point that runs every gate except end-to-end tests, the same locally, for agents and in CI. | Check-all, CI script, precommit |
 | **Verify full** (new) | `npm run verify:full`: verify plus build and end-to-end tests, run on every pull request into `main`. | Full CI, e2e run |
-| **Branch range** (new) | The commits of the current branch not yet on `main`: `git merge-base origin/main HEAD`..`HEAD`. | Diff, PR commits |
+| **Branch range** (new) | The commits of the current branch not yet on `main`: `origin/main..HEAD`. | Diff, PR commits |
 | **Ticket check** (new) | The gate that every commit in the branch range names an existing feature folder, ticket or refactor step. | Issue check, reference check |
 | **Pull-request check** (new) | The gate, run only on pull requests into `main`, that every ticket is `done` or every refactor step is ticked, and that the PR title follows the commit header. | Merge check, done check |
 | **Data file** (new) | A tracked `*.db`, `*.sqlite` or `*.csv` file outside `fixtures/`, or any `.env` file but `.env.example`, which the data-file check rejects. | Dump, export, real data |

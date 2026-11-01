@@ -5,7 +5,7 @@ import {
 import { parseCommitHeader } from '../parseCommitHeader/parseCommitHeader.ts';
 import { readBranchName } from '../readBranchRange/readBranchRange.ts';
 import {
-  featureFolderPath,
+  buildFeatureFolderPath,
   parseFeatureBranch,
 } from '../readFeatureFolders/readFeatureFolders.ts';
 import {
@@ -116,7 +116,7 @@ export async function checkPullRequest(
   if (featureBranch?.kind === 'feat') {
     violations.push(
       ...findUnfinishedTickets(
-        featureFolderPath(featureBranch.folder),
+        buildFeatureFolderPath(featureBranch.folder),
         input,
         subject,
       ),
@@ -124,7 +124,7 @@ export async function checkPullRequest(
   } else if (featureBranch?.kind === 'refactor') {
     violations.push(
       ...findUntickedRefactorSteps(
-        featureFolderPath(featureBranch.folder),
+        buildFeatureFolderPath(featureBranch.folder),
         input,
         subject,
       ),

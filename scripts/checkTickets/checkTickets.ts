@@ -6,7 +6,7 @@ import {
 import { readBranchRange } from '../readBranchRange/readBranchRange.ts';
 import {
   FEATURES_FOLDER,
-  featureFolderPath,
+  buildFeatureFolderPath,
   findFeatureFolder,
   parseFeatureBranch,
 } from '../readFeatureFolders/readFeatureFolders.ts';
@@ -36,7 +36,7 @@ function ticketReason(
       ? `a ${type} commit must carry a ticket number`
       : undefined;
   }
-  const folderPath = featureFolderPath(folder);
+  const folderPath = buildFeatureFolderPath(folder);
   if (type === 'refactor') {
     const planPath = refactorPlanPath(folderPath);
     const plan = trackedPaths.includes(planPath) ? readFile(planPath) : '';

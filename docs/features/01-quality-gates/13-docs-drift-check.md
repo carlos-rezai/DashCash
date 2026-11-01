@@ -36,7 +36,7 @@ only ticket 12 creates, so the gate passes on today's docs only after it
 - [x] `npm run check:docs-drift` passes on today's docs.
 - [x] `verify` runs `check:docs-drift` last; the gate wiring test expects
       it there.
-- [ ] CI's `verify` job is green.
+- [x] CI's `verify` job is green.
 
 ## Handover note
 

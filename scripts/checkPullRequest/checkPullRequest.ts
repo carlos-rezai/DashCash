@@ -1,24 +1,27 @@
-import { execFileSync } from 'node:child_process';
 import load from '@commitlint/load';
 import config from '../../commitlint.config.js';
 import { lintCommitMessages } from '../checkCommits/checkCommits.ts';
 import { resolveBranchName } from '../readBranchRange/readBranchRange.ts';
 import {
+  featureFolderPath,
+  parseFeatureBranch,
+} from '../readFeatureFolders/readFeatureFolders.ts';
+import {
+  readRefactorSteps,
+  refactorPlanPath,
+} from '../readRefactorSteps/readRefactorSteps.ts';
+import { listTickets } from '../readTickets/readTickets.ts';
+import {
   reportViolations,
   type Violation,
 } from '../reportViolations/reportViolations.ts';
+import { listHeadPaths, readHeadFile, runGit } from '../runGit/runGit.ts';
 
 const HEADER_PATTERN = config.parserPreset.parserOpts.headerPattern;
-const FEATURES_FOLDER = 'docs/features';
-const REFACTOR_PLAN = 'refactor-plan.md';
-const FEATURE_BRANCH = /^feat\/(\d+-.+)$/;
-const REFACTOR_BRANCH = /^refactor\/(\d+-.+)$/;
 const RENOVATE_BRANCH = /^renovate\/.+$/;
 const RENOVATE_TITLE = /^chore: (.*)$/;
-const TICKET_FILE = /^\d{2}-[^/]+\.md$/;
 const STATUS_LINE = /^status:[ \t]*([^\s#]*)/m;
 const FRONT_MATTER = /^---\r?\n([\s\S]*?)\r?\n---/;
-const REFACTOR_STEP = /^- \[( |x)\] (\d+)(?: .*)?$/gm;
 // A stand-in feature, so that a Renovate description meets the description
 // rules of the commitlint config without a feature of its own.
 const STAND_IN_FEATURE = 'renovate';
@@ -41,11 +44,7 @@ function checkTickets(
   input: PullRequestInput,
   subject: string,
 ): Violation[] {
-  const tickets = input.trackedPaths.filter(
-    (path) =>
-      path.startsWith(`${folderPath}/`) &&
-      TICKET_FILE.test(path.slice(folderPath.length + 1)),
-  );
+  const tickets = listTickets(folderPath, input.trackedPaths);
   if (tickets.length === 0) {
     return [{ subject, reason: `no ticket in ${folderPath}` }];
   }
@@ -59,15 +58,15 @@ function checkRefactorSteps(
   input: PullRequestInput,
   subject: string,
 ): Violation[] {
-  const planPath = `${folderPath}/${REFACTOR_PLAN}`;
+  const planPath = refactorPlanPath(folderPath);
   if (!input.trackedPaths.includes(planPath)) {
     return [{ subject, reason: `${planPath} is missing` }];
   }
-  return [...input.readFile(planPath).matchAll(REFACTOR_STEP)]
-    .filter(([, mark]) => mark !== 'x')
-    .map(([, , step]) => ({
+  return readRefactorSteps(input.readFile(planPath))
+    .filter((step) => !step.ticked)
+    .map((step) => ({
       subject,
-      reason: `refactor step ${step ?? ''} in ${planPath} is not ticked`,
+      reason: `refactor step ${step.number} in ${planPath} is not ticked`,
     }));
 }
 
@@ -118,15 +117,18 @@ export async function checkPullRequest(
   if (title === undefined || title === '') {
     violations.push({ subject: '(no title)', reason: 'the title is missing' });
   }
-  const feature = FEATURE_BRANCH.exec(branch ?? '')?.[1];
-  const refactor = REFACTOR_BRANCH.exec(branch ?? '')?.[1];
-  if (feature !== undefined) {
+  const featureBranch = parseFeatureBranch(branch);
+  if (featureBranch?.kind === 'feat') {
     violations.push(
-      ...checkTickets(`${FEATURES_FOLDER}/${feature}`, input, subject),
+      ...checkTickets(featureFolderPath(featureBranch.folder), input, subject),
     );
-  } else if (refactor !== undefined) {
+  } else if (featureBranch?.kind === 'refactor') {
     violations.push(
-      ...checkRefactorSteps(`${FEATURES_FOLDER}/${refactor}`, input, subject),
+      ...checkRefactorSteps(
+        featureFolderPath(featureBranch.folder),
+        input,
+        subject,
+      ),
     );
   } else if (!RENOVATE_BRANCH.test(branch ?? '')) {
     violations.push({
@@ -144,39 +146,18 @@ export async function checkPullRequest(
   return violations;
 }
 
-// Environment without the GIT_* variables a git hook sets, so the commands
-// act on the repository in cwd.
-function gitEnv(): NodeJS.ProcessEnv {
-  return Object.fromEntries(
-    Object.entries(process.env).filter(([key]) => !key.startsWith('GIT_')),
-  );
-}
-
-function git(cwd: string, args: readonly string[]): string {
-  return execFileSync('git', args, {
-    cwd,
-    encoding: 'utf8',
-    env: gitEnv(),
-    stdio: ['ignore', 'pipe', 'pipe'],
-    maxBuffer: 64 * 1024 * 1024,
-  });
-}
-
 if (import.meta.main) {
   try {
     const cwd = process.cwd();
     const loaded = await load({}, { cwd, file: 'commitlint.config.js' });
-    const trackedPaths = git(cwd, ['ls-tree', '-r', '--name-only', 'HEAD'])
-      .split('\n')
-      .filter((path) => path !== '');
     const violations = await checkPullRequest({
       branch: resolveBranchName(
         process.env,
-        git(cwd, ['branch', '--show-current']).trim(),
+        runGit(cwd, ['branch', '--show-current']).trim(),
       ),
       title: process.env['PR_TITLE'],
-      trackedPaths,
-      readFile: (path) => git(cwd, ['show', `HEAD:${path}`]),
+      trackedPaths: listHeadPaths(cwd),
+      readFile: (path) => readHeadFile(cwd, path),
       lintTitle: (header) => lintCommitMessages([header], loaded),
     });
     process.exitCode = reportViolations(violations);

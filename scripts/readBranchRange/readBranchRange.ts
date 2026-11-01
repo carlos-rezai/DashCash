@@ -1,4 +1,4 @@
-import { execFileSync } from 'node:child_process';
+import { runGit } from '../runGit/runGit.ts';
 
 export type BranchCommit = { hash: string; message: string };
 export type BranchRange = {
@@ -26,27 +26,9 @@ export function resolveBranchName(
   );
 }
 
-// Environment without the GIT_* variables a git hook sets, so the commands
-// act on the repository in cwd.
-function gitEnv(): NodeJS.ProcessEnv {
-  return Object.fromEntries(
-    Object.entries(process.env).filter(([key]) => !key.startsWith('GIT_')),
-  );
-}
-
-function git(cwd: string, args: readonly string[]): string {
-  return execFileSync('git', args, {
-    cwd,
-    encoding: 'utf8',
-    env: gitEnv(),
-    stdio: ['ignore', 'pipe', 'pipe'],
-    maxBuffer: 64 * 1024 * 1024,
-  });
-}
-
 function hasBaseRef(cwd: string): boolean {
   try {
-    git(cwd, ['rev-parse', '--verify', '--quiet', `${BASE_REF}^{commit}`]);
+    runGit(cwd, ['rev-parse', '--verify', '--quiet', `${BASE_REF}^{commit}`]);
     return true;
   } catch {
     return false;
@@ -62,9 +44,9 @@ export function readBranchRange(cwd: string): BranchRange {
   }
   const branch = resolveBranchName(
     process.env,
-    git(cwd, ['branch', '--show-current']).trim(),
+    runGit(cwd, ['branch', '--show-current']).trim(),
   );
-  const log = git(cwd, [
+  const log = runGit(cwd, [
     'log',
     `--format=%H${FIELD_SEPARATOR}%B${RECORD_SEPARATOR}`,
     `${BASE_REF}..HEAD`,

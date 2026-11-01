@@ -1,10 +1,10 @@
-import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { posix } from 'node:path';
 import {
   reportViolations,
   type Violation,
 } from '../reportViolations/reportViolations.ts';
+import { listTrackedPaths } from '../runGit/runGit.ts';
 
 export type Doc = { path: string; text: string };
 
@@ -134,14 +134,6 @@ export function findDocsDrift(
   return violations;
 }
 
-function listTrackedPaths(): string[] {
-  const output = execFileSync('git', ['ls-files', '-z'], {
-    encoding: 'utf8',
-    maxBuffer: 64 * 1024 * 1024,
-  });
-  return output.split('\0').filter((path) => path !== '');
-}
-
 function isCheckedDoc(path: string): boolean {
   return (
     path === 'README.md' ||
@@ -151,7 +143,7 @@ function isCheckedDoc(path: string): boolean {
 }
 
 if (import.meta.main) {
-  const trackedPaths = listTrackedPaths();
+  const trackedPaths = listTrackedPaths(process.cwd());
   const docs: Doc[] = trackedPaths
     .filter(isCheckedDoc)
     .map((path) => ({ path, text: readFileSync(path, 'utf8') }));

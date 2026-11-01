@@ -1,4 +1,3 @@
-import { execFileSync } from 'node:child_process';
 import isIgnored from '@commitlint/is-ignored';
 import config from '../../commitlint.config.js';
 import {
@@ -6,13 +5,20 @@ import {
   type Violation,
 } from '../reportViolations/reportViolations.ts';
 import { readBranchRange } from '../readBranchRange/readBranchRange.ts';
+import {
+  featureFolderPath,
+  findFeatureFolder,
+  parseFeatureBranch,
+} from '../readFeatureFolders/readFeatureFolders.ts';
+import {
+  hasRefactorStep,
+  refactorPlanPath,
+} from '../readRefactorSteps/readRefactorSteps.ts';
+import { hasTicket } from '../readTickets/readTickets.ts';
+import { listHeadPaths, readHeadFile } from '../runGit/runGit.ts';
 
 const HEADER_PATTERN = config.parserPreset.parserOpts.headerPattern;
 const TICKET_REQUIRED = ['feat', 'fix', 'test', 'refactor'];
-const FEATURES_FOLDER = 'docs/features/';
-const REFACTOR_PLAN = 'refactor-plan.md';
-const FEATURE_BRANCH = /^(?:feat|refactor)\/\d+-(.+)$/;
-const TICKET_FILE = /^\d{2}-[^/]+\.md$/;
 
 type ParsedHeader = {
   type: string;
@@ -30,35 +36,6 @@ function parseHeader(message: string): ParsedHeader | undefined {
   return { type, feature, ticket };
 }
 
-// The Feature folder (`<NN>-<feature>`) of a feature name, if one is tracked.
-function findFeatureFolder(
-  feature: string,
-  trackedPaths: readonly string[],
-): string | undefined {
-  for (const path of trackedPaths) {
-    if (!path.startsWith(FEATURES_FOLDER)) {
-      continue;
-    }
-    const folder = path.slice(FEATURES_FOLDER.length).split('/')[0] ?? '';
-    if (folder.replace(/^\d+-/, '') === feature && /^\d+-/.test(folder)) {
-      return folder;
-    }
-  }
-  return undefined;
-}
-
-function isTicket(folderPath: string, number: string, path: string): boolean {
-  if (!path.startsWith(`${folderPath}/`)) {
-    return false;
-  }
-  const file = path.slice(folderPath.length + 1);
-  return TICKET_FILE.test(file) && file.startsWith(`${number}-`);
-}
-
-function isRefactorStep(plan: string, number: string): boolean {
-  return new RegExp(`^- [[][ x]] ${number}(?: |$)`, 'm').test(plan);
-}
-
 function ticketReason(
   parsed: ParsedHeader,
   trackedPaths: readonly string[],
@@ -71,15 +48,15 @@ function ticketReason(
       ? `a ${type} commit must carry a ticket number`
       : undefined;
   }
-  const folderPath = `${FEATURES_FOLDER}${folder}`;
+  const folderPath = featureFolderPath(folder);
   if (type === 'refactor') {
-    const planPath = `${folderPath}/${REFACTOR_PLAN}`;
+    const planPath = refactorPlanPath(folderPath);
     const plan = trackedPaths.includes(planPath) ? readFile(planPath) : '';
-    return isRefactorStep(plan, ticket)
+    return hasRefactorStep(plan, ticket)
       ? undefined
       : `no refactor step ${ticket} in ${planPath}`;
   }
-  return trackedPaths.some((path) => isTicket(folderPath, ticket, path))
+  return hasTicket(folderPath, ticket, trackedPaths)
     ? undefined
     : `no ticket ${ticket} for ${feature} in ${folderPath}`;
 }
@@ -93,8 +70,7 @@ export function checkTicketReferences(
   readFile: (path: string) => string,
   branch: string | undefined,
 ): Violation[] {
-  const branchFeature =
-    branch === undefined ? undefined : FEATURE_BRANCH.exec(branch)?.[1];
+  const branchFeature = parseFeatureBranch(branch)?.feature;
   const violations: Violation[] = [];
   for (const message of commits) {
     if (isIgnored(message)) {
@@ -124,35 +100,14 @@ export function checkTicketReferences(
   return violations;
 }
 
-// Environment without the GIT_* variables a git hook sets, so the commands
-// act on the repository in cwd.
-function gitEnv(): NodeJS.ProcessEnv {
-  return Object.fromEntries(
-    Object.entries(process.env).filter(([key]) => !key.startsWith('GIT_')),
-  );
-}
-
-function git(cwd: string, args: readonly string[]): string {
-  return execFileSync('git', args, {
-    cwd,
-    encoding: 'utf8',
-    env: gitEnv(),
-    stdio: ['ignore', 'pipe', 'pipe'],
-    maxBuffer: 64 * 1024 * 1024,
-  });
-}
-
 if (import.meta.main) {
   try {
     const cwd = process.cwd();
     const { branch, commits } = readBranchRange(cwd);
-    const trackedPaths = git(cwd, ['ls-tree', '-r', '--name-only', 'HEAD'])
-      .split('\n')
-      .filter((path) => path !== '');
     const violations = checkTicketReferences(
       commits.map((commit) => commit.message),
-      trackedPaths,
-      (path) => git(cwd, ['show', `HEAD:${path}`]),
+      listHeadPaths(cwd),
+      (path) => readHeadFile(cwd, path),
       branch,
     );
     process.exitCode = reportViolations(violations);

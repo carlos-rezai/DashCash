@@ -1,4 +1,4 @@
-import { execFileSync } from 'node:child_process';
+import { listTrackedPaths } from '../runGit/runGit.ts';
 import {
   reportViolations,
   type Violation,
@@ -26,17 +26,9 @@ export function findDataFiles(trackedPaths: readonly string[]): string[] {
   return trackedPaths.filter(isDataFile);
 }
 
-function listTrackedPaths(): string[] {
-  const output = execFileSync('git', ['ls-files', '-z'], {
-    encoding: 'utf8',
-    maxBuffer: 64 * 1024 * 1024,
-  });
-  return output.split('\0').filter((path) => path !== '');
-}
-
 if (import.meta.main) {
-  const violations: Violation[] = findDataFiles(listTrackedPaths()).map(
-    (subject) => ({ subject, reason: 'data file is tracked' }),
-  );
+  const violations: Violation[] = findDataFiles(
+    listTrackedPaths(process.cwd()),
+  ).map((subject) => ({ subject, reason: 'data file is tracked' }));
   process.exitCode = reportViolations(violations);
 }

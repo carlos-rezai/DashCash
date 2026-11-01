@@ -1,7 +1,7 @@
 import isIgnored from '@commitlint/is-ignored';
 import config from '../../commitlint.config.js';
 import {
-  reportViolations,
+  runGate,
   type Violation,
 } from '../reportViolations/reportViolations.ts';
 import { readBranchRange } from '../readBranchRange/readBranchRange.ts';
@@ -102,18 +102,14 @@ export function checkTicketReferences(
 }
 
 if (import.meta.main) {
-  try {
+  await runGate(() => {
     const cwd = process.cwd();
     const { branch, commits } = readBranchRange(cwd);
-    const violations = checkTicketReferences(
+    return checkTicketReferences(
       commits.map((commit) => commit.message),
       listHeadPaths(cwd),
       (path) => readHeadFile(cwd, path),
       branch,
     );
-    process.exitCode = reportViolations(violations);
-  } catch (error) {
-    console.error(error instanceof Error ? error.message : String(error));
-    process.exitCode = 1;
-  }
+  });
 }

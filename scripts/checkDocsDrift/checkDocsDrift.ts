@@ -100,13 +100,8 @@ function namedPaths(doc: Doc): NamedPath[] {
   return named;
 }
 
-// Returns one violation per path a doc names that git does not track, as a
-// file or as a folder holding a tracked file.
-export function findDocsDrift(
-  docs: readonly Doc[],
-  trackedPaths: readonly string[],
-): Violation[] {
-  const tracked = new Set(trackedPaths);
+// Collects every folder that holds a tracked file, directly or in a subfolder.
+function collectTrackedFolders(trackedPaths: readonly string[]): Set<string> {
   const folders = new Set<string>();
   for (const path of trackedPaths) {
     for (
@@ -117,6 +112,17 @@ export function findDocsDrift(
       folders.add(folder);
     }
   }
+  return folders;
+}
+
+// Returns one violation per path a doc names that git does not track, as a
+// file or as a folder holding a tracked file.
+export function findDocsDrift(
+  docs: readonly Doc[],
+  trackedPaths: readonly string[],
+): Violation[] {
+  const tracked = new Set(trackedPaths);
+  const folders = collectTrackedFolders(trackedPaths);
 
   const violations: Violation[] = [];
   for (const doc of docs) {

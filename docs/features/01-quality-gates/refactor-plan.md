@@ -108,7 +108,7 @@ Run `npm run verify` before committing; every step must leave it green.
 - [x] 30 rename feature folder path to verb first
 - [x] 31 rename refactor plan path to verb first
 - [x] 32 rename check tickets helpers to verb first
-- [ ] 33 extract tracked folders in docs drift
+- [x] 33 extract tracked folders in docs drift
 - [ ] 34 rename docs drift helpers to verb first
 - [ ] 35 extract endpoint resolution in branch protection
 - [ ] 36 rename git env helper to verb first

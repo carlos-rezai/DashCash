@@ -1,7 +1,7 @@
 import lint from '@commitlint/lint';
 import load from '@commitlint/load';
 import {
-  reportViolations,
+  runGate,
   type Violation,
 } from '../reportViolations/reportViolations.ts';
 import { readBranchRange } from '../readBranchRange/readBranchRange.ts';
@@ -32,17 +32,13 @@ export async function lintCommitMessages(
 }
 
 if (import.meta.main) {
-  try {
+  await runGate(async () => {
     const cwd = process.cwd();
     const config = await load({}, { cwd, file: 'commitlint.config.js' });
     const { commits } = readBranchRange(cwd);
-    const violations = await lintCommitMessages(
+    return lintCommitMessages(
       commits.map((commit) => commit.message),
       config,
     );
-    process.exitCode = reportViolations(violations);
-  } catch (error) {
-    console.error(error instanceof Error ? error.message : String(error));
-    process.exitCode = 1;
-  }
+  });
 }

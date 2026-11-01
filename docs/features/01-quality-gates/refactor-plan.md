@@ -111,7 +111,7 @@ Run `npm run verify` before committing; every step must leave it green.
 - [x] 33 extract tracked folders in docs drift
 - [x] 34 rename docs drift helpers to verb first
 - [x] 35 extract endpoint resolution in branch protection
-- [ ] 36 rename git env helper to verb first
+- [x] 36 rename git env helper to verb first
 - [ ] 37 rename gh helper to verb first
 - [ ] 38 remove the obsolete scripts gitkeep
 

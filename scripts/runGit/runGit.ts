@@ -2,7 +2,7 @@ import { execFileSync } from 'node:child_process';
 
 // Environment without the GIT_* variables a git hook sets, so the commands
 // act on the repository in cwd.
-function gitEnv(): NodeJS.ProcessEnv {
+function buildGitEnv(): NodeJS.ProcessEnv {
   return Object.fromEntries(
     Object.entries(process.env).filter(([key]) => !key.startsWith('GIT_')),
   );
@@ -12,7 +12,7 @@ export function runGit(cwd: string, args: readonly string[]): string {
   return execFileSync('git', args, {
     cwd,
     encoding: 'utf8',
-    env: gitEnv(),
+    env: buildGitEnv(),
     stdio: ['ignore', 'pipe', 'pipe'],
     maxBuffer: 64 * 1024 * 1024,
   });

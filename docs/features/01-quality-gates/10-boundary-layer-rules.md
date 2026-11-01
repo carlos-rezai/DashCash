@@ -1,5 +1,5 @@
 ---
-status: in-progress
+status: done
 ---
 # Boundary layer rules
 
@@ -31,15 +31,15 @@ adds the renderer **Layer** ladder to the same config and test.
 
 ## Acceptance criteria
 
-- [ ] One allowed and one forbidden import per rule above, each in a
+- [x] One allowed and one forbidden import per rule above, each in a
       temporary tree cruised with the real config; the forbidden ones
       include a domain import of another workspace, of an npm package and
       of a Node built-in.
-- [ ] A renderer import of `packages/domain` is allowed.
-- [ ] A test, a story, a `test-support/` file and an `e2e/` file may import
+- [x] A renderer import of `packages/domain` is allowed.
+- [x] A test, a story, a `test-support/` file and an `e2e/` file may import
       `test-support/`; a **Shipping code** file may not.
-- [ ] `npm run lint:deps` passes on the tree.
-- [ ] `verify` runs `lint:deps` after `typecheck`; the gate wiring test
+- [x] `npm run lint:deps` passes on the tree.
+- [x] `verify` runs `lint:deps` after `typecheck`; the gate wiring test
       expects it there.
 - [ ] CI's `verify` job is green.
 

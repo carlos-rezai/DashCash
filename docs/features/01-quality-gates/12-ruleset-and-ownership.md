@@ -1,5 +1,5 @@
 ---
-status: in-progress
+status: done
 ---
 # Ruleset and ownership
 
@@ -33,14 +33,14 @@ handover note sits in the final ticket, `13-docs-drift-check.md` (Q50).
 
 ## Acceptance criteria
 
-- [ ] `planRulesetRequests`'s tests: no ruleset of that name plans a
+- [x] `planRulesetRequests`'s tests: no ruleset of that name plans a
       create; an existing one plans an update by its id; both plans patch
       the repository to merge commits only (squash and rebase off).
-- [ ] The **Ruleset** file holds every setting listed above.
-- [ ] The gate wiring test fails when the **Ruleset**'s required check
+- [x] The **Ruleset** file holds every setting listed above.
+- [x] The gate wiring test fails when the **Ruleset**'s required check
       stops naming the `pull-request` job of the workflow, or when it
       allows a merge method other than `merge`.
-- [ ] `.github/CODEOWNERS` and `.github/pull_request_template.md` exist
+- [x] `.github/CODEOWNERS` and `.github/pull_request_template.md` exist
       with the content above.
 - [ ] `npm run verify` and CI's `verify` job are green.
 

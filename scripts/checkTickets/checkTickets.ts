@@ -24,7 +24,7 @@ import { listHeadPaths, readHeadFile } from '../runGit/runGit.ts';
 
 const TICKET_REQUIRED = ['feat', 'fix', 'test', 'refactor'];
 
-function ticketReason(
+function findReferenceProblem(
   parsed: CommitHeader,
   trackedPaths: readonly string[],
   readFile: (path: string) => string,
@@ -79,7 +79,7 @@ export function checkTicketReferences(
     ) {
       reason = `the feature ${parsed.feature} is not the branch's feature ${branchFeature}`;
     } else {
-      reason = ticketReason(parsed, trackedPaths, readFile, folder);
+      reason = findReferenceProblem(parsed, trackedPaths, readFile, folder);
     }
     if (reason !== undefined) {
       violations.push({ subject: header, reason });

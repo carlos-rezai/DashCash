@@ -17,7 +17,7 @@ type PackageJson = {
   scripts: Record<string, string | undefined>;
 };
 
-const ROOT = fileURLToPath(new URL('.', import.meta.url));
+const ROOT = fileURLToPath(new URL('../..', import.meta.url));
 const IGNORE_FILE = join(ROOT, '.prettierignore');
 
 const packageJson = JSON.parse(

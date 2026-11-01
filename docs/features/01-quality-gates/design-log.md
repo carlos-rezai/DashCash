@@ -147,14 +147,16 @@ checked by a tool or script, and each check must itself be tested.
     exercise, and a thin entry that reads git and the file system and sets
     the exit code.
 22. *How are the tool configs tested?* **Assumption:** each config's test
-    sits next to it at the root (`eslint.config.test.ts`,
-    `commitlint.config.test.ts`, `dependency-cruiser.test.ts`) and drives
+    sits in `gates/<gate>/` (`gates/formatting/formatting.test.ts`,
+    `gates/lint/lint.test.ts`, `gates/commitMessages/commitMessages.test.ts`,
+    `gates/layerRules/layerRules.test.ts`) and drives
     the real config through the tool's Node API (ESLint `lintText`,
     `@commitlint/lint`, dependency-cruiser `cruise`). Code that must violate
     a rule is written to a temporary folder inside the test, never committed,
     because committed violations would fail the gates themselves. Reason:
-    "tests sit next to their module", and the configs must live where the
-    tools find them.
+    the configs must live at the root where the tools find them, and
+    `docs/conventions.md` allows no test at the root, so a test that proves
+    a configuration gate lives in `gates/<gate>/`.
 
 **`npm run verify`**
 
@@ -414,10 +416,10 @@ Files:
 | `.nvmrc`, `.npmrc` | Node `24.14.0`; `engine-strict`, `save-exact` ✅ |
 | `tsconfig.base.json`, `tsconfig.json` | strict base; root project for scripts and configs ✅ |
 | `.prettierrc.json`, `.prettierignore` | single quotes; Markdown and handoff excluded ✅ |
-| `eslint.config.js` (+ `eslint.config.test.ts`) | typed, zero warnings, project rules ✅ |
+| `eslint.config.js` (+ `gates/lint/lint.test.ts`) | typed, zero warnings, project rules ✅ |
 | `vitest.config.ts` | one root config ✅ |
-| `commitlint.config.js` (+ `commitlint.config.test.ts`) | header grammar, `@`/`#` rule ✅ |
-| `.dependency-cruiser.js` (+ `dependency-cruiser.test.ts`) | layer rules ✅ |
+| `commitlint.config.js` (+ `gates/commitMessages/commitMessages.test.ts`) | header grammar, `@`/`#` rule ✅ |
+| `.dependency-cruiser.js` (+ `gates/layerRules/layerRules.test.ts`) | layer rules ✅ |
 | `scripts/checkCommits/` | runs commitlint over the branch range ✅ |
 | `scripts/checkTickets/` | feature, ticket and step references ✅ |
 | `scripts/checkPullRequest/` | tickets done, steps ticked, PR title ✅ |
@@ -608,7 +610,8 @@ Alternatives:
   creates, so the gate could not pass on today's docs any earlier; its
   place in **Verify** (last, Q23) does not change.
 - **I4. Place of the gate wiring test.** **Assumption:** the gate wiring
-  test is `gateWiring.test.ts` at the repository root. Reason: it tests
+  test is `gates/gateWiring/gateWiring.test.ts`. Reason: it tests
   root files (`package.json`, `.nvmrc`, the workflow, the **Ruleset**)
-  and has no module of its own; Q22 puts the tests of root configs at the
-  root beside them.
+  and has no module of its own; `docs/conventions.md` allows no test at
+  the root and puts a test that proves a configuration gate in
+  `gates/<gate>/` (Q22).

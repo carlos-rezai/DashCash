@@ -18,7 +18,7 @@ build and test output are ignored. `lint` runs `eslint . --max-warnings 0`
 and joins **Verify** after `format:check`; the code of tickets 01–03
 passes it.
 
-The config is tested beside it in `eslint.config.test.ts`, through
+The config is tested in `gates/lint/lint.test.ts`, through
 ESLint's Node API (`lintText` with a file path), with violating code passed
 as text, never committed (Q22). Ticket 05 adds the project rules to this
 config and test.

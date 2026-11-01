@@ -6,7 +6,7 @@ import { beforeAll, describe, expect, it } from 'vitest';
 type Config = Awaited<ReturnType<typeof load>>;
 type LintOptions = NonNullable<Parameters<typeof lint>[2]>;
 
-const ROOT = fileURLToPath(new URL('.', import.meta.url));
+const ROOT = fileURLToPath(new URL('../..', import.meta.url));
 
 // The format the header-format rule's message shows when a header does not
 // match the Commit header grammar at all.

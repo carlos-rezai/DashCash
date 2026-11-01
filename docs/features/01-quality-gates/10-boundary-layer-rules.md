@@ -25,7 +25,7 @@ Implementation Decisions, "Layer rules"; design log Q40–Q43):
 
 `lint:deps` runs dependency-cruiser with this config over `apps`,
 `packages`, `scripts` and `e2e`, and joins **Verify** after `typecheck`.
-The config is tested in `dependency-cruiser.test.ts` by cruising small
+The config is tested in `gates/layerRules/layerRules.test.ts` by cruising small
 trees written to a temporary folder with the real config (Q44). Ticket 11
 adds the renderer **Layer** ladder to the same config and test.
 

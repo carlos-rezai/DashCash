@@ -11,7 +11,7 @@ status: done
 
 The description and mention rules of the commit convention (second half of
 plan Phase 6; PRD Implementation Decisions, "Commit convention"), added to
-`commitlint.config.js` and proven in `commitlint.config.test.ts`:
+`commitlint.config.js` and proven in `gates/commitMessages/commitMessages.test.ts`:
 
 - the description (`subject`, without the `, RED` part) no trailing full
   stop, at most 50 characters (Q30);
@@ -38,7 +38,7 @@ commit already on the branch passes them (P3).
 Note: the lower-case description rule is not part of this ticket. Ticket
 06's `header-format` rule already covers it: the header pattern in
 `commitlint.config.js` requires the description to start with a lower-case
-letter, and `commitlint.config.test.ts` proves it.
+letter, and `gates/commitMessages/commitMessages.test.ts` proves it.
 
 ## Blocked by
 

@@ -22,7 +22,7 @@ toolchain", "npm scripts", "Vitest" and "CI workflow". For now the
 **Pull-request check** to it.
 
 The first test is the gate wiring test (PRD Testing Decisions, design log
-A4, P1, P2), at the repository root as `gateWiring.test.ts` (design log
+A4, P1, P2), in `gates/gateWiring/gateWiring.test.ts` (design log
 I4). It reads the root `package.json`, `.github/workflows/ci.yml` and
 `.nvmrc` and pins only the gates present so far; every later ticket that
 adds a gate extends its expected list.

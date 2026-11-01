@@ -11,7 +11,7 @@ status: done
 
 The renderer's **Layer rules** (second half of plan Phase 9; PRD
 Implementation Decisions, "Layer rules"; design log Q40, Q42), added to
-`.dependency-cruiser.js` and proven in `dependency-cruiser.test.ts`:
+`.dependency-cruiser.js` and proven in `gates/layerRules/layerRules.test.ts`:
 
 - the **Layer** ladder tokens → primitives → components → features →
   layouts → pages → App: a layer imports only from layers below it, the

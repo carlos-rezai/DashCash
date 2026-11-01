@@ -22,7 +22,7 @@ typescript-eslint and `eslint-config-prettier`:
 - for files under `packages/domain`: `Date.now()` and an argument-less
   `new Date()` forbidden, with a message saying that today is a parameter.
 
-Each rule is proven in `eslint.config.test.ts` through `lintText` with a
+Each rule is proven in `gates/lint/lint.test.ts` through `lintText` with a
 file path; `npm run lint` keeps enforcing them in **Verify**, and the
 existing code passes.
 

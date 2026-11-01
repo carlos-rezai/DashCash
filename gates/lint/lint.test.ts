@@ -20,7 +20,7 @@ type PackageJson = {
 
 type Report = { ruleId: string | null; message: string; severity: number };
 
-const ROOT = fileURLToPath(new URL('.', import.meta.url));
+const ROOT = fileURLToPath(new URL('../..', import.meta.url));
 
 const packageJson = JSON.parse(
   readFileSync(join(ROOT, 'package.json'), 'utf8'),

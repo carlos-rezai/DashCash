@@ -16,7 +16,7 @@ and test output. `format:check` runs first in **Verify**, `format` writes
 in place, and the tree is formatted once so the gate starts green. The
 gate wiring test expects `format:check` first.
 
-The config is tested beside it at the root, through Prettier's Node API
+The config is tested in `gates/formatting/formatting.test.ts`, through Prettier's Node API
 with the resolved project config, as the design log (Q22) places config
 tests.
 

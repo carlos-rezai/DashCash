@@ -44,7 +44,7 @@ const GATE_COMMANDS: Record<string, string> = {
 };
 
 function readRootFile(path: string): string {
-  return readFileSync(new URL(path, import.meta.url), 'utf8');
+  return readFileSync(new URL(`../../${path}`, import.meta.url), 'utf8');
 }
 
 function chainedCommands(script: string | undefined): string[] {

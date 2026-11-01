@@ -32,7 +32,7 @@ branch passes it (P3).
 
 ## Acceptance criteria
 
-- [x] `commitlint.config.test.ts`, through `@commitlint/lint` with the
+- [x] `gates/commitMessages/commitMessages.test.ts`, through `@commitlint/lint` with the
       loaded config and headers given as literal strings: accepts the
       examples of `docs/conventions.md` (Commit messages) and the header
       forms the issue-loop writes (`test: … , RED`, `feat: …`,

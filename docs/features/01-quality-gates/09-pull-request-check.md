@@ -1,5 +1,5 @@
 ---
-status: in-progress
+status: done
 ---
 # Pull-request check
 
@@ -31,22 +31,22 @@ step's `env`, never inside the shell command (Q32). Neither **Verify** nor
 
 ## Acceptance criteria
 
-- [ ] On `feat/<NN>-<feature>`: a folder whose **Tickets** all read
+- [x] On `feat/<NN>-<feature>`: a folder whose **Tickets** all read
       `status: done` passes; an `open` or `in-progress` **Ticket** fails; a
       status line carrying the template's trailing `# …` comment is read
       correctly; a folder without a **Ticket** fails.
-- [ ] On `refactor/<NN>-<feature>`: all **Refactor steps** ticked passes; an
+- [x] On `refactor/<NN>-<feature>`: all **Refactor steps** ticked passes; an
       unticked step fails; a missing `refactor-plan.md` fails.
-- [ ] On `renovate/*`: a title `chore: <description>` passes, with no
+- [x] On `renovate/*`: a title `chore: <description>` passes, with no
       folder or plan check; a title of any other type, a title with
       `[<feature>]` or a number, and a title whose description breaks a
       description rule (upper case, trailing full stop, more than 50
       characters, `@` or `#`) fail.
-- [ ] Any other branch, or no branch, fails.
-- [ ] On `feat/*` and `refactor/*`: a title following the **Commit
+- [x] Any other branch, or no branch, fails.
+- [x] On `feat/*` and `refactor/*`: a title following the **Commit
       header** grammar without a number passes; a title with a number or
       with `@` or `#` fails. On any branch, no title fails.
-- [ ] The gate wiring test fails when `verify` or `verify:full` runs
+- [x] The gate wiring test fails when `verify` or `verify:full` runs
       `check:pr`, when the `pull-request` job stops running `npm run
       check:pr` after `npm run verify:full`, and when the title reaches the
       command other than through `PR_TITLE`.

@@ -20,7 +20,8 @@
     "verify:full": "npm run verify",
     "check:data-files": "node scripts/checkDataFiles/checkDataFiles.ts",
     "check:commits": "node scripts/checkCommits/checkCommits.ts",
-    "check:tickets": "node scripts/checkTickets/checkTickets.ts"
+    "check:tickets": "node scripts/checkTickets/checkTickets.ts",
+    "check:pr": "node scripts/checkPullRequest/checkPullRequest.ts"
   },
   "devDependencies": {
     "@commitlint/is-ignored": "21.2.3",

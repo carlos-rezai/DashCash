@@ -37,3 +37,6 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run verify:full
+      - run: npm run check:pr
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}

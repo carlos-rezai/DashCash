@@ -1,5 +1,5 @@
 ---
-status: in-progress
+status: done
 ---
 # Docs-drift check
 
@@ -45,6 +45,12 @@ feature's pull request, the owner applies the **Ruleset** once:
 `node scripts/applyBranchProtection/applyBranchProtection.ts` with a `gh`
 login that has admin rights on the repository (Q50). The agents' token
 cannot reach the branch-protection API.
+
+## Notes
+
+- A link that normalises to the repository root, such as `[x](../)` from
+  `docs/`, is reported as missing. Not required now; the refactor can
+  decide.
 
 ## Blocked by
 

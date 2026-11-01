@@ -474,6 +474,16 @@ describe('check:docs-drift', { timeout: 30_000 }, () => {
     expect(result.stderr).toContain('CLAUDE.md: apps/desktop/notes.md');
   });
 
+  it('reads the top-level docs/*.md and names a removed path', () => {
+    // Only docs/concept.md names e2e/, so this pins that source.
+    git(tree, 'rm', '--quiet', 'e2e/.gitkeep');
+
+    const result = runScript('check:docs-drift', tree);
+
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain('docs/concept.md: e2e/');
+  });
+
   it('ignores Markdown below the top level of docs/', () => {
     writeTreeFile(
       tree,

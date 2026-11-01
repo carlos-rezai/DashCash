@@ -98,7 +98,8 @@ const DESCRIPTIONS_ENDING_IN_FULL_STOP = [
   'test: [csv-import] 02 add duplicate detection., RED',
 ];
 
-// The first letter is lower case in each; a later letter is not.
+// Each holds an upper-case letter. All but the last start lower case and
+// break `subject-case`; the last breaks the header pattern with its type.
 const DESCRIPTIONS_NOT_LOWER_CASE = [
   'feat: [csv-import] 02 add CSV Duplicate Detection',
   'feat: [csv-import] 02 add duplicate Detection',

@@ -50,7 +50,7 @@ step's `env`, never inside the shell command (Q32). Neither **Verify** nor
       `check:pr`, when the `pull-request` job stops running `npm run
       check:pr` after `npm run verify:full`, and when the title reaches the
       command other than through `PR_TITLE`.
-- [ ] CI's `verify` job is green.
+- [x] CI's `verify` job is green.
 
 ## Blocked by
 

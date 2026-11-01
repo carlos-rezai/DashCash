@@ -3,7 +3,7 @@ import {
   loadCommitConfig,
 } from '../lintCommitMessages/lintCommitMessages.ts';
 import { parseCommitHeader } from '../parseCommitHeader/parseCommitHeader.ts';
-import { resolveBranchName } from '../readBranchRange/readBranchRange.ts';
+import { readBranchName } from '../readBranchRange/readBranchRange.ts';
 import {
   featureFolderPath,
   parseFeatureBranch,
@@ -17,7 +17,7 @@ import {
   runGate,
   type Violation,
 } from '../reportViolations/reportViolations.ts';
-import { listHeadPaths, readHeadFile, runGit } from '../runGit/runGit.ts';
+import { listHeadPaths, readHeadFile } from '../runGit/runGit.ts';
 
 const RENOVATE_BRANCH = /^renovate\/.+$/;
 const RENOVATE_TITLE = /^chore: (.*)$/;
@@ -152,10 +152,7 @@ if (import.meta.main) {
     const cwd = process.cwd();
     const loaded = await loadCommitConfig(cwd);
     return checkPullRequest({
-      branch: resolveBranchName(
-        process.env,
-        runGit(cwd, ['branch', '--show-current']).trim(),
-      ),
+      branch: readBranchName(cwd, process.env),
       title: process.env['PR_TITLE'],
       trackedPaths: listHeadPaths(cwd),
       readFile: (path) => readHeadFile(cwd, path),

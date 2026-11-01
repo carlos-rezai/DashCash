@@ -41,6 +41,16 @@ export function planRulesetRequests(
   ];
 }
 
+// Fills the {owner} and {repo} placeholders of an endpoint from the
+// repository's `owner/name`.
+export function resolveEndpoint(
+  endpoint: string,
+  nameWithOwner: string,
+): string {
+  const [owner = '', name = ''] = nameWithOwner.split('/');
+  return endpoint.replace('{owner}', owner).replace('{repo}', name);
+}
+
 function gh(args: readonly string[], input?: string): string {
   return execFileSync('gh', args, {
     encoding: 'utf8',
@@ -60,18 +70,14 @@ if (import.meta.main) {
       '--jq',
       '.nameWithOwner',
     ]).trim();
-    const resolve = (endpoint: string): string => {
-      const [owner = '', name = ''] = repository.split('/');
-      return endpoint.replace('{owner}', owner).replace('{repo}', name);
-    };
     const ruleset = JSON.parse(
       readFileSync('.github/rulesets/main.json', 'utf8'),
     ) as { name: string };
     const existing = JSON.parse(
-      gh(['api', resolve(`${REPOSITORY}/rulesets`)]),
+      gh(['api', resolveEndpoint(`${REPOSITORY}/rulesets`, repository)]),
     ) as ExistingRuleset[];
     for (const request of planRulesetRequests(ruleset, existing)) {
-      const endpoint = resolve(request.endpoint);
+      const endpoint = resolveEndpoint(request.endpoint, repository);
       gh(
         ['api', '--method', request.method, endpoint, '--input', '-'],
         JSON.stringify(request.body),

@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { planRulesetRequests } from './applyBranchProtection.ts';
+import {
+  planRulesetRequests,
+  resolveEndpoint,
+} from './applyBranchProtection.ts';
 
 // The requests that put the Ruleset on the repository: create it when no
 // ruleset of its name exists, otherwise update that one by its id, and in
@@ -77,4 +80,21 @@ describe('planRulesetRequests', () => {
       );
     },
   );
+});
+
+describe('resolveEndpoint', () => {
+  it('replaces the owner and repo placeholders', () => {
+    expect(
+      resolveEndpoint(
+        'repos/{owner}/{repo}/rulesets',
+        'sample-owner/sample-repo',
+      ),
+    ).toBe('repos/sample-owner/sample-repo/rulesets');
+  });
+
+  it('leaves an endpoint without placeholders unchanged', () => {
+    expect(resolveEndpoint('user/repos', 'sample-owner/sample-repo')).toBe(
+      'user/repos',
+    );
+  });
 });

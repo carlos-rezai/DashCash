@@ -29,13 +29,13 @@ and to create the gate test above.
 
 ## Acceptance criteria
 
-- [ ] Every remote `uses:` names a 40-character hex SHA followed by
+- [x] Every remote `uses:` names a 40-character hex SHA followed by
       `# v<release>`, the release the SHA belongs to.
-- [ ] The gate test fails, on invented workflow text, for a tag reference,
+- [x] The gate test fails, on invented workflow text, for a tag reference,
       a short SHA, a branch name and a pin without its comment, and passes
       a local `./…` action.
-- [ ] The gate test passes on the repository's workflows.
-- [ ] `npm run verify` and CI's `verify` job are green with the pinned
+- [x] The gate test passes on the repository's workflows.
+- [x] `npm run verify` and CI's `verify` job are green with the pinned
       actions.
 
 ## Blocked by

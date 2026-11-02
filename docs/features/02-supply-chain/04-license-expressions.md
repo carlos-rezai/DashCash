@@ -1,5 +1,5 @@
 ---
-status: in-progress
+status: done
 ---
 # License expressions
 
@@ -29,15 +29,15 @@ after `check:docs-drift`, and the gate wiring test expects it there.
 
 ## Acceptance criteria
 
-- [ ] The core's tests, on invented lockfiles, cover `OR` with one and with
+- [x] The core's tests, on invented lockfiles, cover `OR` with one and with
       no allowed side, `AND` with both and with one allowed side,
       parentheses that change the result, a `WITH` term compared whole,
       lower-case `or` / `and` not read as operators, and an unreadable
       expression (unbalanced parentheses, a dangling operator).
-- [ ] An unreadable expression is one violation naming the package and its
+- [x] An unreadable expression is one violation naming the package and its
       licence value.
-- [ ] `npm run check:licenses` still passes on today's lockfile.
-- [ ] `npm run verify` and CI's `verify` job are green.
+- [x] `npm run check:licenses` still passes on today's lockfile.
+- [x] `npm run verify` and CI's `verify` job are green.
 
 ## Blocked by
 

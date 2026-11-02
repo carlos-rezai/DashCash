@@ -24,6 +24,13 @@ A2), inside `scripts/checkAudit/`:
 
 No file outside `scripts/checkAudit/` changes.
 
+## Between 05 and this ticket
+
+`05-audit.md` ends green with `check:audit` active in **Verify** (design
+log, Implementation Results, D4). This ticket adds rules to the active
+gate; it starts no gate. The shipped exception is live, not stale, and
+not duplicated, so `npm run check:audit` stays green.
+
 ## Acceptance criteria
 
 - [ ] The core's table tests, on invented reports and GHSA ids with fixed

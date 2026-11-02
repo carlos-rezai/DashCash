@@ -56,6 +56,16 @@ This ticket is the approval to create exactly
 `quality/audit-exceptions.json`, to change the `verify` script in
 `package.json`, and to change the gate wiring test.
 
+## Between this ticket and 06
+
+This ticket ends with `npm run verify` and CI green, and `check:audit`
+active in **Verify** (design log, Implementation Results, D4). The one
+advisory open today has a GHSA id and its exception; stale and duplicate
+exceptions are not judged yet, so they fail nothing. If `npm audit` reports
+an advisory without a GHSA id on the day of building, that is no interim
+gap: 06 fails it too and no exception can lift it (A2), so the
+issue-loop stops and reports it.
+
 ## Acceptance criteria
 
 - [ ] The core's table tests, on invented reports and GHSA ids with fixed

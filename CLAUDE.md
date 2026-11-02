@@ -4,6 +4,8 @@ DashCash: local-only Electron app for personal finances (CSV import, account his
 
 @docs/conventions.md
 
+Read when relevant: `docs/quality-gates.md` before adding or changing a gate, `docs/feature-checklist.md` before starting a feature.
+
 ## Definition of done
 
 - `npm run verify` is green, and you report the result. For changes to a user flow: `npm run verify:full`.

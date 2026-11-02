@@ -630,3 +630,16 @@ answers named; those answers stay as they were written.
 - **D3. Renovate's release age is 14 days** (supersedes
   `minimumReleaseAge: "3 days"` in Q37). It matches the rule feature 01
   uses for every pinned version (ticket 10).
+- **D4. Every ticket ends green** (supersedes A15's interim "fails
+  closed"). Each ticket of a split pair ends with `npm run verify` and CI
+  green, or the issue-loop stops at its push. Checked on 2026-11-02:
+  - 03/04: every licence in the lockfile is a plain SPDX id, so
+    `check:licenses` is green after 03 and active. Should an expression
+    fail it on the day of building, 03 leaves it out of `verify` and 04
+    switches it on.
+  - 05/06: the one open advisory has a GHSA id and its exception, so
+    `check:audit` is green after 05 and active; 06 adds rules only.
+  - 10/11: the Renovate gate test checks only what `renovate.json`
+    holds; 11 adds groups only.
+  - 12/13: nothing runs the entry until 13 adds the hook and `prepare`.
+  Both tickets of each pair say so.

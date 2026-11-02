@@ -19,6 +19,14 @@ parentheses or a dangling operator fails as unreadable, naming
 `<name>@<version>` and the value. No file outside `scripts/checkLicenses/`
 changes.
 
+## Between 03 and this ticket
+
+`03-license-allowlist.md` ends green with `check:licenses` active in
+**Verify**, because today's lockfile holds no SPDX expression (design log,
+Implementation Results, D4). If 03 had to leave `check:licenses` out of
+`verify` (it says when), this ticket switches it on: `verify` runs it right
+after `check:docs-drift`, and the gate wiring test expects it there.
+
 ## Acceptance criteria
 
 - [ ] The core's tests, on invented lockfiles, cover `OR` with one and with

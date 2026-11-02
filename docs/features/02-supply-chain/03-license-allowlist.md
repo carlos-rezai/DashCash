@@ -36,6 +36,17 @@ This ticket is the approval to create exactly
 `quality/license-allowlist.json`, to change the `verify` script in
 `package.json`, and to change the gate wiring test.
 
+## Between this ticket and 04
+
+This ticket ends with `npm run verify` and CI green, and `check:licenses`
+active in **Verify** (design log, Implementation Results, D4). Every
+licence in today's lockfile is a plain SPDX id, none an expression, so
+comparing a value whole fails nothing. If `check:licenses` fails on an
+SPDX expression on the day of building, `verify` does not run it yet:
+this ticket adds the script and the wiring test expects it absent, and
+`04-license-expressions.md` adds it to `verify` right after
+`check:docs-drift`.
+
 ## Acceptance criteria
 
 - [ ] The core's tests, on invented lockfiles, cover an allowed, a

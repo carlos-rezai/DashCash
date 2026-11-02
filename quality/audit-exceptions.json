@@ -1,0 +1,8 @@
+[
+  {
+    "advisory": "GHSA-g3hv-75wg-m249",
+    "reason": "minimatch is reached only through the lint tooling, where it matches glob patterns from the repository's own configuration, and no fix exists inside the dependents' minimatch@^10 range",
+    "added": "2026-11-02",
+    "expires": "2027-01-31"
+  }
+]

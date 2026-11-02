@@ -68,31 +68,31 @@ issue-loop stops and reports it.
 
 ## Acceptance criteria
 
-- [ ] The core's table tests, on invented reports and GHSA ids with fixed
+- [x] The core's table tests, on invented reports and GHSA ids with fixed
       dates, cover: no advisories; an advisory with and without an
       exception; an exception on its **Expiry date** and the day after;
       advisories of several severities, dev dependencies included; one
       advisory reaching several packages, reported once with every
       package; a report without `vulnerabilities` and one with an `error`.
-- [ ] The core's tests cover each malformed input: exceptions that are not
+- [x] The core's tests cover each malformed input: exceptions that are not
       an array, an entry with a missing or empty `reason`, an `advisory`
       that is not a GHSA id, an `added` or `expires` that is missing, not
       `YYYY-MM-DD` or not a real date (`2027-02-30`); each is one
       violation naming the exceptions file with the entry's index and
       field.
-- [ ] The 90-day limit: an `expires` exactly 90 days after `added`
+- [x] The 90-day limit: an `expires` exactly 90 days after `added`
       passes; 91 days after fails; an `expires` before `added` fails; an
       `added` later than `today` fails; each is one violation naming the
       exceptions file with the entry's index and field.
-- [ ] Each violation is one line: the GHSA id with severity, title and
+- [x] Each violation is one line: the GHSA id with severity, title and
       affected packages, or the expired date; the exceptions file with
       index and field; `npm audit` when the report cannot be read.
-- [ ] The entry fails with a message to run `npm run check:audit` when it
+- [x] The entry fails with a message to run `npm run check:audit` when it
       is not started by npm, and when `npm audit` produces no JSON report;
       a missing or unparsable exceptions file fails naming the file.
-- [ ] Tests never run the entry or touch the network.
-- [ ] `npm run check:audit` passes on the day of building.
-- [ ] `verify` runs `check:audit` last, after `check:licenses`; the wiring
+- [x] Tests never run the entry or touch the network.
+- [x] `npm run check:audit` passes on the day of building.
+- [x] `verify` runs `check:audit` last, after `check:licenses`; the wiring
       test expects it there and fails when it moves or goes.
 - [ ] `npm run verify` and CI's `verify` job are green.
 

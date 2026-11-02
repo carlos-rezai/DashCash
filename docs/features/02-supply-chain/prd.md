@@ -214,9 +214,11 @@ GitHub App, and start the **Daily run** once by hand.
 46. As the developer, I want every Renovate commit message to be fixed text
     `chore: [supply-chain] <description>`, so that the commit gate and the
     **Ticket check** accept it.
-47. As the human who merges, I want every **Renovate PR** title to be fixed
-    text `chore: <description>`, so that the **Pull-request check**'s rule
-    for `renovate/*` accepts it.
+47. As the human who merges, I want every **Renovate PR** title to be the
+    same fixed text as its commit message,
+    `chore: [supply-chain] <description>`, so that the **Pull-request
+    check**'s rule for `renovate/*` accepts it and rejects the old
+    bracket-less form (design log, Implementation Results, D1).
 48. As the developer, I want one group each for npm packages, GitHub
     Actions, Node (`.nvmrc` and `engines.node` together), lockfile
     maintenance and vulnerability alerts, so that the PRs stay few and each

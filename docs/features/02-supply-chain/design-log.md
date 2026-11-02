@@ -609,3 +609,16 @@ Alternatives:
   budget and the skill prefers thin slices; no source sets the interim
   behaviour, and 01's rule that a gate must not pass what it cannot judge
   (01, A1) decides it.
+
+## Implementation Results
+
+Deviations the human set before the build, 2026-11-02. They supersede the
+answers named; those answers stay as they were written.
+
+- **D1. One Renovate format** (supersedes Q35 and the titles in Q36; Q34
+  stands). Renovate derives its PR titles from the commit message, so a
+  title without `[<feature>]` (01, ticket 09) conflicts with Q34's
+  messages. Commit messages and PR titles are both
+  `chore: [supply-chain] <description>`. The **Pull-request check**
+  accepts this form on `renovate/*` and rejects the old bracket-less
+  `chore: <description>` (ticket 10).

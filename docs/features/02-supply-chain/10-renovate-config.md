@@ -17,14 +17,21 @@ and vulnerability-alert groups follow in `11-renovate-groups.md`.
 - `renovate.json` at the repository root: `extends` `config:recommended`,
   `helpers:pinGitHubActionDigests` and `:disableDependencyDashboard`;
   `semanticCommits: "disabled"`; no `commitBody`; no automerge;
-  `minimumReleaseAge: "3 days"`; `schedule` `before 6am on monday`;
-  `timezone` `Europe/Berlin`; the default `renovate/` branch prefix. Two
-  `packageRules` groups, each with a fixed `commitMessage` and `prTitle`
-  and no template variables (Q36):
-  - npm packages: `chore: [supply-chain] update npm dependencies` /
-    `chore: update npm dependencies`;
-  - GitHub Actions: `chore: [supply-chain] update github actions` /
-    `chore: update github actions`.
+  `minimumReleaseAge: "14 days"`, the rule for every pinned version in
+  feature 01 (design log, Implementation Results, D3); `schedule`
+  `before 6am on monday`; `timezone` `Europe/Berlin`; the default
+  `renovate/` branch prefix. Two `packageRules` groups, each with a fixed
+  `commitMessage` and a `prTitle` of exactly the same text, and no
+  template variables (Q36; one format, Implementation Results, D1):
+  - npm packages: `chore: [supply-chain] update npm dependencies`;
+  - GitHub Actions: `chore: [supply-chain] update github actions`.
+- The **Pull-request check** (`scripts/checkPullRequest/`, feature 01
+  ticket 09) changes its `renovate/*` rule to the same format: the title
+  is `chore: [supply-chain] <description>`, type `chore`, the feature
+  exactly `supply-chain`, no number, and every description rule of the
+  commitlint config still applies; still no folder or plan check. The old
+  bracket-less form `chore: <description>` now fails. Its tests change
+  with it.
 - `gates/renovate/renovate.test.ts` reads `renovate.json` and fails when
   any commit message in it fails the loaded commitlint config (through its
   Node API, as `gates/commitMessages/` does), does not name `supply-chain`
@@ -43,11 +50,18 @@ installs the Renovate GitHub App on the repository; because
 
 - [ ] Every commit message is fixed text `chore: [supply-chain] …` and
       passes the commitlint config through its Node API.
-- [ ] Every PR title is fixed text `chore: …` and passes the
-      **Pull-request check** core on a `renovate/*` branch.
+- [ ] Every PR title is the same text as its group's commit message and
+      passes the **Pull-request check** core on a `renovate/*` branch.
+- [ ] On `renovate/*`, the **Pull-request check** passes
+      `chore: [supply-chain] <description>` and fails the bracket-less
+      `chore: <description>`, another feature in the brackets, a number,
+      another type, and a description that breaks a description rule
+      (upper case, trailing full stop, more than 50 characters, `@` or
+      `#`); its tests are updated from the old form to the new one.
 - [ ] The gate test fails, on invented config variants, for a templated
       message, a message naming another feature, a message the commitlint
-      config rejects, a title the check rejects, and each changed setting
+      config rejects, a title the check rejects, a title that differs from
+      its commit message, and each changed setting
       of story 51 (presets, `semanticCommits`, a `commitBody`, automerge,
       release age, schedule, timezone, branch prefix).
 - [ ] The gate test passes on `renovate.json`.

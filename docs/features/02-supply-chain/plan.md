@@ -46,9 +46,10 @@ Durable decisions that apply across all phases:
 - **Repository settings as code**: the existing apply script's repository
   `PATCH` carries the merge settings and `security_and_analysis`
   (secret scanning, push protection); only the human runs it.
-- **Renovate**: `renovate.json` at the root, fixed commit messages
-  `chore: [supply-chain] <description>` and fixed titles
-  `chore: <description>`, default `renovate/` branch prefix.
+- **Renovate**: `renovate.json` at the root, fixed commit messages and
+  PR titles, both `chore: [supply-chain] <description>`, which the
+  **Pull-request check** accepts on `renovate/*` (design log D1); default
+  `renovate/` branch prefix.
 - **Commit-msg hook**: a committed `.githooks/` folder, activated by
   `prepare` (`git config core.hooksPath .githooks`); the hook runs the
   commit-message entry with `node` directly.

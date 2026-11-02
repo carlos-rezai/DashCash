@@ -632,6 +632,25 @@ describe('checkAudit', () => {
     },
   );
 
+  it.each([
+    ['exit code 2', 2],
+    ['no exit code', null],
+  ])(
+    'fails with a message to run npm run check:audit when npm audit ends with %s, even with a JSON report',
+    (_, status) => {
+      const node = fakeNode(status, JSON.stringify(report()));
+
+      expect(() =>
+        checkAudit({
+          env: STARTED_BY_NPM,
+          today: TODAY,
+          runNode: node.runNode,
+          readFile: files({ [EXCEPTIONS_FILE]: '[]' }),
+        }),
+      ).toThrow(/npm run check:audit/);
+    },
+  );
+
   it('reports a missing exceptions file, naming it', () => {
     const node = fakeNode(0, JSON.stringify(report()));
 

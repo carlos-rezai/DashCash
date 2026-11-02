@@ -41,6 +41,7 @@ const VERIFY_GATES = [
   'check:tickets',
   'check:data-files',
   'check:docs-drift',
+  'check:licenses',
 ];
 
 const GATE_COMMANDS: Record<string, string> = {
@@ -54,6 +55,7 @@ const GATE_COMMANDS: Record<string, string> = {
   'check:tickets': 'node scripts/checkTickets/checkTickets.ts',
   'check:data-files': 'node scripts/checkDataFiles/checkDataFiles.ts',
   'check:docs-drift': 'node scripts/checkDocsDrift/checkDocsDrift.ts',
+  'check:licenses': 'node scripts/checkLicenses/checkLicenses.ts',
 };
 
 function readRootFile(path: string): string {

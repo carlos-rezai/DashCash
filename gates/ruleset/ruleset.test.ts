@@ -1,11 +1,12 @@
-import { readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { parse } from 'yaml';
 
 // The Ruleset on main, kept as code in .github/rulesets/main.json, and its
-// wiring to the CI workflow: the one Required check is the pull-request job,
+// wiring to the pull-request workflow: the one Required check is its
+// pull-request job, the only job of any workflow reporting under that name,
 // which runs Verify full and the Pull-request check.
 
 type RulesetRule = {
@@ -41,8 +42,25 @@ function readRuleset(): Ruleset {
   return JSON.parse(readRootFile('.github/rulesets/main.json')) as Ruleset;
 }
 
-function readWorkflow(): Workflow {
-  return parse(readRootFile('.github/workflows/ci.yml')) as Workflow;
+const WORKFLOWS_FOLDER = '.github/workflows';
+const PULL_REQUEST_WORKFLOW = 'pull-request.yml';
+
+// A workflow file that does not exist reads as a workflow without jobs, so
+// every check on it fails at its assertion.
+function readWorkflow(file: string): Workflow {
+  const path = join(ROOT, WORKFLOWS_FOLDER, file);
+  if (!existsSync(path)) {
+    return { jobs: {} };
+  }
+  const workflow = (parse(readFileSync(path, 'utf8')) ??
+    {}) as Partial<Workflow>;
+  return { jobs: workflow.jobs ?? {} };
+}
+
+function workflowFiles(): string[] {
+  return readdirSync(join(ROOT, WORKFLOWS_FOLDER))
+    .filter((file) => /\.ya?ml$/.test(file))
+    .sort();
 }
 
 function findRule(ruleset: Ruleset, type: string): RulesetRule | undefined {
@@ -129,17 +147,26 @@ describe('the Ruleset file', () => {
 });
 
 describe('the Ruleset wiring', () => {
-  it('names exactly one Required check, reported by the pull-request job', () => {
+  it('names exactly one Required check, reported by the pull-request job of the pull-request workflow', () => {
     const checks = requiredCheckNames(readRuleset());
 
     expect(checks).toHaveLength(1);
-    expect(jobsReportingAs(readWorkflow(), checks[0])).toEqual([
-      'pull-request',
-    ]);
+    expect(
+      jobsReportingAs(readWorkflow(PULL_REQUEST_WORKFLOW), checks[0]),
+    ).toEqual(['pull-request']);
+  });
+
+  it('has exactly one job across every workflow file reporting as the Required check', () => {
+    const [check] = requiredCheckNames(readRuleset());
+    const reporting = workflowFiles().flatMap((file) =>
+      jobsReportingAs(readWorkflow(file), check).map((id) => `${file}: ${id}`),
+    );
+
+    expect(reporting).toEqual([`${PULL_REQUEST_WORKFLOW}: pull-request`]);
   });
 
   it('waits for a check that runs verify:full and check:pr', () => {
-    const workflow = readWorkflow();
+    const workflow = readWorkflow(PULL_REQUEST_WORKFLOW);
     const [job] = requiredCheckNames(readRuleset()).flatMap((check) =>
       jobsReportingAs(workflow, check),
     );

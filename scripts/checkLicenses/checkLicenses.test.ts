@@ -160,6 +160,153 @@ describe('findLicenseViolations', () => {
     });
   });
 
+  describe('SPDX expressions', () => {
+    it('passes an OR when one side is allowed and fails it when no side is', () => {
+      const violations = findLicenseViolations(
+        lockfile({
+          'node_modules/dual-left': {
+            version: '1.0.0',
+            license: 'MIT OR GPL-3.0-only',
+          },
+          'node_modules/dual-right': {
+            version: '1.1.0',
+            license: 'GPL-3.0-only OR Apache-2.0',
+          },
+          'node_modules/dual-none': {
+            version: '1.2.0',
+            license: 'GPL-3.0-only OR SSPL-1.0',
+          },
+        }),
+        ALLOWLIST,
+      );
+
+      expect(violations).toEqual([
+        disallowed('dual-none@1.2.0', 'GPL-3.0-only OR SSPL-1.0'),
+      ]);
+    });
+
+    it('passes an AND when both sides are allowed and fails it when one is not', () => {
+      const violations = findLicenseViolations(
+        lockfile({
+          'node_modules/joint-both': {
+            version: '2.0.0',
+            license: 'MIT AND ISC',
+          },
+          'node_modules/joint-one': {
+            version: '2.1.0',
+            license: 'MIT AND GPL-3.0-only',
+          },
+        }),
+        ALLOWLIST,
+      );
+
+      expect(violations).toEqual([
+        disallowed('joint-one@2.1.0', 'MIT AND GPL-3.0-only'),
+      ]);
+    });
+
+    it('groups with parentheses, so that moving them changes the result', () => {
+      const violations = findLicenseViolations(
+        lockfile({
+          'node_modules/grouped-or-first': {
+            version: '3.0.0',
+            license: '(ISC OR GPL-3.0-only) AND SSPL-1.0',
+          },
+          'node_modules/grouped-and-first': {
+            version: '3.1.0',
+            license: 'ISC OR (GPL-3.0-only AND SSPL-1.0)',
+          },
+          'node_modules/grouped-nested': {
+            version: '3.2.0',
+            license: '((MIT OR GPL-3.0-only) AND (ISC OR SSPL-1.0))',
+          },
+        }),
+        ALLOWLIST,
+      );
+
+      expect(violations).toEqual([
+        disallowed(
+          'grouped-or-first@3.0.0',
+          '(ISC OR GPL-3.0-only) AND SSPL-1.0',
+        ),
+      ]);
+    });
+
+    it('compares a WITH term as a whole against the allowlist', () => {
+      const violations = findLicenseViolations(
+        lockfile({
+          'node_modules/with-allowed': {
+            version: '4.0.0',
+            license: 'ISC AND Apache-2.0 WITH LLVM-exception',
+          },
+          'node_modules/with-split': {
+            version: '4.1.0',
+            license: 'ISC AND GPL-2.0-only WITH Classpath-exception-2.0',
+          },
+        }),
+        [...ALLOWLIST, 'Apache-2.0 WITH LLVM-exception', 'GPL-2.0-only'],
+      );
+
+      expect(violations).toEqual([
+        disallowed(
+          'with-split@4.1.0',
+          'ISC AND GPL-2.0-only WITH Classpath-exception-2.0',
+        ),
+      ]);
+    });
+
+    it('reads OR and AND as operators in upper case only', () => {
+      const violations = findLicenseViolations(
+        lockfile({
+          'node_modules/upper-or': { version: '5.0.0', license: 'MIT OR ISC' },
+          'node_modules/upper-and': {
+            version: '5.1.0',
+            license: 'MIT AND ISC',
+          },
+          'node_modules/lower-or': { version: '5.2.0', license: 'MIT or ISC' },
+          'node_modules/lower-and': {
+            version: '5.3.0',
+            license: 'MIT and ISC',
+          },
+        }),
+        ALLOWLIST,
+      );
+
+      expect(violations).toEqual([
+        disallowed('lower-or@5.2.0', 'MIT or ISC'),
+        disallowed('lower-and@5.3.0', 'MIT and ISC'),
+      ]);
+    });
+
+    it.each([
+      ['an unclosed parenthesis', '(MIT OR ISC'],
+      ['an unopened parenthesis', 'MIT OR ISC)'],
+      ['a closing parenthesis before its opening one', ')MIT OR ISC('],
+      ['a trailing operator', 'MIT OR'],
+      ['a leading operator', 'AND MIT'],
+      ['two operators in a row', 'MIT OR AND ISC'],
+      ['a dangling operator inside parentheses', '(MIT OR) AND ISC'],
+      ['empty parentheses', 'MIT OR ()'],
+    ])(
+      'reports an expression with %s as one unreadable violation naming the package and the value',
+      (_case, licence) => {
+        const violations = findLicenseViolations(
+          lockfile({
+            'node_modules/left-pad': { version: '1.3.0', license: 'MIT' },
+            'node_modules/garbled-kit': { version: '6.0.0', license: licence },
+          }),
+          ALLOWLIST,
+        );
+
+        expect(violations).toHaveLength(1);
+        const [violation] = violations;
+        expect(violation?.subject).toBe('garbled-kit@6.0.0');
+        expect(violation?.reason).toContain(`"${licence}"`);
+        expect(violation?.reason).toContain('unreadable');
+      },
+    );
+  });
+
   describe('entries', () => {
     it('checks a nested node_modules entry, naming it after its last node_modules/', () => {
       const violations = findLicenseViolations(

@@ -488,3 +488,103 @@ Alternatives:
   GitHub's repository-level SHA-pinning policy, which no source asks for;
   blocking `~/.claude.json` or other home files beyond
   `~/.claude/settings.json`; changes to `CLAUDE.md`'s "Ask first" list.
+
+### Assumptions from write-a-prd
+
+- **A1. Audit violations, one per cause.** **Assumption:** the audit core
+  reports one violation per unexcepted **Advisory** (subject the GHSA id,
+  reason its severity, title and every package it reaches), and at most
+  one per exception: expired first (`expires` before today), otherwise
+  stale (the report does not list it). Two exceptions naming one advisory
+  are one violation on the exceptions file. Reason: Q17 lists the failures
+  but not their output; one line per cause keeps 01's output (01, A9)
+  readable; the duplicate rule follows the glossary ("exactly one **Audit
+  exception**").
+- **A2. Advisory without a GHSA id.** **Assumption:** an advisory object
+  whose `url` does not end in a GHSA id fails the audit and cannot be
+  excepted. Reason: Q15 identifies advisories by GHSA id only; an unknown
+  report shape must not pass (01, A1).
+- **A3. Exceptions file validation.** **Assumption:** the file must exist
+  and hold a JSON array (`[]` when there are no exceptions); each entry
+  needs `advisory` matching `GHSA-xxxx-xxxx-xxxx`, a non-empty `reason` and
+  `expires` as a real calendar date `YYYY-MM-DD`; other keys are ignored. A
+  report that is not a version-2 report (no `vulnerabilities` object, or an
+  `error`) is a violation with the subject `npm audit`. Reason: Q17 (d)
+  and (e) say malformed input fails but not what counts as malformed; a
+  typo such as `expiry` already fails through the missing `expires`.
+- **A4. How the entry runs npm.** **Assumption:** `checkAudit` runs
+  `npm audit --json` as `node <npm_execpath>`, the npm that runs the
+  script, accepts exit codes 0 and 1 (npm exits 1 when it finds
+  vulnerabilities) and throws when the output is not JSON or
+  `npm_execpath` is unset, with a message to run `npm run check:audit`.
+  Reason: on Windows `npm` is `npm.cmd`, which `execFileSync` cannot start
+  without a shell, and 01's gate entries start tools without one
+  (`scripts/runGit/`); every caller (**Verify**, the **Daily run**) goes
+  through `npm run`.
+- **A5. Licence check skips workspace members.** **Assumption:** the
+  licence check judges only lockfile entries whose key holds a
+  `node_modules/` segment and that are not `link: true`; the root and the
+  **Workspace member** entries (`apps/desktop`, `packages/domain`, …) are
+  skipped. Reason: Q22 skips the root and links, but from 03 on the
+  lockfile also holds an entry per member without its own `license`, which
+  would fail; members are the repository's own code under the root's MIT
+  licence.
+- **A6. Licence values the check cannot read.** **Assumption:** a
+  `license` that is missing, not a string or empty fails as "has no
+  licence"; an expression with unbalanced parentheses or a dangling
+  operator fails as unreadable; `OR` and `AND` are matched in upper case
+  only, as SPDX writes them; a `WITH` term is compared as a whole. The
+  subject is `<name>@<version>`, the name taken from the key after its last
+  `node_modules/`. Reason: Q24 settles valid expressions only; an unknown
+  licence must never pass.
+- **A7. Allowlist validation, no stale check.** **Assumption:** the
+  allowlist must be a non-empty JSON array of non-empty strings, or the
+  check fails; an allowed licence no package uses does not fail. Reason:
+  unlike an **Audit exception** (Q17 c), the allowlist is policy, not a
+  list of live risks; a Renovate PR that drops the last `Python-2.0`
+  package should not turn red.
+- **A8. Wiring tests for the new workflows.** **Assumption:** the gate
+  wiring test also checks each workflow's triggers (push: `feat/**` and
+  `refactor/**` only; pull request: `pull_request` into `main` only;
+  daily: `schedule` `0 5 * * *` and `workflow_dispatch`), that each of the
+  three jobs runs gitleaks after checkout with `GITLEAKS_ENABLE_COMMENTS`
+  `false`, and that the daily job checks out full history and runs
+  `npm run check:audit`. Reason: Q4 wants every configuration gate tested,
+  and a gitleaks step or a trigger dropped from a workflow would stop
+  enforcing without any test failing (01, A4).
+- **A9. `cleanCommitMessage` instead of `stripCommentLines`.**
+  **Assumption:** the hook core is `cleanCommitMessage(raw): string` and
+  applies git's whole default `strip` cleanup: CRLF to LF, the scissors
+  line and everything after it dropped, `#` lines dropped, trailing
+  whitespace stripped, consecutive blank lines collapsed, leading and
+  trailing blank lines removed. An empty result exits 0, so git aborts the
+  commit with its own message. Reason: Q43 names comment lines only, but a
+  Windows editor writes CRLF, and `\r` breaks the header pattern on a
+  message git would store clean; commitlint on an empty message would
+  report a misleading grammar error.
+- **A10. Commit-msg hook test.** **Assumption:** a gate test in
+  `gates/commitMsgHook/` checks that the hook is tracked with mode
+  `100755`, starts with `#!/bin/sh` and runs the entry with `"$1"`, that
+  `prepare` is `git config core.hooksPath .githooks`, and that the hook,
+  run with `sh` from the repository root on a temporary message file,
+  exits 0 for a valid header and 1, printing the violation, for an invalid
+  one. Reason: the hook is not a gate (glossary), but it is configuration
+  that can stop working silently; `docs/conventions.md` (Module filing)
+  puts tests of configuration in `gates/<name>/`.
+- **A11. Hook entry errors.** **Assumption:** the entry exits 1 with one
+  line when it gets no argument or cannot read the file, through
+  `runGate`. Reason: 01's rule that a check which cannot run must not pass
+  (01, A1); a human can still skip the hook (Q44) and CI decides.
+- **A12. No Renovate validator.** **Assumption:** no `renovate` package
+  and no `renovate-config-validator` in **Verify**; the gate test reads the
+  JSON only, and Renovate's first run after the human installs the app
+  shows whether it accepts the config. Reason: the `renovate` package
+  brings hundreds of dependencies to audit and allow, the reason Q21 gives
+  for no licence-checker; Q38 names the test's checks and no validator.
+- **A13. Node group and branch prefix.** **Assumption:** the Node rule
+  matches the dependency `node` in both the `nvm` manager (`.nvmrc`) and
+  the npm manager's `engines`, enabling the `engines` update explicitly if
+  Renovate's defaults skip it, and the gate test checks both are covered;
+  `branchPrefix` stays Renovate's default `renovate/`, which the test pins.
+  Reason: Q36 groups `.nvmrc` with `engines.node` but not how; the
+  **Pull-request check** accepts only `renovate/*` branches (01, Q37).

@@ -29,6 +29,12 @@ through its existing rules, and gains: the Node rule covers both the `nvm`
 manager and `engines.node`; lockfile maintenance is enabled; the
 vulnerability-alert title carries no suffix.
 
+## Between 10 and this ticket
+
+`10-renovate-config.md` ends green with the Renovate gate test active
+(design log, Implementation Results, D4). This ticket adds groups the
+existing test then checks; it starts no gate.
+
 ## Acceptance criteria
 
 - [ ] The three groups' messages and titles pass the existing message and

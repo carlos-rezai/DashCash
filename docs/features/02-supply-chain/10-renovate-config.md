@@ -46,6 +46,13 @@ Then, by hand, after the feature is merged (not a criterion): the human
 installs the Renovate GitHub App on the repository; because
 `renovate.json` is on `main`, Renovate skips its onboarding PR.
 
+## Between this ticket and 11
+
+This ticket ends with `npm run verify` and CI green (design log,
+Implementation Results, D4). The Renovate gate test checks only what
+`renovate.json` holds, so the two missing groups fail nothing, and Renovate
+itself is installed only after the merge.
+
 ## Acceptance criteria
 
 - [ ] Every commit message is fixed text `chore: [supply-chain] …` and

@@ -34,6 +34,12 @@ it:
 The entry's behaviour is tested by running it with `node` on temporary
 message files, a fresh temporary folder per test.
 
+## Between this ticket and 13
+
+This ticket ends with `npm run verify` and CI green (design log,
+Implementation Results, D4). Nothing runs the entry yet: the hook file,
+`prepare` and the hook's gate test arrive in `13-commit-msg-hook.md`.
+
 ## Acceptance criteria
 
 - [ ] The core's tests cover comment lines, the scissors line and what

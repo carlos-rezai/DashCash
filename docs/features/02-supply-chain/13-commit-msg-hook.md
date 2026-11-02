@@ -36,6 +36,13 @@ This ticket is the approval to create exactly `.githooks/commit-msg` and
 `gates/commitMsgHook/commitMsgHook.test.ts`, to add the `prepare` script
 to `package.json`, and to add the line to `docs/conventions.md`.
 
+## Between 12 and this ticket
+
+`12-commit-message-check.md` ends green with the entry in place but not
+run by anything (design log, Implementation Results, D4). This ticket
+switches the **Commit-msg hook** on through `prepare` and adds its gate
+test.
+
 ## Acceptance criteria
 
 - [ ] Driven with `sh` from the repository root, the hook exits 0 for a

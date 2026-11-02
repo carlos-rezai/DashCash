@@ -627,3 +627,6 @@ answers named; those answers stay as they were written.
   the date it was added, recorded as its `added` date; the **Audit** fails
   on a longer one. The exception for `GHSA-g3hv-75wg-m249` is added on the
   day of building and expires 90 days later (ticket 05).
+- **D3. Renovate's release age is 14 days** (supersedes
+  `minimumReleaseAge: "3 days"` in Q37). It matches the rule feature 01
+  uses for every pinned version (ticket 10).

@@ -431,7 +431,7 @@ and ends through `runGate` (`scripts/reportViolations/`).
 
 - `extends`: `config:recommended`, `helpers:pinGitHubActionDigests`,
   `:disableDependencyDashboard`. `semanticCommits: "disabled"`, no
-  `commitBody`, no automerge, `minimumReleaseAge: "3 days"`, schedule
+  `commitBody`, no automerge, `minimumReleaseAge: "14 days"` (D3), schedule
   `before 6am on monday`, timezone `Europe/Berlin`.
 - One rule per group (Q36), each with its fixed `commitMessage` and
   `prTitle`; lockfile maintenance enabled with its fixed pair; vulnerability

@@ -1,5 +1,5 @@
 ---
-status: in-progress
+status: done
 ---
 # License allowlist
 
@@ -49,21 +49,21 @@ this ticket adds the script and the wiring test expects it absent, and
 
 ## Acceptance criteria
 
-- [ ] The core's tests, on invented lockfiles, cover an allowed, a
+- [x] The core's tests, on invented lockfiles, cover an allowed, a
       disallowed and a missing licence, a non-string and an empty licence,
       nested `node_modules` entries checked, and the root,
       workspace-member and link entries skipped.
-- [ ] A malformed allowlist (not an array, empty, a non-string or an empty
+- [x] A malformed allowlist (not an array, empty, a non-string or an empty
       entry) is one violation naming the allowlist file.
-- [ ] Each violation names `<name>@<version>` and its licence
+- [x] Each violation names `<name>@<version>` and its licence
       (`licence "<value>" is not on the licence allowlist`), or "has no
       licence".
-- [ ] An allowed licence no package uses does not fail.
-- [ ] `npm run check:licenses` passes on today's lockfile without
+- [x] An allowed licence no package uses does not fail.
+- [x] `npm run check:licenses` passes on today's lockfile without
       `node_modules` and without the network.
-- [ ] `verify` runs `check:licenses` right after `check:docs-drift`; the
+- [x] `verify` runs `check:licenses` right after `check:docs-drift`; the
       wiring test expects it there and fails when it moves or goes.
-- [ ] `npm run verify` and CI's `verify` job are green.
+- [x] `npm run verify` and CI's `verify` job are green.
 
 ## Blocked by
 

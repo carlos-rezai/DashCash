@@ -1,5 +1,5 @@
 ---
-status: in-progress
+status: done
 ---
 # Pull-request workflow
 
@@ -30,23 +30,23 @@ tests named above.
 
 ## Acceptance criteria
 
-- [ ] `ci.yml` is `name: CI`, triggered only by `push` to `feat/**` and
+- [x] `ci.yml` is `name: CI`, triggered only by `push` to `feat/**` and
       `refactor/**`, with one job `verify` running `npm run verify`.
-- [ ] `pull-request.yml` is `name: Pull request`, triggered only by
+- [x] `pull-request.yml` is `name: Pull request`, triggered only by
       `pull_request` into `main`; its job `pull-request` runs checkout with
       full history, setup-node from `.nvmrc` with the npm cache, `npm ci`,
       `npm run verify:full`, then `npm run check:pr` with `PR_TITLE` from
       the event, as in 01.
-- [ ] No job in any workflow has an `if:`.
-- [ ] The wiring test fails when the pull-request workflow gains another
+- [x] No job in any workflow has an `if:`.
+- [x] The wiring test fails when the pull-request workflow gains another
       trigger, and when the push workflow gains a trigger other than `push`
       to the two branch patterns.
-- [ ] The **Ruleset** test reads the job from the pull-request workflow and
+- [x] The **Ruleset** test reads the job from the pull-request workflow and
       fails when a second workflow has a job reporting as `pull-request`.
-- [ ] The **Ruleset** file is unchanged and still requires `pull-request`.
+- [x] The **Ruleset** file is unchanged and still requires `pull-request`.
 - [ ] A push of the branch runs one workflow, `CI`, with one job `verify`,
       green; no `pull-request` job appears in the push run.
-- [ ] `npm run verify` is green.
+- [x] `npm run verify` is green.
 
 ## Blocked by
 

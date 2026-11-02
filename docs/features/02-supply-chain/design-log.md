@@ -588,3 +588,24 @@ Alternatives:
   `branchPrefix` stays Renovate's default `renovate/`, which the test pins.
   Reason: Q36 groups `.nvmrc` with `engines.node` but not how; the
   **Pull-request check** accepts only `renovate/*` branches (01, Q37).
+
+### Assumptions from prd-to-issues
+
+- **A14. The human's ticket last.** **Assumption:** the **Home settings**
+  guard is ticket 14, the last, although nothing blocks it, and it carries
+  the plan's handover note. Reason: the issue-loop grabs the
+  lowest-numbered open ticket and stops at one that binds the project's
+  Claude folder, so any lower number would stop the loop before the
+  tickets agents can build; the skill orders by blockers only and leaves
+  this open.
+- **A15. Four phases split in two.** **Assumption:** plan Phases 3, 4, 8
+  and 9 each become two tickets (licence ids, then SPDX expressions; the
+  audit with exception validation, then the stale, duplicate and non-GHSA
+  rules; Renovate's base and two groups, then the other three groups; the
+  commit-message script, then the hook and its installation). Between the
+  two, the first ticket's gate fails closed on what it does not yet judge:
+  an SPDX expression is compared whole and fails, an advisory without a
+  GHSA id fails as unexcepted. Reason: each issue-loop step has a 100k
+  budget and the skill prefers thin slices; no source sets the interim
+  behaviour, and 01's rule that a gate must not pass what it cannot judge
+  (01, A1) decides it.

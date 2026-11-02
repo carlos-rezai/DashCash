@@ -38,7 +38,7 @@
 | --- | --- | --- |
 | **Advisory** (new) | A published vulnerability report for an npm package, identified by its GHSA id. | CVE, vuln, alert |
 | **Audit** (new) | The gate that fails on every advisory of any severity in the dependency tree that has no valid audit exception. | Security scan, npm check |
-| **Audit exception** (new) | An entry in the audit exceptions file in `quality/` that accepts one advisory, with a reason and an expiry date. | Ignore, waiver, suppression |
+| **Audit exception** (new) | An entry in the audit exceptions file in `quality/` that accepts one advisory, with a reason, the date it was added and an expiry date at most 90 days later. | Ignore, waiver, suppression |
 | **Expiry date** (new) | The last day an audit exception is valid; from the day after, the audit fails. | Deadline, TTL |
 | **License allowlist** (new) | The SPDX licence ids in `quality/` that every package in the lockfile must carry. | Whitelist, licence policy |
 | **Secret scan** (new) | gitleaks in CI over the pushed commits, the pull request's commits or, in the daily run, the whole history. | Leak check, credential scan |

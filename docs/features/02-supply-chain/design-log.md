@@ -622,3 +622,8 @@ answers named; those answers stay as they were written.
   `chore: [supply-chain] <description>`. The **Pull-request check**
   accepts this form on `renovate/*` and rejects the old bracket-less
   `chore: <description>` (ticket 10).
+- **D2. A 90-day limit on audit exceptions** (supersedes Q18 and the
+  expiry in Q19). An **Audit exception** expires at most 90 days after
+  the date it was added, recorded as its `added` date; the **Audit** fails
+  on a longer one. The exception for `GHSA-g3hv-75wg-m249` is added on the
+  day of building and expires 90 days later (ticket 05).

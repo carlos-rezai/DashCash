@@ -113,8 +113,9 @@ GitHub App, and start the **Daily run** once by hand.
     an **Expiry date**, so that each accepted risk is explained and comes
     back for review.
 16. As the repository owner, I want an exception valid through its
-    **Expiry date** and the **Audit** failing from the day after, so that no
-    exception lasts forever.
+    **Expiry date**, at most 90 days after the date it was added, and the
+    **Audit** failing from the day after or on a longer one, so that no
+    exception lasts forever (design log, Implementation Results, D2).
 17. As the repository owner, I want an exception whose **Advisory** the
     audit no longer reports to fail the **Audit**, so that the exceptions
     file stays a list of live risks for the monthly review.
@@ -138,7 +139,8 @@ GitHub App, and start the **Daily run** once by hand.
     test runs on a fixed date.
 24. As the developer, I want the exceptions file to land with the one
     **Advisory** open today (`GHSA-g3hv-75wg-m249`, minimatch through the
-    lint tooling, expiring `2027-02-02`) and with any further advisory open
+    lint tooling, added on the day of building and expiring 90 days later)
+    and with any further advisory open
     on the day of building, so that the new gate starts green instead of
     blocking every branch.
 25. As the developer, I want the **Audit** last in **Verify**, so that the
@@ -326,9 +328,12 @@ and ends through `runGate` (`scripts/reportViolations/`).
     object in a vulnerability's `via` list; its id is the last segment of
     its `url`. String entries in `via` carry no advisory. The packages an
     advisory reaches are every vulnerability whose `via` holds it.
-  - Exceptions: a JSON array of `{ advisory, reason, expires }`.
+  - Exceptions: a JSON array of `{ advisory, reason, added, expires }`;
+    `expires` at most 90 days after `added` (D2).
   - Fails on: an advisory with no exception; an expired exception
-    (`expires` before `today`); an exception whose advisory the report does
+    (`expires` before `today`); an exception expiring more than 90 days
+    after its `added` date, before it, or added after `today`; an exception
+    whose advisory the report does
     not list; two exceptions with one advisory; a malformed file or entry;
     a report that is not a version-2 report; an advisory whose `url` holds
     no GHSA id.
@@ -374,7 +379,8 @@ and ends through `runGate` (`scripts/reportViolations/`).
 **Gate files under `quality/`**
 
 - The audit exceptions file: `[{ "advisory": "GHSA-g3hv-75wg-m249",
-  "reason": "…", "expires": "2027-02-02" }]` plus any advisory open on the
+  "reason": "…", "added": "<day of building>", "expires": "<90 days
+  later>" }]` plus any advisory open on the
   day of building, each with a reason of the same kind (Q19).
 - The licence allowlist: the eight SPDX ids of Q23, as a JSON array.
 
@@ -505,8 +511,7 @@ and ends through `runGate` (`scripts/reportViolations/`).
   signing (20).
 - `npm audit signatures`, workflow `permissions:` blocks and GitHub's
   repository-level SHA-pinning policy.
-- A maximum length for an **Expiry date** (Q18); per-package licence
-  exceptions (Q24).
+- Per-package licence exceptions (Q24).
 - A Renovate config validator or the `renovate` package (A12).
 - The **Ticket check** or **Branch range** in the **Commit-msg hook** (Q40);
   a hook manager.

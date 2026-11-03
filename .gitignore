@@ -15,6 +15,9 @@ test-results/
 .stryker-tmp/
 reports/
 
+# CI artifacts
+results.sarif
+
 # Secrets
 .env
 .env.*

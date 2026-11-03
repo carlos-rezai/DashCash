@@ -231,7 +231,7 @@ GitHub App, and start the **Daily run** once by hand.
     their version comments current, so that pinning does not freeze the
     actions.
 51. As the repository owner, I want no dependency dashboard, no automerge,
-    a three-day minimum release age and a weekly schedule (before 6am on
+    a 14-day minimum release age and a weekly schedule (before 6am on
     Monday, Europe/Berlin), so that no GitHub issue is opened, I merge every
     PR, a compromised release has time to be pulled, and PRs stay few.
 52. As the developer, I want a gate test that fails when any Renovate

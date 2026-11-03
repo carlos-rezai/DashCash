@@ -72,7 +72,7 @@ itself is installed only after the merge.
       of story 51 (presets, `semanticCommits`, a `commitBody`, automerge,
       release age, schedule, timezone, branch prefix).
 - [x] The gate test passes on `renovate.json`.
-- [ ] No dependency is added.
+- [x] No dependency is added.
 - [x] `npm run verify` and CI's `verify` job are green.
 
 ## Blocked by

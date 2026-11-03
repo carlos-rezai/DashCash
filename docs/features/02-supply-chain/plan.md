@@ -286,7 +286,7 @@ The script keeps its name and is still run only by the human.
 
 `renovate.json` at the root: `config:recommended`,
 `helpers:pinGitHubActionDigests` and `:disableDependencyDashboard`;
-`semanticCommits` disabled, no `commitBody`, no automerge, a three-day
+`semanticCommits` disabled, no `commitBody`, no automerge, a 14-day
 minimum release age, `before 6am on monday` in `Europe/Berlin`, the default
 `renovate/` branch prefix; one group each for npm packages, GitHub
 Actions, Node (`.nvmrc` and `engines.node` together), lockfile maintenance
@@ -302,7 +302,7 @@ validator.
 
 - [ ] Every commit message is fixed text `chore: [supply-chain] …` and
       passes the commitlint config through its Node API.
-- [ ] Every PR title is fixed text `chore: …` and passes the
+- [ ] Every PR title is fixed text `chore: [supply-chain] …` and passes the
       **Pull-request check** core on a `renovate/*` branch.
 - [ ] The gate test fails for a templated message, a message naming
       another feature, a title the check rejects, a Node rule covering

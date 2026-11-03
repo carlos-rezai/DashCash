@@ -265,6 +265,21 @@ describe('findAuditViolations', () => {
       ]);
     });
 
+    it('reports an advisory listed twice in one via once, with its package once', () => {
+      const violations = findAuditViolations(
+        report({
+          'glob-walker': vulnerability('glob-walker', 'moderate', [
+            advisory(GLOB_ADVISORY),
+            advisory(GLOB_ADVISORY),
+          ]),
+        }),
+        [],
+        TODAY,
+      );
+
+      expect(violations).toEqual([unexcepted(GLOB_ADVISORY, 'glob-walker')]);
+    });
+
     it('lifts an advisory reaching several packages with one exception', () => {
       const violations = findAuditViolations(
         report({
@@ -303,7 +318,7 @@ describe('findAuditViolations', () => {
           [exception({ added: '2026-10-01', expires: '2026-11-30' })],
           '2026-12-01',
         ),
-      ).toContainEqual(expired(GHSA_GLOB, '2026-11-30'));
+      ).toEqual([expired(GHSA_GLOB, '2026-11-30')]);
     });
 
     it('reports an expired exception across a year end', () => {
@@ -313,7 +328,7 @@ describe('findAuditViolations', () => {
           [exception({ added: '2026-12-01', expires: '2026-12-31' })],
           '2027-01-01',
         ),
-      ).toContainEqual(expired(GHSA_GLOB, '2026-12-31'));
+      ).toEqual([expired(GHSA_GLOB, '2026-12-31')]);
     });
   });
 
@@ -453,6 +468,16 @@ describe('findAuditViolations', () => {
         expect(onExceptionsFile(violations)).toEqual([malformed(1, field)]);
       },
     );
+
+    it('reports an entry that is not an object as one violation naming the entry', () => {
+      const violations = findAuditViolations(
+        globReport(),
+        [exception(), null],
+        TODAY,
+      );
+
+      expect(onExceptionsFile(violations)).toEqual([malformed(1, 'entry')]);
+    });
 
     it('ignores keys it does not know', () => {
       expect(

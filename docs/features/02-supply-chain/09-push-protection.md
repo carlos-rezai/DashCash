@@ -29,7 +29,7 @@ runs the apply script again so that push protection is switched on.
       create and the update path.
 - [x] Every other planned request is unchanged; the existing tests pass
       unchanged.
-- [ ] `npm run verify` and CI's `verify` job are green.
+- [x] `npm run verify` and CI's `verify` job are green.
 
 ## Blocked by
 

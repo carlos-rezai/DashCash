@@ -507,7 +507,7 @@ and ends through `runGate` (`scripts/reportViolations/`).
 
 ## Out of Scope
 
-- Flaky quarantine and its daily expiry check (03); SBOM and release
+- Flaky quarantine and its daily expiry check (04); SBOM and release
   signing (20).
 - `npm audit signatures`, workflow `permissions:` blocks and GitHub's
   repository-level SHA-pinning policy.

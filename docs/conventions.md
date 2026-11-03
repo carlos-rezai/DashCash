@@ -66,6 +66,7 @@ docs: [csv-import] add prd
 ```
 .claude/                   skills, agents (issue-loop subagents)
 .github/                   workflows, CODEOWNERS, PR template
+.githooks/                 local git hooks
 apps/desktop/src/
   main/                    Electron main: db/, ipc/, updater/, test-support/
   preload/                 exposes the contract, nothing else

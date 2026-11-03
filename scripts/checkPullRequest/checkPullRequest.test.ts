@@ -27,7 +27,8 @@ function ticket(status: string, title: string): string {
 
 const FEATURE_TITLE = 'feat: [sample] add sample';
 const REFACTOR_TITLE = 'refactor: [sample] tidy the sample';
-const RENOVATE_TITLE = 'chore: update dependency sample-tool to v2';
+const RENOVATE_TITLE =
+  'chore: [supply-chain] update dependency sample-tool to v2';
 
 // A Feature folder whose Tickets are all done, with planning files beside
 // them, and a refactor plan whose Refactor steps are all ticked. The folder
@@ -202,8 +203,9 @@ describe('checkPullRequest', () => {
 
     it.each([
       RENOVATE_TITLE,
-      'chore: pin dependencies',
-      `chore: update dependency ${'a'.repeat(32)}`,
+      'chore: [supply-chain] pin dependencies',
+      'chore: [supply-chain] update npm dependencies',
+      `chore: [supply-chain] update dependency ${'a'.repeat(32)}`,
     ])('passes the title %s', async (title) => {
       expect(await check(BRANCH, title)).toEqual([]);
     });
@@ -213,32 +215,46 @@ describe('checkPullRequest', () => {
     });
 
     it.each([
-      'fix: update dependency sample-tool to v2',
-      'feat: update dependency sample-tool to v2',
-      'ci: update dependency sample-tool to v2',
+      'chore: update dependency sample-tool to v2',
+      'chore: pin dependencies',
+    ])('fails the bracket-less title %s', async (title) => {
+      expect(await check(BRANCH, title)).not.toEqual([]);
+    });
+
+    it.each([
+      'chore: [sample] update dependency sample-tool to v2',
+      'chore: [quality-gates] update dependency sample-tool to v2',
+      'chore: [supply-chain-x] update dependency sample-tool to v2',
+      'chore: [renovate] update dependency sample-tool to v2',
+    ])('fails the title %s, which names another feature', async (title) => {
+      expect(await check(BRANCH, title)).not.toEqual([]);
+    });
+
+    it.each([
+      'chore: [supply-chain] 01 update dependency sample-tool to v2',
+      'chore: 01 update dependency sample-tool to v2',
+    ])('fails the title %s, which carries a number', async (title) => {
+      expect(await check(BRANCH, title)).not.toEqual([]);
+    });
+
+    it.each([
+      'fix: [supply-chain] update dependency sample-tool to v2',
+      'feat: [supply-chain] update dependency sample-tool to v2',
+      'ci: [supply-chain] update dependency sample-tool to v2',
+      'test: [supply-chain] update dependency sample-tool to v2, RED',
       'chore(deps): update dependency sample-tool to v2',
+      '[supply-chain] update dependency sample-tool to v2',
       'update dependency sample-tool to v2',
     ])('fails the title %s, which is no chore: title', async (title) => {
       expect(await check(BRANCH, title)).not.toEqual([]);
     });
 
     it.each([
-      'chore: [sample] update dependency sample-tool to v2',
-      'chore: [sample] 01 update dependency sample-tool to v2',
-      'chore: 01 update dependency sample-tool to v2',
-    ])(
-      'fails the title %s, which carries a feature or a number',
-      async (title) => {
-        expect(await check(BRANCH, title)).not.toEqual([]);
-      },
-    );
-
-    it.each([
-      'chore: Update dependency sample-tool to v2',
-      'chore: update dependency sample-tool to v2.',
-      `chore: update dependency ${'a'.repeat(33)}`,
-      'chore: update dependency @types/node to v24',
-      'chore: update dependency sample-tool, closes #12',
+      'chore: [supply-chain] Update dependency sample-tool to v2',
+      'chore: [supply-chain] update dependency sample-tool to v2.',
+      `chore: [supply-chain] update dependency ${'a'.repeat(33)}`,
+      'chore: [supply-chain] update dependency @types/node to v24',
+      'chore: [supply-chain] update dependency sample-tool, closes #12',
     ])(
       'fails the title %s, whose description breaks a description rule',
       async (title) => {

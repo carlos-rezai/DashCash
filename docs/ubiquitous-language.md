@@ -30,7 +30,30 @@
 | **Fixture** (new) | Invented test data in `fixtures/`; the only place a CSV may be committed. | Sample data, test dump, real export |
 | **Docs drift** (new) | A path named in `README.md`, `CLAUDE.md` or `docs/*.md` that no longer exists in the repository. | Dead link, stale doc |
 | **Ruleset** (new) | The GitHub rules on `main`, kept as code in `.github/rulesets/main.json`: pull request required, the `pull-request` check green and up to date, merge commits only. | Branch protection settings |
-| **Required check** (new) | The CI job the ruleset waits for before a merge: `pull-request`. | Status, build badge |
+| **Required check** (updated) | The CI job the ruleset waits for before a merge: `pull-request`, the one job of the pull-request workflow, which runs on pull requests only. | Status, build badge |
+
+## Supply chain
+
+| Term | Definition | Aliases to avoid |
+| --- | --- | --- |
+| **Advisory** (new) | A published vulnerability report for an npm package, identified by its GHSA id. | CVE, vuln, alert |
+| **Audit** (new) | The gate that fails on every advisory of any severity in the dependency tree that has no valid audit exception. | Security scan, npm check |
+| **Audit exception** (new) | An entry in the audit exceptions file in `quality/` that accepts one advisory, with a reason, the date it was added and an expiry date at most 90 days later. | Ignore, waiver, suppression |
+| **Expiry date** (new) | The last day an audit exception is valid; from the day after, the audit fails. | Deadline, TTL |
+| **License allowlist** (new) | The SPDX licence ids in `quality/` that every package in the lockfile must carry. | Whitelist, licence policy |
+| **Secret scan** (new) | gitleaks in CI over the pushed commits, the pull request's commits or, in the daily run, the whole history. | Leak check, credential scan |
+| **Push protection** (new) | GitHub's repository setting that refuses a push containing a known secret pattern. | Secret blocking |
+| **Pinned action** (new) | A workflow `uses:` that names a full commit SHA, with its release as a trailing comment. | Locked action, tagged action |
+| **Daily run** (new) | The scheduled workflow on `main` that runs the audit and a full-history secret scan. | Nightly, cron job |
+| **Renovate PR** (new) | A pull request from a `renovate/*` branch that updates dependencies, its commits naming the feature `supply-chain`. | Bot PR, dependency PR |
+
+## Local feedback and agent guards
+
+| Term | Definition | Aliases to avoid |
+| --- | --- | --- |
+| **Commit-msg hook** (new) | The local git hook that lints the message being committed with the commitlint config; feedback before the push, not a gate. | Pre-commit hook, local gate |
+| **Claude folder guard** (new) | The Claude Code hook that refuses an agent's change under the project's `.claude/` or to the home settings. | Edit blocker, sandbox |
+| **Home settings** (new) | The user-level Claude Code settings file `~/.claude/settings.json`. | Global config, user config |
 
 ## Code structure
 
@@ -50,6 +73,10 @@
 - **Verify** runs every **Gate** except end-to-end tests; **Verify full** runs **Verify** plus build and end-to-end tests.
 - The **Ruleset** names exactly one **Required check**, and that check runs **Verify full** and the **Pull-request check**.
 - A **Layer rule** constrains **Shipping code**; tests and stories may import `test-support/`.
+- An **Advisory** fails the **Audit** unless exactly one **Audit exception** names it and its **Expiry date** has not passed; an **Audit exception** whose **Advisory** is no longer reported fails it too.
+- The **Daily run** runs the **Audit** and a **Secret scan**; the **Required check** runs **Verify full**, which includes the **Audit**, and a **Secret scan**.
+- A **Renovate PR** passes the same **Required check** as a feature pull request; its workflows use only **Pinned actions**.
+- The **Commit-msg hook** checks one message; the commit gate and the **Ticket check** check the whole **Branch range** in CI.
 
 ## Example dialogue
 
@@ -59,6 +86,10 @@
 > **Domain expert:** "**Verify** passes, because mid-feature that is normal. The **Pull-request check** fails on the pull request into `main`, and the **Ruleset** blocks the merge until the **Required check** is green."
 > **Dev:** "What about `docs: [csv-import] add plan`? It has no number."
 > **Domain expert:** "That is a **Planning commit**: it needs only the **Feature folder** to exist. Only **Ticket commits** and `refactor:` commits must carry a number."
+> **Dev:** "Overnight a new **Advisory** came out for a lint plugin. Why is my branch red although I changed nothing?"
+> **Domain expert:** "The **Daily run** and **Verify** both run the **Audit**. Either a **Renovate PR** brings the fix, or you ask for an **Audit exception** with a reason and an **Expiry date**; the day after that date the **Audit** fails again."
+> **Dev:** "And if I mistype a **Commit header**? Does the **Commit-msg hook** stop the push?"
+> **Domain expert:** "It stops the commit, before any push. It is feedback, not a **Gate**: the commit gate in CI still decides, over the whole **Branch range**."
 
 ## Flagged ambiguities
 
@@ -68,3 +99,7 @@
 - "status" means both **Ticket status** (`open`, `in-progress`, `done`) and **Feature status** (`planned`, `in-progress`, `done`, `refactored`). Name which one.
 - "issue" appears in skill names (`prd-to-issues`, `issue-loop`) but the files are **Tickets**; GitHub issues are not used. Say **Ticket**.
 - "check" is used for a **Gate**, a CI job and a GitHub status. A **Gate** is the rule; the **Required check** is the CI job the **Ruleset** waits for.
+- "hook" (new) means a git hook (the **Commit-msg hook**) and a Claude Code hook (the **Claude folder guard**, the dangerous-git hook). Name which one; neither is a **Gate**, because CI decides.
+- "exception" (new) means an **Audit exception** and a thrown error. Say **Audit exception** for the file entry.
+- "allowlist" (new) is only the **License allowlist**; accepted advisories are **Audit exceptions**, not an allowlist.
+- "workflow" (new) means a GitHub Actions file and the planning-and-build workflow of `docs/conventions.md`. Say "CI workflow" for the file, or name it: the push workflow, the pull-request workflow, the **Daily run**.

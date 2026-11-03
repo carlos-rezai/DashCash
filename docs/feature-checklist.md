@@ -7,12 +7,12 @@ Status: `planned` → `in-progress` (feature branch open) → `done` (merged int
 | No | Feature | Contents | Status |
 | --- | --- | --- | --- |
 | 01 | quality-gates | Workspace, pinned Node, `.npmrc`, TypeScript strict, ESLint, Prettier, Vitest, `npm run verify`, CI on push and PR, branch protection, commitlint (with the `@` and `#` rule), ticket check, data-file check, dependency-cruiser, CODEOWNERS, docs-drift check | refactored |
-| 02 | supply-chain | Audit with an exceptions file and expiry, license allowlist, gitleaks and push protection, Renovate, actions pinned by SHA, daily scheduled run | planned |
-| 03 | desktop-shell | Electron main and preload with secure defaults and CSP, typed IPC bridge, SQLite and migrations, data folder, single instance, dev-only debug port, Playwright harness with the first end-to-end test, flaky quarantine | planned |
-| 04 | design-system | Theme and tokens, primitives, components, Storybook with story tests, accessibility check and MCP, every component has a story check, coverage on changed lines, reviewer gets the Storybook MCP tools | planned |
-| 05 | app-shell | AppShell, Sidebar with collapse, PageLayout, routing with persisted route, empty pages, SnackbarHost, splash, LoadingOverlay, reviewer gets the DevTools MCP tools | planned |
-| 06 | accounts | Five account types, anchor, AccountList, AccountCard, AccountFormModal, delete | planned |
-| 07 | mutation-testing | StrykerJS on `packages/domain`, informative first, then a break threshold that only goes up | planned |
+| 02 | supply-chain | Audit with an exceptions file and expiry, license allowlist, gitleaks and push protection, Renovate, actions pinned by SHA, daily scheduled run, the pull-request job in its own workflow, local commit-msg hook, Claude folder guard for `~/.claude/settings.json` | done |
+| 03 | mutation-testing | StrykerJS on `packages/domain` and `scripts/`, informative first, then a break threshold that only goes up | planned |
+| 04 | desktop-shell | Electron main and preload with secure defaults and CSP, typed IPC bridge, SQLite and migrations, data folder, single instance, dev-only debug port, Playwright harness with the first end-to-end test, flaky quarantine | planned |
+| 05 | design-system | Theme and tokens, primitives, components, Storybook with story tests, accessibility check and MCP, every component has a story check, coverage on changed lines, reviewer gets the Storybook MCP tools | planned |
+| 06 | app-shell | AppShell, Sidebar with collapse, PageLayout, routing with persisted route, empty pages, SnackbarHost, splash, LoadingOverlay, reviewer gets the DevTools MCP tools | planned |
+| 07 | accounts | Five account types, anchor, AccountList, AccountCard, AccountFormModal, delete | planned |
 | 08 | categories | Kinds, 40 category colours, built-in Cash category, CategoryList, create, rename, delete-as-merge | planned |
 | 09 | rules | Merchant normalisation, exact and contains rules, PayPal and Klarna purpose matching, RuleList | planned |
 | 10 | csv-import | Import wizard steps 1, 2 and 5: file, bank profile detection, column mapping, preview, duplicates, balance check, summary, commit | planned |

@@ -76,7 +76,9 @@ Rules:
 - Write tests against the planned public interface, even if the
   module doesn't exist yet
 - Each test should fail for the right reason (missing module,
-  missing export, or assertion failure — not a syntax error)
+  missing export, or assertion failure — not a syntax error).
+  A failure thrown before the assertion is reached (in the test's
+  setup, or a tool refusing to run) is never the right reason.
 - Run the full test suite after writing all tests and confirm
   every new test is RED
 - Do not write any implementation to make tests pass
@@ -98,4 +100,5 @@ After all tests are written and confirmed failing:
 [ ] Test would survive internal refactor
 [ ] No implementation code written
 [ ] Every new test is confirmed RED before stopping
+[ ] Every new test fails at its assertion, not in its setup
 ```

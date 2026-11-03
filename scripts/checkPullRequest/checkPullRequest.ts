@@ -20,10 +20,9 @@ import {
 import { listHeadPaths, readHeadFile } from '../runGit/runGit.ts';
 
 const RENOVATE_BRANCH = /^renovate\/.+$/;
-const RENOVATE_TITLE = /^chore: (.*)$/;
-// A stand-in feature, so that a Renovate description meets the description
-// rules of the commitlint config without a feature of its own.
-const STAND_IN_FEATURE = 'renovate';
+// The feature every Renovate pull request names; its title is
+// `chore: [supply-chain] <description>`.
+const RENOVATE_FEATURE = 'supply-chain';
 
 export type PullRequestInput = {
   branch: string | undefined;
@@ -68,22 +67,29 @@ async function checkRenovateTitle(
   title: string,
   lintTitle: PullRequestInput['lintTitle'],
 ): Promise<Violation[]> {
-  const description = RENOVATE_TITLE.exec(title)?.[1];
-  if (description === undefined) {
-    return [
-      { subject: title, reason: 'a renovate title must be "chore: ..."' },
-    ];
+  const violations = await lintTitle(title);
+  const header = parseCommitHeader(title);
+  if (header === undefined) {
+    return violations.length > 0
+      ? violations
+      : [{ subject: title, reason: 'the title does not follow the format' }];
   }
-  if (/^(?:\[|\d)/.test(description)) {
-    return [
-      {
-        subject: title,
-        reason: 'a renovate title carries no feature and no number',
-      },
-    ];
+  if (header.type !== 'chore' || header.red) {
+    violations.push({ subject: title, reason: 'a renovate title is chore:' });
   }
-  const found = await lintTitle(`chore: [${STAND_IN_FEATURE}] ${description}`);
-  return found.map(({ reason }) => ({ subject: title, reason }));
+  if (header.feature !== RENOVATE_FEATURE) {
+    violations.push({
+      subject: title,
+      reason: `a renovate title names the feature ${RENOVATE_FEATURE}`,
+    });
+  }
+  if (header.ticket !== undefined) {
+    violations.push({
+      subject: title,
+      reason: 'a renovate title carries no number',
+    });
+  }
+  return violations;
 }
 
 async function checkPlainTitle(

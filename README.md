@@ -32,7 +32,7 @@ Every change goes through the same gate, whether I wrote it or an AI agent did. 
 | Formatting | Prettier (`--check`) | CI | 01 |
 | Linting, zero warnings | ESLint (`--max-warnings 0`) | CI | 01 |
 | Strict types | TypeScript `strict`, `noUncheckedIndexedAccess` | CI | 01 |
-| Money is never a plain number | `Cents` branded type + lint rule | CI | 06 |
+| Money is never a plain number | `Cents` branded type + lint rule | CI | 07 |
 | Architecture layers | dependency-cruiser | CI | 01 |
 | Unit tests | Vitest | CI | 01 |
 | Dependency audit, all severities | `npm audit` + exceptions file with expiry | CI, daily | 02 |
@@ -42,16 +42,16 @@ Every change goes through the same gate, whether I wrote it or an AI agent did. 
 | No data files in git | script: no `*.db`, `*.sqlite`, `*.csv` outside `fixtures/` | CI | 01 |
 | Every commit follows the commit convention | commitlint | CI | 01 |
 | Commits name an existing ticket or refactor step; a PR into `main` needs all of them done | script | CI | 01 |
-| Component tests | Storybook stories as tests (interaction + accessibility) | CI | 04 |
-| Every component has a story | script | CI | 04 |
-| Coverage on changed lines | Vitest coverage | CI | 04 |
-| End-to-end tests | Playwright driving the Electron app | CI | 03 |
+| Component tests | Storybook stories as tests (interaction + accessibility) | CI | 05 |
+| Every component has a story | script | CI | 05 |
+| Coverage on changed lines | Vitest coverage | CI | 05 |
+| End-to-end tests | Playwright driving the Electron app | CI | 04 |
 | Visual regression | Playwright screenshots of Storybook | CI | 20 |
 | Release from CI only | tag → build once → draft release → publish | CI | 20 |
 | SBOM per release | `npm sbom` | release | 20 |
-| Flaky tests quarantined with expiry | quarantine file + expiry check | CI, daily | 03 |
-| License allowlist | license checker | CI | 02 |
-| Mutation testing | StrykerJS on the domain package | nightly, ratchet | 07 |
+| Flaky tests quarantined with expiry | quarantine file + expiry check | CI, daily | 04 |
+| License allowlist | script: lockfile licences against `quality/license-allowlist.json` | CI | 02 |
+| Mutation testing | StrykerJS on `packages/domain` and `scripts/` | nightly, ratchet | 03 |
 | Docs drift | paths named in docs must exist | CI | 01 |
 
 Each gate arrives with the feature in [docs/feature-checklist.md](docs/feature-checklist.md) that first needs it; the rollout rules are in [docs/quality-gates.md](docs/quality-gates.md).

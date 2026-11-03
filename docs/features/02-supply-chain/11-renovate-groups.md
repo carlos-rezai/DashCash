@@ -1,0 +1,67 @@
+---
+status: done
+---
+# Renovate groups
+
+## Parent PRD
+
+`prd.md`
+
+## What to build
+
+The remaining three Renovate groups (plan Phase 8; PRD "Renovate config";
+design log Q36, A13), in `renovate.json`, each with its fixed
+`commitMessage` and a `prTitle` of exactly the same text (one format,
+design log Implementation Results, D1):
+
+- Node: the dependency `node` in both the `nvm` manager (`.nvmrc`) and the
+  npm manager's `engines` (`engines.node`), in one group, so that both
+  files change in one PR; the `engines` update is enabled explicitly if
+  Renovate's defaults skip it, and this rule wins over the npm packages
+  group: `chore: [supply-chain] update node`.
+- Lockfile maintenance, enabled: `chore: [supply-chain] refresh the
+  lockfile`.
+- Vulnerability alerts: `chore: [supply-chain] fix vulnerable
+  dependencies`, with no `[SECURITY]` suffix.
+
+`gates/renovate/renovate.test.ts` checks the new messages and titles
+through its existing rules, and gains: the Node rule covers both the `nvm`
+manager and `engines.node`; lockfile maintenance is enabled; the
+vulnerability-alert title carries no suffix.
+
+## Between 10 and this ticket
+
+`10-renovate-config.md` ends green with the Renovate gate test active
+(design log, Implementation Results, D4). This ticket adds groups the
+existing test then checks; it starts no gate.
+
+## Acceptance criteria
+
+- [x] The three groups' messages and titles pass the existing message and
+      title checks of the gate test.
+- [x] The gate test fails for a Node rule covering only one of `.nvmrc`
+      and `engines.node`, for lockfile maintenance disabled, and for a
+      vulnerability-alert title with a suffix.
+- [x] No dependency is added.
+- [x] `npm run verify` and CI's `verify` job are green.
+
+## Blocked by
+
+- Blocked by `10-renovate-config.md`
+
+## User stories addressed
+
+- User stories 48, 49
+- User story 52 (the new groups)
+
+## Notes
+
+- The npm rule's `matchUpdateTypes` guards against Renovate applying it to
+  lockfile maintenance, which cannot be confirmed before Renovate's first
+  run.
+- The gate models a subset of Renovate's packageRules semantics; Renovate's first run after the merge is the real test. Check the first lockfile maintenance PR and the first Node update PR for the expected titles.
+- `matchesNpm` treats an empty `matchManagers: []` as not npm; the gate does not model how Renovate treats an empty matcher list.
+- Glob, regex and negated patterns in `matchManagers` (such as `"/^np/"` or `"!nvm"`) are not modelled; a rule matching npm that way escapes the order and lockfile checks.
+- A rule without `matchManagers` but narrowed to non-npm updates by another matcher (such as `matchDatasources`) counts as an npm rule: a false positive in the strict direction.
+- `packageRules` from the `extends` presets are not evaluated; they come before our rules, so the order check is not affected.
+- Lesson: a gate for a third-party tool's config should check our own decisions (titles, messages, release age, groups), not model the tool's semantics; the tool's first run checks those.

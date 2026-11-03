@@ -80,6 +80,28 @@ describe('planRulesetRequests', () => {
       );
     },
   );
+
+  it.each([
+    ['a create', []],
+    ['an update', [{ id: 42, name: 'main' }]],
+  ])(
+    'switches on secret scanning and push protection beside the merge settings alongside %s',
+    (_plan, existing) => {
+      expect(planRulesetRequests(RULESET, existing)).toContainEqual({
+        method: 'PATCH',
+        endpoint: 'repos/{owner}/{repo}',
+        body: expect.objectContaining({
+          allow_merge_commit: true,
+          allow_squash_merge: false,
+          allow_rebase_merge: false,
+          security_and_analysis: {
+            secret_scanning: { status: 'enabled' },
+            secret_scanning_push_protection: { status: 'enabled' },
+          },
+        }) as unknown,
+      });
+    },
+  );
 });
 
 describe('resolveEndpoint', () => {

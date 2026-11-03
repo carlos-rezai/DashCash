@@ -4,6 +4,8 @@ DashCash: local-only Electron app for personal finances (CSV import, account his
 
 @docs/conventions.md
 
+Read when relevant: `docs/quality-gates.md` before adding or changing a gate, `docs/feature-checklist.md` before starting a feature.
+
 ## Definition of done
 
 - `npm run verify` is green, and you report the result. For changes to a user flow: `npm run verify:full`.
@@ -56,3 +58,4 @@ Run tools only through these scripts or `node_modules/.bin`, never `npx`.
 
 - Commit to `main`, or commit `.env`, `*.db`, real CSVs or app data.
 - Publish, release or push tags.
+- Add a `Co-Authored-By` line, or any other trailer or body, to a commit message.

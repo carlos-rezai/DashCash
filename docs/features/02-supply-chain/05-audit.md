@@ -107,3 +107,9 @@ issue-loop stops and reports it.
 - User story 19 (malformed file and entries)
 - User story 21 (unexcepted and expired advisories)
 - User story 34 (the order in **Verify**)
+
+## Notes
+
+- The malformed(1, 'entry') expectation matches any malformed message for
+  entry 1, because the test helper only checks the word appears. Tighten the
+  helper to match the field exactly; for the refactor.

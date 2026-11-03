@@ -21,6 +21,24 @@
       "groupName": "github actions",
       "commitMessage": "chore: [supply-chain] update github actions",
       "prTitle": "chore: [supply-chain] update github actions"
+    },
+    {
+      "matchManagers": ["nvm", "npm"],
+      "matchDepNames": ["node"],
+      "enabled": true,
+      "groupName": "node",
+      "commitMessage": "chore: [supply-chain] update node",
+      "prTitle": "chore: [supply-chain] update node"
     }
-  ]
+  ],
+  "lockFileMaintenance": {
+    "enabled": true,
+    "commitMessage": "chore: [supply-chain] refresh the lockfile",
+    "prTitle": "chore: [supply-chain] refresh the lockfile"
+  },
+  "vulnerabilityAlerts": {
+    "commitMessage": "chore: [supply-chain] fix vulnerable dependencies",
+    "prTitle": "chore: [supply-chain] fix vulnerable dependencies",
+    "commitMessageSuffix": ""
+  }
 }

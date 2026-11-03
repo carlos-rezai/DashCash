@@ -37,12 +37,12 @@ existing test then checks; it starts no gate.
 
 ## Acceptance criteria
 
-- [ ] The three groups' messages and titles pass the existing message and
+- [x] The three groups' messages and titles pass the existing message and
       title checks of the gate test.
-- [ ] The gate test fails for a Node rule covering only one of `.nvmrc`
+- [x] The gate test fails for a Node rule covering only one of `.nvmrc`
       and `engines.node`, for lockfile maintenance disabled, and for a
       vulnerability-alert title with a suffix.
-- [ ] No dependency is added.
+- [x] No dependency is added.
 - [ ] `npm run verify` and CI's `verify` job are green.
 
 ## Blocked by

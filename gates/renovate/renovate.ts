@@ -22,6 +22,8 @@ const TIMEZONE = 'Europe/Berlin';
 const BRANCH_PREFIX = 'renovate/';
 const RENOVATE_BRANCH = 'renovate/sample';
 const SUBJECT = 'renovate.json';
+const NODE_DEP = 'node';
+const NODE_MANAGERS = ['nvm', 'npm'];
 
 function isSettings(value: unknown): value is Settings {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -81,6 +83,54 @@ function findSettingViolations(config: Settings): Violation[] {
   return violations;
 }
 
+function holds(value: unknown, item: string): boolean {
+  return Array.isArray(value) && value.includes(item);
+}
+
+// The Node rule covers the dependency node in both the nvm manager (.nvmrc)
+// and the npm manager's engines (engines.node): both managers, no dependency
+// type that would leave one of them out, and not disabled.
+function isNodeRule(rule: Settings): boolean {
+  return (
+    holds(rule['matchDepNames'], NODE_DEP) &&
+    NODE_MANAGERS.every((manager) => holds(rule['matchManagers'], manager)) &&
+    rule['matchDepTypes'] === undefined &&
+    rule['enabled'] !== false
+  );
+}
+
+function findGroupViolations(config: Settings): Violation[] {
+  const violations: Violation[] = [];
+  const fail = (reason: string) =>
+    violations.push({ subject: SUBJECT, reason });
+  const rules = Array.isArray(config['packageRules'])
+    ? config['packageRules'].filter(isSettings)
+    : [];
+  if (!rules.some(isNodeRule)) {
+    fail(
+      'a packageRule must cover the dependency node in both the nvm manager and the npm manager (engines.node)',
+    );
+  }
+  const lockfile = config['lockFileMaintenance'];
+  if (!isSettings(lockfile) || lockfile['enabled'] !== true) {
+    fail('lockFileMaintenance must be enabled');
+  }
+  const alerts = config['vulnerabilityAlerts'];
+  if (!isSettings(alerts)) {
+    fail('vulnerabilityAlerts must be set');
+  } else {
+    if (alerts['commitMessageSuffix'] !== '') {
+      fail('vulnerabilityAlerts must set commitMessageSuffix to ""');
+    }
+    for (const text of [alerts['commitMessage'], alerts['prTitle']]) {
+      if (typeof text === 'string' && /\[security\]/i.test(text)) {
+        fail('a vulnerability-alert title carries no [SECURITY] suffix');
+      }
+    }
+  }
+  return violations;
+}
+
 async function findMessageViolations(
   message: unknown,
   commitConfig: CommitConfig,
@@ -132,7 +182,10 @@ export async function findRenovateViolations(
   if (!isSettings(config)) {
     return [{ subject: SUBJECT, reason: 'the config must be an object' }];
   }
-  const violations = findSettingViolations(config);
+  const violations = [
+    ...findSettingViolations(config),
+    ...findGroupViolations(config),
+  ];
   for (const object of collectObjects(config)) {
     const { commitMessage, prTitle } = object;
     if (commitMessage !== undefined) {

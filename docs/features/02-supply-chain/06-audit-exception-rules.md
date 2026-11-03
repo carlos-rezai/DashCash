@@ -33,16 +33,16 @@ not duplicated, so `npm run check:audit` stays green.
 
 ## Acceptance criteria
 
-- [ ] The core's table tests, on invented reports and GHSA ids with fixed
+- [x] The core's table tests, on invented reports and GHSA ids with fixed
       dates, cover a stale exception, an exception both expired and stale
       (one violation, expired), two exceptions for one advisory (one
       violation naming the file and the id), and an advisory whose `url`
       holds no GHSA id (a violation of its own, which no exception
       lifts).
-- [ ] Each of these violations is one line, as in the PRD's "Violation
+- [x] Each of these violations is one line, as in the PRD's "Violation
       output" table.
-- [ ] Tests never run the entry or touch the network.
-- [ ] `npm run check:audit` still passes on the day of building.
+- [x] Tests never run the entry or touch the network.
+- [x] `npm run check:audit` still passes on the day of building.
 - [ ] `npm run verify` and CI's `verify` job are green.
 
 ## Blocked by

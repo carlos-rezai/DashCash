@@ -42,17 +42,31 @@ function readDate(value: unknown): number | undefined {
   return new Date(time).toISOString().startsWith(value) ? time : undefined;
 }
 
-// Every Advisory of the report once, with each package it reaches.
-function readAdvisories(vulnerabilities: Record<string, unknown>): Advisory[] {
+type ReadAdvisories = { advisories: Advisory[]; withoutId: Violation[] };
+
+// Every Advisory of the report once, with each package it reaches, and a
+// violation for every advisory object whose `url` does not end in a GHSA id.
+function readAdvisories(
+  vulnerabilities: Record<string, unknown>,
+): ReadAdvisories {
   const advisories = new Map<string, Advisory>();
+  const withoutId: Violation[] = [];
   for (const [name, vulnerability] of Object.entries(vulnerabilities)) {
     const via = isRecord(vulnerability) ? vulnerability['via'] : undefined;
     for (const entry of Array.isArray(via) ? (via as unknown[]) : []) {
       if (!isRecord(entry)) {
         continue;
       }
-      const url = String(entry['url']);
-      const id = url.slice(url.lastIndexOf('/') + 1);
+      const url = entry['url'];
+      const id =
+        typeof url === 'string' ? url.slice(url.lastIndexOf('/') + 1) : '';
+      if (!GHSA_ID.test(id)) {
+        withoutId.push({
+          subject: name,
+          reason: `${String(entry['severity'])} advisory "${String(entry['title'])}" has no GHSA id at the end of its url`,
+        });
+        continue;
+      }
       const known = advisories.get(id);
       if (known === undefined) {
         advisories.set(id, {
@@ -66,7 +80,7 @@ function readAdvisories(vulnerabilities: Record<string, unknown>): Advisory[] {
       }
     }
   }
-  return [...advisories.values()];
+  return { advisories: [...advisories.values()], withoutId };
 }
 
 function malformedEntry(index: number, field: string, why: string): Violation {
@@ -149,10 +163,25 @@ function readExceptions(
   return { valid, violations };
 }
 
+// The advisory ids that more than one exception names, each once.
+function findDuplicates(exceptions: readonly AuditException[]): string[] {
+  const seen = new Set<string>();
+  const duplicates = new Set<string>();
+  for (const { advisory } of exceptions) {
+    if (seen.has(advisory)) {
+      duplicates.add(advisory);
+    }
+    seen.add(advisory);
+  }
+  return [...duplicates];
+}
+
 // Returns a violation for every Advisory of the report that has no Audit
-// exception, for every expired exception and for every malformed one. An
-// advisory whose exception expired is reported by the expiry alone. A report
-// that cannot be read is one violation naming `npm audit`.
+// exception, for every expired exception, for every stale one, for every
+// advisory without a GHSA id, for every advisory two exceptions name and for
+// every malformed exception. An exception that is expired and stale is
+// reported by the expiry alone. A report that cannot be read is one violation
+// naming `npm audit`.
 export function findAuditViolations(
   report: unknown,
   exceptions: unknown,
@@ -179,20 +208,44 @@ export function findAuditViolations(
     ];
   }
 
+  const { advisories, withoutId } = readAdvisories(vulnerabilities);
   const covered = new Set(valid.map(({ advisory }) => advisory));
-  const expired: Violation[] = valid
-    .filter(({ expires }) => (readDate(expires) ?? 0) < todayTime)
-    .map(({ advisory, expires }) => ({
-      subject: advisory,
-      reason: `audit exception expired on ${expires}`,
-    }));
-  const unexcepted: Violation[] = readAdvisories(vulnerabilities)
+  const reported = new Set(advisories.map(({ id }) => id));
+  const expired: Violation[] = [];
+  const stale: Violation[] = [];
+  for (const { advisory, expires } of new Map(
+    valid.map((entry) => [entry.advisory, entry]),
+  ).values()) {
+    if ((readDate(expires) ?? 0) < todayTime) {
+      expired.push({
+        subject: advisory,
+        reason: `audit exception expired on ${expires}`,
+      });
+    } else if (!reported.has(advisory)) {
+      stale.push({
+        subject: advisory,
+        reason: 'audit exception names an advisory npm audit no longer reports',
+      });
+    }
+  }
+  const duplicates: Violation[] = findDuplicates(valid).map((id) => ({
+    subject: EXCEPTIONS_FILE,
+    reason: `more than one audit exception names ${id}`,
+  }));
+  const unexcepted: Violation[] = advisories
     .filter(({ id }) => !covered.has(id))
     .map(({ id, severity, title, packages }) => ({
       subject: id,
       reason: `${severity} advisory "${title}" in ${packages.join(', ')} has no audit exception`,
     }));
-  return [...unexcepted, ...expired, ...problems];
+  return [
+    ...unexcepted,
+    ...withoutId,
+    ...expired,
+    ...stale,
+    ...duplicates,
+    ...problems,
+  ];
 }
 
 export type CheckAuditDependencies = {

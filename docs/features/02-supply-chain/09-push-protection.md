@@ -38,3 +38,7 @@ None — can start immediately.
 ## User stories addressed
 
 - User story 39
+
+## Notes
+
+- The comment at the top of `scripts/applyBranchProtection/applyBranchProtection.test.ts` (lines 7-10) still describes only the merge-commit settings, not the secret-scanning settings; for the refactor.

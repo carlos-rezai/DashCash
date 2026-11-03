@@ -665,6 +665,63 @@ describe('findAuditViolations', () => {
       expect(violations).toEqual([duplicate(GHSA_GLOB)]);
       expect(lineOf(violations[0] as Violation)).not.toContain(GHSA_PARSER);
     });
+
+    describe('when one of them is expired or stale', () => {
+      const EXPIRED = exception({ added: '2026-09-01', expires: '2026-10-01' });
+      const LIVE = exception();
+      const OTHER_LIVE = exception({
+        reason: 'a second entry for the same sample advisory',
+      });
+
+      it.each<[string, () => unknown, unknown[], Violation[]]>([
+        [
+          'one expired and one live, the advisory listed',
+          globReport,
+          [EXPIRED, LIVE],
+          [expired(GHSA_GLOB, '2026-10-01'), duplicate(GHSA_GLOB)],
+        ],
+        [
+          'one expired and one live, the advisory not listed',
+          report,
+          [EXPIRED, LIVE],
+          [
+            expired(GHSA_GLOB, '2026-10-01'),
+            stale(GHSA_GLOB),
+            duplicate(GHSA_GLOB),
+          ],
+        ],
+        [
+          'both live, the advisory not listed',
+          report,
+          [LIVE, OTHER_LIVE],
+          [stale(GHSA_GLOB), stale(GHSA_GLOB), duplicate(GHSA_GLOB)],
+        ],
+        [
+          'both expired, the advisory listed',
+          globReport,
+          [EXPIRED, exception({ added: '2026-09-15', expires: '2026-10-15' })],
+          [
+            expired(GHSA_GLOB, '2026-10-01'),
+            expired(GHSA_GLOB, '2026-10-15'),
+            duplicate(GHSA_GLOB),
+          ],
+        ],
+      ])(
+        'reports each exception once, in either order: %s',
+        (_, makeReport, entries, expected) => {
+          for (const ordered of [entries, [...entries].reverse()]) {
+            const violations = findAuditViolations(
+              makeReport(),
+              ordered,
+              TODAY,
+            );
+
+            expect(violations).toHaveLength(expected.length);
+            expect(violations).toEqual(expect.arrayContaining(expected));
+          }
+        },
+      );
+    });
   });
 
   describe('an advisory without a GHSA id', () => {

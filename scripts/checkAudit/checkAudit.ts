@@ -213,9 +213,7 @@ export function findAuditViolations(
   const reported = new Set(advisories.map(({ id }) => id));
   const expired: Violation[] = [];
   const stale: Violation[] = [];
-  for (const { advisory, expires } of new Map(
-    valid.map((entry) => [entry.advisory, entry]),
-  ).values()) {
+  for (const { advisory, expires } of valid) {
     if ((readDate(expires) ?? 0) < todayTime) {
       expired.push({
         subject: advisory,

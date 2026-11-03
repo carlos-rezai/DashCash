@@ -26,7 +26,8 @@ Durable decisions that apply across all phases:
   `YYYY-MM-DD`, `cleanCommitMessage(raw)`.
 - **Gate files under `quality/`**: the licence allowlist, a JSON array of
   SPDX ids; the audit exceptions file, a JSON array of
-  `{ advisory, reason, expires }` keyed by GHSA id.
+  `{ advisory, reason, added, expires }` keyed by GHSA id, `expires` at most
+  90 days after `added` (design log, D2).
 - **Workflows**: three files under `.github/workflows/`, one trigger kind
   each, no `if:` on any job, `ubuntu-latest`.
   - `name: CI`: `push` to `feat/**` and `refactor/**`; job `verify`.
@@ -161,14 +162,16 @@ that reads both files offline. `check:licenses` joins **Verify** after the
 ### What to build
 
 The **Audit** end to end: the audit exceptions file in `quality/` with the
-exception for `GHSA-g3hv-75wg-m249` (expiring `2027-02-02`, with its
+exception for `GHSA-g3hv-75wg-m249` (added on the day of building and
+expiring 90 days later, `2027-01-31` when built on `2026-11-02`, with its
 reason) and one of the same kind for any further **Advisory** open on the
 day of building; a gate script whose pure core compares a version-2
 `npm audit --json` report with the exceptions on a given day; and a thin
 entry that runs `npm audit --json` through the npm that runs the script,
 reads the file and passes today's UTC date. Every advisory of any
 severity, dev dependencies included, needs exactly one valid **Audit
-exception**; an expired, stale, duplicate or malformed exception fails, and
+exception**; an expired, stale, duplicate or malformed exception, or one
+expiring more than 90 days after its `added` date, fails, and
 so does a report that cannot be read or an advisory without a GHSA id.
 `check:audit` joins **Verify** last; the wiring test expects it there.
 
@@ -179,8 +182,10 @@ so does a report that cannot be read or an advisory without a GHSA id.
       exception; an exception on its **Expiry date** and the day after; a
       stale exception; two exceptions for one advisory; each malformed
       input (a missing or unparsable file, not an array, a missing or empty
-      reason, a non-GHSA id, an expiry that is not a real `YYYY-MM-DD`
-      date); a report without `vulnerabilities` or with an `error`; an
+      reason, a non-GHSA id, an `added` or `expires` that is not a real
+      `YYYY-MM-DD` date); the 90-day limit (exactly 90 days after `added`
+      passes, 91 fails, `expires` before `added` fails, `added` later than
+      today fails); a report without `vulnerabilities` or with an `error`; an
       advisory whose `url` holds no GHSA id; one advisory reaching several
       packages, reported once.
 - [ ] Each violation is one line: the GHSA id with severity, title and

@@ -24,6 +24,9 @@ const RENOVATE_BRANCH = 'renovate/sample';
 const SUBJECT = 'renovate.json';
 const NODE_DEP = 'node';
 const NODE_MANAGERS = ['nvm', 'npm'];
+const NPM_MANAGER = 'npm';
+const LOCKFILE_UPDATE_TYPE = 'lockFileMaintenance';
+const NODE_RULE_KEYS = ['matchManagers', 'matchDepNames'];
 
 function isSettings(value: unknown): value is Settings {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -88,15 +91,33 @@ function holds(value: unknown, item: string): boolean {
 }
 
 // The Node rule covers the dependency node in both the nvm manager (.nvmrc)
-// and the npm manager's engines (engines.node): both managers, no dependency
-// type that would leave one of them out, and not disabled.
+// and the npm manager's engines (engines.node): both managers, not disabled,
+// and no other match* or exclude* key that could leave one of them out.
 function isNodeRule(rule: Settings): boolean {
+  const narrowed = Object.keys(rule).some(
+    (key) => /^(match|exclude)/.test(key) && !NODE_RULE_KEYS.includes(key),
+  );
   return (
     holds(rule['matchDepNames'], NODE_DEP) &&
     NODE_MANAGERS.every((manager) => holds(rule['matchManagers'], manager)) &&
-    rule['matchDepTypes'] === undefined &&
+    !narrowed &&
     rule['enabled'] !== false
   );
+}
+
+function matchesNpm(rule: Settings): boolean {
+  return holds(rule['matchManagers'], NPM_MANAGER);
+}
+
+// Lockfile maintenance has no dependency name, so a rule narrowed by
+// matchDepNames (the Node rule) never applies to it; any other npm rule does,
+// unless matchUpdateTypes leaves lockFileMaintenance out.
+function reachesLockfileMaintenance(rule: Settings): boolean {
+  if (!matchesNpm(rule)) return false;
+  const names = rule['matchDepNames'];
+  if (Array.isArray(names) && names.length > 0) return false;
+  const types = rule['matchUpdateTypes'];
+  return !Array.isArray(types) || types.includes(LOCKFILE_UPDATE_TYPE);
 }
 
 function findGroupViolations(config: Settings): Violation[] {
@@ -109,6 +130,17 @@ function findGroupViolations(config: Settings): Violation[] {
   if (!rules.some(isNodeRule)) {
     fail(
       'a packageRule must cover the dependency node in both the nvm manager and the npm manager (engines.node)',
+    );
+  }
+  // Later rules win in Renovate: the Node rule comes after every other rule
+  // for the npm manager.
+  const lastNode = rules.findLastIndex(isNodeRule);
+  if (lastNode !== -1 && rules.slice(lastNode + 1).some(matchesNpm)) {
+    fail('the Node rule must come after every other packageRule for npm');
+  }
+  if (rules.some(reachesLockfileMaintenance)) {
+    fail(
+      `a packageRule for npm must set matchUpdateTypes without ${LOCKFILE_UPDATE_TYPE}`,
     );
   }
   const lockfile = config['lockFileMaintenance'];

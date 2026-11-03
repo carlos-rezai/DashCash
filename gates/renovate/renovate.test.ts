@@ -34,9 +34,24 @@ const LOCKFILE_MESSAGE = 'chore: [supply-chain] refresh the lockfile';
 const VULNERABILITY_MESSAGE =
   'chore: [supply-chain] fix vulnerable dependencies';
 
+// The update types an npm rule may match: every one but lockFileMaintenance,
+// which Renovate may also run the packageRules against.
+const PACKAGE_UPDATE_TYPES = [
+  'major',
+  'minor',
+  'patch',
+  'pin',
+  'pinDigest',
+  'digest',
+  'rollback',
+  'bump',
+  'replacement',
+];
+
 function group(message: string, title: string = message): Config {
   return {
     matchManagers: ['npm'],
+    matchUpdateTypes: PACKAGE_UPDATE_TYPES,
     groupName: 'sample group',
     commitMessage: message,
     prTitle: title,
@@ -222,7 +237,11 @@ describe('the Renovate rule on invented configs', () => {
     it('fails a group with a commit message and no title', async () => {
       const config = sampleConfig({
         packageRules: [
-          { matchManagers: ['npm'], commitMessage: NPM_MESSAGE },
+          {
+            matchManagers: ['npm'],
+            matchUpdateTypes: PACKAGE_UPDATE_TYPES,
+            commitMessage: NPM_MESSAGE,
+          },
           nodeRule(),
         ],
       });
@@ -233,7 +252,11 @@ describe('the Renovate rule on invented configs', () => {
     it('fails a group with a title and no commit message', async () => {
       const config = sampleConfig({
         packageRules: [
-          { matchManagers: ['npm'], prTitle: NPM_MESSAGE },
+          {
+            matchManagers: ['npm'],
+            matchUpdateTypes: PACKAGE_UPDATE_TYPES,
+            prTitle: NPM_MESSAGE,
+          },
           nodeRule(),
         ],
       });
@@ -262,9 +285,63 @@ describe('the Renovate rule on invented configs', () => {
       ],
       ['only the engines dependency type', { matchDepTypes: ['engines'] }],
       ['nothing, being disabled', { enabled: false }],
+      ['only .nvmrc, by file name', { matchFileNames: ['.nvmrc'] }],
+      ['only package.json, by file name', { matchFileNames: ['package.json'] }],
     ])('fails a Node rule covering %s', async (_case, narrowing) => {
       const config = sampleConfig({
         packageRules: [group(NPM_MESSAGE), nodeRule(narrowing)],
+      });
+
+      expect(await check(config)).not.toEqual([]);
+    });
+
+    it.each([
+      [
+        'node, npm, actions',
+        [nodeRule(), group(NPM_MESSAGE), group(ACTIONS_MESSAGE)],
+      ],
+      [
+        'npm, node, actions',
+        [group(NPM_MESSAGE), nodeRule(), group(ACTIONS_MESSAGE)],
+      ],
+    ])('fails the rule order %s', async (_case, packageRules) => {
+      expect(await check(sampleConfig({ packageRules }))).not.toEqual([]);
+    });
+
+    it('fails a later npm rule that disables the engines dependency type', async () => {
+      const config = sampleConfig({
+        packageRules: [
+          group(NPM_MESSAGE),
+          nodeRule(),
+          {
+            matchManagers: ['npm'],
+            matchUpdateTypes: PACKAGE_UPDATE_TYPES,
+            matchDepTypes: ['engines'],
+            enabled: false,
+          },
+        ],
+      });
+
+      expect(await check(config)).not.toEqual([]);
+    });
+
+    it('fails an npm rule without matchUpdateTypes, which takes over lockfile maintenance', async () => {
+      const unrestricted: Config = { ...group(NPM_MESSAGE) };
+      Reflect.deleteProperty(unrestricted, 'matchUpdateTypes');
+      const config = sampleConfig({ packageRules: [unrestricted, nodeRule()] });
+
+      expect(await check(config)).not.toEqual([]);
+    });
+
+    it('fails an npm rule whose matchUpdateTypes include lockFileMaintenance', async () => {
+      const config = sampleConfig({
+        packageRules: [
+          {
+            ...group(NPM_MESSAGE),
+            matchUpdateTypes: [...PACKAGE_UPDATE_TYPES, 'lockFileMaintenance'],
+          },
+          nodeRule(),
+        ],
       });
 
       expect(await check(config)).not.toEqual([]);

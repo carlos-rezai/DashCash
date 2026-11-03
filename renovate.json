@@ -12,6 +12,17 @@
   "packageRules": [
     {
       "matchManagers": ["npm"],
+      "matchUpdateTypes": [
+        "major",
+        "minor",
+        "patch",
+        "pin",
+        "pinDigest",
+        "digest",
+        "rollback",
+        "bump",
+        "replacement"
+      ],
       "groupName": "npm packages",
       "commitMessage": "chore: [supply-chain] update npm dependencies",
       "prTitle": "chore: [supply-chain] update npm dependencies"

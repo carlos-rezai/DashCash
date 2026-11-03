@@ -53,3 +53,9 @@ existing test then checks; it starts no gate.
 
 - User stories 48, 49
 - User story 52 (the new groups)
+
+## Notes
+
+- The npm rule's `matchUpdateTypes` guards against Renovate applying it to
+  lockfile maintenance, which cannot be confirmed before Renovate's first
+  run.

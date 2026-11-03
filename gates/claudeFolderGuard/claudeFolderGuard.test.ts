@@ -30,6 +30,38 @@ function runHook(input: string, projectDir: string): HookResult {
   return { status: result.status, stderr: result.stderr };
 }
 
+// The home folder the guard sees: HOME, else USERPROFILE (Q46). Git Bash's
+// runtime fills both in from the Windows profile when a process starts
+// without them, so they cannot be removed through the environment. The
+// shell unsets them, sets the ones given, then sources the hook.
+interface Home {
+  HOME?: string;
+  USERPROFILE?: string;
+}
+
+const WITH_HOME =
+  'unset HOME USERPROFILE; ' +
+  'if [ -n "$1" ]; then export HOME="$1"; fi; ' +
+  'if [ -n "$2" ]; then export USERPROFILE="$2"; fi; ' +
+  '. "$0"';
+
+function runHookWithHome(
+  input: string,
+  projectDir: string,
+  home: Home,
+): HookResult {
+  const result = spawnSync(
+    'bash',
+    ['-c', WITH_HOME, HOOK, home.HOME ?? '', home.USERPROFILE ?? ''],
+    {
+      input,
+      encoding: 'utf8',
+      env: { ...process.env, CLAUDE_PROJECT_DIR: projectDir },
+    },
+  );
+  return { status: result.status, stderr: result.stderr };
+}
+
 function fileInput(
   toolName: 'Edit' | 'Write',
   filePath: string,
@@ -116,6 +148,135 @@ describe('Edit and Write', () => {
 
         expect(result.status, result.stderr).toBe(0);
       });
+    });
+  });
+});
+
+// The Home settings: <home>/.claude/settings.json, outside the project.
+// Invented home folders; the hook only compares paths, it never opens them.
+const POSIX_HOME = '/home/sample';
+const WINDOWS_HOME = 'C:\\Users\\Sample';
+const GIT_BASH_HOME = '/c/Users/Sample';
+// A project outside every home folder above.
+const OTHER_ROOT = '/work/dashcash';
+
+describe('the Home settings', () => {
+  describe.each(FILE_TOOLS)('%s', (tool) => {
+    describe('blocks', () => {
+      it.each<[string, Home, string]>([
+        [
+          'a POSIX path',
+          { HOME: POSIX_HOME },
+          `${POSIX_HOME}/.claude/settings.json`,
+        ],
+        [
+          'a Windows path',
+          { HOME: WINDOWS_HOME },
+          `${WINDOWS_HOME}\\.claude\\settings.json`,
+        ],
+        [
+          'a Windows path, with a Git Bash home',
+          { HOME: GIT_BASH_HOME },
+          `${WINDOWS_HOME}\\.claude\\settings.json`,
+        ],
+        [
+          'a Git Bash path, with a Git Bash home',
+          { HOME: GIT_BASH_HOME },
+          `${GIT_BASH_HOME}/.claude/settings.json`,
+        ],
+        [
+          'a Windows path in another case',
+          { HOME: WINDOWS_HOME },
+          'c:\\USERS\\sample\\.claude\\Settings.json',
+        ],
+        ['a ~/ path', { HOME: POSIX_HOME }, '~/.claude/settings.json'],
+        ['a ~\\ path', { HOME: WINDOWS_HOME }, '~\\.claude\\settings.json'],
+        [
+          'a path found through USERPROFILE, without HOME',
+          { USERPROFILE: WINDOWS_HOME },
+          `${WINDOWS_HOME}\\.claude\\settings.json`,
+        ],
+      ])('as %s', (_form, home, filePath) => {
+        const result = runHookWithHome(
+          fileInput(tool, filePath, OTHER_ROOT),
+          OTHER_ROOT,
+          home,
+        );
+
+        expect(result.status, result.stderr).toBe(2);
+        expect(result.stderr).toMatch(/^BLOCKED: /);
+      });
+    });
+
+    describe('allows', () => {
+      it.each([
+        `${POSIX_HOME}/.claude/projects/sample/memory/MEMORY.md`,
+        `${POSIX_HOME}/.claude/settings.json.bak`,
+        `${POSIX_HOME}/other/.claude/settings.json`,
+      ])('%s', (filePath) => {
+        const result = runHookWithHome(
+          fileInput(tool, filePath, OTHER_ROOT),
+          OTHER_ROOT,
+          { HOME: POSIX_HOME },
+        );
+
+        expect(result.status, result.stderr).toBe(0);
+      });
+
+      it('the USERPROFILE settings when HOME names another folder', () => {
+        const result = runHookWithHome(
+          fileInput(
+            tool,
+            `${WINDOWS_HOME}\\.claude\\settings.json`,
+            OTHER_ROOT,
+          ),
+          OTHER_ROOT,
+          { HOME: POSIX_HOME, USERPROFILE: WINDOWS_HOME },
+        );
+
+        expect(result.status, result.stderr).toBe(0);
+      });
+    });
+
+    describe('with neither HOME nor USERPROFILE', () => {
+      it('skips the home rule', () => {
+        const result = runHookWithHome(
+          fileInput(tool, `${POSIX_HOME}/.claude/settings.json`, OTHER_ROOT),
+          OTHER_ROOT,
+          {},
+        );
+
+        expect(result.status, result.stderr).toBe(0);
+      });
+
+      it('still blocks a path under the project .claude/', () => {
+        const result = runHookWithHome(
+          fileInput(tool, `${OTHER_ROOT}/.claude/settings.json`, OTHER_ROOT),
+          OTHER_ROOT,
+          {},
+        );
+
+        expect(result.status).toBe(2);
+        expect(result.stderr).toMatch(/^BLOCKED: /);
+      });
+    });
+  });
+
+  describe('Bash blocks a command naming it', () => {
+    it.each([
+      'echo invented > ~/.claude/settings.json',
+      `sed -i 's/Bash/Read/' $HOME/.claude/settings.json`,
+    ])('%s', (command) => {
+      const result = runHookWithHome(
+        bashInput(command, OTHER_ROOT),
+        OTHER_ROOT,
+        {
+          HOME: POSIX_HOME,
+        },
+      );
+
+      expect(result.status).toBe(2);
+      expect(result.stderr).toMatch(/^BLOCKED: /);
     });
   });
 });

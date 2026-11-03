@@ -28,6 +28,9 @@ type Workflow = {
 const WORKFLOWS_FOLDER = '.github/workflows';
 const PUSH_WORKFLOW = 'ci.yml';
 const PULL_REQUEST_WORKFLOW = 'pull-request.yml';
+const DAILY_WORKFLOW = 'daily.yml';
+const DAILY_SCHEDULE = '0 5 * * *';
+const DAILY_COMMANDS = ['npm ci', 'npm run check:audit'];
 
 // The gates of Verify, in their fixed order. Every ticket that adds a gate
 // inserts it here at its place.
@@ -117,9 +120,131 @@ function jobCommands(workflow: Workflow, job: string): string[] {
   );
 }
 
+// What the Daily run's workflow lacks or holds beyond its wiring, one line
+// each, so a check can show which part a workflow is missing.
+function findDailyWiringProblems(workflow: Workflow): string[] {
+  const problems: string[] = [];
+  if (workflow.name !== 'Daily') {
+    problems.push('the workflow is not named Daily');
+  }
+
+  const on = triggers(workflow);
+  if (
+    JSON.stringify(on['schedule']) !==
+    JSON.stringify([{ cron: DAILY_SCHEDULE }])
+  ) {
+    problems.push(`no schedule trigger ${DAILY_SCHEDULE}`);
+  }
+  if (!('workflow_dispatch' in on)) {
+    problems.push('no workflow_dispatch trigger');
+  }
+  for (const event of Object.keys(on)) {
+    if (event !== 'schedule' && event !== 'workflow_dispatch') {
+      problems.push(`also triggered by ${event}`);
+    }
+  }
+
+  const jobs = Object.keys(workflow.jobs ?? {});
+  if (JSON.stringify(jobs) !== JSON.stringify(['daily'])) {
+    problems.push(`the jobs are [${jobs.join(', ')}], not the one job daily`);
+  }
+
+  const steps = jobSteps(workflow, 'daily');
+  const checkout = stepIndex(steps, 'actions/checkout');
+  const setupNode = stepIndex(steps, 'actions/setup-node');
+  if (checkout !== 0) {
+    problems.push('the daily job does not start with a checkout');
+  }
+  if (steps[checkout]?.with?.['fetch-depth'] !== 0) {
+    problems.push('the daily job does not check out full history');
+  }
+  const setupNodeWith = steps[setupNode]?.with ?? {};
+  if (
+    setupNode <= checkout ||
+    setupNodeWith['node-version-file'] !== '.nvmrc' ||
+    setupNodeWith['cache'] !== 'npm'
+  ) {
+    problems.push(
+      'the daily job does not set up Node from .nvmrc with the npm cache after the checkout',
+    );
+  }
+
+  const commands = jobCommands(workflow, 'daily');
+  const npmCi = commands.indexOf('npm ci');
+  const audit = commands.indexOf('npm run check:audit');
+  const npmCiStep = steps.findIndex((step) => step.run === 'npm ci');
+  if (
+    npmCi === -1 ||
+    npmCiStep <= setupNode ||
+    (audit !== -1 && audit < npmCi)
+  ) {
+    problems.push(
+      'the daily job does not run npm ci after setting up Node and before the audit',
+    );
+  }
+  if (audit === -1) {
+    problems.push('the daily job does not run npm run check:audit');
+  }
+  for (const command of commands) {
+    if (!DAILY_COMMANDS.includes(command)) {
+      problems.push(`the daily job also runs ${command}`);
+    }
+  }
+  return problems;
+}
+
+// The workflow without the named trigger.
+function withoutTrigger(workflow: Workflow, event: string): Workflow {
+  return {
+    ...workflow,
+    on: Object.fromEntries(
+      Object.entries(triggers(workflow)).filter(([name]) => name !== event),
+    ),
+  };
+}
+
+// The workflow with the daily job's steps changed by `change`.
+function withDailySteps(
+  workflow: Workflow,
+  change: (steps: WorkflowStep[]) => WorkflowStep[],
+): Workflow {
+  const daily = workflow.jobs?.['daily'] ?? {};
+  return {
+    ...workflow,
+    jobs: {
+      ...workflow.jobs,
+      daily: { ...daily, steps: change(jobSteps(workflow, 'daily')) },
+    },
+  };
+}
+
+function withoutFullHistory(workflow: Workflow): Workflow {
+  return withDailySteps(workflow, (steps) =>
+    steps.map((step) =>
+      (step.uses ?? '').startsWith('actions/checkout@')
+        ? {
+            ...step,
+            with: Object.fromEntries(
+              Object.entries(step.with ?? {}).filter(
+                ([key]) => key !== 'fetch-depth',
+              ),
+            ),
+          }
+        : step,
+    ),
+  );
+}
+
+function withoutAuditStep(workflow: Workflow): Workflow {
+  return withDailySteps(workflow, (steps) =>
+    steps.filter((step) => !(step.run ?? '').includes('npm run check:audit')),
+  );
+}
+
 const packageJson = JSON.parse(readRootFile('package.json')) as PackageJson;
 const pushWorkflow = readWorkflow(PUSH_WORKFLOW);
 const pullRequestWorkflow = readWorkflow(PULL_REQUEST_WORKFLOW);
+const dailyWorkflow = readWorkflow(DAILY_WORKFLOW);
 const { scripts } = packageJson;
 
 describe('gate wiring', () => {
@@ -233,6 +358,80 @@ describe('gate wiring', () => {
       expect(step.run ?? '').not.toContain('${{');
     }
   });
+
+  it('triggers the daily workflow, Daily, only by the schedule 0 5 * * * and workflow_dispatch', () => {
+    const on = triggers(dailyWorkflow);
+
+    expect(dailyWorkflow.name).toBe('Daily');
+    expect(Object.keys(on).sort()).toEqual(['schedule', 'workflow_dispatch']);
+    expect(on['schedule']).toEqual([{ cron: DAILY_SCHEDULE }]);
+  });
+
+  it('gives the daily workflow the one job daily', () => {
+    expect(Object.keys(dailyWorkflow.jobs ?? {})).toEqual(['daily']);
+  });
+
+  it('checks out full history, then sets up Node from .nvmrc with the npm cache, before npm ci in the daily job', () => {
+    const steps = jobSteps(dailyWorkflow, 'daily');
+    const checkout = stepIndex(steps, 'actions/checkout');
+    const setupNode = stepIndex(steps, 'actions/setup-node');
+    const npmCi = steps.findIndex((step) => step.run === 'npm ci');
+
+    expect(checkout).toBe(0);
+    expect(steps[checkout]?.with?.['fetch-depth']).toBe(0);
+    expect(setupNode).toBeGreaterThan(checkout);
+    expect(steps[setupNode]?.with?.['node-version-file']).toBe('.nvmrc');
+    expect(steps[setupNode]?.with?.['cache']).toBe('npm');
+    expect(npmCi).toBeGreaterThan(setupNode);
+  });
+
+  it('runs npm ci, then npm run check:audit and no other gate of verify in the daily job', () => {
+    const commands = jobCommands(dailyWorkflow, 'daily');
+
+    expect(commands).toEqual(DAILY_COMMANDS);
+    for (const gate of VERIFY_GATES.filter((name) => name !== 'check:audit')) {
+      expect(commands, gate).not.toContain(`npm run ${gate}`);
+    }
+    expect(commands).not.toContain('npm run verify');
+    expect(commands).not.toContain('npm run verify:full');
+  });
+
+  it('finds nothing missing from the daily wiring', () => {
+    expect(findDailyWiringProblems(dailyWorkflow)).toEqual([]);
+  });
+
+  it.each([
+    [
+      'schedule',
+      (workflow: Workflow) => withoutTrigger(workflow, 'schedule'),
+      `no schedule trigger ${DAILY_SCHEDULE}`,
+    ],
+    [
+      'manual trigger',
+      (workflow: Workflow) => withoutTrigger(workflow, 'workflow_dispatch'),
+      'no workflow_dispatch trigger',
+    ],
+    [
+      'full-history checkout',
+      withoutFullHistory,
+      'the daily job does not check out full history',
+    ],
+    [
+      'audit step',
+      withoutAuditStep,
+      'the daily job does not run npm run check:audit',
+    ],
+  ])(
+    'fails the daily wiring when the %s is removed',
+    (_part, remove, problem) => {
+      const before = findDailyWiringProblems(dailyWorkflow);
+      const added = findDailyWiringProblems(remove(dailyWorkflow)).filter(
+        (found) => !before.includes(found),
+      );
+
+      expect(added).toEqual([problem]);
+    },
+  );
 
   it('keeps every job of every workflow free of if:', () => {
     const conditionalJobs = workflowFiles().flatMap((file) =>

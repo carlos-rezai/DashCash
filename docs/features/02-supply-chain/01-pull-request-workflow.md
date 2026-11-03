@@ -44,7 +44,7 @@ tests named above.
 - [x] The **Ruleset** test reads the job from the pull-request workflow and
       fails when a second workflow has a job reporting as `pull-request`.
 - [x] The **Ruleset** file is unchanged and still requires `pull-request`.
-- [ ] A push of the branch runs one workflow, `CI`, with one job `verify`,
+- [x] A push of the branch runs one workflow, `CI`, with one job `verify`,
       green; no `pull-request` job appears in the push run.
 - [x] `npm run verify` is green.
 

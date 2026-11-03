@@ -50,7 +50,7 @@ Every change goes through the same gate, whether I wrote it or an AI agent did. 
 | Release from CI only | tag → build once → draft release → publish | CI | 20 |
 | SBOM per release | `npm sbom` | release | 20 |
 | Flaky tests quarantined with expiry | quarantine file + expiry check | CI, daily | 04 |
-| License allowlist | license checker | CI | 02 |
+| License allowlist | script: lockfile licences against `quality/license-allowlist.json` | CI | 02 |
 | Mutation testing | StrykerJS on `packages/domain` and `scripts/` | nightly, ratchet | 03 |
 | Docs drift | paths named in docs must exist | CI | 01 |
 

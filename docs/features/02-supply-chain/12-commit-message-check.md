@@ -68,3 +68,8 @@ None — can start immediately.
 
 - User stories 55, 56, 57, 58, 59
 - User story 53 (one line per violation)
+
+## Notes
+
+- The comment at `scripts/checkCommitMessage/checkCommitMessage.test.ts` line 58 says "Descriptions at and just over the limit", but only the 51-character constant exists; for the refactor.
+- `expect(DESCRIPTION_OF_51).toHaveLength(51)` (line 242) runs inside every `it.each` row instead of once; for the refactor.

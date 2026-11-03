@@ -43,7 +43,7 @@ existing test then checks; it starts no gate.
       and `engines.node`, for lockfile maintenance disabled, and for a
       vulnerability-alert title with a suffix.
 - [x] No dependency is added.
-- [ ] `npm run verify` and CI's `verify` job are green.
+- [x] `npm run verify` and CI's `verify` job are green.
 
 ## Blocked by
 

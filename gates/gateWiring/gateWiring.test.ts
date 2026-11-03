@@ -1,6 +1,7 @@
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { parse } from 'yaml';
+import { findUnpinnedUses } from '../pinnedActions/pinnedActions.ts';
 
 type PackageJson = {
   scripts: Record<string, string | undefined>;
@@ -11,7 +12,7 @@ type WorkflowStep = {
   uses?: string;
   with?: Record<string, unknown>;
   run?: string;
-  env?: Record<string, string | undefined>;
+  env?: Record<string, unknown>;
 };
 
 type WorkflowJob = {
@@ -31,6 +32,17 @@ const PULL_REQUEST_WORKFLOW = 'pull-request.yml';
 const DAILY_WORKFLOW = 'daily.yml';
 const DAILY_SCHEDULE = '0 5 * * *';
 const DAILY_COMMANDS = ['npm ci', 'npm run check:audit'];
+const GITLEAKS_ACTION = 'gitleaks/gitleaks-action';
+const WORKFLOW_TOKEN = '${{ secrets.GITHUB_TOKEN }}';
+const LINE_BREAK = /\r?\n/;
+const NEWLINE = '\n';
+
+// The three jobs that run the Secret scan, each with its workflow file.
+const SECRET_SCAN_JOBS: [job: string, file: string][] = [
+  ['verify', PUSH_WORKFLOW],
+  ['pull-request', PULL_REQUEST_WORKFLOW],
+  ['daily', DAILY_WORKFLOW],
+];
 
 // The gates of Verify, in their fixed order. Every ticket that adds a gate
 // inserts it here at its place.
@@ -69,6 +81,11 @@ function readRootFile(path: string): string {
 
 // A workflow file that does not exist reads as an empty workflow, so every
 // check on it fails at its assertion.
+function readWorkflowText(file: string): string {
+  const url = new URL(`../../${WORKFLOWS_FOLDER}/${file}`, import.meta.url);
+  return existsSync(url) ? readFileSync(url, 'utf8') : '';
+}
+
 function readWorkflow(file: string): Workflow {
   const url = new URL(`../../${WORKFLOWS_FOLDER}/${file}`, import.meta.url);
   if (!existsSync(url)) {
@@ -191,6 +208,82 @@ function findDailyWiringProblems(workflow: Workflow): string[] {
     }
   }
   return problems;
+}
+
+// What a job lacks in its Secret scan wiring, one line each: the gitleaks
+// step right after the checkout and before setup-node, with comments off and
+// the workflow's GITHUB_TOKEN.
+function findSecretScanProblems(workflow: Workflow, job: string): string[] {
+  const steps = jobSteps(workflow, job);
+  const gitleaks = stepIndex(steps, GITLEAKS_ACTION);
+  if (gitleaks === -1) {
+    return [`the ${job} job does not run gitleaks`];
+  }
+
+  const problems: string[] = [];
+  const checkout = stepIndex(steps, 'actions/checkout');
+  const setupNode = stepIndex(steps, 'actions/setup-node');
+  if (checkout === -1 || gitleaks !== checkout + 1) {
+    problems.push(`the ${job} job does not run gitleaks right after checkout`);
+  }
+  if (setupNode === -1 || gitleaks > setupNode) {
+    problems.push(`the ${job} job does not run gitleaks before setup-node`);
+  }
+  const env = steps[gitleaks]?.env ?? {};
+  if (String(env['GITLEAKS_ENABLE_COMMENTS']) !== 'false') {
+    problems.push(`the ${job} job runs gitleaks with comments enabled`);
+  }
+  if (env['GITHUB_TOKEN'] !== WORKFLOW_TOKEN) {
+    problems.push(
+      `the ${job} job does not hand gitleaks the workflow's GITHUB_TOKEN`,
+    );
+  }
+  return problems;
+}
+
+function isGitleaksStep(step: WorkflowStep): boolean {
+  return (step.uses ?? '').startsWith(`${GITLEAKS_ACTION}@`);
+}
+
+// The workflow with the named job's steps changed by `change`.
+function withJobSteps(
+  workflow: Workflow,
+  job: string,
+  change: (steps: WorkflowStep[]) => WorkflowStep[],
+): Workflow {
+  return {
+    ...workflow,
+    jobs: {
+      ...workflow.jobs,
+      [job]: {
+        ...workflow.jobs?.[job],
+        steps: change(jobSteps(workflow, job)),
+      },
+    },
+  };
+}
+
+function withoutGitleaks(workflow: Workflow, job: string): Workflow {
+  return withJobSteps(workflow, job, (steps) =>
+    steps.filter((step) => !isGitleaksStep(step)),
+  );
+}
+
+function withGitleaksBeforeCheckout(workflow: Workflow, job: string): Workflow {
+  return withJobSteps(workflow, job, (steps) => [
+    ...steps.filter(isGitleaksStep),
+    ...steps.filter((step) => !isGitleaksStep(step)),
+  ]);
+}
+
+function withGitleaksComments(workflow: Workflow, job: string): Workflow {
+  return withJobSteps(workflow, job, (steps) =>
+    steps.map((step) =>
+      isGitleaksStep(step)
+        ? { ...step, env: { ...step.env, GITLEAKS_ENABLE_COMMENTS: true } }
+        : step,
+    ),
+  );
 }
 
 // The workflow without the named trigger.
@@ -432,6 +525,87 @@ describe('gate wiring', () => {
       expect(added).toEqual([problem]);
     },
   );
+
+  it.each(SECRET_SCAN_JOBS)(
+    'runs gitleaks in the %s job right after checkout and before setup-node, with comments off and the workflow GITHUB_TOKEN',
+    (job, file) => {
+      expect(findSecretScanProblems(readWorkflow(file), job)).toEqual([]);
+    },
+  );
+
+  it.each(
+    SECRET_SCAN_JOBS.flatMap(
+      ([job, file]) =>
+        [
+          [
+            job,
+            'its gitleaks step is removed',
+            file,
+            withoutGitleaks,
+            `the ${job} job does not run gitleaks`,
+          ],
+          [
+            job,
+            'its gitleaks step is moved before checkout',
+            file,
+            withGitleaksBeforeCheckout,
+            `the ${job} job does not run gitleaks right after checkout`,
+          ],
+          [
+            job,
+            'its gitleaks step has comments enabled',
+            file,
+            withGitleaksComments,
+            `the ${job} job runs gitleaks with comments enabled`,
+          ],
+        ] as const,
+    ),
+  )('fails the %s job when %s', (job, _change, file, change, problem) => {
+    const workflow = readWorkflow(file);
+    const before = findSecretScanProblems(workflow, job);
+    const after = findSecretScanProblems(change(workflow, job), job);
+
+    expect(before).toEqual([]);
+    expect(after).toEqual([problem]);
+  });
+
+  it.each(SECRET_SCAN_JOBS)(
+    'pins the gitleaks action of the %s job as a Pinned action',
+    (_job, file) => {
+      const text = readWorkflowText(file);
+      const gitleaksLines = text
+        .split(LINE_BREAK)
+        .filter((line) => line.includes(`${GITLEAKS_ACTION}@`));
+
+      expect(gitleaksLines).toHaveLength(1);
+      expect(findUnpinnedUses(gitleaksLines.join(NEWLINE))).toEqual([]);
+    },
+  );
+
+  it('scans with the default gitleaks rules: a gitleaks step in each job, no gitleaks config file and no .gitleaksignore', () => {
+    const configFiles = readdirSync(new URL('../../', import.meta.url)).filter(
+      (name) => /gitleaks/i.test(name),
+    );
+    const configuredSteps = SECRET_SCAN_JOBS.flatMap(([job, file]) =>
+      jobSteps(readWorkflow(file), job)
+        .filter(isGitleaksStep)
+        .filter(
+          (step) =>
+            step.with !== undefined ||
+            Object.keys(step.env ?? {}).some((name) =>
+              name.startsWith('GITLEAKS_CONFIG'),
+            ),
+        )
+        .map(() => job),
+    );
+    const jobsWithGitleaks = SECRET_SCAN_JOBS.filter(([job, file]) =>
+      jobSteps(readWorkflow(file), job).some(isGitleaksStep),
+    ).map(([job]) => job);
+
+    expect(jobsWithGitleaks).toEqual(SECRET_SCAN_JOBS.map(([job]) => job));
+    expect(configFiles).toEqual([]);
+    expect(configuredSteps).toEqual([]);
+  });
 
   it('keeps every job of every workflow free of if:', () => {
     const conditionalJobs = workflowFiles().flatMap((file) =>

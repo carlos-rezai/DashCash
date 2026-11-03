@@ -1,5 +1,5 @@
 ---
-status: in-progress
+status: done
 ---
 # Commit message check
 
@@ -42,19 +42,19 @@ Implementation Results, D4). Nothing runs the entry yet: the hook file,
 
 ## Acceptance criteria
 
-- [ ] The core's tests cover comment lines, the scissors line and what
+- [x] The core's tests cover comment lines, the scissors line and what
       follows, CRLF, trailing whitespace, consecutive and surrounding blank
       lines, and an all-comment message (empty result).
-- [ ] Run on a temporary message file, the entry exits 0 for a valid
+- [x] Run on a temporary message file, the entry exits 0 for a valid
       header, for a valid header followed by git's comment block, for a
       merge, a revert and a `fixup!` message, and for an empty or
       all-comment message.
-- [ ] It exits 1 with one line per violation for an invalid header, a
+- [x] It exits 1 with one line per violation for an invalid header, a
       header with `@` or `#`, a 51-character description and a message
       with a body.
-- [ ] It exits 1 with one line for a missing argument and for a file that
+- [x] It exits 1 with one line for a missing argument and for a file that
       does not exist.
-- [ ] It checks the message only: a valid header naming a feature folder
+- [x] It checks the message only: a valid header naming a feature folder
       and ticket that do not exist (`feat: [sample-feature] 99 add sample`)
       exits 0, with the message file in a temporary folder outside the
       repository.

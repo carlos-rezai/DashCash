@@ -53,7 +53,7 @@ test.
 - [x] After `npm ci`, `git config core.hooksPath` reads `.githooks`.
 - [x] `docs/conventions.md` lists the hooks folder, and the docs-drift
       gate passes.
-- [ ] `npm run verify` and CI's `verify` job are green.
+- [x] `npm run verify` and CI's `verify` job are green.
 
 ## Blocked by
 

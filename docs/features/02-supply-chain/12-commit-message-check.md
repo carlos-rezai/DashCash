@@ -58,7 +58,7 @@ Implementation Results, D4). Nothing runs the entry yet: the hook file,
       and ticket that do not exist (`feat: [sample-feature] 99 add sample`)
       exits 0, with the message file in a temporary folder outside the
       repository.
-- [ ] `npm run verify` and CI's `verify` job are green.
+- [x] `npm run verify` and CI's `verify` job are green.
 
 ## Blocked by
 

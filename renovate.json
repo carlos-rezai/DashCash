@@ -1,0 +1,26 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    "helpers:pinGitHubActionDigests",
+    ":disableDependencyDashboard"
+  ],
+  "semanticCommits": "disabled",
+  "minimumReleaseAge": "14 days",
+  "schedule": ["before 6am on monday"],
+  "timezone": "Europe/Berlin",
+  "packageRules": [
+    {
+      "matchManagers": ["npm"],
+      "groupName": "npm packages",
+      "commitMessage": "chore: [supply-chain] update npm dependencies",
+      "prTitle": "chore: [supply-chain] update npm dependencies"
+    },
+    {
+      "matchManagers": ["github-actions"],
+      "groupName": "github actions",
+      "commitMessage": "chore: [supply-chain] update github actions",
+      "prTitle": "chore: [supply-chain] update github actions"
+    }
+  ]
+}

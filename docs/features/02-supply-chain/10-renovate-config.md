@@ -1,5 +1,5 @@
 ---
-status: in-progress
+status: done
 ---
 # Renovate config
 
@@ -55,23 +55,23 @@ itself is installed only after the merge.
 
 ## Acceptance criteria
 
-- [ ] Every commit message is fixed text `chore: [supply-chain] …` and
+- [x] Every commit message is fixed text `chore: [supply-chain] …` and
       passes the commitlint config through its Node API.
-- [ ] Every PR title is the same text as its group's commit message and
+- [x] Every PR title is the same text as its group's commit message and
       passes the **Pull-request check** core on a `renovate/*` branch.
-- [ ] On `renovate/*`, the **Pull-request check** passes
+- [x] On `renovate/*`, the **Pull-request check** passes
       `chore: [supply-chain] <description>` and fails the bracket-less
       `chore: <description>`, another feature in the brackets, a number,
       another type, and a description that breaks a description rule
       (upper case, trailing full stop, more than 50 characters, `@` or
       `#`); its tests are updated from the old form to the new one.
-- [ ] The gate test fails, on invented config variants, for a templated
+- [x] The gate test fails, on invented config variants, for a templated
       message, a message naming another feature, a message the commitlint
       config rejects, a title the check rejects, a title that differs from
       its commit message, and each changed setting
       of story 51 (presets, `semanticCommits`, a `commitBody`, automerge,
       release age, schedule, timezone, branch prefix).
-- [ ] The gate test passes on `renovate.json`.
+- [x] The gate test passes on `renovate.json`.
 - [ ] No dependency is added.
 - [ ] `npm run verify` and CI's `verify` job are green.
 

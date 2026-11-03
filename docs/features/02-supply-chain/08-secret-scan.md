@@ -37,7 +37,7 @@ above and the gate wiring test.
 - [x] The wiring test fails for each job when its gitleaks step is
       removed, moved before checkout or has comments enabled.
 - [x] The pinned-actions test passes with the gitleaks action.
-- [ ] A push of the branch runs gitleaks green over the branch in CI's
+- [x] A push of the branch runs gitleaks green over the branch in CI's
       `verify` job; `npm run verify` is green.
 
 ## Blocked by

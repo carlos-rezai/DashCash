@@ -301,11 +301,47 @@ describe('the Renovate rule on invented configs', () => {
         [nodeRule(), group(NPM_MESSAGE), group(ACTIONS_MESSAGE)],
       ],
       [
-        'npm, node, actions',
+        'a second npm group after the Node rule',
         [group(NPM_MESSAGE), nodeRule(), group(ACTIONS_MESSAGE)],
       ],
     ])('fails the rule order %s', async (_case, packageRules) => {
       expect(await check(sampleConfig({ packageRules }))).not.toEqual([]);
+    });
+
+    it('fails a later rule without matchManagers, which applies to npm', async () => {
+      const config = sampleConfig({
+        packageRules: [
+          group(NPM_MESSAGE),
+          nodeRule(),
+          { matchUpdateTypes: ['major'], enabled: false },
+        ],
+      });
+
+      expect(await check(config)).toEqual([
+        {
+          subject: 'renovate.json',
+          reason:
+            'the Node rule must come after every other packageRule for npm',
+        },
+      ]);
+    });
+
+    it('fails a rule without matchManagers or matchUpdateTypes, which takes over lockfile maintenance', async () => {
+      const config = sampleConfig({
+        packageRules: [
+          group(NPM_MESSAGE),
+          { matchPackageNames: ['*'], groupName: 'all' },
+          nodeRule(),
+        ],
+      });
+
+      expect(await check(config)).toEqual([
+        {
+          subject: 'renovate.json',
+          reason:
+            'a packageRule for npm must set matchUpdateTypes without lockFileMaintenance',
+        },
+      ]);
     });
 
     it('fails a later npm rule that disables the engines dependency type', async () => {

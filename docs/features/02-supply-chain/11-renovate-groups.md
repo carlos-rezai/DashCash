@@ -1,5 +1,5 @@
 ---
-status: in-progress
+status: done
 ---
 # Renovate groups
 
@@ -59,3 +59,4 @@ existing test then checks; it starts no gate.
 - The npm rule's `matchUpdateTypes` guards against Renovate applying it to
   lockfile maintenance, which cannot be confirmed before Renovate's first
   run.
+- The gate models a subset of Renovate's packageRules semantics; Renovate's first run after the merge is the real test. Check the first lockfile maintenance PR and the first Node update PR for the expected titles.

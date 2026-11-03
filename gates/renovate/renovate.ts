@@ -105,8 +105,12 @@ function isNodeRule(rule: Settings): boolean {
   );
 }
 
+// A rule without matchManagers applies to every manager, npm included.
 function matchesNpm(rule: Settings): boolean {
-  return holds(rule['matchManagers'], NPM_MANAGER);
+  return (
+    rule['matchManagers'] === undefined ||
+    holds(rule['matchManagers'], NPM_MANAGER)
+  );
 }
 
 // Lockfile maintenance has no dependency name, so a rule narrowed by

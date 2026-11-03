@@ -1,5 +1,5 @@
 ---
-status: in-progress
+status: done
 ---
 # Secret scan
 
@@ -30,13 +30,13 @@ above and the gate wiring test.
 
 ## Acceptance criteria
 
-- [ ] Each of the three jobs runs gitleaks after checkout and before
+- [x] Each of the three jobs runs gitleaks after checkout and before
       setup-node, with `GITLEAKS_ENABLE_COMMENTS` `false` and the
       workflow's `GITHUB_TOKEN`.
-- [ ] No gitleaks config file and no `.gitleaksignore` exist.
-- [ ] The wiring test fails for each job when its gitleaks step is
+- [x] No gitleaks config file and no `.gitleaksignore` exist.
+- [x] The wiring test fails for each job when its gitleaks step is
       removed, moved before checkout or has comments enabled.
-- [ ] The pinned-actions test passes with the gitleaks action.
+- [x] The pinned-actions test passes with the gitleaks action.
 - [ ] A push of the branch runs gitleaks green over the branch in CI's
       `verify` job; `npm run verify` is green.
 

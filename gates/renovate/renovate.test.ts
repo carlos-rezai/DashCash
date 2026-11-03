@@ -8,9 +8,12 @@ import { findRenovateViolations } from './renovate.ts';
 // The Renovate config: every commit message is fixed text naming the feature
 // supply-chain and passes the commitlint config; every PR title is the same
 // text as its commit message and passes the Pull-request check on a
-// renovate/* branch; the base settings stay as the PRD fixes them. The rule
-// finds every message and title wherever the config holds them, so a group
-// added later is checked without changing this test.
+// renovate/* branch; the base settings stay as the PRD fixes them; the Node
+// rule covers both .nvmrc (the nvm manager) and engines.node (the npm
+// manager's engines); lockfile maintenance is enabled; the vulnerability-alert
+// title carries no suffix. The rule finds every message and title wherever
+// the config holds them, so a group added later is checked without changing
+// this test.
 
 type CommitConfig = Awaited<ReturnType<typeof loadCommitConfig>>;
 type Config = Record<string, unknown>;
@@ -26,6 +29,10 @@ const PRESETS = [
 
 const NPM_MESSAGE = 'chore: [supply-chain] update npm dependencies';
 const ACTIONS_MESSAGE = 'chore: [supply-chain] update github actions';
+const NODE_MESSAGE = 'chore: [supply-chain] update node';
+const LOCKFILE_MESSAGE = 'chore: [supply-chain] refresh the lockfile';
+const VULNERABILITY_MESSAGE =
+  'chore: [supply-chain] fix vulnerable dependencies';
 
 function group(message: string, title: string = message): Config {
   return {
@@ -36,8 +43,22 @@ function group(message: string, title: string = message): Config {
   };
 }
 
-// An invented config with the base settings and one group whose commit
-// message and PR title pass every rule.
+// The Node group: the dependency node in both the nvm manager (.nvmrc) and
+// the npm manager's engines (engines.node), unless the changes narrow it.
+function nodeRule(changes: Config = {}): Config {
+  return {
+    matchManagers: ['nvm', 'npm'],
+    matchDepNames: ['node'],
+    groupName: 'node',
+    commitMessage: NODE_MESSAGE,
+    prTitle: NODE_MESSAGE,
+    ...changes,
+  };
+}
+
+// An invented config with the base settings, an npm group, the Node group,
+// lockfile maintenance and vulnerability alerts, whose commit messages and PR
+// titles pass every rule.
 function sampleConfig(changes: Config = {}): Config {
   return {
     $schema: 'https://docs.renovatebot.com/renovate-schema.json',
@@ -46,7 +67,17 @@ function sampleConfig(changes: Config = {}): Config {
     minimumReleaseAge: '14 days',
     schedule: ['before 6am on monday'],
     timezone: 'Europe/Berlin',
-    packageRules: [group(NPM_MESSAGE)],
+    packageRules: [group(NPM_MESSAGE), nodeRule()],
+    lockFileMaintenance: {
+      enabled: true,
+      commitMessage: LOCKFILE_MESSAGE,
+      prTitle: LOCKFILE_MESSAGE,
+    },
+    vulnerabilityAlerts: {
+      commitMessage: VULNERABILITY_MESSAGE,
+      prTitle: VULNERABILITY_MESSAGE,
+      commitMessageSuffix: '',
+    },
     ...changes,
   };
 }
@@ -92,7 +123,7 @@ describe('the Renovate rule on invented configs', () => {
 
   it('passes a config with several groups of fixed messages', async () => {
     const config = sampleConfig({
-      packageRules: [group(NPM_MESSAGE), group(ACTIONS_MESSAGE)],
+      packageRules: [group(NPM_MESSAGE), group(ACTIONS_MESSAGE), nodeRule()],
     });
 
     expect(await check(config)).toEqual([]);
@@ -107,7 +138,9 @@ describe('the Renovate rule on invented configs', () => {
       ],
     ])('fails %s', async (_case, message) => {
       expect(
-        await check(sampleConfig({ packageRules: [group(message)] })),
+        await check(
+          sampleConfig({ packageRules: [group(message), nodeRule()] }),
+        ),
       ).not.toEqual([]);
     });
 
@@ -116,7 +149,9 @@ describe('the Renovate rule on invented configs', () => {
       'chore: [csv-import] update npm dependencies',
     ])('fails %s, which names another feature', async (message) => {
       expect(
-        await check(sampleConfig({ packageRules: [group(message)] })),
+        await check(
+          sampleConfig({ packageRules: [group(message), nodeRule()] }),
+        ),
       ).not.toEqual([]);
     });
 
@@ -131,7 +166,9 @@ describe('the Renovate rule on invented configs', () => {
       'deps: [supply-chain] update npm dependencies',
     ])('fails %s, which the commitlint config rejects', async (message) => {
       expect(
-        await check(sampleConfig({ packageRules: [group(message)] })),
+        await check(
+          sampleConfig({ packageRules: [group(message), nodeRule()] }),
+        ),
       ).not.toEqual([]);
     });
 
@@ -150,7 +187,7 @@ describe('the Renovate rule on invented configs', () => {
     it('fails a message the commitlint config rejects in a later group', async () => {
       const message = 'chore: [supply-chain] Update github actions';
       const config = sampleConfig({
-        packageRules: [group(NPM_MESSAGE), group(message)],
+        packageRules: [group(NPM_MESSAGE), group(message), nodeRule()],
       });
 
       expect(await check(config)).not.toEqual([]);
@@ -165,7 +202,9 @@ describe('the Renovate rule on invented configs', () => {
       'ci: [supply-chain] update github actions',
     ])('fails %s, which the Pull-request check rejects', async (message) => {
       expect(
-        await check(sampleConfig({ packageRules: [group(message)] })),
+        await check(
+          sampleConfig({ packageRules: [group(message), nodeRule()] }),
+        ),
       ).not.toEqual([]);
     });
 
@@ -173,6 +212,7 @@ describe('the Renovate rule on invented configs', () => {
       const config = sampleConfig({
         packageRules: [
           group(NPM_MESSAGE, 'chore: [supply-chain] update npm packages'),
+          nodeRule(),
         ],
       });
 
@@ -181,7 +221,10 @@ describe('the Renovate rule on invented configs', () => {
 
     it('fails a group with a commit message and no title', async () => {
       const config = sampleConfig({
-        packageRules: [{ matchManagers: ['npm'], commitMessage: NPM_MESSAGE }],
+        packageRules: [
+          { matchManagers: ['npm'], commitMessage: NPM_MESSAGE },
+          nodeRule(),
+        ],
       });
 
       expect(await check(config)).not.toEqual([]);
@@ -189,7 +232,10 @@ describe('the Renovate rule on invented configs', () => {
 
     it('fails a group with a title and no commit message', async () => {
       const config = sampleConfig({
-        packageRules: [{ matchManagers: ['npm'], prTitle: NPM_MESSAGE }],
+        packageRules: [
+          { matchManagers: ['npm'], prTitle: NPM_MESSAGE },
+          nodeRule(),
+        ],
       });
 
       expect(await check(config)).not.toEqual([]);
@@ -201,6 +247,72 @@ describe('the Renovate rule on invented configs', () => {
           commitMessage: 'chore: [supply-chain] fix a vulnerable dependency',
           prTitle: 'chore: [supply-chain] fix {{depname}}',
         },
+      });
+
+      expect(await check(config)).not.toEqual([]);
+    });
+  });
+
+  describe('the groups', () => {
+    it.each([
+      ['only .nvmrc', { matchManagers: ['nvm'] }],
+      [
+        'only engines.node',
+        { matchManagers: ['npm'], matchDepTypes: ['engines'] },
+      ],
+    ])('fails a Node rule covering %s', async (_case, narrowing) => {
+      const config = sampleConfig({
+        packageRules: [group(NPM_MESSAGE), nodeRule(narrowing)],
+      });
+
+      expect(await check(config)).not.toEqual([]);
+    });
+
+    it('fails lockfile maintenance disabled', async () => {
+      const config = sampleConfig({
+        lockFileMaintenance: {
+          enabled: false,
+          commitMessage: LOCKFILE_MESSAGE,
+          prTitle: LOCKFILE_MESSAGE,
+        },
+      });
+
+      expect(await check(config)).not.toEqual([]);
+    });
+
+    it('fails lockfile maintenance left at its disabled default', async () => {
+      const config = sampleConfig({
+        lockFileMaintenance: {
+          commitMessage: LOCKFILE_MESSAGE,
+          prTitle: LOCKFILE_MESSAGE,
+        },
+      });
+
+      expect(await check(config)).not.toEqual([]);
+    });
+
+    it('fails a config without lockfile maintenance', async () => {
+      expect(
+        await check(sampleConfigWithout('lockFileMaintenance')),
+      ).not.toEqual([]);
+    });
+
+    it('fails a vulnerability-alert title with the [SECURITY] suffix', async () => {
+      const config = sampleConfig({
+        vulnerabilityAlerts: {
+          commitMessage: VULNERABILITY_MESSAGE,
+          prTitle: VULNERABILITY_MESSAGE,
+          commitMessageSuffix: '[SECURITY]',
+        },
+      });
+
+      expect(await check(config)).not.toEqual([]);
+    });
+
+    it('fails a vulnerability-alert title with a suffix written into it', async () => {
+      const message = `${VULNERABILITY_MESSAGE} [security]`;
+      const config = sampleConfig({
+        vulnerabilityAlerts: { commitMessage: message, prTitle: message },
       });
 
       expect(await check(config)).not.toEqual([]);
@@ -244,7 +356,10 @@ describe('the Renovate rule on invented configs', () => {
 
     it('fails a commitBody in a group', async () => {
       const config = sampleConfig({
-        packageRules: [{ ...group(NPM_MESSAGE), commitBody: 'sample body' }],
+        packageRules: [
+          { ...group(NPM_MESSAGE), commitBody: 'sample body' },
+          nodeRule(),
+        ],
       });
 
       expect(await check(config)).not.toEqual([]);
@@ -256,7 +371,7 @@ describe('the Renovate rule on invented configs', () => {
 
     it('fails automerge in a group', async () => {
       const config = sampleConfig({
-        packageRules: [{ ...group(NPM_MESSAGE), automerge: true }],
+        packageRules: [{ ...group(NPM_MESSAGE), automerge: true }, nodeRule()],
       });
 
       expect(await check(config)).not.toEqual([]);
@@ -331,13 +446,16 @@ describe('renovate.json', () => {
     expect(await findRenovateViolations(config, commitConfig)).toEqual([]);
   });
 
-  it.each([NPM_MESSAGE, ACTIONS_MESSAGE])(
-    'holds a group whose commit message is %s',
-    (message) => {
-      const config = readConfig();
+  it.each([
+    NPM_MESSAGE,
+    ACTIONS_MESSAGE,
+    NODE_MESSAGE,
+    LOCKFILE_MESSAGE,
+    VULNERABILITY_MESSAGE,
+  ])('holds a group whose commit message is %s', (message) => {
+    const config = readConfig();
 
-      expect(collectStrings(config, 'commitMessage')).toContain(message);
-      expect(collectStrings(config, 'prTitle')).toContain(message);
-    },
-  );
+    expect(collectStrings(config, 'commitMessage')).toContain(message);
+    expect(collectStrings(config, 'prTitle')).toContain(message);
+  });
 });

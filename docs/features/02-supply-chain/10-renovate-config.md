@@ -83,3 +83,8 @@ None — can start immediately.
 
 - User stories 45, 46, 47, 50, 51, 52
 - User story 48 (npm packages, GitHub Actions)
+
+## Notes
+
+- In `scripts/checkPullRequest/checkPullRequest.ts` `checkRenovateTitle`, the "the title does not follow the format" fallback and `|| header.red` cannot be reached with the real commitlint config (same header pattern, `red-only-on-test`); they only guard a stubbed `lintTitle`; for the refactor.
+- Three input checks in `gates/renovate/renovate.ts` have no test: a config that is not an object, a message or title that is not a string, and an explicit `automerge: false` being allowed; for the refactor.

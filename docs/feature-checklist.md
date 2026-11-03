@@ -7,7 +7,7 @@ Status: `planned` → `in-progress` (feature branch open) → `done` (merged int
 | No | Feature | Contents | Status |
 | --- | --- | --- | --- |
 | 01 | quality-gates | Workspace, pinned Node, `.npmrc`, TypeScript strict, ESLint, Prettier, Vitest, `npm run verify`, CI on push and PR, branch protection, commitlint (with the `@` and `#` rule), ticket check, data-file check, dependency-cruiser, CODEOWNERS, docs-drift check | refactored |
-| 02 | supply-chain | Audit with an exceptions file and expiry, license allowlist, gitleaks and push protection, Renovate, actions pinned by SHA, daily scheduled run, the pull-request job in its own workflow, local commit-msg hook, Claude folder guard for `~/.claude/settings.json` | in-progress |
+| 02 | supply-chain | Audit with an exceptions file and expiry, license allowlist, gitleaks and push protection, Renovate, actions pinned by SHA, daily scheduled run, the pull-request job in its own workflow, local commit-msg hook, Claude folder guard for `~/.claude/settings.json` | done |
 | 03 | mutation-testing | StrykerJS on `packages/domain` and `scripts/`, informative first, then a break threshold that only goes up | planned |
 | 04 | desktop-shell | Electron main and preload with secure defaults and CSP, typed IPC bridge, SQLite and migrations, data folder, single instance, dev-only debug port, Playwright harness with the first end-to-end test, flaky quarantine | planned |
 | 05 | design-system | Theme and tokens, primitives, components, Storybook with story tests, accessibility check and MCP, every component has a story check, coverage on changed lines, reviewer gets the Storybook MCP tools | planned |

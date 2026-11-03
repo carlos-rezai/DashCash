@@ -60,3 +60,8 @@ existing test then checks; it starts no gate.
   lockfile maintenance, which cannot be confirmed before Renovate's first
   run.
 - The gate models a subset of Renovate's packageRules semantics; Renovate's first run after the merge is the real test. Check the first lockfile maintenance PR and the first Node update PR for the expected titles.
+- `matchesNpm` treats an empty `matchManagers: []` as not npm; the gate does not model how Renovate treats an empty matcher list.
+- Glob, regex and negated patterns in `matchManagers` (such as `"/^np/"` or `"!nvm"`) are not modelled; a rule matching npm that way escapes the order and lockfile checks.
+- A rule without `matchManagers` but narrowed to non-npm updates by another matcher (such as `matchDatasources`) counts as an npm rule: a false positive in the strict direction.
+- `packageRules` from the `extends` presets are not evaluated; they come before our rules, so the order check is not affected.
+- Lesson: a gate for a third-party tool's config should check our own decisions (titles, messages, release age, groups), not model the tool's semantics; the tool's first run checks those.

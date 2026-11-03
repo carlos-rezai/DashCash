@@ -30,10 +30,10 @@ Gates are features in [feature-checklist.md](feature-checklist.md), built in the
 
 - **01 quality-gates:** the binding core. `npm run verify`, CI on every push and PR, branch protection, formatting, linting, strict types, unit tests, layer rules, commit and ticket checks, the data-file check, docs drift.
 - **02 supply-chain:** audit with an exceptions file and expiry, license allowlist, gitleaks, Renovate, pinned actions, a daily run on `main`.
-- **03 desktop-shell:** the first end-to-end test and flaky quarantine, before any test can turn flaky.
-- **04 design-system:** stories as tests, the accessibility check, a story for every component, coverage on changed lines.
-- **06 accounts:** the `Cents` type and its lint rule, with the first money.
-- **07 mutation-testing:** StrykerJS on the domain package, before the features where the money math happens.
+- **03 mutation-testing:** StrykerJS on the domain package and `scripts/`, before the features where the money math happens.
+- **04 desktop-shell:** the first end-to-end test and flaky quarantine, before any test can turn flaky.
+- **05 design-system:** stories as tests, the accessibility check, a story for every component, coverage on changed lines.
+- **07 accounts:** the `Cents` type and its lint rule, with the first money.
 - **20 release-pipeline:** release from a tag, SBOM, installer smoke test, visual regression.
 
 Each new gate starts informative where it could block existing work, then blocks. Thresholds only go up: a monthly ten-minute review (lead time, failed runs, open exceptions, flaky tests, coverage and mutation score) raises them, and lowering one needs a written decision.

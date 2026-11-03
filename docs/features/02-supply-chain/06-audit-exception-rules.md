@@ -43,7 +43,7 @@ not duplicated, so `npm run check:audit` stays green.
       output" table.
 - [x] Tests never run the entry or touch the network.
 - [x] `npm run check:audit` still passes on the day of building.
-- [ ] `npm run verify` and CI's `verify` job are green.
+- [x] `npm run verify` and CI's `verify` job are green.
 
 ## Blocked by
 

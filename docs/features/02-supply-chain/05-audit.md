@@ -94,7 +94,7 @@ issue-loop stops and reports it.
 - [x] `npm run check:audit` passes on the day of building.
 - [x] `verify` runs `check:audit` last, after `check:licenses`; the wiring
       test expects it there and fails when it moves or goes.
-- [ ] `npm run verify` and CI's `verify` job are green.
+- [x] `npm run verify` and CI's `verify` job are green.
 
 ## Blocked by
 

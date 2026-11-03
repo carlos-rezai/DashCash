@@ -1,5 +1,5 @@
 ---
-status: in-progress
+status: done
 ---
 # Push protection
 
@@ -24,10 +24,10 @@ runs the apply script again so that push protection is switched on.
 
 ## Acceptance criteria
 
-- [ ] The request-planning tests show the repository patch carrying both
+- [x] The request-planning tests show the repository patch carrying both
       secret-scanning settings beside the merge settings, for both the
       create and the update path.
-- [ ] Every other planned request is unchanged; the existing tests pass
+- [x] Every other planned request is unchanged; the existing tests pass
       unchanged.
 - [ ] `npm run verify` and CI's `verify` job are green.
 

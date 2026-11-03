@@ -13,7 +13,8 @@ const REPOSITORY = 'repos/{owner}/{repo}';
 
 // The requests that put the Ruleset on the repository: create it when no
 // ruleset of its name exists, otherwise update that one by its id, and in
-// both cases switch the repository to merge commits only.
+// both cases switch the repository to merge commits only and switch on
+// secret scanning with push protection.
 export function planRulesetRequests(
   ruleset: { name: string },
   existing: readonly ExistingRuleset[],
@@ -36,6 +37,10 @@ export function planRulesetRequests(
         allow_merge_commit: true,
         allow_squash_merge: false,
         allow_rebase_merge: false,
+        security_and_analysis: {
+          secret_scanning: { status: 'enabled' },
+          secret_scanning_push_protection: { status: 'enabled' },
+        },
       },
     },
   ];

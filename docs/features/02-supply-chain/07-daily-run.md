@@ -1,5 +1,5 @@
 ---
-status: in-progress
+status: done
 ---
 # Daily run
 
@@ -32,14 +32,14 @@ starts the **Daily run** once with `workflow_dispatch`.
 
 ## Acceptance criteria
 
-- [ ] The daily workflow is `name: Daily`; its triggers are exactly the
+- [x] The daily workflow is `name: Daily`; its triggers are exactly the
       schedule `0 5 * * *` and `workflow_dispatch`; its one job `daily`
       runs `npm run check:audit` and no other gate of **Verify**.
-- [ ] The wiring test fails when the schedule, the manual trigger, the
+- [x] The wiring test fails when the schedule, the manual trigger, the
       full-history checkout or the audit step is removed.
-- [ ] The pinned-actions test and the single-`pull-request`-job check pass
+- [x] The pinned-actions test and the single-`pull-request`-job check pass
       with the new workflow.
-- [ ] `npm run verify` and CI's `verify` job are green.
+- [x] `npm run verify` and CI's `verify` job are green.
 
 ## Blocked by
 

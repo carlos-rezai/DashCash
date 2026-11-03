@@ -49,3 +49,14 @@ above and the gate wiring test.
 
 - User stories 35, 36, 37, 38, 40
 - User story 44 (gitleaks in the **Daily run**)
+
+## Notes
+
+- In `gates/gateWiring/gateWiring.test.ts` (around lines 82-84) the comment
+  "A workflow file that does not exist reads as an empty workflow" was
+  written for `readWorkflow`, but `readWorkflowText` now sits between them.
+  Move it back; for the refactor.
+- The per-job test "pins the gitleaks action of the %s job as a Pinned
+  action" (`gates/gateWiring/gateWiring.test.ts`, around line 573) partly
+  repeats the pinned-actions gate; it adds only that each file has exactly
+  one gitleaks `uses:` line. Decide whether to keep it; for the refactor.

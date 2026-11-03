@@ -1,5 +1,5 @@
 ---
-status: open
+status: done
 ---
 # Home settings guard
 
@@ -33,17 +33,17 @@ so the issue-loop stops at this ticket (design log Q47). It must be
 
 ## Acceptance criteria
 
-- [ ] `Edit` and `Write` of the **Home settings** as a POSIX, Windows, Git
+- [x] `Edit` and `Write` of the **Home settings** as a POSIX, Windows, Git
       Bash and `~/` path exit 2.
-- [ ] A memory file under the home `.claude/projects/`, a
+- [x] A memory file under the home `.claude/projects/`, a
       `settings.json.bak` beside the **Home settings** and a
       `.claude/settings.json` under another home subfolder exit 0.
-- [ ] Bash commands naming `~/.claude/settings.json` and
+- [x] Bash commands naming `~/.claude/settings.json` and
       `$HOME/.claude/settings.json` exit 2.
-- [ ] With neither `HOME` nor `USERPROFILE` set, the home rule is skipped
+- [x] With neither `HOME` nor `USERPROFILE` set, the home rule is skipped
       and the project rule still blocks.
-- [ ] Every existing guard case keeps its exit code.
-- [ ] `npm run verify` and CI's `verify` job are green.
+- [x] Every existing guard case keeps its exit code.
+- [x] `npm run verify` and CI's `verify` job are green.
 
 ## Handover
 

@@ -25,7 +25,8 @@
     "check:docs-drift": "node scripts/checkDocsDrift/checkDocsDrift.ts",
     "check:commits": "node scripts/checkCommits/checkCommits.ts",
     "check:tickets": "node scripts/checkTickets/checkTickets.ts",
-    "check:pr": "node scripts/checkPullRequest/checkPullRequest.ts"
+    "check:pr": "node scripts/checkPullRequest/checkPullRequest.ts",
+    "prepare": "git config core.hooksPath .githooks"
   },
   "devDependencies": {
     "@commitlint/is-ignored": "21.2.3",

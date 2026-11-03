@@ -1,5 +1,5 @@
 ---
-status: in-progress
+status: done
 ---
 # Commit-msg hook
 
@@ -45,13 +45,13 @@ test.
 
 ## Acceptance criteria
 
-- [ ] Driven with `sh` from the repository root, the hook exits 0 for a
+- [x] Driven with `sh` from the repository root, the hook exits 0 for a
       valid header and for an empty message, and exits 1 with the
       violation line for an invalid header.
-- [ ] The gate test fails when the hook loses mode `100755`, its shebang,
+- [x] The gate test fails when the hook loses mode `100755`, its shebang,
       its command or `"$1"`, or when `prepare` changes.
-- [ ] After `npm ci`, `git config core.hooksPath` reads `.githooks`.
-- [ ] `docs/conventions.md` lists the hooks folder, and the docs-drift
+- [x] After `npm ci`, `git config core.hooksPath` reads `.githooks`.
+- [x] `docs/conventions.md` lists the hooks folder, and the docs-drift
       gate passes.
 - [ ] `npm run verify` and CI's `verify` job are green.
 

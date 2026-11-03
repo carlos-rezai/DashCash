@@ -151,6 +151,65 @@ function onExceptionsFile(violations: readonly Violation[]): Violation[] {
   return violations.filter(({ subject }) => subject === EXCEPTIONS_FILE);
 }
 
+function stale(id: string): Violation {
+  return {
+    subject: id,
+    reason: 'audit exception names an advisory npm audit no longer reports',
+  };
+}
+
+// One violation on the exceptions file whose reason names the duplicate id.
+function duplicate(id: string): Violation {
+  return {
+    subject: EXCEPTIONS_FILE,
+    reason: expect.stringContaining(id) as string,
+  };
+}
+
+// An advisory object like `advisory`, with its `url` replaced or, set to
+// undefined, left out.
+function advisoryAt(spec: AdvisorySpec, url: unknown): unknown {
+  const entry = { ...(advisory(spec) as Record<string, unknown>), url };
+  return Object.fromEntries(
+    Object.entries(entry).filter(([, value]) => value !== undefined),
+  );
+}
+
+const NO_ID_ADVISORY: AdvisorySpec = {
+  id: 'none',
+  title: 'Sample Query Builder allows injection through raw fragments',
+  severity: 'high',
+};
+
+// A report whose one advisory, in query-builder, has the given `url`.
+function noIdReport(url: unknown): unknown {
+  return report({
+    'query-builder': vulnerability('query-builder', 'high', [
+      advisoryAt(NO_ID_ADVISORY, url),
+    ]),
+  });
+}
+
+function lineOf({ subject, reason }: Violation): string {
+  return `${subject}: ${reason}`;
+}
+
+// The violations whose line names the advisory without a GHSA id.
+function aboutNoIdAdvisory(violations: readonly Violation[]): Violation[] {
+  return violations.filter((violation) =>
+    lineOf(violation).includes(NO_ID_ADVISORY.title),
+  );
+}
+
+// Asserts that `violations` hold exactly one violation for the advisory
+// without a GHSA id, and that it is a violation of its own rather than the
+// advisory reported as lacking an audit exception.
+function expectOwnNoIdViolation(violations: readonly Violation[]): void {
+  const own = aboutNoIdAdvisory(violations);
+  expect(own).toHaveLength(1);
+  expect(lineOf(own[0] as Violation)).not.toMatch(/has no audit exception/);
+}
+
 describe('findAuditViolations', () => {
   describe('advisories', () => {
     it('reports nothing for a report without advisories', () => {
@@ -522,7 +581,181 @@ describe('findAuditViolations', () => {
     });
   });
 
+  describe('a stale exception', () => {
+    it('reports an exception whose advisory the report does not list', () => {
+      expect(findAuditViolations(report(), [exception()], TODAY)).toEqual([
+        stale(GHSA_GLOB),
+      ]);
+    });
+
+    it('reports the stale exception only, beside a live one', () => {
+      expect(
+        findAuditViolations(
+          globReport(),
+          [exception(), exception({ advisory: GHSA_PARSER })],
+          TODAY,
+        ),
+      ).toEqual([stale(GHSA_PARSER)]);
+    });
+
+    it('reports an exception both expired and stale once, as expired, beside a stale one', () => {
+      const violations = findAuditViolations(
+        report(),
+        [
+          exception({ added: '2026-10-01', expires: '2026-11-30' }),
+          exception({
+            advisory: GHSA_PARSER,
+            added: '2026-11-15',
+            expires: '2027-01-31',
+          }),
+        ],
+        '2026-12-01',
+      );
+
+      expect(violations).toHaveLength(2);
+      expect(violations).toEqual(
+        expect.arrayContaining([
+          expired(GHSA_GLOB, '2026-11-30'),
+          stale(GHSA_PARSER),
+        ]),
+      );
+    });
+  });
+
+  describe('two exceptions for one advisory', () => {
+    it('reports one violation on the exceptions file, naming the duplicate id', () => {
+      expect(
+        findAuditViolations(
+          globReport(),
+          [
+            exception(),
+            exception({
+              reason: 'a second entry for the same sample advisory',
+              added: '2026-10-15',
+              expires: '2027-01-10',
+            }),
+          ],
+          TODAY,
+        ),
+      ).toEqual([duplicate(GHSA_GLOB)]);
+    });
+
+    it('reports only the duplicated advisory, beside an exception for another', () => {
+      const violations = findAuditViolations(
+        report({
+          'glob-walker': vulnerability('glob-walker', 'moderate', [
+            advisory(GLOB_ADVISORY),
+          ]),
+          'deep-parser': vulnerability('deep-parser', 'low', [
+            advisory({
+              id: GHSA_PARSER,
+              title: 'Sample Parser leaks memory on deep input',
+              severity: 'low',
+            }),
+          ]),
+        }),
+        [
+          exception({ advisory: GHSA_PARSER }),
+          exception(),
+          exception({ reason: 'a second entry for the same sample advisory' }),
+        ],
+        TODAY,
+      );
+
+      expect(violations).toEqual([duplicate(GHSA_GLOB)]);
+      expect(lineOf(violations[0] as Violation)).not.toContain(GHSA_PARSER);
+    });
+  });
+
+  describe('an advisory without a GHSA id', () => {
+    it.each<[string, unknown]>([
+      [
+        'a url ending in a number',
+        'https://registry.invented.test/-/npm/v1/security/advisories/1100042',
+      ],
+      [
+        'a url ending in a CVE id',
+        'https://github.com/advisories/CVE-2026-12345',
+      ],
+      [
+        'a url with a path after the GHSA id',
+        `https://github.com/advisories/${GHSA_GLOB}/dependabot`,
+      ],
+      [
+        'a url ending in a short GHSA id',
+        'https://github.com/advisories/GHSA-2c3f-4g5h',
+      ],
+      ['no url', undefined],
+      ['a url that is not a string', 1_100_042],
+    ])('reports an advisory with %s as a violation of its own', (_, url) => {
+      const violations = findAuditViolations(noIdReport(url), [], TODAY);
+
+      expect(violations).toHaveLength(1);
+      expectOwnNoIdViolation(violations);
+    });
+
+    it('is not lifted by an exception for the GHSA id inside its url', () => {
+      const violations = findAuditViolations(
+        noIdReport(`https://github.com/advisories/${GHSA_GLOB}/dependabot`),
+        [exception()],
+        TODAY,
+      );
+
+      expectOwnNoIdViolation(violations);
+    });
+
+    it('is reported beside the advisories that have a GHSA id', () => {
+      const violations = findAuditViolations(
+        report({
+          'glob-walker': vulnerability('glob-walker', 'moderate', [
+            advisory(GLOB_ADVISORY),
+          ]),
+          'query-builder': vulnerability('query-builder', 'high', [
+            advisoryAt(
+              NO_ID_ADVISORY,
+              'https://registry.invented.test/-/npm/v1/security/advisories/1100042',
+            ),
+          ]),
+        }),
+        [exception()],
+        TODAY,
+      );
+
+      expect(violations).toHaveLength(1);
+      expectOwnNoIdViolation(violations);
+    });
+  });
+
   describe('violation lines', () => {
+    it('keeps the stale, duplicate and no-GHSA-id violations to one line each', () => {
+      const violations = findAuditViolations(
+        report({
+          'glob-walker': vulnerability('glob-walker', 'moderate', [
+            advisory(GLOB_ADVISORY),
+          ]),
+          'query-builder': vulnerability('query-builder', 'high', [
+            advisoryAt(
+              NO_ID_ADVISORY,
+              'https://registry.invented.test/-/npm/v1/security/advisories/1100042',
+            ),
+          ]),
+        }),
+        [
+          exception(),
+          exception({ reason: 'a second entry for the same sample advisory' }),
+          exception({ advisory: GHSA_TEMPLATE }),
+        ],
+        TODAY,
+      );
+
+      expect(violations).toContainEqual(stale(GHSA_TEMPLATE));
+      expect(violations).toContainEqual(duplicate(GHSA_GLOB));
+      expectOwnNoIdViolation(violations);
+      for (const violation of violations) {
+        expect(lineOf(violation)).not.toMatch(/[\r\n]/);
+      }
+    });
+
     it('keeps every violation to one line', () => {
       const violations = findAuditViolations(
         report({

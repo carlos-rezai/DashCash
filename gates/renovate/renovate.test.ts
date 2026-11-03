@@ -260,6 +260,8 @@ describe('the Renovate rule on invented configs', () => {
         'only engines.node',
         { matchManagers: ['npm'], matchDepTypes: ['engines'] },
       ],
+      ['only the engines dependency type', { matchDepTypes: ['engines'] }],
+      ['nothing, being disabled', { enabled: false }],
     ])('fails a Node rule covering %s', async (_case, narrowing) => {
       const config = sampleConfig({
         packageRules: [group(NPM_MESSAGE), nodeRule(narrowing)],
@@ -289,6 +291,12 @@ describe('the Renovate rule on invented configs', () => {
       });
 
       expect(await check(config)).not.toEqual([]);
+    });
+
+    it('fails a config without vulnerability alerts', async () => {
+      expect(
+        await check(sampleConfigWithout('vulnerabilityAlerts')),
+      ).not.toEqual([]);
     });
 
     it('fails a config without lockfile maintenance', async () => {

@@ -93,7 +93,7 @@ Run `npm run verify` before committing. Every step must leave it green.
 - [x] 12 use is record in check licenses
 - [x] 13 use is record in the renovate rule
 - [x] 14 share the renovate feature name
-- [ ] 15 rename malformed entry to verb first
+- [x] 15 rename malformed entry to verb first
 - [ ] 16 rename renovate list helpers to verb first
 - [ ] 17 move the array check into read exceptions
 - [ ] 18 extract lapsed exceptions in check audit

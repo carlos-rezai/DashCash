@@ -80,7 +80,11 @@ function readAdvisories(
   return { advisories: [...advisories.values()], withoutId };
 }
 
-function malformedEntry(index: number, field: string, why: string): Violation {
+function buildEntryViolation(
+  index: number,
+  field: string,
+  why: string,
+): Violation {
   return {
     subject: EXCEPTIONS_FILE,
     reason: `entry ${String(index)}, field ${field}: ${why}`,
@@ -97,33 +101,37 @@ function findEntryProblems(
   const { advisory, reason } = entry;
   if (typeof advisory !== 'string' || !GHSA_ID.test(advisory)) {
     problems.push(
-      malformedEntry(index, 'advisory', 'must be a GHSA-xxxx-xxxx-xxxx id'),
+      buildEntryViolation(
+        index,
+        'advisory',
+        'must be a GHSA-xxxx-xxxx-xxxx id',
+      ),
     );
   }
   if (typeof reason !== 'string' || reason === '') {
-    problems.push(malformedEntry(index, 'reason', 'must not be empty'));
+    problems.push(buildEntryViolation(index, 'reason', 'must not be empty'));
   }
   const added = readDate(entry['added']);
   const expires = readDate(entry['expires']);
   if (added === undefined) {
     problems.push(
-      malformedEntry(index, 'added', 'must be a real YYYY-MM-DD date'),
+      buildEntryViolation(index, 'added', 'must be a real YYYY-MM-DD date'),
     );
   }
   if (expires === undefined) {
     problems.push(
-      malformedEntry(index, 'expires', 'must be a real YYYY-MM-DD date'),
+      buildEntryViolation(index, 'expires', 'must be a real YYYY-MM-DD date'),
     );
   }
   if (added !== undefined && expires !== undefined) {
     if (added > today) {
-      problems.push(malformedEntry(index, 'added', 'is later than today'));
+      problems.push(buildEntryViolation(index, 'added', 'is later than today'));
     }
     if (expires < added) {
-      problems.push(malformedEntry(index, 'expires', 'is before added'));
+      problems.push(buildEntryViolation(index, 'expires', 'is before added'));
     } else if (expires - added > MAX_EXCEPTION_DAYS * MS_PER_DAY) {
       problems.push(
-        malformedEntry(
+        buildEntryViolation(
           index,
           'expires',
           `is more than ${String(MAX_EXCEPTION_DAYS)} days after added`,
@@ -144,7 +152,7 @@ function readExceptions(
   const violations: Violation[] = [];
   exceptions.forEach((entry, index) => {
     if (!isRecord(entry)) {
-      violations.push(malformedEntry(index, 'entry', 'must be an object'));
+      violations.push(buildEntryViolation(index, 'entry', 'must be an object'));
       return;
     }
     const problems = findEntryProblems(entry, index, today);

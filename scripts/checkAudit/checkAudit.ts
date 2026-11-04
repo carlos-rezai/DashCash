@@ -179,6 +179,34 @@ function readExceptions(
   return { valid, violations };
 }
 
+type LapsedExceptions = { expired: Violation[]; stale: Violation[] };
+
+// The exceptions that have lapsed: expired ones, and stale ones whose advisory
+// the report no longer names. An exception that is both is reported once, as
+// expired.
+function findLapsedExceptions(
+  valid: readonly AuditException[],
+  reported: ReadonlySet<string>,
+  today: number,
+): LapsedExceptions {
+  const expired: Violation[] = [];
+  const stale: Violation[] = [];
+  for (const { advisory, expires } of valid) {
+    if ((readDate(expires) ?? 0) < today) {
+      expired.push({
+        subject: advisory,
+        reason: `audit exception expired on ${expires}`,
+      });
+    } else if (!reported.has(advisory)) {
+      stale.push({
+        subject: advisory,
+        reason: 'audit exception names an advisory npm audit no longer reports',
+      });
+    }
+  }
+  return { expired, stale };
+}
+
 // The advisory ids that more than one exception names, each once.
 function findDuplicates(exceptions: readonly AuditException[]): string[] {
   const seen = new Set<string>();
@@ -217,21 +245,7 @@ export function findAuditViolations(
   const { advisories, withoutId } = readAdvisories(vulnerabilities);
   const covered = new Set(valid.map(({ advisory }) => advisory));
   const reported = new Set(advisories.map(({ id }) => id));
-  const expired: Violation[] = [];
-  const stale: Violation[] = [];
-  for (const { advisory, expires } of valid) {
-    if ((readDate(expires) ?? 0) < todayTime) {
-      expired.push({
-        subject: advisory,
-        reason: `audit exception expired on ${expires}`,
-      });
-    } else if (!reported.has(advisory)) {
-      stale.push({
-        subject: advisory,
-        reason: 'audit exception names an advisory npm audit no longer reports',
-      });
-    }
-  }
+  const { expired, stale } = findLapsedExceptions(valid, reported, todayTime);
   const duplicates: Violation[] = findDuplicates(valid).map((id) => ({
     subject: EXCEPTIONS_FILE,
     reason: `more than one audit exception names ${id}`,

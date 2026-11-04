@@ -31,7 +31,7 @@ const NPM_MANAGER = 'npm';
 const LOCKFILE_UPDATE_TYPE = 'lockFileMaintenance';
 const NODE_RULE_KEYS = ['matchManagers', 'matchDepNames'];
 
-function sameList(value: unknown, expected: readonly string[]): boolean {
+function hasSameItems(value: unknown, expected: readonly string[]): boolean {
   if (!Array.isArray(value)) return false;
   const items = value.map((item: unknown) => String(item)).sort();
   return (
@@ -55,7 +55,7 @@ function findSettingViolations(config: Settings): Violation[] {
   const violations: Violation[] = [];
   const fail = (reason: string) =>
     violations.push({ subject: SUBJECT, reason });
-  if (!sameList(config['extends'], PRESETS)) {
+  if (!hasSameItems(config['extends'], PRESETS)) {
     fail(`extends must be exactly ${PRESETS.join(', ')}`);
   }
   if (config['semanticCommits'] !== SEMANTIC_COMMITS) {
@@ -64,7 +64,7 @@ function findSettingViolations(config: Settings): Violation[] {
   if (config['minimumReleaseAge'] !== MINIMUM_RELEASE_AGE) {
     fail(`minimumReleaseAge must be "${MINIMUM_RELEASE_AGE}"`);
   }
-  if (!sameList(config['schedule'], SCHEDULE)) {
+  if (!hasSameItems(config['schedule'], SCHEDULE)) {
     fail(`schedule must be ${describeValue(SCHEDULE)}`);
   }
   if (config['timezone'] !== TIMEZONE) {
@@ -85,7 +85,7 @@ function findSettingViolations(config: Settings): Violation[] {
   return violations;
 }
 
-function holds(value: unknown, item: string): boolean {
+function listIncludes(value: unknown, item: string): boolean {
   return Array.isArray(value) && value.includes(item);
 }
 
@@ -97,8 +97,10 @@ function isNodeRule(rule: Settings): boolean {
     (key) => /^(match|exclude)/.test(key) && !NODE_RULE_KEYS.includes(key),
   );
   return (
-    holds(rule['matchDepNames'], NODE_DEP) &&
-    NODE_MANAGERS.every((manager) => holds(rule['matchManagers'], manager)) &&
+    listIncludes(rule['matchDepNames'], NODE_DEP) &&
+    NODE_MANAGERS.every((manager) =>
+      listIncludes(rule['matchManagers'], manager),
+    ) &&
     !narrowed &&
     rule['enabled'] !== false
   );
@@ -108,7 +110,7 @@ function isNodeRule(rule: Settings): boolean {
 function matchesNpm(rule: Settings): boolean {
   return (
     rule['matchManagers'] === undefined ||
-    holds(rule['matchManagers'], NPM_MANAGER)
+    listIncludes(rule['matchManagers'], NPM_MANAGER)
   );
 }
 

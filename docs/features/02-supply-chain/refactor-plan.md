@@ -85,7 +85,7 @@ Run `npm run verify` before committing. Every step must leave it green.
 - [x] 04 tidy the 51-character description sample
 - [x] 05 move the missing workflow comment back
 - [x] 06 narrow the gitleaks pin test to one step
-- [ ] 07 use with job steps for the daily job
+- [x] 07 use with job steps for the daily job
 - [ ] 08 share the checkout test of two jobs
 - [ ] 09 describe secret scanning in protection tests
 - [ ] 10 add the is record module

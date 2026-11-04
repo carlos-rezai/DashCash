@@ -288,23 +288,8 @@ function withoutTrigger(workflow: Workflow, event: string): Workflow {
   };
 }
 
-// The workflow with the daily job's steps changed by `change`.
-function withDailySteps(
-  workflow: Workflow,
-  change: (steps: WorkflowStep[]) => WorkflowStep[],
-): Workflow {
-  const daily = workflow.jobs?.['daily'] ?? {};
-  return {
-    ...workflow,
-    jobs: {
-      ...workflow.jobs,
-      daily: { ...daily, steps: change(jobSteps(workflow, 'daily')) },
-    },
-  };
-}
-
 function withoutFullHistory(workflow: Workflow): Workflow {
-  return withDailySteps(workflow, (steps) =>
+  return withJobSteps(workflow, 'daily', (steps) =>
     steps.map((step) =>
       (step.uses ?? '').startsWith('actions/checkout@')
         ? {
@@ -321,7 +306,7 @@ function withoutFullHistory(workflow: Workflow): Workflow {
 }
 
 function withoutAuditStep(workflow: Workflow): Workflow {
-  return withDailySteps(workflow, (steps) =>
+  return withJobSteps(workflow, 'daily', (steps) =>
     steps.filter((step) => !(step.run ?? '').includes('npm run check:audit')),
   );
 }

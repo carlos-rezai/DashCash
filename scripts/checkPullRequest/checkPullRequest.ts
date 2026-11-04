@@ -22,7 +22,7 @@ import { listHeadPaths, readHeadFile } from '../runGit/runGit.ts';
 const RENOVATE_BRANCH = /^renovate\/.+$/;
 // The feature every Renovate pull request names; its title is
 // `chore: [supply-chain] <description>`.
-const RENOVATE_FEATURE = 'supply-chain';
+export const RENOVATE_FEATURE = 'supply-chain';
 
 export type PullRequestInput = {
   branch: string | undefined;

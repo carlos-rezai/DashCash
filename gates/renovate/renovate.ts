@@ -1,4 +1,7 @@
-import { checkPullRequest } from '../../scripts/checkPullRequest/checkPullRequest.ts';
+import {
+  checkPullRequest,
+  RENOVATE_FEATURE,
+} from '../../scripts/checkPullRequest/checkPullRequest.ts';
 import { isRecord } from '../../scripts/isRecord/isRecord.ts';
 import {
   lintCommitMessages,
@@ -15,7 +18,6 @@ const PRESETS = [
   'config:recommended',
   'helpers:pinGitHubActionDigests',
 ];
-const FEATURE = 'supply-chain';
 const SEMANTIC_COMMITS = 'disabled';
 const MINIMUM_RELEASE_AGE = '14 days';
 const SCHEDULE = ['before 6am on monday'];
@@ -175,8 +177,8 @@ async function findMessageViolations(
   const fail = (reason: string) =>
     violations.push({ subject: message, reason });
   if (message.includes('{{')) fail('a commit message holds no template');
-  if (parseCommitHeader(message)?.feature !== FEATURE) {
-    fail(`a commit message names the feature ${FEATURE}`);
+  if (parseCommitHeader(message)?.feature !== RENOVATE_FEATURE) {
+    fail(`a commit message names the feature ${RENOVATE_FEATURE}`);
   }
   violations.push(...(await lintCommitMessages([message], commitConfig)));
   return violations;

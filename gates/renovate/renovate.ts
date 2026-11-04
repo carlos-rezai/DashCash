@@ -1,4 +1,5 @@
 import { checkPullRequest } from '../../scripts/checkPullRequest/checkPullRequest.ts';
+import { isRecord } from '../../scripts/isRecord/isRecord.ts';
 import {
   lintCommitMessages,
   type loadCommitConfig,
@@ -28,10 +29,6 @@ const NPM_MANAGER = 'npm';
 const LOCKFILE_UPDATE_TYPE = 'lockFileMaintenance';
 const NODE_RULE_KEYS = ['matchManagers', 'matchDepNames'];
 
-function isSettings(value: unknown): value is Settings {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
-
 function sameList(value: unknown, expected: readonly string[]): boolean {
   if (!Array.isArray(value)) return false;
   const items = value.map((item: unknown) => String(item)).sort();
@@ -44,7 +41,7 @@ function sameList(value: unknown, expected: readonly string[]): boolean {
 // Every object in the config, the root first, at any depth.
 function collectObjects(value: unknown): Settings[] {
   if (Array.isArray(value)) return value.flatMap(collectObjects);
-  if (!isSettings(value)) return [];
+  if (!isRecord(value)) return [];
   return [value, ...Object.values(value).flatMap(collectObjects)];
 }
 
@@ -129,7 +126,7 @@ function findGroupViolations(config: Settings): Violation[] {
   const fail = (reason: string) =>
     violations.push({ subject: SUBJECT, reason });
   const rules = Array.isArray(config['packageRules'])
-    ? config['packageRules'].filter(isSettings)
+    ? config['packageRules'].filter(isRecord)
     : [];
   if (!rules.some(isNodeRule)) {
     fail(
@@ -148,11 +145,11 @@ function findGroupViolations(config: Settings): Violation[] {
     );
   }
   const lockfile = config['lockFileMaintenance'];
-  if (!isSettings(lockfile) || lockfile['enabled'] !== true) {
+  if (!isRecord(lockfile) || lockfile['enabled'] !== true) {
     fail('lockFileMaintenance must be enabled');
   }
   const alerts = config['vulnerabilityAlerts'];
-  if (!isSettings(alerts)) {
+  if (!isRecord(alerts)) {
     fail('vulnerabilityAlerts must be set');
   } else {
     if (alerts['commitMessageSuffix'] !== '') {
@@ -215,7 +212,7 @@ export async function findRenovateViolations(
   config: unknown,
   commitConfig: CommitConfig,
 ): Promise<Violation[]> {
-  if (!isSettings(config)) {
+  if (!isRecord(config)) {
     return [{ subject: SUBJECT, reason: 'the config must be an object' }];
   }
   const violations = [

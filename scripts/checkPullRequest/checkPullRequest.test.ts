@@ -261,6 +261,52 @@ describe('checkPullRequest', () => {
         expect(await check(BRANCH, title)).not.toEqual([]);
       },
     );
+
+    // The fallbacks below cannot be reached with the real commitlint config,
+    // so a stubbed linter pins them: the check must fail closed whatever
+    // linter it gets.
+    describe('with a stubbed lintTitle', () => {
+      const SAMPLE_VIOLATION: Violation = {
+        subject: 'update sample',
+        reason: 'a sample rule',
+      };
+
+      function checkWithStub(
+        title: string,
+        reported: Violation[],
+      ): Promise<Violation[]> {
+        return checkPullRequest({
+          branch: BRANCH,
+          title,
+          trackedPaths: [],
+          readFile: fileReader({}),
+          lintTitle: () => Promise.resolve(reported),
+        });
+      }
+
+      it('fails a title off the header pattern that the linter passes', async () => {
+        expect(await checkWithStub('update sample', [])).toEqual([
+          {
+            subject: 'update sample',
+            reason: 'the title does not follow the format',
+          },
+        ]);
+      });
+
+      it('reports only what the linter reports for a title off the header pattern', async () => {
+        expect(
+          await checkWithStub('update sample', [SAMPLE_VIOLATION]),
+        ).toEqual([SAMPLE_VIOLATION]);
+      });
+
+      it('fails a RED title that the linter passes, as no chore: title', async () => {
+        const title = 'chore: [supply-chain] update sample, RED';
+
+        expect(await checkWithStub(title, [])).toEqual([
+          { subject: title, reason: 'a renovate title is chore:' },
+        ]);
+      });
+    });
   });
 
   describe.each([

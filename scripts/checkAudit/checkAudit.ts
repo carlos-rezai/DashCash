@@ -5,6 +5,7 @@ import {
   runGate,
   type Violation,
 } from '../reportViolations/reportViolations.ts';
+import { isRecord } from '../isRecord/isRecord.ts';
 
 const EXCEPTIONS_FILE = 'quality/audit-exceptions.json';
 const NPM_AUDIT = 'npm audit';
@@ -22,10 +23,6 @@ type Advisory = {
   title: string;
   packages: string[];
 };
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
 
 // The time of a `YYYY-MM-DD` string in UTC milliseconds, or undefined when it
 // is not a real calendar date.

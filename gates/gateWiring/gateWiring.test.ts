@@ -79,13 +79,13 @@ function readRootFile(path: string): string {
   return readFileSync(new URL(`../../${path}`, import.meta.url), 'utf8');
 }
 
-// A workflow file that does not exist reads as an empty workflow, so every
-// check on it fails at its assertion.
 function readWorkflowText(file: string): string {
   const url = new URL(`../../${WORKFLOWS_FOLDER}/${file}`, import.meta.url);
   return existsSync(url) ? readFileSync(url, 'utf8') : '';
 }
 
+// A workflow file that does not exist reads as an empty workflow, so every
+// check on it fails at its assertion.
 function readWorkflow(file: string): Workflow {
   const url = new URL(`../../${WORKFLOWS_FOLDER}/${file}`, import.meta.url);
   if (!existsSync(url)) {

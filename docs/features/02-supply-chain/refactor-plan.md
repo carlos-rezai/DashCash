@@ -83,7 +83,7 @@ Run `npm run verify` before committing. Every step must leave it green.
 - [x] 02 test renovate title fallbacks with a stub
 - [x] 03 tighten the audit malformed entry helper
 - [x] 04 tidy the 51-character description sample
-- [ ] 05 move the missing workflow comment back
+- [x] 05 move the missing workflow comment back
 - [ ] 06 narrow the gitleaks pin test to one step
 - [ ] 07 use with job steps for the daily job
 - [ ] 08 share the checkout test of two jobs

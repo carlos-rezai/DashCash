@@ -144,6 +144,49 @@ describe('the Renovate rule on invented configs', () => {
     expect(await check(config)).toEqual([]);
   });
 
+  describe('the input checks', () => {
+    it.each([
+      ['an array', []],
+      ['null', null],
+      ['a string', 'renovate'],
+    ])('fails %s as a config, with one violation', async (_case, config) => {
+      expect(await check(config)).toEqual([
+        { subject: 'renovate.json', reason: 'the config must be an object' },
+      ]);
+    });
+
+    it('fails a commit message and a title that are not strings', async () => {
+      const config = sampleConfig({
+        packageRules: [
+          { ...group(NPM_MESSAGE), commitMessage: 42, prTitle: 42 },
+          nodeRule(),
+        ],
+      });
+
+      const violations = await check(config);
+
+      expect(violations).toContainEqual({
+        subject: '42',
+        reason: 'must be a string',
+      });
+      expect(
+        violations.filter((violation) => violation.subject === '42'),
+      ).toHaveLength(2);
+    });
+
+    it('passes an explicit automerge false at the root', async () => {
+      expect(await check(sampleConfig({ automerge: false }))).toEqual([]);
+    });
+
+    it('passes an explicit automerge false in a group', async () => {
+      const config = sampleConfig({
+        packageRules: [{ ...group(NPM_MESSAGE), automerge: false }, nodeRule()],
+      });
+
+      expect(await check(config)).toEqual([]);
+    });
+  });
+
   describe('the commit messages', () => {
     it.each([
       ['a templated message', 'chore: [supply-chain] update {{depname}}'],

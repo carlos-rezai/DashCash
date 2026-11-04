@@ -79,7 +79,7 @@ duplicated pin assertion that step 06 drops (Decision Document).
 Each step is one `refactor:` commit with the step's number and description.
 Run `npm run verify` before committing. Every step must leave it green.
 
-- [ ] 01 test renovate rule input checks
+- [x] 01 test renovate rule input checks
 - [ ] 02 test renovate title fallbacks with a stub
 - [ ] 03 tighten the audit malformed entry helper
 - [ ] 04 tidy the 51-character description sample

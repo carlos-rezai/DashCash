@@ -207,8 +207,11 @@ function findLapsedExceptions(
   return { expired, stale };
 }
 
-// The advisory ids that more than one exception names, each once.
-function findDuplicates(exceptions: readonly AuditException[]): string[] {
+// A violation for every advisory id that more than one exception names, each
+// once.
+function findDuplicateExceptions(
+  exceptions: readonly AuditException[],
+): Violation[] {
   const seen = new Set<string>();
   const duplicates = new Set<string>();
   for (const { advisory } of exceptions) {
@@ -217,7 +220,10 @@ function findDuplicates(exceptions: readonly AuditException[]): string[] {
     }
     seen.add(advisory);
   }
-  return [...duplicates];
+  return [...duplicates].map((id) => ({
+    subject: EXCEPTIONS_FILE,
+    reason: `more than one audit exception names ${id}`,
+  }));
 }
 
 // Returns a violation for every Advisory of the report that has no Audit
@@ -246,10 +252,7 @@ export function findAuditViolations(
   const covered = new Set(valid.map(({ advisory }) => advisory));
   const reported = new Set(advisories.map(({ id }) => id));
   const { expired, stale } = findLapsedExceptions(valid, reported, todayTime);
-  const duplicates: Violation[] = findDuplicates(valid).map((id) => ({
-    subject: EXCEPTIONS_FILE,
-    reason: `more than one audit exception names ${id}`,
-  }));
+  const duplicates = findDuplicateExceptions(valid);
   const unexcepted: Violation[] = advisories
     .filter(({ id }) => !covered.has(id))
     .map(({ id, severity, title, packages }) => ({

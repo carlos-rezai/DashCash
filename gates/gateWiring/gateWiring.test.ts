@@ -1,7 +1,6 @@
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { parse } from 'yaml';
-import { findUnpinnedUses } from '../pinnedActions/pinnedActions.ts';
 
 type PackageJson = {
   scripts: Record<string, string | undefined>;
@@ -34,8 +33,6 @@ const DAILY_SCHEDULE = '0 5 * * *';
 const DAILY_COMMANDS = ['npm ci', 'npm run check:audit'];
 const GITLEAKS_ACTION = 'gitleaks/gitleaks-action';
 const WORKFLOW_TOKEN = '${{ secrets.GITHUB_TOKEN }}';
-const LINE_BREAK = /\r?\n/;
-const NEWLINE = '\n';
 
 // The three jobs that run the Secret scan, each with its workflow file.
 const SECRET_SCAN_JOBS: [job: string, file: string][] = [
@@ -77,11 +74,6 @@ const GATE_COMMANDS: Record<string, string> = {
 
 function readRootFile(path: string): string {
   return readFileSync(new URL(`../../${path}`, import.meta.url), 'utf8');
-}
-
-function readWorkflowText(file: string): string {
-  const url = new URL(`../../${WORKFLOWS_FOLDER}/${file}`, import.meta.url);
-  return existsSync(url) ? readFileSync(url, 'utf8') : '';
 }
 
 // A workflow file that does not exist reads as an empty workflow, so every
@@ -570,15 +562,11 @@ describe('gate wiring', () => {
   });
 
   it.each(SECRET_SCAN_JOBS)(
-    'pins the gitleaks action of the %s job as a Pinned action',
-    (_job, file) => {
-      const text = readWorkflowText(file);
-      const gitleaksLines = text
-        .split(LINE_BREAK)
-        .filter((line) => line.includes(`${GITLEAKS_ACTION}@`));
-
-      expect(gitleaksLines).toHaveLength(1);
-      expect(findUnpinnedUses(gitleaksLines.join(NEWLINE))).toEqual([]);
+    'runs exactly one gitleaks step in the %s job',
+    (job, file) => {
+      expect(
+        jobSteps(readWorkflow(file), job).filter(isGitleaksStep),
+      ).toHaveLength(1);
     },
   );
 

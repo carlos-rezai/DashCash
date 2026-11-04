@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { isRecord } from '../isRecord/isRecord.ts';
 import {
   runGate,
   type Violation,
@@ -10,10 +11,6 @@ const LOCKFILE = 'package-lock.json';
 const NODE_MODULES = 'node_modules/';
 
 type LockEntry = { version?: unknown; license?: unknown; link?: unknown };
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
 
 function isAllowlist(value: unknown): value is string[] {
   return (

@@ -143,14 +143,25 @@ function findEntryProblems(
 }
 
 // Splits the exceptions into the well-formed ones and the violations of the
-// rest.
+// rest. A value that is not an array has no valid exceptions and one violation.
 function readExceptions(
-  exceptions: readonly unknown[],
+  exceptions: unknown,
   today: number,
 ): { valid: AuditException[]; violations: Violation[] } {
+  if (!Array.isArray(exceptions)) {
+    return {
+      valid: [],
+      violations: [
+        {
+          subject: EXCEPTIONS_FILE,
+          reason: 'must be an array of audit exceptions',
+        },
+      ],
+    };
+  }
   const valid: AuditException[] = [];
   const violations: Violation[] = [];
-  exceptions.forEach((entry, index) => {
+  (exceptions as unknown[]).forEach((entry, index) => {
     if (!isRecord(entry)) {
       violations.push(buildEntryViolation(index, 'entry', 'must be an object'));
       return;
@@ -193,17 +204,7 @@ export function findAuditViolations(
   today: string,
 ): Violation[] {
   const todayTime = readDate(today) ?? Number.NaN;
-  const { valid, violations: problems } = Array.isArray(exceptions)
-    ? readExceptions(exceptions as unknown[], todayTime)
-    : {
-        valid: [],
-        violations: [
-          {
-            subject: EXCEPTIONS_FILE,
-            reason: 'must be an array of audit exceptions',
-          },
-        ],
-      };
+  const { valid, violations: problems } = readExceptions(exceptions, todayTime);
 
   const vulnerabilities = isRecord(report) ? report['vulnerabilities'] : null;
   if (!isRecord(vulnerabilities) || (isRecord(report) && 'error' in report)) {

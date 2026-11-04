@@ -88,7 +88,7 @@ Run `npm run verify` before committing. Every step must leave it green.
 - [x] 07 use with job steps for the daily job
 - [x] 08 share the checkout test of two jobs
 - [x] 09 describe secret scanning in protection tests
-- [ ] 10 add the is record module
+- [x] 10 add the is record module
 - [ ] 11 use is record in check audit
 - [ ] 12 use is record in check licenses
 - [ ] 13 use is record in the renovate rule

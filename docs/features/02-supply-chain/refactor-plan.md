@@ -98,7 +98,7 @@ Run `npm run verify` before committing. Every step must leave it green.
 - [x] 17 move the array check into read exceptions
 - [x] 18 extract lapsed exceptions in check audit
 - [x] 19 return violations from find duplicates
-- [ ] 20 extract unexcepted advisories in check audit
+- [x] 20 extract unexcepted advisories in check audit
 - [ ] 21 extract the licence verdict in check licenses
 
 ### What each step does

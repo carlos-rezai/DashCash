@@ -226,6 +226,20 @@ function findDuplicateExceptions(
   }));
 }
 
+// A violation for every Advisory of the report that no valid exception names.
+function findUnexceptedAdvisories(
+  advisories: readonly Advisory[],
+  valid: readonly AuditException[],
+): Violation[] {
+  const covered = new Set(valid.map(({ advisory }) => advisory));
+  return advisories
+    .filter(({ id }) => !covered.has(id))
+    .map(({ id, severity, title, packages }) => ({
+      subject: id,
+      reason: `${severity} advisory "${title}" in ${packages.join(', ')} has no audit exception`,
+    }));
+}
+
 // Returns a violation for every Advisory of the report that has no Audit
 // exception, for every expired exception, for every stale one, for every
 // advisory without a GHSA id, for every advisory two exceptions name and for
@@ -249,22 +263,14 @@ export function findAuditViolations(
   }
 
   const { advisories, withoutId } = readAdvisories(vulnerabilities);
-  const covered = new Set(valid.map(({ advisory }) => advisory));
   const reported = new Set(advisories.map(({ id }) => id));
   const { expired, stale } = findLapsedExceptions(valid, reported, todayTime);
-  const duplicates = findDuplicateExceptions(valid);
-  const unexcepted: Violation[] = advisories
-    .filter(({ id }) => !covered.has(id))
-    .map(({ id, severity, title, packages }) => ({
-      subject: id,
-      reason: `${severity} advisory "${title}" in ${packages.join(', ')} has no audit exception`,
-    }));
   return [
-    ...unexcepted,
+    ...findUnexceptedAdvisories(advisories, valid),
     ...withoutId,
     ...expired,
     ...stale,
-    ...duplicates,
+    ...findDuplicateExceptions(valid),
     ...problems,
   ];
 }

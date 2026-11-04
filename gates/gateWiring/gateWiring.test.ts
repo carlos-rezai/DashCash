@@ -368,19 +368,25 @@ describe('gate wiring', () => {
     ]);
   });
 
-  it('checks out full history, then sets up Node from .nvmrc with the npm cache, before npm ci in the pull-request job', () => {
-    const steps = jobSteps(pullRequestWorkflow, 'pull-request');
-    const checkout = stepIndex(steps, 'actions/checkout');
-    const setupNode = stepIndex(steps, 'actions/setup-node');
-    const npmCi = steps.findIndex((step) => step.run === 'npm ci');
+  it.each([
+    ['pull-request', pullRequestWorkflow],
+    ['daily', dailyWorkflow],
+  ] as const)(
+    'checks out full history, then sets up Node from .nvmrc with the npm cache, before npm ci in the %s job',
+    (job, workflow) => {
+      const steps = jobSteps(workflow, job);
+      const checkout = stepIndex(steps, 'actions/checkout');
+      const setupNode = stepIndex(steps, 'actions/setup-node');
+      const npmCi = steps.findIndex((step) => step.run === 'npm ci');
 
-    expect(checkout).toBe(0);
-    expect(steps[checkout]?.with?.['fetch-depth']).toBe(0);
-    expect(setupNode).toBeGreaterThan(checkout);
-    expect(steps[setupNode]?.with?.['node-version-file']).toBe('.nvmrc');
-    expect(steps[setupNode]?.with?.['cache']).toBe('npm');
-    expect(npmCi).toBeGreaterThan(setupNode);
-  });
+      expect(checkout).toBe(0);
+      expect(steps[checkout]?.with?.['fetch-depth']).toBe(0);
+      expect(setupNode).toBeGreaterThan(checkout);
+      expect(steps[setupNode]?.with?.['node-version-file']).toBe('.nvmrc');
+      expect(steps[setupNode]?.with?.['cache']).toBe('npm');
+      expect(npmCi).toBeGreaterThan(setupNode);
+    },
+  );
 
   it('runs npm ci, npm run verify:full, then npm run check:pr in the pull-request job', () => {
     expect(jobCommands(pullRequestWorkflow, 'pull-request')).toEqual([
@@ -439,20 +445,6 @@ describe('gate wiring', () => {
 
   it('gives the daily workflow the one job daily', () => {
     expect(Object.keys(dailyWorkflow.jobs ?? {})).toEqual(['daily']);
-  });
-
-  it('checks out full history, then sets up Node from .nvmrc with the npm cache, before npm ci in the daily job', () => {
-    const steps = jobSteps(dailyWorkflow, 'daily');
-    const checkout = stepIndex(steps, 'actions/checkout');
-    const setupNode = stepIndex(steps, 'actions/setup-node');
-    const npmCi = steps.findIndex((step) => step.run === 'npm ci');
-
-    expect(checkout).toBe(0);
-    expect(steps[checkout]?.with?.['fetch-depth']).toBe(0);
-    expect(setupNode).toBeGreaterThan(checkout);
-    expect(steps[setupNode]?.with?.['node-version-file']).toBe('.nvmrc');
-    expect(steps[setupNode]?.with?.['cache']).toBe('npm');
-    expect(npmCi).toBeGreaterThan(setupNode);
   });
 
   it('runs npm ci, then npm run check:audit and no other gate of verify in the daily job', () => {

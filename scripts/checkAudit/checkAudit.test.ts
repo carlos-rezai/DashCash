@@ -134,13 +134,13 @@ function expired(id: string, date: string): Violation {
 }
 
 // A violation on the exceptions file whose reason names the entry's index and
-// the field, in whatever words.
+// the words `field <field>`, in whatever words follow.
 function malformed(index: number, field: string): Violation {
   return {
     subject: EXCEPTIONS_FILE,
     reason: expect.stringMatching(
       new RegExp(
-        `^(?=.*(^|\\D)${String(index)}(\\D|$))(?=.*\\b${field}\\b)`,
+        `^(?=.*(^|\\D)${String(index)}(\\D|$))(?=.*\\bfield ${field}\\b)`,
         's',
       ),
     ) as string,

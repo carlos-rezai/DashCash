@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { isRecord } from '../isRecord/isRecord.ts';
 import {
   runGate,
   type Violation,
@@ -10,10 +11,6 @@ const LOCKFILE = 'package-lock.json';
 const NODE_MODULES = 'node_modules/';
 
 type LockEntry = { version?: unknown; license?: unknown; link?: unknown };
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
 
 function isAllowlist(value: unknown): value is string[] {
   return (
@@ -80,6 +77,23 @@ function isBoundary(token: string | undefined): boolean {
   return token === '(' || token === ')' || token === 'OR' || token === 'AND';
 }
 
+// Returns why a package's licence is refused, or undefined when it is allowed.
+function judgeLicence(
+  license: unknown,
+  allowlist: readonly string[],
+): string | undefined {
+  if (typeof license !== 'string' || license === '') {
+    return 'has no licence';
+  }
+  const allowed = evaluateExpression(license, allowlist);
+  if (allowed === undefined) {
+    return `licence "${license}" is an unreadable SPDX expression`;
+  }
+  return allowed
+    ? undefined
+    : `licence "${license}" is not on the licence allowlist`;
+}
+
 // Returns every package of the lockfile whose licence is missing or not on
 // the allowlist. A malformed allowlist is one violation naming its file.
 export function findLicenseViolations(
@@ -106,22 +120,9 @@ export function findLicenseViolations(
       continue;
     }
     const subject = `${key.slice(folder + NODE_MODULES.length)}@${String(entry.version)}`;
-    const { license } = entry;
-    if (typeof license !== 'string' || license === '') {
-      violations.push({ subject, reason: 'has no licence' });
-    } else {
-      const allowed = evaluateExpression(license, allowlist);
-      if (allowed === undefined) {
-        violations.push({
-          subject,
-          reason: `licence "${license}" is an unreadable SPDX expression`,
-        });
-      } else if (!allowed) {
-        violations.push({
-          subject,
-          reason: `licence "${license}" is not on the licence allowlist`,
-        });
-      }
+    const reason = judgeLicence(entry.license, allowlist);
+    if (reason !== undefined) {
+      violations.push({ subject, reason });
     }
   }
   return violations;

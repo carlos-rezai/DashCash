@@ -1,7 +1,6 @@
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { parse } from 'yaml';
-import { findUnpinnedUses } from '../pinnedActions/pinnedActions.ts';
 
 type PackageJson = {
   scripts: Record<string, string | undefined>;
@@ -34,8 +33,6 @@ const DAILY_SCHEDULE = '0 5 * * *';
 const DAILY_COMMANDS = ['npm ci', 'npm run check:audit'];
 const GITLEAKS_ACTION = 'gitleaks/gitleaks-action';
 const WORKFLOW_TOKEN = '${{ secrets.GITHUB_TOKEN }}';
-const LINE_BREAK = /\r?\n/;
-const NEWLINE = '\n';
 
 // The three jobs that run the Secret scan, each with its workflow file.
 const SECRET_SCAN_JOBS: [job: string, file: string][] = [
@@ -81,11 +78,6 @@ function readRootFile(path: string): string {
 
 // A workflow file that does not exist reads as an empty workflow, so every
 // check on it fails at its assertion.
-function readWorkflowText(file: string): string {
-  const url = new URL(`../../${WORKFLOWS_FOLDER}/${file}`, import.meta.url);
-  return existsSync(url) ? readFileSync(url, 'utf8') : '';
-}
-
 function readWorkflow(file: string): Workflow {
   const url = new URL(`../../${WORKFLOWS_FOLDER}/${file}`, import.meta.url);
   if (!existsSync(url)) {
@@ -296,23 +288,8 @@ function withoutTrigger(workflow: Workflow, event: string): Workflow {
   };
 }
 
-// The workflow with the daily job's steps changed by `change`.
-function withDailySteps(
-  workflow: Workflow,
-  change: (steps: WorkflowStep[]) => WorkflowStep[],
-): Workflow {
-  const daily = workflow.jobs?.['daily'] ?? {};
-  return {
-    ...workflow,
-    jobs: {
-      ...workflow.jobs,
-      daily: { ...daily, steps: change(jobSteps(workflow, 'daily')) },
-    },
-  };
-}
-
 function withoutFullHistory(workflow: Workflow): Workflow {
-  return withDailySteps(workflow, (steps) =>
+  return withJobSteps(workflow, 'daily', (steps) =>
     steps.map((step) =>
       (step.uses ?? '').startsWith('actions/checkout@')
         ? {
@@ -329,7 +306,7 @@ function withoutFullHistory(workflow: Workflow): Workflow {
 }
 
 function withoutAuditStep(workflow: Workflow): Workflow {
-  return withDailySteps(workflow, (steps) =>
+  return withJobSteps(workflow, 'daily', (steps) =>
     steps.filter((step) => !(step.run ?? '').includes('npm run check:audit')),
   );
 }
@@ -391,19 +368,25 @@ describe('gate wiring', () => {
     ]);
   });
 
-  it('checks out full history, then sets up Node from .nvmrc with the npm cache, before npm ci in the pull-request job', () => {
-    const steps = jobSteps(pullRequestWorkflow, 'pull-request');
-    const checkout = stepIndex(steps, 'actions/checkout');
-    const setupNode = stepIndex(steps, 'actions/setup-node');
-    const npmCi = steps.findIndex((step) => step.run === 'npm ci');
+  it.each([
+    ['pull-request', pullRequestWorkflow],
+    ['daily', dailyWorkflow],
+  ] as const)(
+    'checks out full history, then sets up Node from .nvmrc with the npm cache, before npm ci in the %s job',
+    (job, workflow) => {
+      const steps = jobSteps(workflow, job);
+      const checkout = stepIndex(steps, 'actions/checkout');
+      const setupNode = stepIndex(steps, 'actions/setup-node');
+      const npmCi = steps.findIndex((step) => step.run === 'npm ci');
 
-    expect(checkout).toBe(0);
-    expect(steps[checkout]?.with?.['fetch-depth']).toBe(0);
-    expect(setupNode).toBeGreaterThan(checkout);
-    expect(steps[setupNode]?.with?.['node-version-file']).toBe('.nvmrc');
-    expect(steps[setupNode]?.with?.['cache']).toBe('npm');
-    expect(npmCi).toBeGreaterThan(setupNode);
-  });
+      expect(checkout).toBe(0);
+      expect(steps[checkout]?.with?.['fetch-depth']).toBe(0);
+      expect(setupNode).toBeGreaterThan(checkout);
+      expect(steps[setupNode]?.with?.['node-version-file']).toBe('.nvmrc');
+      expect(steps[setupNode]?.with?.['cache']).toBe('npm');
+      expect(npmCi).toBeGreaterThan(setupNode);
+    },
+  );
 
   it('runs npm ci, npm run verify:full, then npm run check:pr in the pull-request job', () => {
     expect(jobCommands(pullRequestWorkflow, 'pull-request')).toEqual([
@@ -462,20 +445,6 @@ describe('gate wiring', () => {
 
   it('gives the daily workflow the one job daily', () => {
     expect(Object.keys(dailyWorkflow.jobs ?? {})).toEqual(['daily']);
-  });
-
-  it('checks out full history, then sets up Node from .nvmrc with the npm cache, before npm ci in the daily job', () => {
-    const steps = jobSteps(dailyWorkflow, 'daily');
-    const checkout = stepIndex(steps, 'actions/checkout');
-    const setupNode = stepIndex(steps, 'actions/setup-node');
-    const npmCi = steps.findIndex((step) => step.run === 'npm ci');
-
-    expect(checkout).toBe(0);
-    expect(steps[checkout]?.with?.['fetch-depth']).toBe(0);
-    expect(setupNode).toBeGreaterThan(checkout);
-    expect(steps[setupNode]?.with?.['node-version-file']).toBe('.nvmrc');
-    expect(steps[setupNode]?.with?.['cache']).toBe('npm');
-    expect(npmCi).toBeGreaterThan(setupNode);
   });
 
   it('runs npm ci, then npm run check:audit and no other gate of verify in the daily job', () => {
@@ -570,15 +539,11 @@ describe('gate wiring', () => {
   });
 
   it.each(SECRET_SCAN_JOBS)(
-    'pins the gitleaks action of the %s job as a Pinned action',
-    (_job, file) => {
-      const text = readWorkflowText(file);
-      const gitleaksLines = text
-        .split(LINE_BREAK)
-        .filter((line) => line.includes(`${GITLEAKS_ACTION}@`));
-
-      expect(gitleaksLines).toHaveLength(1);
-      expect(findUnpinnedUses(gitleaksLines.join(NEWLINE))).toEqual([]);
+    'runs exactly one gitleaks step in the %s job',
+    (job, file) => {
+      expect(
+        jobSteps(readWorkflow(file), job).filter(isGitleaksStep),
+      ).toHaveLength(1);
     },
   );
 

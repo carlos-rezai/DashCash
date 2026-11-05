@@ -6,8 +6,9 @@ import {
 
 // The requests that put the Ruleset on the repository: create it when no
 // ruleset of its name exists, otherwise update that one by its id, and in
-// both cases switch the repository to merge commits only. Endpoints carry
-// gh api's {owner} and {repo} placeholders.
+// both cases switch the repository to merge commits only and switch on
+// secret scanning with push protection. Endpoints carry gh api's {owner}
+// and {repo} placeholders.
 
 const RULESET = {
   name: 'main',

@@ -1,4 +1,8 @@
-import { checkPullRequest } from '../../scripts/checkPullRequest/checkPullRequest.ts';
+import {
+  checkPullRequest,
+  RENOVATE_FEATURE,
+} from '../../scripts/checkPullRequest/checkPullRequest.ts';
+import { isRecord } from '../../scripts/isRecord/isRecord.ts';
 import {
   lintCommitMessages,
   type loadCommitConfig,
@@ -14,7 +18,6 @@ const PRESETS = [
   'config:recommended',
   'helpers:pinGitHubActionDigests',
 ];
-const FEATURE = 'supply-chain';
 const SEMANTIC_COMMITS = 'disabled';
 const MINIMUM_RELEASE_AGE = '14 days';
 const SCHEDULE = ['before 6am on monday'];
@@ -28,11 +31,7 @@ const NPM_MANAGER = 'npm';
 const LOCKFILE_UPDATE_TYPE = 'lockFileMaintenance';
 const NODE_RULE_KEYS = ['matchManagers', 'matchDepNames'];
 
-function isSettings(value: unknown): value is Settings {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
-
-function sameList(value: unknown, expected: readonly string[]): boolean {
+function hasSameItems(value: unknown, expected: readonly string[]): boolean {
   if (!Array.isArray(value)) return false;
   const items = value.map((item: unknown) => String(item)).sort();
   return (
@@ -44,7 +43,7 @@ function sameList(value: unknown, expected: readonly string[]): boolean {
 // Every object in the config, the root first, at any depth.
 function collectObjects(value: unknown): Settings[] {
   if (Array.isArray(value)) return value.flatMap(collectObjects);
-  if (!isSettings(value)) return [];
+  if (!isRecord(value)) return [];
   return [value, ...Object.values(value).flatMap(collectObjects)];
 }
 
@@ -56,7 +55,7 @@ function findSettingViolations(config: Settings): Violation[] {
   const violations: Violation[] = [];
   const fail = (reason: string) =>
     violations.push({ subject: SUBJECT, reason });
-  if (!sameList(config['extends'], PRESETS)) {
+  if (!hasSameItems(config['extends'], PRESETS)) {
     fail(`extends must be exactly ${PRESETS.join(', ')}`);
   }
   if (config['semanticCommits'] !== SEMANTIC_COMMITS) {
@@ -65,7 +64,7 @@ function findSettingViolations(config: Settings): Violation[] {
   if (config['minimumReleaseAge'] !== MINIMUM_RELEASE_AGE) {
     fail(`minimumReleaseAge must be "${MINIMUM_RELEASE_AGE}"`);
   }
-  if (!sameList(config['schedule'], SCHEDULE)) {
+  if (!hasSameItems(config['schedule'], SCHEDULE)) {
     fail(`schedule must be ${describeValue(SCHEDULE)}`);
   }
   if (config['timezone'] !== TIMEZONE) {
@@ -86,7 +85,7 @@ function findSettingViolations(config: Settings): Violation[] {
   return violations;
 }
 
-function holds(value: unknown, item: string): boolean {
+function listIncludes(value: unknown, item: string): boolean {
   return Array.isArray(value) && value.includes(item);
 }
 
@@ -98,8 +97,10 @@ function isNodeRule(rule: Settings): boolean {
     (key) => /^(match|exclude)/.test(key) && !NODE_RULE_KEYS.includes(key),
   );
   return (
-    holds(rule['matchDepNames'], NODE_DEP) &&
-    NODE_MANAGERS.every((manager) => holds(rule['matchManagers'], manager)) &&
+    listIncludes(rule['matchDepNames'], NODE_DEP) &&
+    NODE_MANAGERS.every((manager) =>
+      listIncludes(rule['matchManagers'], manager),
+    ) &&
     !narrowed &&
     rule['enabled'] !== false
   );
@@ -109,7 +110,7 @@ function isNodeRule(rule: Settings): boolean {
 function matchesNpm(rule: Settings): boolean {
   return (
     rule['matchManagers'] === undefined ||
-    holds(rule['matchManagers'], NPM_MANAGER)
+    listIncludes(rule['matchManagers'], NPM_MANAGER)
   );
 }
 
@@ -129,7 +130,7 @@ function findGroupViolations(config: Settings): Violation[] {
   const fail = (reason: string) =>
     violations.push({ subject: SUBJECT, reason });
   const rules = Array.isArray(config['packageRules'])
-    ? config['packageRules'].filter(isSettings)
+    ? config['packageRules'].filter(isRecord)
     : [];
   if (!rules.some(isNodeRule)) {
     fail(
@@ -148,11 +149,11 @@ function findGroupViolations(config: Settings): Violation[] {
     );
   }
   const lockfile = config['lockFileMaintenance'];
-  if (!isSettings(lockfile) || lockfile['enabled'] !== true) {
+  if (!isRecord(lockfile) || lockfile['enabled'] !== true) {
     fail('lockFileMaintenance must be enabled');
   }
   const alerts = config['vulnerabilityAlerts'];
-  if (!isSettings(alerts)) {
+  if (!isRecord(alerts)) {
     fail('vulnerabilityAlerts must be set');
   } else {
     if (alerts['commitMessageSuffix'] !== '') {
@@ -178,8 +179,8 @@ async function findMessageViolations(
   const fail = (reason: string) =>
     violations.push({ subject: message, reason });
   if (message.includes('{{')) fail('a commit message holds no template');
-  if (parseCommitHeader(message)?.feature !== FEATURE) {
-    fail(`a commit message names the feature ${FEATURE}`);
+  if (parseCommitHeader(message)?.feature !== RENOVATE_FEATURE) {
+    fail(`a commit message names the feature ${RENOVATE_FEATURE}`);
   }
   violations.push(...(await lintCommitMessages([message], commitConfig)));
   return violations;
@@ -215,7 +216,7 @@ export async function findRenovateViolations(
   config: unknown,
   commitConfig: CommitConfig,
 ): Promise<Violation[]> {
-  if (!isSettings(config)) {
+  if (!isRecord(config)) {
     return [{ subject: SUBJECT, reason: 'the config must be an object' }];
   }
   const violations = [

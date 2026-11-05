@@ -55,7 +55,7 @@ const GIT_VERBOSE_BLOCK = [
   '',
 ].join('\n');
 
-// Descriptions at and just over the limit of 50 characters.
+// One description just over the limit of 50 characters.
 const DESCRIPTION_OF_51 = 'add a description that is fifty-one characters long';
 
 // Loads the core per test, so each test reports its own result.
@@ -212,6 +212,10 @@ describe('checkCommitMessage entry', { timeout: 60_000 }, () => {
   });
 
   describe('exits 1 with one line per violation', () => {
+    it('uses a description of 51 characters, just over the limit', () => {
+      expect(DESCRIPTION_OF_51).toHaveLength(51);
+    });
+
     it.each([
       [
         'an invalid header',
@@ -239,7 +243,6 @@ describe('checkCommitMessage entry', { timeout: 60_000 }, () => {
         'body must be empty',
       ],
     ])('for %s', async (_name, message, reason) => {
-      expect(DESCRIPTION_OF_51).toHaveLength(51);
       const expected = await expectedLines(message);
       expect(expected.some((line) => line.includes(reason))).toBe(true);
 

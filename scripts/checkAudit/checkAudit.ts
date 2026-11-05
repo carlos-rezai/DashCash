@@ -5,6 +5,7 @@ import {
   runGate,
   type Violation,
 } from '../reportViolations/reportViolations.ts';
+import { isRecord } from '../isRecord/isRecord.ts';
 
 const EXCEPTIONS_FILE = 'quality/audit-exceptions.json';
 const NPM_AUDIT = 'npm audit';
@@ -22,10 +23,6 @@ type Advisory = {
   title: string;
   packages: string[];
 };
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
 
 // The time of a `YYYY-MM-DD` string in UTC milliseconds, or undefined when it
 // is not a real calendar date.
@@ -83,7 +80,11 @@ function readAdvisories(
   return { advisories: [...advisories.values()], withoutId };
 }
 
-function malformedEntry(index: number, field: string, why: string): Violation {
+function buildEntryViolation(
+  index: number,
+  field: string,
+  why: string,
+): Violation {
   return {
     subject: EXCEPTIONS_FILE,
     reason: `entry ${String(index)}, field ${field}: ${why}`,
@@ -100,33 +101,37 @@ function findEntryProblems(
   const { advisory, reason } = entry;
   if (typeof advisory !== 'string' || !GHSA_ID.test(advisory)) {
     problems.push(
-      malformedEntry(index, 'advisory', 'must be a GHSA-xxxx-xxxx-xxxx id'),
+      buildEntryViolation(
+        index,
+        'advisory',
+        'must be a GHSA-xxxx-xxxx-xxxx id',
+      ),
     );
   }
   if (typeof reason !== 'string' || reason === '') {
-    problems.push(malformedEntry(index, 'reason', 'must not be empty'));
+    problems.push(buildEntryViolation(index, 'reason', 'must not be empty'));
   }
   const added = readDate(entry['added']);
   const expires = readDate(entry['expires']);
   if (added === undefined) {
     problems.push(
-      malformedEntry(index, 'added', 'must be a real YYYY-MM-DD date'),
+      buildEntryViolation(index, 'added', 'must be a real YYYY-MM-DD date'),
     );
   }
   if (expires === undefined) {
     problems.push(
-      malformedEntry(index, 'expires', 'must be a real YYYY-MM-DD date'),
+      buildEntryViolation(index, 'expires', 'must be a real YYYY-MM-DD date'),
     );
   }
   if (added !== undefined && expires !== undefined) {
     if (added > today) {
-      problems.push(malformedEntry(index, 'added', 'is later than today'));
+      problems.push(buildEntryViolation(index, 'added', 'is later than today'));
     }
     if (expires < added) {
-      problems.push(malformedEntry(index, 'expires', 'is before added'));
+      problems.push(buildEntryViolation(index, 'expires', 'is before added'));
     } else if (expires - added > MAX_EXCEPTION_DAYS * MS_PER_DAY) {
       problems.push(
-        malformedEntry(
+        buildEntryViolation(
           index,
           'expires',
           `is more than ${String(MAX_EXCEPTION_DAYS)} days after added`,
@@ -138,16 +143,27 @@ function findEntryProblems(
 }
 
 // Splits the exceptions into the well-formed ones and the violations of the
-// rest.
+// rest. A value that is not an array has no valid exceptions and one violation.
 function readExceptions(
-  exceptions: readonly unknown[],
+  exceptions: unknown,
   today: number,
 ): { valid: AuditException[]; violations: Violation[] } {
+  if (!Array.isArray(exceptions)) {
+    return {
+      valid: [],
+      violations: [
+        {
+          subject: EXCEPTIONS_FILE,
+          reason: 'must be an array of audit exceptions',
+        },
+      ],
+    };
+  }
   const valid: AuditException[] = [];
   const violations: Violation[] = [];
-  exceptions.forEach((entry, index) => {
+  (exceptions as unknown[]).forEach((entry, index) => {
     if (!isRecord(entry)) {
-      violations.push(malformedEntry(index, 'entry', 'must be an object'));
+      violations.push(buildEntryViolation(index, 'entry', 'must be an object'));
       return;
     }
     const problems = findEntryProblems(entry, index, today);
@@ -163,8 +179,39 @@ function readExceptions(
   return { valid, violations };
 }
 
-// The advisory ids that more than one exception names, each once.
-function findDuplicates(exceptions: readonly AuditException[]): string[] {
+type LapsedExceptions = { expired: Violation[]; stale: Violation[] };
+
+// The exceptions that have lapsed: expired ones, and stale ones whose advisory
+// the report no longer names. An exception that is both is reported once, as
+// expired.
+function findLapsedExceptions(
+  valid: readonly AuditException[],
+  reported: ReadonlySet<string>,
+  today: number,
+): LapsedExceptions {
+  const expired: Violation[] = [];
+  const stale: Violation[] = [];
+  for (const { advisory, expires } of valid) {
+    if ((readDate(expires) ?? 0) < today) {
+      expired.push({
+        subject: advisory,
+        reason: `audit exception expired on ${expires}`,
+      });
+    } else if (!reported.has(advisory)) {
+      stale.push({
+        subject: advisory,
+        reason: 'audit exception names an advisory npm audit no longer reports',
+      });
+    }
+  }
+  return { expired, stale };
+}
+
+// A violation for every advisory id that more than one exception names, each
+// once.
+function findDuplicateExceptions(
+  exceptions: readonly AuditException[],
+): Violation[] {
   const seen = new Set<string>();
   const duplicates = new Set<string>();
   for (const { advisory } of exceptions) {
@@ -173,7 +220,24 @@ function findDuplicates(exceptions: readonly AuditException[]): string[] {
     }
     seen.add(advisory);
   }
-  return [...duplicates];
+  return [...duplicates].map((id) => ({
+    subject: EXCEPTIONS_FILE,
+    reason: `more than one audit exception names ${id}`,
+  }));
+}
+
+// A violation for every Advisory of the report that no valid exception names.
+function findUnexceptedAdvisories(
+  advisories: readonly Advisory[],
+  valid: readonly AuditException[],
+): Violation[] {
+  const covered = new Set(valid.map(({ advisory }) => advisory));
+  return advisories
+    .filter(({ id }) => !covered.has(id))
+    .map(({ id, severity, title, packages }) => ({
+      subject: id,
+      reason: `${severity} advisory "${title}" in ${packages.join(', ')} has no audit exception`,
+    }));
 }
 
 // Returns a violation for every Advisory of the report that has no Audit
@@ -188,17 +252,7 @@ export function findAuditViolations(
   today: string,
 ): Violation[] {
   const todayTime = readDate(today) ?? Number.NaN;
-  const { valid, violations: problems } = Array.isArray(exceptions)
-    ? readExceptions(exceptions as unknown[], todayTime)
-    : {
-        valid: [],
-        violations: [
-          {
-            subject: EXCEPTIONS_FILE,
-            reason: 'must be an array of audit exceptions',
-          },
-        ],
-      };
+  const { valid, violations: problems } = readExceptions(exceptions, todayTime);
 
   const vulnerabilities = isRecord(report) ? report['vulnerabilities'] : null;
   if (!isRecord(vulnerabilities) || (isRecord(report) && 'error' in report)) {
@@ -209,39 +263,14 @@ export function findAuditViolations(
   }
 
   const { advisories, withoutId } = readAdvisories(vulnerabilities);
-  const covered = new Set(valid.map(({ advisory }) => advisory));
   const reported = new Set(advisories.map(({ id }) => id));
-  const expired: Violation[] = [];
-  const stale: Violation[] = [];
-  for (const { advisory, expires } of valid) {
-    if ((readDate(expires) ?? 0) < todayTime) {
-      expired.push({
-        subject: advisory,
-        reason: `audit exception expired on ${expires}`,
-      });
-    } else if (!reported.has(advisory)) {
-      stale.push({
-        subject: advisory,
-        reason: 'audit exception names an advisory npm audit no longer reports',
-      });
-    }
-  }
-  const duplicates: Violation[] = findDuplicates(valid).map((id) => ({
-    subject: EXCEPTIONS_FILE,
-    reason: `more than one audit exception names ${id}`,
-  }));
-  const unexcepted: Violation[] = advisories
-    .filter(({ id }) => !covered.has(id))
-    .map(({ id, severity, title, packages }) => ({
-      subject: id,
-      reason: `${severity} advisory "${title}" in ${packages.join(', ')} has no audit exception`,
-    }));
+  const { expired, stale } = findLapsedExceptions(valid, reported, todayTime);
   return [
-    ...unexcepted,
+    ...findUnexceptedAdvisories(advisories, valid),
     ...withoutId,
     ...expired,
     ...stale,
-    ...duplicates,
+    ...findDuplicateExceptions(valid),
     ...problems,
   ];
 }

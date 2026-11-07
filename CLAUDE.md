@@ -59,3 +59,4 @@ Run tools only through these scripts or `node_modules/.bin`, never `npx`.
 - Commit to `main`, or commit `.env`, `*.db`, real CSVs or app data.
 - Publish, release or push tags.
 - Add a `Co-Authored-By` line, or any other trailer or body, to a commit message.
+- Work around a refusal: when a hook, a permission rule or a safety check denies an action, stop and report it. Never make the same change through another tool or command.

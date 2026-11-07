@@ -51,7 +51,7 @@
 
 | Term | Definition | Aliases to avoid |
 | --- | --- | --- |
-| **Mutation testing** (new) | The gate that changes shipping code in `packages/domain`, `scripts/` and `gates/` one small edit at a time with StrykerJS and checks that the tests notice. | Test-quality check, fuzzing |
+| **Mutation testing** (new) | The gate that changes **Shipping code** in `packages/domain`, `scripts/` and `gates/` one small edit at a time with StrykerJS and checks that the tests notice. | Test-quality check, fuzzing |
 | **Mutant** (new) | One such edit of the code, such as a flipped condition or a removed statement. | Mutation, variant |
 | **Killed mutant** (new) | A **Mutant** that makes at least one test fail or time out. | Detected, caught |
 | **Surviving mutant** (new) | A **Mutant** that every test covering it still passes, or that no test covers: a gap in the tests. | Survivor, escaped mutant |
@@ -89,11 +89,11 @@
 - The **Ruleset** names exactly one **Required check**, and that check runs **Verify full**, the **Pull-request check** and the **Mutation run**.
 - A **Layer rule** constrains **Shipping code**; tests and stories may import `test-support/`.
 - An **Advisory** fails the **Audit** unless exactly one **Audit exception** names it and its **Expiry date** has not passed; an **Audit exception** whose **Advisory** is no longer reported fails it too.
-- The **Daily run** runs the **Audit** and a **Secret scan**; the **Required check** runs **Verify full**, which includes the **Audit**, plus a **Secret scan** and the **Mutation run**.
+- The **Daily run** runs the **Audit**, a **Secret scan** and the **Mutation run**; the **Required check** runs **Verify full**, which includes the **Audit**, plus a **Secret scan** and the **Mutation run**.
 - A **Renovate PR** passes the same **Required check** as a feature pull request; its workflows use only **Pinned actions**.
 - The **Commit-msg hook** checks one message; the commit gate and the **Ticket check** check the whole **Branch range** in CI.
 - (new) A **Mutation run** produces many **Mutants**, each either a **Killed mutant** or a **Surviving mutant**, one **Mutation score** and one **Mutation report**.
-- (new) **Mutation testing** is an **Informative gate** until its **Break threshold** is set; from then on a **Mutation score** below it fails the **Mutation run** and turns the **Daily run** red. It is not part of **Verify**; it runs in the **Required check** and in the **Daily run**.
+- (new) **Mutation testing** is an **Informative gate** until its **Break threshold** is set; from then on a **Mutation score** below it fails the **Mutation run**, turns the **Daily run** red and fails the **Required check**. It is not part of **Verify**; it runs in the **Required check** and in the **Daily run**.
 - (new) Every gate must **Fail closed**: the licence check on a lockfile that is not an object with a `packages` object, the **Audit** on an unreadable report.
 
 ## Example dialogue

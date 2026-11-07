@@ -44,8 +44,23 @@
 | **Secret scan** (new) | gitleaks in CI over the pushed commits, the pull request's commits or, in the daily run, the whole history. | Leak check, credential scan |
 | **Push protection** (new) | GitHub's repository setting that refuses a push containing a known secret pattern. | Secret blocking |
 | **Pinned action** (new) | A workflow `uses:` that names a full commit SHA, with its release as a trailing comment. | Locked action, tagged action |
-| **Daily run** (new) | The scheduled workflow on `main` that runs the audit and a full-history secret scan. | Nightly, cron job |
+| **Daily run** (updated) | The scheduled workflow on `main` whose jobs run the audit, a full-history secret scan and the **Mutation run**. | Nightly, cron job |
 | **Renovate PR** (new) | A pull request from a `renovate/*` branch that updates dependencies, its commits naming the feature `supply-chain`. | Bot PR, dependency PR |
+
+## Mutation testing
+
+| Term | Definition | Aliases to avoid |
+| --- | --- | --- |
+| **Mutation testing** (new) | The gate that changes shipping code in `packages/domain` and `scripts/` one small edit at a time with StrykerJS and checks that the tests notice. | Test-quality check, fuzzing |
+| **Mutant** (new) | One such edit of the code, such as a flipped condition or a removed statement. | Mutation, variant |
+| **Killed mutant** (new) | A **Mutant** that makes at least one test fail or time out. | Detected, caught |
+| **Surviving mutant** (new) | A **Mutant** that every test covering it still passes, or that no test covers: a gap in the tests. | Survivor, escaped mutant |
+| **Mutation score** (new) | The share of **Mutants** killed, in percent of all **Mutants**. | Coverage, kill rate |
+| **Mutation run** (new) | One run of `npm run test:mutation`: by hand, or nightly as the `mutation` job of the **Daily run**. | Stryker job, mutation build |
+| **Mutation report** (new) | The HTML report of a **Mutation run**, listing every **Surviving mutant**; the nightly run keeps it as a CI artifact. | Stryker output, dashboard |
+| **Break threshold** (new) | The lowest **Mutation score** a **Mutation run** passes with; it is only ever raised, and lowering it needs a written decision. | Minimum score, ratchet value |
+| **Informative gate** (new) | A gate that reports its result without failing, as **Mutation testing** does before its **Break threshold** is set. | Soft gate, warning mode |
+| **Fail closed** (new) | What a gate does with input it cannot judge, such as a malformed lockfile or exceptions file: it fails instead of passing. | Strict mode, defensive check |
 
 ## Local feedback and agent guards
 
@@ -77,6 +92,9 @@
 - The **Daily run** runs the **Audit** and a **Secret scan**; the **Required check** runs **Verify full**, which includes the **Audit**, and a **Secret scan**.
 - A **Renovate PR** passes the same **Required check** as a feature pull request; its workflows use only **Pinned actions**.
 - The **Commit-msg hook** checks one message; the commit gate and the **Ticket check** check the whole **Branch range** in CI.
+- (new) A **Mutation run** produces many **Mutants**, each either a **Killed mutant** or a **Surviving mutant**, one **Mutation score** and one **Mutation report**.
+- (new) **Mutation testing** is an **Informative gate** until its **Break threshold** is set; from then on a **Mutation score** below it fails the **Mutation run** and turns the **Daily run** red. It is not part of **Verify** and not the **Required check**.
+- (new) Every gate must **Fail closed**: the licence check on a lockfile that is not an object with a `packages` object, the **Audit** on an unreadable report.
 
 ## Example dialogue
 
@@ -90,6 +108,10 @@
 > **Domain expert:** "The **Daily run** and **Verify** both run the **Audit**. Either a **Renovate PR** brings the fix, or you ask for an **Audit exception** with a reason and an **Expiry date**; the day after that date the **Audit** fails again."
 > **Dev:** "And if I mistype a **Commit header**? Does the **Commit-msg hook** stop the push?"
 > **Domain expert:** "It stops the commit, before any push. It is feedback, not a **Gate**: the commit gate in CI still decides, over the whole **Branch range**."
+> **Dev:** "This morning the **Daily run** is red, but the audit job is green. What broke?"
+> **Domain expert:** "The **Mutation run**. Yesterday's merge added a gate script whose tests leave **Surviving mutants**, so the **Mutation score** fell below the **Break threshold**. Open the **Mutation report** artifact and write a ticket for the missing tests."
+> **Dev:** "Can I lower the **Break threshold** instead?"
+> **Domain expert:** "Only with a written decision, and only the human changes that gate file. Before the threshold was set, **Mutation testing** was an **Informative gate**: the same score would only have shown in the report."
 
 ## Flagged ambiguities
 
@@ -102,4 +124,8 @@
 - "hook" (new) means a git hook (the **Commit-msg hook**) and a Claude Code hook (the **Claude folder guard**, the dangerous-git hook). Name which one; neither is a **Gate**, because CI decides.
 - "exception" (new) means an **Audit exception** and a thrown error. Say **Audit exception** for the file entry.
 - "allowlist" (new) is only the **License allowlist**; accepted advisories are **Audit exceptions**, not an allowlist.
+- "threshold" (new) means the **Break threshold** and Stryker's `high` and `low` thresholds, which only colour the **Mutation report**; later also the coverage threshold (05). Say **Break threshold** for the one that fails a run.
+- "coverage" (new) means test coverage of lines and Stryker's per-test coverage of **Mutants**. A **Mutation score** is not coverage; a **Mutant** no test reaches is a **Surviving mutant**.
+- "nightly" and "daily" (new) name the same schedule: the **Mutation run** is a job of the **Daily run**, not a workflow of its own.
+- "mutation" (new) is the technique; one edit is a **Mutant**. Avoid "a mutation" for a single edit.
 - "workflow" (new) means a GitHub Actions file and the planning-and-build workflow of `docs/conventions.md`. Say "CI workflow" for the file, or name it: the push workflow, the pull-request workflow, the **Daily run**.

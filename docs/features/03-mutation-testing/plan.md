@@ -63,8 +63,8 @@ Durable decisions that apply across all phases:
   records the result in the ticket's Notes.
 - **Gate files the phases name** (Q31): `vitest.config.ts` (phase 2);
   `package.json`, `package-lock.json`, `stryker.config.js`,
-  `quality/license-allowlist.json`, `quality/audit-exceptions.json`
-  (phase 3); `.github/workflows/daily.yml` (phase 4); `stryker.config.js`
+  `quality/license-allowlist.json`, `quality/audit-exceptions.json`,
+  `vitest.stryker.config.ts` (phase 3, D4); `.github/workflows/daily.yml` (phase 4); `stryker.config.js`
   (phase 5); the tests under `gates/` in phases 2 to 5. So
   `/feature-pipeline` pauses for the human's `go` after planning.
 
@@ -155,7 +155,7 @@ The tracer bullet of **Mutation testing**: the two Stryker packages are
 installed as exact dev dependencies, the supply-chain gates are brought
 along (the two new licences on the **License allowlist** after review, one
 **Audit exception** per open `qs` **Advisory** with its reason, the
-minimatch reason naming Stryker), the five-key Stryker configuration with
+minimatch reason naming Stryker), the Stryker configuration with
 `break: null` lands at the root, and `npm run test:mutation` runs it.
 A **Mutation run** mutates the **Shipping code** of `scripts/` and
 `gates/` (and of `packages/domain`, from its first module), runs only the related tests per

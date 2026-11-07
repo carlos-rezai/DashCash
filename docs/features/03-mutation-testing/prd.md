@@ -84,8 +84,10 @@ threshold**.
 **Mutation run**
 
 10. As the developer, I want `npm run test:mutation` to run StrykerJS with
-    the Vitest runner on the repository's one Vitest configuration, so that
-    mutants are judged by the same tests **Verify** runs.
+    the Vitest runner on `vitest.stryker.config.ts`, the root Vitest
+    configuration minus three whole-repository test files (D4), so that
+    mutants are judged by the same tests **Verify** runs, apart from those
+    three.
 11. As the developer, I want every `.ts` file under `packages/domain/src/`
     and `scripts/` mutated, except tests and `test-support/`, so that only
     **Shipping code** is measured.
@@ -302,7 +304,14 @@ section names modules and their interfaces.
   - imports the Vitest config: the exclude keeps every Vitest default and,
     matched with Node's `path.matchesGlob`, a sandbox test path such as
     `.stryker-tmp/sandbox-1a2b3c/scripts/runGit/runGit.test.ts` matches an
-    exclude pattern while `scripts/runGit/runGit.test.ts` matches none.
+    exclude pattern while `scripts/runGit/runGit.test.ts` matches none;
+  - checks the `vitest` key is exactly
+    `{ configFile: 'vitest.stryker.config.ts' }`, and imports that config:
+    its excluded test files are exactly
+    `gates/commitMsgHook/commitMsgHookTracking.test.ts`,
+    `gates/formatting/formattingTree.test.ts` and
+    `gates/lint/lintTree.test.ts` by name, and every other setting equals
+    the root config's (D4).
 - Gate wiring (extended):
   - `test:mutation` runs `stryker run stryker.config.js`; **Verify** still
     runs exactly its eleven gates and neither it nor `verify:full` runs
@@ -329,7 +338,8 @@ section names modules and their interfaces.
 **Gate files the tickets name** (Q31)
 
 `package.json`, `package-lock.json`, `stryker.config.js`,
-`vitest.config.ts`, `.github/workflows/daily.yml`,
+`vitest.config.ts`, `vitest.stryker.config.ts` (D4),
+`.github/workflows/daily.yml`,
 `quality/license-allowlist.json`, `quality/audit-exceptions.json` and the
 tests under `gates/`. So `/feature-pipeline` pauses after planning for the
 human's `go`.
@@ -390,8 +400,9 @@ human's `go`.
   (`CLAUDE.md`, Definition of done). The one exception is D4: a test that
   checks the state of the repository rather than code is excluded by file
   name in `vitest.stryker.config.ts`.
-- Should the install bring a package without a licence, or a licence that
-  needs more than the review of Q22, the builder stops and asks: there are
+- Should the install bring a package without a licence, a GPL, LGPL or
+  AGPL licence, or any other licence that is not permissive (D3), the
+  builder stops and asks: there are
   no per-package licence exceptions (02, Q24), and `CLAUDE.md` (Ask first)
   covers an unclear spec.
 - A full **Mutation run** prints every **Surviving mutant**; the builder

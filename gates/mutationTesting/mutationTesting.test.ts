@@ -4,6 +4,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { configDefaults } from 'vitest/config';
 import { describe, expect, it } from 'vitest';
 import vitestConfig from '../../vitest.config.ts';
+import { hasBreakThreshold } from './mutationTesting.ts';
 
 // The Stryker configuration: exactly six keys, the Vitest runner with
 // per-test coverage pointed at the Stryker Vitest config, the non-test .ts
@@ -178,35 +179,10 @@ describe('the Stryker configuration', () => {
 
   it('sets a Break threshold that is a whole number from 1 to 100', async () => {
     const config = await loadStrykerConfig();
-    const hasBreakThreshold = await loadBreakThresholdCheck();
 
     expect(hasBreakThreshold(config.thresholds)).toBe(true);
   });
 });
-
-const BREAK_THRESHOLD_CHECK = join(
-  ROOT,
-  'gates',
-  'mutationTesting',
-  'mutationTesting.ts',
-);
-
-type BreakThresholdCheck = (thresholds: unknown) => boolean;
-
-const loadBreakThresholdCheck = async (): Promise<BreakThresholdCheck> => {
-  expect(
-    existsSync(BREAK_THRESHOLD_CHECK),
-    'gates/mutationTesting/mutationTesting.ts beside the gate test',
-  ).toBe(true);
-  const module = (await import(pathToFileURL(BREAK_THRESHOLD_CHECK).href)) as {
-    hasBreakThreshold?: unknown;
-  };
-  expect(
-    typeof module.hasBreakThreshold,
-    'hasBreakThreshold exported by the Break threshold check',
-  ).toBe('function');
-  return module.hasBreakThreshold as BreakThresholdCheck;
-};
 
 // Invented thresholds: high and low as configured, the Break threshold varied.
 const thresholdsWith = (value: unknown): Record<string, unknown> => ({
@@ -223,15 +199,11 @@ describe('the Break threshold check', () => {
     ['101', thresholdsWith(101)],
     ['a fraction', thresholdsWith(72.5)],
     ['a string', thresholdsWith('72')],
-  ])('fails %s', async (_case, thresholds) => {
-    const hasBreakThreshold = await loadBreakThresholdCheck();
-
+  ])('fails %s', (_case, thresholds) => {
     expect(hasBreakThreshold(thresholds)).toBe(false);
   });
 
-  it.each([1, 100])('passes the whole number %i', async (value) => {
-    const hasBreakThreshold = await loadBreakThresholdCheck();
-
+  it.each([1, 100])('passes the whole number %i', (value) => {
     expect(hasBreakThreshold(thresholdsWith(value))).toBe(true);
   });
 });

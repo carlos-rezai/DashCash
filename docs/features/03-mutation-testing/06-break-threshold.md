@@ -1,5 +1,5 @@
 ---
-status: in-progress
+status: done
 ---
 # Break threshold
 
@@ -64,7 +64,7 @@ Linux **Mutation score** clears the **Break threshold** (story 45).
 - [x] No check compares the threshold with `origin/main`; **Verify** still
       does not run Stryker, and the **Required check** runs it only if 05
       added the pull-request step.
-- [ ] `npm run verify` is green.
+- [x] `npm run verify` is green.
 
 ## Blocked by
 
@@ -81,7 +81,7 @@ Linux **Mutation score** clears the **Break threshold** (story 45).
 
 ## Notes
 
-- Measured **Mutation score**: 80.82 (first run, exit 0 with `break: null`).
-- **Break threshold** set: 80 (rounded down); `high` 80 and `low` 60 unchanged.
-- Confirming run with the threshold in place: exit code 0 (score 80.82, "greater than or equal to break threshold 80").
-- The new module `gates/mutationTesting/mutationTesting.ts` shows 0.00 with all 22 mutants no-coverage in both runs: the gate test loads it by dynamic import of an absolute file URL, which Stryker's per-test coverage does not attribute. Left as the RED test has it; a static import in the test would count the module.
+- Measured **Mutation score**: 81.97 (after the gate test imports `hasBreakThreshold` statically; the earlier 80.82 counted the module's 22 mutants as no coverage).
+- **Break threshold** set: 81 (rounded down); `high` 80 and `low` 60 unchanged.
+- Confirming run with the threshold in place: exit code 0 (score 81.97, "greater than or equal to break threshold 81").
+- The module `gates/mutationTesting/mutationTesting.ts` scores 86.36 (19 killed, 2 survived, 1 no coverage).

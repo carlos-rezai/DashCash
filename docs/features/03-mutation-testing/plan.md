@@ -26,8 +26,8 @@ Durable decisions that apply across all phases:
   root, an ES module with a JSDoc type from `@stryker-mutator/api/core`,
   type-checked and linted through the existing root configs. Exactly five
   keys: `testRunner: 'vitest'`, `coverageAnalysis: 'perTest'`, `mutate`
-  (`packages/domain/src/**/*.ts`, `scripts/**/*.ts`, `!**/*.test.ts`,
-  `!**/test-support/**`), `reporters` (`clear-text`, `progress`, `html`,
+  (`packages/domain/src/**/*.ts`, `scripts/**/*.ts`, `gates/**/*.ts`,
+  `!**/*.test.ts`, `!**/test-support/**`), `reporters` (`clear-text`, `progress`, `html`,
   report at `reports/mutation/mutation.html`), `thresholds`
   (`high: 80`, `low: 60`, `break` `null` until the threshold phase, then a
   whole number from 1 to 100). Everything else at Stryker's defaults: no
@@ -155,8 +155,8 @@ along (the two new licences on the **License allowlist** after review, one
 **Audit exception** per open `qs` **Advisory** with its reason, the
 minimatch reason naming Stryker), the five-key Stryker configuration with
 `break: null` lands at the root, and `npm run test:mutation` runs it.
-A **Mutation run** mutates the **Shipping code** of `scripts/` (and of
-`packages/domain`, from its first module), runs only the related tests per
+A **Mutation run** mutates the **Shipping code** of `scripts/` and
+`gates/` (and of `packages/domain`, from its first module), runs only the related tests per
 **Mutant** through the Vitest runner, prints the **Mutation score** and the
 **Surviving mutants**, writes the **Mutation report** under `reports/`,
 and fails only when Stryker cannot run. The `mutationTesting` gate test
@@ -167,9 +167,10 @@ pins the configuration; the gate wiring test pins the new script and that
 
 - [ ] Both packages are exact root dev dependencies at the same release,
       at least 14 days old on the day of building.
-- [ ] The **License allowlist** gains `0BSD` and `CC-BY-4.0`, and any
-      further licence only after the same review (a package without a
-      licence, or one needing more, stops the builder to ask);
+- [ ] The **License allowlist** gains `0BSD` and `CC-BY-4.0`; any
+      further licence only if it is permissive (any GPL, LGPL or AGPL
+      licence, any other licence that is not permissive, and a package
+      without a licence stop the builder for the human's decision);
       `npm run check:licenses` passes.
 - [ ] Each open `qs` **Advisory** has one **Audit exception**, added on the
       day of building and expiring 90 days later, with the reason that

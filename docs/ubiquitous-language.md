@@ -51,7 +51,7 @@
 
 | Term | Definition | Aliases to avoid |
 | --- | --- | --- |
-| **Mutation testing** (new) | The gate that changes shipping code in `packages/domain` and `scripts/` one small edit at a time with StrykerJS and checks that the tests notice. | Test-quality check, fuzzing |
+| **Mutation testing** (new) | The gate that changes shipping code in `packages/domain`, `scripts/` and `gates/` one small edit at a time with StrykerJS and checks that the tests notice. | Test-quality check, fuzzing |
 | **Mutant** (new) | One such edit of the code, such as a flipped condition or a removed statement. | Mutation, variant |
 | **Killed mutant** (new) | A **Mutant** that makes at least one test fail or time out. | Detected, caught |
 | **Surviving mutant** (new) | A **Mutant** that every test covering it still passes, or that no test covers: a gap in the tests. | Survivor, escaped mutant |

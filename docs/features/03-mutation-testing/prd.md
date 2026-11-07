@@ -24,7 +24,7 @@ carry the same risk, with higher stakes.
 ## Solution
 
 **Mutation testing** with StrykerJS on the **Shipping code** of
-`packages/domain` and `scripts/`, row 03 of `docs/feature-checklist.md`:
+`packages/domain`, `scripts/` and `gates/`, row 03 of `docs/feature-checklist.md`:
 
 - The licence check **Fails closed**: a lockfile that is not an object with
   a `packages` object is one violation naming `package-lock.json`. Its
@@ -88,8 +88,9 @@ threshold**.
 11. As the developer, I want every `.ts` file under `packages/domain/src/`
     and `scripts/` mutated, except tests and `test-support/`, so that only
     **Shipping code** is measured.
-12. As the developer, I want `gates/` left out of the mutated files, so that
-    the tests that prove configuration are not themselves mutated.
+12. As the developer, I want every `.ts` file under `gates/` mutated too,
+    except tests and `test-support/`, so that the code behind the
+    configuration gates is measured like the rest.
 13. As the developer, I want the domain pattern in place before any domain
     code exists, so that the first domain module is measured from the ticket
     that adds it without a gate-file change.
@@ -181,9 +182,11 @@ threshold**.
     release at least 14 days old, so that the install follows 01 and 02's
     rules.
 41. As the repository owner, I want `0BSD` and `CC-BY-4.0` added to the
-    **License allowlist**, and any further licence the install brings on the
-    day of building only after the same review, so that the licence check
-    stays green and every new licence is a deliberate change.
+    **License allowlist**; any further licence the install brings on the day
+    of building is added only if it is permissive, and any GPL, LGPL or AGPL
+    licence, any other licence that is not permissive, and a package without
+    a licence stop the builder for the human's decision, so that the licence
+    check stays green and every new licence is a deliberate change.
 42. As the repository owner, I want one **Audit exception** per open `qs`
     **Advisory**, each with the reason that `qs` is reached only through
     Stryker's `typed-rest-client`, which serves the unused dashboard
@@ -241,7 +244,7 @@ section names modules and their interfaces.
   - `testRunner: 'vitest'`, `coverageAnalysis: 'perTest'`; the Vitest
     runner's own defaults (the root Vitest config, related mode).
   - `mutate`: `packages/domain/src/**/*.ts`, `scripts/**/*.ts`,
-    `!**/*.test.ts`, `!**/test-support/**`.
+    `gates/**/*.ts`, `!**/*.test.ts`, `!**/test-support/**`.
   - `reporters`: `clear-text`, `progress`, `html` (default file
     `reports/mutation/mutation.html`).
   - `thresholds`: `high: 80`, `low: 60`, `break: null`; the threshold
@@ -357,7 +360,6 @@ human's `go`.
 
 - Stryker in **Verify**, on pull requests or in the issue-loop's review (the
   latter under `.claude/`, the human's).
-- Mutating `gates/`.
 - An automatic ratchet that raises the threshold, or a check against the
   value on `origin/main` (Q28).
 - The Stryker dashboard, incremental mode, the TypeScript checker.

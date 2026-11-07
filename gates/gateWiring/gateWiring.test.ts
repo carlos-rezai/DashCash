@@ -12,10 +12,12 @@ type WorkflowStep = {
   with?: Record<string, unknown>;
   run?: string;
   env?: Record<string, unknown>;
+  if?: unknown;
 };
 
 type WorkflowJob = {
   if?: unknown;
+  needs?: unknown;
   steps?: WorkflowStep[];
 };
 
@@ -31,6 +33,17 @@ const PULL_REQUEST_WORKFLOW = 'pull-request.yml';
 const DAILY_WORKFLOW = 'daily.yml';
 const DAILY_SCHEDULE = '0 5 * * *';
 const DAILY_COMMANDS = ['npm ci', 'npm run check:audit'];
+const DAILY_JOBS = ['daily', 'mutation'];
+const MUTATION_COMMANDS = ['npm ci', 'npm run test:mutation'];
+const MUTATION_REPORT_NAME = 'mutation-report';
+const MUTATION_REPORT_PATH = 'reports/mutation/mutation.html';
+const UPLOAD_ACTION = 'actions/upload-artifact';
+const PULL_REQUEST_COMMANDS = [
+  'npm ci',
+  'npm run verify:full',
+  'npm run check:pr',
+  'npm run test:mutation',
+];
 const GITLEAKS_ACTION = 'gitleaks/gitleaks-action';
 const WORKFLOW_TOKEN = '${{ secrets.GITHUB_TOKEN }}';
 
@@ -154,8 +167,10 @@ function findDailyWiringProblems(workflow: Workflow): string[] {
   }
 
   const jobs = Object.keys(workflow.jobs ?? {});
-  if (JSON.stringify(jobs) !== JSON.stringify(['daily'])) {
-    problems.push(`the jobs are [${jobs.join(', ')}], not the one job daily`);
+  if (JSON.stringify(jobs) !== JSON.stringify(DAILY_JOBS)) {
+    problems.push(
+      `the jobs are [${jobs.join(', ')}], not exactly daily and mutation`,
+    );
   }
 
   const steps = jobSteps(workflow, 'daily');
@@ -237,6 +252,120 @@ function isGitleaksStep(step: WorkflowStep): boolean {
   return (step.uses ?? '').startsWith(`${GITLEAKS_ACTION}@`);
 }
 
+function usesAction(step: WorkflowStep, action: string): boolean {
+  return (step.uses ?? '').startsWith(`${action}@`);
+}
+
+// What the Daily run's mutation job lacks or holds beyond its wiring, one
+// line each: checkout at the default depth, setup-node from .nvmrc with the
+// npm cache, npm ci, the Mutation run, then the upload of the Mutation report
+// on every outcome; beside the daily job, without gitleaks.
+function findMutationWiringProblems(workflow: Workflow): string[] {
+  const job = workflow.jobs?.['mutation'];
+  if (job === undefined) {
+    return ['the daily workflow has no mutation job'];
+  }
+
+  const problems: string[] = [];
+  if (job.if !== undefined) {
+    problems.push('the mutation job has a condition');
+  }
+  if (job.needs !== undefined) {
+    problems.push('the mutation job waits for another job');
+  }
+
+  const steps = job.steps ?? [];
+  const checkout = stepIndex(steps, 'actions/checkout');
+  if (checkout !== 0) {
+    problems.push('the mutation job does not start with a checkout');
+  } else if (steps[checkout]?.with !== undefined) {
+    problems.push('the mutation job does not check out at the default depth');
+  }
+
+  const setupNode = stepIndex(steps, 'actions/setup-node');
+  if (setupNode === -1) {
+    problems.push('the mutation job does not set up Node');
+  } else {
+    const setupNodeWith = steps[setupNode]?.with ?? {};
+    if (setupNodeWith['node-version-file'] !== '.nvmrc') {
+      problems.push('the mutation job does not take Node from .nvmrc');
+    }
+    if (setupNodeWith['cache'] !== 'npm') {
+      problems.push('the mutation job does not use the npm cache');
+    }
+  }
+
+  const npmCi = steps.findIndex((step) => step.run === 'npm ci');
+  if (npmCi === -1) {
+    problems.push('the mutation job does not run npm ci');
+  }
+  const mutationRun = steps.findIndex(
+    (step) => step.run === 'npm run test:mutation',
+  );
+  if (mutationRun === -1) {
+    problems.push('the mutation job does not run npm run test:mutation');
+  }
+
+  const upload = stepIndex(steps, UPLOAD_ACTION);
+  if (upload === -1) {
+    problems.push('the mutation job does not upload the mutation report');
+  } else {
+    const uploadStep = steps[upload] ?? {};
+    const uploadWith = uploadStep.with ?? {};
+    if (uploadWith['name'] !== MUTATION_REPORT_NAME) {
+      problems.push(
+        `the mutation job does not name its upload ${MUTATION_REPORT_NAME}`,
+      );
+    }
+    if (uploadWith['path'] !== MUTATION_REPORT_PATH) {
+      problems.push(`the mutation job does not upload ${MUTATION_REPORT_PATH}`);
+    }
+    for (const key of Object.keys(uploadWith)) {
+      if (key !== 'name' && key !== 'path') {
+        problems.push(`the mutation job also sets ${key} on its upload`);
+      }
+    }
+    if (uploadStep.if !== 'always()') {
+      problems.push('the mutation job does not upload on every outcome');
+    }
+  }
+
+  const order = [checkout, setupNode, npmCi, mutationRun, upload].filter(
+    (index) => index !== -1,
+  );
+  if (order.some((index, at) => at > 0 && index <= (order[at - 1] ?? -1))) {
+    problems.push(
+      'the mutation job does not run checkout, setup-node, npm ci, the mutation run and the upload in that order',
+    );
+  }
+
+  if (steps.some(isGitleaksStep)) {
+    problems.push('the mutation job runs gitleaks');
+  }
+  for (const command of jobCommands(workflow, 'mutation')) {
+    if (!MUTATION_COMMANDS.includes(command)) {
+      problems.push(`the mutation job also runs ${command}`);
+    }
+  }
+  return problems;
+}
+
+// What the pull-request job lacks in its Mutation run, one line: the run
+// after npm run check:pr.
+function findPullRequestMutationProblems(workflow: Workflow): string[] {
+  const commands = jobCommands(workflow, 'pull-request');
+  const mutationRun = commands.indexOf('npm run test:mutation');
+  if (mutationRun === -1) {
+    return ['the pull-request job does not run npm run test:mutation'];
+  }
+  if (mutationRun < commands.indexOf('npm run check:pr')) {
+    return [
+      'the pull-request job runs npm run test:mutation before npm run check:pr',
+    ];
+  }
+  return [];
+}
+
 // The workflow with the named job's steps changed by `change`.
 function withJobSteps(
   workflow: Workflow,
@@ -309,6 +438,104 @@ function withoutAuditStep(workflow: Workflow): Workflow {
   return withJobSteps(workflow, 'daily', (steps) =>
     steps.filter((step) => !(step.run ?? '').includes('npm run check:audit')),
   );
+}
+
+function withMutationJob(
+  workflow: Workflow,
+  change: (job: WorkflowJob) => WorkflowJob,
+): Workflow {
+  return {
+    ...workflow,
+    jobs: {
+      ...workflow.jobs,
+      mutation: change(workflow.jobs?.['mutation'] ?? {}),
+    },
+  };
+}
+
+function withoutMutationStep(
+  isRemoved: (step: WorkflowStep) => boolean,
+): (workflow: Workflow) => Workflow {
+  return (workflow) =>
+    withJobSteps(workflow, 'mutation', (steps) =>
+      steps.filter((step) => !isRemoved(step)),
+    );
+}
+
+function withoutMutationStepSetting(
+  action: string,
+  key: string,
+): (workflow: Workflow) => Workflow {
+  return (workflow) =>
+    withJobSteps(workflow, 'mutation', (steps) =>
+      steps.map((step) =>
+        usesAction(step, action)
+          ? {
+              ...step,
+              with: Object.fromEntries(
+                Object.entries(step.with ?? {}).filter(
+                  ([name]) => name !== key,
+                ),
+              ),
+            }
+          : step,
+      ),
+    );
+}
+
+function withoutUploadCondition(workflow: Workflow): Workflow {
+  return withJobSteps(workflow, 'mutation', (steps) =>
+    steps.map((step) =>
+      usesAction(step, UPLOAD_ACTION)
+        ? (Object.fromEntries(
+            Object.entries(step).filter(([key]) => key !== 'if'),
+          ) as WorkflowStep)
+        : step,
+    ),
+  );
+}
+
+// The mutation job with `added` inserted right after the first step that
+// `isAnchor` matches.
+function withMutationStepAfter(
+  isAnchor: (step: WorkflowStep) => boolean,
+  added: (workflow: Workflow) => WorkflowStep,
+): (workflow: Workflow) => Workflow {
+  return (workflow) =>
+    withJobSteps(workflow, 'mutation', (steps) => {
+      const anchor = steps.findIndex(isAnchor);
+      return [
+        ...steps.slice(0, anchor + 1),
+        added(workflow),
+        ...steps.slice(anchor + 1),
+      ];
+    });
+}
+
+// The daily job's own gitleaks step, copied as it is.
+function dailyGitleaksStep(workflow: Workflow): WorkflowStep {
+  return jobSteps(workflow, 'daily').find(isGitleaksStep) ?? {};
+}
+
+function withoutPullRequestMutation(workflow: Workflow): Workflow {
+  return withJobSteps(workflow, 'pull-request', (steps) =>
+    steps.filter((step) => step.run !== 'npm run test:mutation'),
+  );
+}
+
+function withPullRequestMutationBeforeCheck(workflow: Workflow): Workflow {
+  return withJobSteps(workflow, 'pull-request', (steps) => {
+    const mutationSteps = steps.filter(
+      (step) => step.run === 'npm run test:mutation',
+    );
+    const others = steps.filter((step) => step.run !== 'npm run test:mutation');
+    const check = others.findIndex((step) => step.run === 'npm run check:pr');
+    return [
+      ...others.slice(0, check),
+      ...mutationSteps,
+      ...others.slice(check),
+    ];
+  });
 }
 
 const packageJson = JSON.parse(readRootFile('package.json')) as PackageJson;
@@ -388,12 +615,34 @@ describe('gate wiring', () => {
     },
   );
 
-  it('runs npm ci, npm run verify:full, then npm run check:pr in the pull-request job', () => {
-    expect(jobCommands(pullRequestWorkflow, 'pull-request')).toEqual([
-      'npm ci',
-      'npm run verify:full',
-      'npm run check:pr',
-    ]);
+  it('runs npm ci, npm run verify:full, npm run check:pr, then npm run test:mutation in the pull-request job', () => {
+    expect(jobCommands(pullRequestWorkflow, 'pull-request')).toEqual(
+      PULL_REQUEST_COMMANDS,
+    );
+  });
+
+  it('finds nothing missing from the mutation run of the pull-request job', () => {
+    expect(findPullRequestMutationProblems(pullRequestWorkflow)).toEqual([]);
+  });
+
+  it.each([
+    [
+      'its mutation step is removed',
+      withoutPullRequestMutation,
+      'the pull-request job does not run npm run test:mutation',
+    ],
+    [
+      'its mutation step is moved before npm run check:pr',
+      withPullRequestMutationBeforeCheck,
+      'the pull-request job runs npm run test:mutation before npm run check:pr',
+    ],
+  ])('fails the pull-request job when %s', (_change, change, problem) => {
+    const before = findPullRequestMutationProblems(pullRequestWorkflow);
+    const added = findPullRequestMutationProblems(
+      change(pullRequestWorkflow),
+    ).filter((found) => !before.includes(found));
+
+    expect(added).toEqual([problem]);
   });
 
   it('runs npm run verify:full in the pull-request job', () => {
@@ -450,8 +699,137 @@ describe('gate wiring', () => {
     expect(on['schedule']).toEqual([{ cron: DAILY_SCHEDULE }]);
   });
 
-  it('gives the daily workflow the one job daily', () => {
-    expect(Object.keys(dailyWorkflow.jobs ?? {})).toEqual(['daily']);
+  it('gives the daily workflow exactly the jobs daily and mutation', () => {
+    expect(Object.keys(dailyWorkflow.jobs ?? {})).toEqual(DAILY_JOBS);
+  });
+
+  it('runs the mutation job beside the daily job: no if: and no needs:', () => {
+    const job = dailyWorkflow.jobs?.['mutation'];
+
+    expect(job).toBeDefined();
+    expect(job?.if).toBeUndefined();
+    expect(job?.needs).toBeUndefined();
+  });
+
+  it('runs checkout, setup-node, npm ci, npm run test:mutation, then the upload of the mutation report in the mutation job', () => {
+    const steps = jobSteps(dailyWorkflow, 'mutation');
+    const kinds = steps.map(
+      (step) => step.run ?? (step.uses ?? '').split('@')[0],
+    );
+
+    expect(kinds).toEqual([
+      'actions/checkout',
+      'actions/setup-node',
+      'npm ci',
+      'npm run test:mutation',
+      UPLOAD_ACTION,
+    ]);
+    expect(steps[0]?.with).toBeUndefined();
+    expect(steps[1]?.with).toEqual({
+      'node-version-file': '.nvmrc',
+      cache: 'npm',
+    });
+    expect(steps[4]?.with).toEqual({
+      name: MUTATION_REPORT_NAME,
+      path: MUTATION_REPORT_PATH,
+    });
+    expect(steps[4]?.if).toBe('always()');
+  });
+
+  it('runs exactly npm ci, then npm run test:mutation in the mutation job', () => {
+    expect(jobCommands(dailyWorkflow, 'mutation')).toEqual(MUTATION_COMMANDS);
+  });
+
+  it('finds nothing missing from the mutation wiring', () => {
+    expect(findMutationWiringProblems(dailyWorkflow)).toEqual([]);
+  });
+
+  it.each([
+    [
+      'its checkout is removed',
+      withoutMutationStep((step) => usesAction(step, 'actions/checkout')),
+      'the mutation job does not start with a checkout',
+    ],
+    [
+      'its setup-node is removed',
+      withoutMutationStep((step) => usesAction(step, 'actions/setup-node')),
+      'the mutation job does not set up Node',
+    ],
+    [
+      'its .nvmrc is removed',
+      withoutMutationStepSetting('actions/setup-node', 'node-version-file'),
+      'the mutation job does not take Node from .nvmrc',
+    ],
+    [
+      'its npm cache is removed',
+      withoutMutationStepSetting('actions/setup-node', 'cache'),
+      'the mutation job does not use the npm cache',
+    ],
+    [
+      'its npm ci is removed',
+      withoutMutationStep((step) => step.run === 'npm ci'),
+      'the mutation job does not run npm ci',
+    ],
+    [
+      'its mutation run is removed',
+      withoutMutationStep((step) => step.run === 'npm run test:mutation'),
+      'the mutation job does not run npm run test:mutation',
+    ],
+    [
+      'its upload is removed',
+      withoutMutationStep((step) => usesAction(step, UPLOAD_ACTION)),
+      'the mutation job does not upload the mutation report',
+    ],
+    [
+      "its upload's name is removed",
+      withoutMutationStepSetting(UPLOAD_ACTION, 'name'),
+      `the mutation job does not name its upload ${MUTATION_REPORT_NAME}`,
+    ],
+    [
+      "its upload's path is removed",
+      withoutMutationStepSetting(UPLOAD_ACTION, 'path'),
+      `the mutation job does not upload ${MUTATION_REPORT_PATH}`,
+    ],
+    [
+      "its upload's if: always() is removed",
+      withoutUploadCondition,
+      'the mutation job does not upload on every outcome',
+    ],
+    [
+      'the job gains another npm command',
+      withMutationStepAfter(
+        (step) => step.run === 'npm ci',
+        () => ({ run: 'npm run lint' }),
+      ),
+      'the mutation job also runs npm run lint',
+    ],
+    [
+      'the job gains a gitleaks step',
+      withMutationStepAfter(
+        (step) => usesAction(step, 'actions/checkout'),
+        dailyGitleaksStep,
+      ),
+      'the mutation job runs gitleaks',
+    ],
+    [
+      'the job gains an if:',
+      (workflow: Workflow) =>
+        withMutationJob(workflow, (job) => ({ ...job, if: 'always()' })),
+      'the mutation job has a condition',
+    ],
+    [
+      'the job gains a needs:',
+      (workflow: Workflow) =>
+        withMutationJob(workflow, (job) => ({ ...job, needs: 'daily' })),
+      'the mutation job waits for another job',
+    ],
+  ])('fails the mutation wiring when %s', (_change, change, problem) => {
+    const before = findMutationWiringProblems(dailyWorkflow);
+    const added = findMutationWiringProblems(change(dailyWorkflow)).filter(
+      (found) => !before.includes(found),
+    );
+
+    expect(added).toEqual([problem]);
   });
 
   it('runs npm ci, then npm run check:audit and no other gate of verify in the daily job', () => {

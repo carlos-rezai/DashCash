@@ -413,6 +413,13 @@ describe('gate wiring', () => {
     );
   });
 
+  it('runs a Mutation run with Stryker from test:mutation, and from neither verify nor verify:full', () => {
+    expect(scripts['test:mutation']).toBe('stryker run stryker.config.js');
+    expect(chainedCommands(scripts.verify)).toHaveLength(11);
+    expect(scripts.verify).not.toMatch(/test:mutation|stryker/);
+    expect(scripts['verify:full']).not.toMatch(/test:mutation|stryker/);
+  });
+
   it('runs npm run check:pr after npm run verify:full in the pull-request job', () => {
     const commands = jobCommands(pullRequestWorkflow, 'pull-request');
     const verifyFull = commands.indexOf('npm run verify:full');

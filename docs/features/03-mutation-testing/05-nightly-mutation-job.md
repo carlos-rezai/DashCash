@@ -54,6 +54,9 @@ run" and "Gate tests"; design log Q25, A4, A5).
   - `docs/ubiquitous-language.md`: the relationship that says **Mutation
     testing** is "not the **Required check**" says it runs in the
     **Required check** and in the **Daily run**.
+  - `README.md`: the cadence of the gates table's Mutation testing row,
+    today `nightly, ratchet`, names the pull-request run beside the
+    nightly one, for example `pull request and nightly, ratchet`.
   - If the wall time is 10 minutes or longer: none of this. Record the
     time from 04 in this ticket's Notes; mutation testing stays nightly
     only.
@@ -87,9 +90,11 @@ and, only under the 10-minute condition above,
       Under 10 minutes: the `pull-request` job runs `npm ci`,
       `npm run verify:full`, `npm run check:pr`, `npm run test:mutation` in
       that order, the wiring test fails when the mutation step is removed
-      or moved before `npm run check:pr`, and the glossary says mutation
-      testing runs in the **Required check**. 10 minutes or longer:
-      `pull-request.yml` and its wiring checks are unchanged.
+      or moved before `npm run check:pr`, the glossary says mutation
+      testing runs in the **Required check**, and the cadence of the
+      `README.md` gates table's Mutation testing row names the pull-request
+      run beside the nightly one. 10 minutes or longer: `pull-request.yml`,
+      its wiring checks and the README cadence are unchanged.
 - [ ] `npm run verify` is green.
 
 ## Blocked by

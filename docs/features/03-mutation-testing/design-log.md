@@ -457,3 +457,31 @@ Alternatives:
   Stryker's own Vitest run inside the sandbox still collects its tests
   (story 22). The `.gitignore`, Prettier and ESLint ignores of the folder
   likewise landed before Stryker (01).
+
+### Assumptions from prd-to-issues
+
+- **I1. Plan phase 3 is two tickets.** **Assumption:** the informative
+  phase splits into `03-stryker-configuration.md` (the two packages, the
+  **License allowlist** and **Audit exceptions** they need,
+  `stryker.config.js` with `break: null` and its gate test) and
+  `04-informative-mutation-run.md` (the `test:mutation` script, its wiring
+  test and the builder's first **Mutation run**). Reason: one issue-loop
+  step has a budget of 100k tokens; together the phase holds the lockfile
+  diff of about 200 new packages, the supply-chain fixes, two gate tests
+  and a full **Mutation run**. The packages stay with the configuration
+  because its JSDoc type needs Stryker's API package to pass the type
+  check; the script stays with the run because a script nothing has run is
+  not verifiable. Each ticket still has its own RED test.
+- **I2. How the builder reads a Mutation run.** **Assumption:** the builder
+  starts `npm run test:mutation` in the background with its output in a
+  log file outside the repository, waits for it to end, and reads only the
+  summary table at the end of the log and the exit code. Reason: a full
+  run lists every **Surviving mutant** and runs longer than one foreground
+  command may; the PRD's Further Notes read the score from that summary
+  table; a log outside the repository keeps `git status` clean.
+- **I3. The `mutation` job reuses the pinned checkout and setup-node.**
+  **Assumption:** its checkout and setup-node steps use the SHAs and
+  `# v…` comments the other jobs already pin; only `actions/upload-artifact`
+  is newly chosen (A4). Reason: no source names their versions; the same
+  pins keep the workflows on one release each, which Renovate then updates
+  together.

@@ -1,0 +1,72 @@
+---
+status: open
+---
+# Nightly mutation job
+
+## Parent PRD
+
+`prd.md`
+
+## What to build
+
+The **Daily run** gains the **Mutation run** (plan Phase 4; PRD "Daily
+run" and "Gate tests"; design log Q25, A4, A5).
+
+- `.github/workflows/daily.yml` keeps its `name: Daily`, its triggers
+  (`schedule` `0 5 * * *` and `workflow_dispatch`) and its job `daily`
+  exactly as they are, and gains the job `mutation`, with no job `if:` and
+  no `needs:`, so it runs beside `daily` on `main`. Its steps, in order:
+  1. checkout, no `with` (default depth);
+  2. setup-node from `.nvmrc` with the npm cache;
+  3. `npm ci`;
+  4. `npm run test:mutation`;
+  5. `actions/upload-artifact` with only `name: mutation-report` and
+     `path: reports/mutation/mutation.html`, and `if: always()` on the
+     step.
+  Every `uses:` is a **Pinned action** with its `# v…` comment; checkout
+  and setup-node at the SHAs the other jobs already use (design log,
+  Assumptions from prd-to-issues, I3), the upload action
+  at the SHA of its newest release at least 14 days old on the day of
+  building. `if-no-files-found`, retention and `timeout-minutes` stay at
+  GitHub's defaults. No gitleaks step: the `daily` job keeps the only
+  full-history **Secret scan** of the night.
+- `gates/gateWiring/gateWiring.test.ts`: the check that the daily
+  workflow has the one job `daily` becomes exactly the jobs `daily` and
+  `mutation`; every existing daily and **Secret scan** check stays. A
+  problem finder for the `mutation` job, in the style of
+  `findDailyWiringProblems`, names each missing piece, one line each, with
+  one test per removed or added piece in the style of the daily job's
+  `it.each` table.
+
+This ticket is the approval to change exactly
+`.github/workflows/daily.yml` and `gates/gateWiring/gateWiring.test.ts`.
+
+## Acceptance criteria
+
+- [ ] `daily.yml` has exactly the jobs `daily` and `mutation`, its name and
+      triggers unchanged, no job `if:` and no `needs:`.
+- [ ] The `daily` job's steps and every existing daily wiring check are
+      unchanged; the **Secret scan** jobs stay `verify`, `pull-request` and
+      `daily`.
+- [ ] The `mutation` job runs, in order: checkout without `with`,
+      setup-node from `.nvmrc` with the npm cache, `npm ci`,
+      `npm run test:mutation`, then the upload with only
+      `name: mutation-report`, `path: reports/mutation/mutation.html` and
+      `if: always()` on the step.
+- [ ] The problem finder names one problem each when the checkout,
+      setup-node, `.nvmrc`, npm cache, `npm ci`, the mutation run, the
+      upload, its name, its path or its `if: always()` is removed, and when
+      the job gains another npm command or a gitleaks step; each case has
+      its own test.
+- [ ] The upload action is pinned to the SHA of its newest release at least
+      14 days old, with its `# v…` comment; the **Pinned action** gate
+      passes unchanged.
+- [ ] `npm run verify` is green.
+
+## Blocked by
+
+- Blocked by `04-informative-mutation-run.md` (`npm run test:mutation`)
+
+## User stories addressed
+
+- User stories 32, 33, 34, 35, 36, 37, 38

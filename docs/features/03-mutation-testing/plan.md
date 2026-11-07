@@ -24,8 +24,9 @@ Durable decisions that apply across all phases:
   is unchanged.
 - **Stryker configuration** (Q11–Q21, A1): `stryker.config.js` at the
   root, an ES module with a JSDoc type from `@stryker-mutator/api/core`,
-  type-checked and linted through the existing root configs. Exactly five
-  keys: `testRunner: 'vitest'`, `coverageAnalysis: 'perTest'`, `mutate`
+  type-checked and linted through the existing root configs. Exactly six
+  keys: `testRunner: 'vitest'`, `coverageAnalysis: 'perTest'`, `vitest`
+  (`configFile: 'vitest.stryker.config.ts'`, D4), `mutate`
   (`packages/domain/src/**/*.ts`, `scripts/**/*.ts`, `gates/**/*.ts`,
   `!**/*.test.ts`, `!**/test-support/**`), `reporters` (`clear-text`, `progress`, `html`,
   report at `reports/mutation/mutation.html`), `thresholds`
@@ -35,8 +36,9 @@ Durable decisions that apply across all phases:
   No `// Stryker disable` comments.
 - **Vitest configuration** (Q20, A2): the root config's `exclude` is
   Vitest's default excludes plus `.stryker-tmp/**`, anchored at the
-  repository root; `include` unchanged. One Vitest config, no second one
-  for Stryker.
+  repository root; `include` unchanged. A second config,
+  `vitest.stryker.config.ts` (D4), is the root config plus an exclude of
+  exactly three test files by name; only Stryker uses it.
 - **Dependencies** (Q11): `@stryker-mutator/core` and
   `@stryker-mutator/vitest-runner` as exact root dev dependencies, the same
   release, the newest one at least 14 days old on the day of building

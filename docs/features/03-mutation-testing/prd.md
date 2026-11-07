@@ -104,9 +104,9 @@ threshold**.
     the ignored `reports/` folder, so that I can browse every **Surviving
     mutant** and nothing new is tracked.
 17. As the developer, I want the configuration to hold only the runner, the
-    coverage mode, the mutated files, the reporters and the thresholds, so
-    that no checker, incremental mode, dashboard or mutator exclusion slips
-    in unnoticed.
+    Vitest runner's config file, the coverage mode, the mutated files, the
+    reporters and the thresholds, so that no checker, incremental mode,
+    dashboard or mutator exclusion slips in unnoticed.
 18. As the repository owner, I want no dashboard reporter, so that no result
     leaves the machine.
 19. As the developer, I want no TypeScript checker plugin, so that the run
@@ -240,9 +240,10 @@ section names modules and their interfaces.
 
 - A root ES-module config with a JSDoc type from Stryker's API package
   (installed with core), type-checked and linted like the other root
-  configs. Exactly these keys:
-  - `testRunner: 'vitest'`, `coverageAnalysis: 'perTest'`; the Vitest
-    runner's own defaults (the root Vitest config, related mode).
+  configs. Exactly these six keys:
+  - `testRunner: 'vitest'`, `coverageAnalysis: 'perTest'`.
+  - `vitest`: `configFile: 'vitest.stryker.config.ts'`; the runner's other
+    options at their defaults (design log D4).
   - `mutate`: `packages/domain/src/**/*.ts`, `scripts/**/*.ts`,
     `gates/**/*.ts`, `!**/*.test.ts`, `!**/test-support/**`.
   - `reporters`: `clear-text`, `progress`, `html` (default file
@@ -257,6 +258,12 @@ section names modules and their interfaces.
 
 - The root Vitest config's `exclude` becomes Vitest's default excludes plus
   `.stryker-tmp/**`, anchored at the repository root. `include` unchanged.
+- `vitest.stryker.config.ts` (D4) is the root config plus an exclude of
+  exactly three test files, listed by name, never by pattern:
+  `gates/commitMsgHook/commitMsgHookTracking.test.ts`,
+  `gates/formatting/formattingTree.test.ts` and
+  `gates/lint/lintTree.test.ts`. They check the state of the repository,
+  which fails inside Stryker's sandbox, and still run in **Verify**.
 
 **Dependencies and supply-chain files** (Q11, Q22–Q24)
 
@@ -284,7 +291,7 @@ section names modules and their interfaces.
 **Gate tests** (Q30, A1, A2, A5, A6)
 
 - Mutation testing, a new gate folder:
-  - imports the Stryker config: its keys are exactly the five above; the
+  - imports the Stryker config: its keys are exactly the six above; the
     runner, coverage mode, `mutate` patterns and reporters are those above;
     `thresholds.break` is `null` until the threshold ticket, then a whole
     number from 1 to 100;
@@ -373,8 +380,10 @@ human's `go`.
   fixed check.
 - Stryker copies the repository into `.stryker-tmp/sandbox-*` and runs the
   dry run there. A test that fails only in the sandbox is a finding for the
-  ticket's Notes and is fixed at its cause, never by excluding the test or
-  weakening a check (`CLAUDE.md`, Definition of done).
+  ticket's Notes and is fixed at its cause, never by weakening a check
+  (`CLAUDE.md`, Definition of done). The one exception is D4: a test that
+  checks the state of the repository rather than code is excluded by file
+  name in `vitest.stryker.config.ts`.
 - Should the install bring a package without a licence, or a licence that
   needs more than the review of Q22, the builder stops and asks: there are
   no per-package licence exceptions (02, Q24), and `CLAUDE.md` (Ask first)

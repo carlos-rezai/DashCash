@@ -5,11 +5,17 @@ import { configDefaults } from 'vitest/config';
 import { describe, expect, it } from 'vitest';
 import vitestConfig from '../../vitest.config.ts';
 
-// The Stryker configuration: exactly five keys, the Vitest runner with
-// per-test coverage, the non-test .ts files of the domain, scripts/ and gates/
-// as the mutate patterns, three reporters, and the thresholds with no Break
-// threshold yet. A key gained or lost, or any of these values changed, fails.
-// No test runs Stryker.
+// The Stryker configuration: exactly six keys, the Vitest runner with
+// per-test coverage pointed at the Stryker Vitest config, the non-test .ts
+// files of the domain, scripts/ and gates/ as the mutate patterns, three
+// reporters, and the thresholds with no Break threshold yet. A key gained or
+// lost, or any of these values changed, fails. No test runs Stryker.
+//
+// The Stryker Vitest config: the root Vitest config plus an exclude of exactly
+// the three files that hold the whole-repository tests, listed by file name,
+// never by pattern. Those tests check the state of the repository, not code,
+// and fail inside Stryker's sandbox; they still run in Verify. A file gained,
+// lost or replaced, or a pattern in place of a name, fails.
 //
 // The Vitest configuration: a cancelled Mutation run leaves copies of the
 // tests in .stryker-tmp/sandbox-*, and npm test must never run them. The
@@ -60,7 +66,9 @@ const STRYKER_KEYS = [
   'reporters',
   'testRunner',
   'thresholds',
+  'vitest',
 ];
+const VITEST_RUNNER = { configFile: 'vitest.stryker.config.ts' };
 const MUTATE = [
   'packages/domain/src/**/*.ts',
   'scripts/**/*.ts',
@@ -112,7 +120,7 @@ const isMutated = (path: string, patterns: readonly string[]): boolean => {
 };
 
 describe('the Stryker configuration', () => {
-  it('has exactly the five keys', async () => {
+  it('has exactly the six keys', async () => {
     const config = await loadStrykerConfig();
 
     expect(Object.keys(config).sort()).toEqual(STRYKER_KEYS);
@@ -123,6 +131,12 @@ describe('the Stryker configuration', () => {
 
     expect(config.testRunner).toBe('vitest');
     expect(config.coverageAnalysis).toBe('perTest');
+  });
+
+  it('points the Vitest runner at the Stryker Vitest config, its other options at their defaults', async () => {
+    const config = await loadStrykerConfig();
+
+    expect(config.vitest).toStrictEqual(VITEST_RUNNER);
   });
 
   it('mutates the non-test files of the domain, scripts and gates', async () => {
@@ -153,5 +167,76 @@ describe('the Stryker configuration', () => {
     const config = await loadStrykerConfig();
 
     expect(config.thresholds).toStrictEqual(THRESHOLDS);
+  });
+});
+
+const STRYKER_VITEST_CONFIG = join(ROOT, 'vitest.stryker.config.ts');
+
+// The files of the whole-repository tests, by name (design log D4).
+const WHOLE_REPOSITORY_TEST_FILES = [
+  'gates/commitMsgHook/commitMsgHookTracking.test.ts',
+  'gates/formatting/formattingTree.test.ts',
+  'gates/lint/lintTree.test.ts',
+];
+// The files the moved tests leave, and an unrelated test: all still run.
+const COLLECTED_TEST_FILES = [
+  'gates/commitMsgHook/commitMsgHook.test.ts',
+  'gates/formatting/formatting.test.ts',
+  'gates/lint/lint.test.ts',
+  'gates/mutationTesting/mutationTesting.test.ts',
+  'scripts/runGit/runGit.test.ts',
+];
+
+type VitestConfig = { test?: { exclude?: string[] } };
+
+const loadStrykerVitestConfig = async (): Promise<VitestConfig> => {
+  expect(
+    existsSync(STRYKER_VITEST_CONFIG),
+    'vitest.stryker.config.ts at the repository root',
+  ).toBe(true);
+  const module = (await import(pathToFileURL(STRYKER_VITEST_CONFIG).href)) as {
+    default: VitestConfig;
+  };
+  return module.default;
+};
+
+const strykerExcludeOf = (config: VitestConfig): readonly string[] =>
+  config.test?.exclude ?? [];
+
+const addedExcludes = (config: VitestConfig): string[] =>
+  strykerExcludeOf(config).filter((pattern) => !exclude.includes(pattern));
+
+const withoutExclude = (config: VitestConfig): Record<string, unknown> => {
+  // toEqual treats a key set to undefined as absent.
+  return { ...config, test: { ...config.test, exclude: undefined } };
+};
+
+describe('the Stryker Vitest configuration', () => {
+  it('excludes exactly the three whole-repository test files, by name', async () => {
+    const config = await loadStrykerVitestConfig();
+
+    expect(addedExcludes(config).sort()).toEqual(WHOLE_REPOSITORY_TEST_FILES);
+  });
+
+  it('still collects every other test, the files the moved tests left included', async () => {
+    const config = await loadStrykerVitestConfig();
+    const added = addedExcludes(config);
+
+    expect(
+      COLLECTED_TEST_FILES.filter((path) =>
+        added.some((pattern) => matchesGlob(path, pattern)),
+      ),
+    ).toEqual([]);
+  });
+
+  it('keeps every other setting of the root config, its exclude included', async () => {
+    const config = await loadStrykerVitestConfig();
+
+    expect(
+      strykerExcludeOf(config).filter(
+        (pattern) => !WHOLE_REPOSITORY_TEST_FILES.includes(pattern),
+      ),
+    ).toEqual(exclude);
+    expect(withoutExclude(config)).toEqual(withoutExclude(vitestConfig));
   });
 });

@@ -10,6 +10,6 @@ export default {
     '!**/test-support/**',
   ],
   reporters: ['clear-text', 'progress', 'html'],
-  thresholds: { high: 80, low: 60, break: null },
+  thresholds: { high: 80, low: 60, break: 80 },
   vitest: { configFile: 'vitest.stryker.config.ts' },
 };

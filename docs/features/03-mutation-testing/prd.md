@@ -322,6 +322,10 @@ section names modules and their interfaces.
     `mutation-report` on every outcome. A helper in the style of the daily
     job's problem finder names each missing piece, with one test per
     removed piece.
+  - the `pull-request` job runs exactly `npm ci`, `npm run verify:full`,
+    `npm run check:pr`, `npm run test:mutation` in that order; a problem
+    finder fails when the mutation step is removed or moved before
+    `npm run check:pr` (D2).
 - Pinned actions: unchanged, it covers the upload action.
 - No test runs Stryker (A6).
 
@@ -339,7 +343,7 @@ section names modules and their interfaces.
 
 `package.json`, `package-lock.json`, `stryker.config.js`,
 `vitest.config.ts`, `vitest.stryker.config.ts` (D4),
-`.github/workflows/daily.yml`,
+`.github/workflows/daily.yml`, `.github/workflows/pull-request.yml` (D2),
 `quality/license-allowlist.json`, `quality/audit-exceptions.json` and the
 tests under `gates/`. So `/feature-pipeline` pauses after planning for the
 human's `go`.
@@ -387,8 +391,11 @@ human's `go`.
 - The Stryker dashboard, incremental mode, the TypeScript checker.
 - Everything `docs/quality-gates.md` gives to 04 and later (Playwright,
   flaky quarantine, stories, coverage on changed lines, `Cents`, releases).
-- Changes to `CLAUDE.md` or `README.md` (Q32), except the cadence of the
-  gates table's Mutation testing row (D2).
+- Changes to `CLAUDE.md` or `README.md` (Q32) by a ticket, except the
+  cadence of the gates table's Mutation testing row (D2). The human's own
+  commits on this branch change both too: the README's scope column, and
+  in `CLAUDE.md` the gate-file list and the rule against working around a
+  refusal.
 
 ## Further Notes
 

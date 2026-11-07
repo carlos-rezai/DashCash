@@ -64,7 +64,8 @@ Durable decisions that apply across all phases:
 - **Gate files the phases name** (Q31): `vitest.config.ts` (phase 2);
   `package.json`, `package-lock.json`, `stryker.config.js`,
   `quality/license-allowlist.json`, `quality/audit-exceptions.json`,
-  `vitest.stryker.config.ts` (phase 3, D4); `.github/workflows/daily.yml` (phase 4); `stryker.config.js`
+  `vitest.stryker.config.ts` (phase 3, D4); `.github/workflows/daily.yml`,
+  `.github/workflows/pull-request.yml` (phase 4, D2); `stryker.config.js`
   (phase 5); the tests under `gates/` in phases 2 to 5. So
   `/feature-pipeline` pauses for the human's `go` after planning.
 

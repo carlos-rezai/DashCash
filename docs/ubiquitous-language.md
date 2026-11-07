@@ -89,7 +89,7 @@
 - The **Ruleset** names exactly one **Required check**, and that check runs **Verify full**, the **Pull-request check** and the **Mutation run**.
 - A **Layer rule** constrains **Shipping code**; tests and stories may import `test-support/`.
 - An **Advisory** fails the **Audit** unless exactly one **Audit exception** names it and its **Expiry date** has not passed; an **Audit exception** whose **Advisory** is no longer reported fails it too.
-- The **Daily run** runs the **Audit** and a **Secret scan**; the **Required check** runs **Verify full**, which includes the **Audit**, a **Secret scan** and the **Mutation run**.
+- The **Daily run** runs the **Audit** and a **Secret scan**; the **Required check** runs **Verify full**, which includes the **Audit**, plus a **Secret scan** and the **Mutation run**.
 - A **Renovate PR** passes the same **Required check** as a feature pull request; its workflows use only **Pinned actions**.
 - The **Commit-msg hook** checks one message; the commit gate and the **Ticket check** check the whole **Branch range** in CI.
 - (new) A **Mutation run** produces many **Mutants**, each either a **Killed mutant** or a **Surviving mutant**, one **Mutation score** and one **Mutation report**.

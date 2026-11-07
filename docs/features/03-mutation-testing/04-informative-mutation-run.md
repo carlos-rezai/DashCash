@@ -13,7 +13,8 @@ The tracer bullet of **Mutation testing**, end to end (plan Phase 3; PRD
 "npm scripts", "Gate tests" and "Testing Decisions"; design log Q14, Q15,
 Q17, Q26, A6). `npm run test:mutation` runs the configuration from
 `03-stryker-configuration.md`: a **Mutation run** mutates the **Shipping
-code** of `scripts/` (and of `packages/domain`, from its first module),
+code** of `scripts/`, the non-test `.ts` files of `gates/` (design log,
+Implementation Results, D1) and, from its first module, `packages/domain`,
 runs only the related tests per **Mutant** through the Vitest runner,
 prints the **Mutation score** and the **Surviving mutants**, writes the
 **Mutation report** to `reports/mutation/mutation.html`, and fails only
@@ -31,7 +32,11 @@ when Stryker cannot run, since there is no **Break threshold** yet.
   lists every **Surviving mutant**: start it in the background with its
   output in a log file outside the repository, wait for it to end, and
   read only the summary table at the end of the log and the exit code
-  (design log, Assumptions from prd-to-issues, I2).
+  (design log, Assumptions from prd-to-issues, I2). Record the run's wall
+  time in minutes and seconds, measured from start to exit: whether it is
+  under 10 minutes decides whether `05-nightly-mutation-job.md` also adds
+  the run to the pull-request workflow (design log, Implementation
+  Results, D2).
 - The domain pattern `packages/domain/src/**/*.ts` stays in `mutate`
   although no domain file exists (Q17). If Stryker refuses it, use the form
   of that pattern Stryker accepts, in `stryker.config.js` and in the
@@ -56,11 +61,12 @@ entry in `stryker.config.js` and its assertion in
       Stryker refuses it, the form it accepts is used and the finding is in
       the ticket's Notes.
 - [ ] The builder's run, no test: `npm run test:mutation` (with the
-      `.stryker-tmp/**` exclude in place) collects the sandbox's tests,
+      `.stryker-tmp/**` exclude in place) mutates files of `scripts/` and
+      `gates/` but no `*.test.ts` file, collects the sandbox's tests,
       prints a **Mutation score** and the **Surviving mutants**, writes
       `reports/mutation/mutation.html` and exits 0; the score and the
-      duration are in the ticket's Notes, and `git status` shows nothing
-      new afterwards.
+      wall time (minutes and seconds) are in the ticket's Notes, and
+      `git status` shows nothing new afterwards.
 - [ ] `npm run verify` is green.
 
 ## Blocked by

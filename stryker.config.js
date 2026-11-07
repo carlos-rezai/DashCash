@@ -11,4 +11,5 @@ export default {
   ],
   reporters: ['clear-text', 'progress', 'html'],
   thresholds: { high: 80, low: 60, break: null },
+  vitest: { configFile: 'vitest.stryker.config.ts' },
 };

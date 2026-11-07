@@ -17,6 +17,7 @@
     "typecheck": "tsc",
     "lint:deps": "depcruise --config .dependency-cruiser.js apps packages scripts e2e",
     "test": "vitest run",
+    "test:mutation": "stryker run stryker.config.js",
     "verify": "npm run format:check && npm run lint && npm run typecheck && npm run lint:deps && npm run test && npm run check:commits && npm run check:tickets && npm run check:data-files && npm run check:docs-drift && npm run check:licenses && npm run check:audit",
     "verify:full": "npm run verify",
     "check:data-files": "node scripts/checkDataFiles/checkDataFiles.ts",

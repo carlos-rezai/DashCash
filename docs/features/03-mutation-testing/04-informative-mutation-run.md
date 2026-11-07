@@ -1,5 +1,5 @@
 ---
-status: in-progress
+status: done
 ---
 # Informative mutation run
 
@@ -87,31 +87,31 @@ the three new files, changing nothing else in them.
 
 ## Acceptance criteria
 
-- [ ] The wiring test fails when `test:mutation` runs anything but
+- [x] The wiring test fails when `test:mutation` runs anything but
       `stryker run stryker.config.js`, and when `verify` or `verify:full`
       runs it; `verify` still runs exactly its eleven gates in order.
-- [ ] The domain pattern is in `mutate` although no domain file exists; if
+- [x] The domain pattern is in `mutate` although no domain file exists; if
       Stryker refuses it, the form it accepts is used and the finding is in
       the ticket's Notes.
-- [ ] The four whole-repository tests live in
+- [x] The four whole-repository tests live in
       `commitMsgHookTracking.test.ts`, `formattingTree.test.ts` and
       `lintTree.test.ts`, unchanged in name, assertions and setup; nothing
       else in their old files changed. The ticket's Notes show the diff of
       each move, so the reviewer can confirm it. `npm test` runs the same
       number of tests as before the move.
-- [ ] The gate test pins the six keys of `stryker.config.js`, its `vitest`
+- [x] The gate test pins the six keys of `stryker.config.js`, its `vitest`
       option pointing at `vitest.stryker.config.ts`, and that config's
       excluded test files as exactly the three files by name; it fails when
       a file is gained, lost or replaced, or a pattern stands in for a
       name.
-- [ ] The builder's run, no test: `npm run test:mutation` (with the
+- [x] The builder's run, no test: `npm run test:mutation` (with the
       `.stryker-tmp/**` exclude in place) mutates files of `scripts/` and
       `gates/` but no `*.test.ts` file, collects the sandbox's tests,
       prints a **Mutation score** and the **Surviving mutants**, writes
       `reports/mutation/mutation.html` and exits 0; the score and the
       wall time (minutes and seconds) are in the ticket's Notes, and
       `git status` shows nothing new afterwards.
-- [ ] `npm run verify` is green.
+- [x] `npm run verify` is green.
 
 ## Blocked by
 
@@ -123,3 +123,160 @@ the three new files, changing nothing else in them.
 ## User stories addressed
 
 - User stories 10, 13, 15, 16, 22, 23, 24, 26
+
+## Notes
+
+Test count: `npm test` ran 1016 tests (6 failed, the RED ones; 1010 passed) before the moves and 1016 (all passed) after them. Equal.
+
+### The four moves
+
+Each diff below is the old file after the move (lines removed, nothing added); the new file follows it in full. Each new file adds only a header comment, its imports, and the constants and helpers its tests need.
+
+#### `gates/commitMsgHook/commitMsgHook.test.ts` to `gates/commitMsgHook/commitMsgHookTracking.test.ts`
+
+Removed from `gates/commitMsgHook/commitMsgHook.test.ts`:
+
+```diff
+@@ -70,12 +69,0 @@ describe('the hook file', () => {
+-  it('is the only file in the hooks folder', () => {
+-    const tracked = runSampleGit(ROOT, 'ls-files', '--', '.githooks');
+-
+-    expect(tracked.split('\n')).toEqual([HOOK_PATH]);
+-  });
+-
+-  it('is tracked with mode 100755', () => {
+-    const entry = runSampleGit(ROOT, 'ls-files', '--stage', '--', HOOK_PATH);
+-
+-    expect(entry.split(' ')[0]).toBe('100755');
+-  });
+-
+```
+
+New file `gates/commitMsgHook/commitMsgHookTracking.test.ts`:
+
+```ts
+import { describe, expect, it } from 'vitest';
+import {
+  ROOT,
+  runSampleGit,
+} from '../../scripts/test-support/sampleRepository/sampleRepository.ts';
+
+// Whole-repository tests of the Commit-msg hook: they check how git tracks
+// the hook in this repository, not code, so the Stryker Vitest config leaves
+// this file out of a Mutation run (design log D4). Verify still runs it.
+
+const HOOK_PATH = '.githooks/commit-msg';
+
+describe('the hook file', () => {
+  it('is the only file in the hooks folder', () => {
+    const tracked = runSampleGit(ROOT, 'ls-files', '--', '.githooks');
+
+    expect(tracked.split('\n')).toEqual([HOOK_PATH]);
+  });
+
+  it('is tracked with mode 100755', () => {
+    const entry = runSampleGit(ROOT, 'ls-files', '--stage', '--', HOOK_PATH);
+
+    expect(entry.split(' ')[0]).toBe('100755');
+  });
+});
+```
+
+#### `gates/formatting/formatting.test.ts` to `gates/formatting/formattingTree.test.ts`
+
+Removed from `gates/formatting/formatting.test.ts`:
+
+```diff
+@@ -184,7 +183,0 @@ describe('format scripts', { timeout: 30_000 }, () => {
+-
+-describe('repository tree', { timeout: 60_000 }, () => {
+-  it('passes format:check', () => {
+-    const result = runScript('format:check', ROOT);
+-    expect(result.status, result.output).toBe(0);
+-  });
+-});
+```
+
+New file `gates/formatting/formattingTree.test.ts`:
+
+```ts
+import { fileURLToPath } from 'node:url';
+import { describe, expect, it } from 'vitest';
+import { runNpmScript } from '../../scripts/test-support/runNpmScript/runNpmScript.ts';
+
+// Whole-repository test of the formatting gate: it formats the repository
+// itself, not code, so the Stryker Vitest config leaves this file out of a
+// Mutation run (design log D4). Verify still runs it.
+
+const ROOT = fileURLToPath(new URL('../..', import.meta.url));
+
+function runScript(
+  name: string,
+  cwd: string,
+): { status: number | null; output: string } {
+  const { status, output } = runNpmScript(name, cwd, { rootBin: true });
+  return { status, output };
+}
+
+describe('repository tree', { timeout: 60_000 }, () => {
+  it('passes format:check', () => {
+    const result = runScript('format:check', ROOT);
+    expect(result.status, result.output).toBe(0);
+  });
+});
+```
+
+#### `gates/lint/lint.test.ts` to `gates/lint/lintTree.test.ts`
+
+Removed from `gates/lint/lint.test.ts`:
+
+```diff
+@@ -354,8 +353,0 @@ describe('lint script', { timeout: 30_000 }, () => {
+-
+-describe('repository tree', { timeout: 120_000 }, () => {
+-  it('passes lint', () => {
+-    const result = runScript('lint', ROOT);
+-
+-    expect(result.status, result.output).toBe(0);
+-  });
+-});
+```
+
+New file `gates/lint/lintTree.test.ts`:
+
+```ts
+import { fileURLToPath } from 'node:url';
+import { describe, expect, it } from 'vitest';
+import { runNpmScript } from '../../scripts/test-support/runNpmScript/runNpmScript.ts';
+
+// Whole-repository test of the lint gate: it lints the repository itself,
+// not code, so the Stryker Vitest config leaves this file out of a Mutation
+// run (design log D4). Verify still runs it.
+
+const ROOT = fileURLToPath(new URL('../..', import.meta.url));
+
+function runScript(
+  name: string,
+  cwd: string,
+): { status: number | null; output: string } {
+  const { status, output } = runNpmScript(name, cwd, { rootBin: true });
+  return { status, output };
+}
+
+describe('repository tree', { timeout: 120_000 }, () => {
+  it('passes lint', () => {
+    const result = runScript('lint', ROOT);
+
+    expect(result.status, result.output).toBe(0);
+  });
+});
+```
+
+### The Mutation run
+
+- Command: `npm run test:mutation`, started in the background, output in a log outside the repository. Exit code 0.
+- Mutation score: 82.04 % (89.31 % of covered mutants). 1315 killed, 14 timeout, 159 survived, 132 no coverage, 0 errors.
+- Wall time: 3 minutes 25 seconds (205 s, start to exit; Stryker's own "Done in" says 3 minutes 22 seconds). Under 10 minutes, so ticket 05 adds the run to the pull-request workflow (D2).
+- The dry run passed in the sandbox with `vitest.stryker.config.ts`; no other test needed excluding.
+- Domain pattern: Stryker does not refuse `packages/domain/src/**/*.ts`; it warns `Glob pattern "packages/domain/src/**/*.ts" did not result in any files` and goes on. The pattern stays as it is in `stryker.config.js` and in the `mutate` assertion.
+- No `*.test.ts` file in the report. `reports/mutation/mutation.html` was written; `git status` shows nothing new from the run (`.stryker-tmp/` and `reports/` are ignored).

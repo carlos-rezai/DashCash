@@ -67,18 +67,6 @@ function readPackageScripts(): Record<string, string | undefined> {
 }
 
 describe('the hook file', () => {
-  it('is the only file in the hooks folder', () => {
-    const tracked = runSampleGit(ROOT, 'ls-files', '--', '.githooks');
-
-    expect(tracked.split('\n')).toEqual([HOOK_PATH]);
-  });
-
-  it('is tracked with mode 100755', () => {
-    const entry = runSampleGit(ROOT, 'ls-files', '--stage', '--', HOOK_PATH);
-
-    expect(entry.split(' ')[0]).toBe('100755');
-  });
-
   it('starts with #!/bin/sh', () => {
     expect(readHookLines()[0]).toBe('#!/bin/sh');
   });

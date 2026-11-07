@@ -95,8 +95,29 @@ function judgeLicence(
 }
 
 // Returns every package of the lockfile whose licence is missing or not on
-// the allowlist. A malformed allowlist or lockfile is one violation naming its
-// file; packages are judged only when both are well formed.
+// the allowlist.
+function judgePackages(
+  packages: Record<string, unknown>,
+  allowlist: readonly string[],
+): Violation[] {
+  const violations: Violation[] = [];
+  for (const [key, value] of Object.entries(packages)) {
+    const folder = key.lastIndexOf(NODE_MODULES);
+    const entry = (isRecord(value) ? value : {}) as LockEntry;
+    if (folder === -1 || entry.link === true) {
+      continue;
+    }
+    const subject = `${key.slice(folder + NODE_MODULES.length)}@${String(entry.version)}`;
+    const reason = judgeLicence(entry.license, allowlist);
+    if (reason !== undefined) {
+      violations.push({ subject, reason });
+    }
+  }
+  return violations;
+}
+
+// Returns those packages. A malformed allowlist or lockfile is one violation
+// naming its file; both are judged before any package.
 export function findLicenseViolations(
   lockfile: unknown,
   allowlist: unknown,
@@ -118,20 +139,7 @@ export function findLicenseViolations(
   if (!isAllowlist(allowlist) || !isRecord(packages)) {
     return malformed;
   }
-  const violations: Violation[] = [];
-  for (const [key, value] of Object.entries(packages)) {
-    const folder = key.lastIndexOf(NODE_MODULES);
-    const entry = (isRecord(value) ? value : {}) as LockEntry;
-    if (folder === -1 || entry.link === true) {
-      continue;
-    }
-    const subject = `${key.slice(folder + NODE_MODULES.length)}@${String(entry.version)}`;
-    const reason = judgeLicence(entry.license, allowlist);
-    if (reason !== undefined) {
-      violations.push({ subject, reason });
-    }
-  }
-  return violations;
+  return judgePackages(packages, allowlist);
 }
 
 function readJson(path: string): unknown {

@@ -15,7 +15,9 @@ PRD "Stryker configuration" and "Gate tests"; design log Q26–Q29).
 - The builder runs `npm run test:mutation` on the day of building, the
   same way as in `04-informative-mutation-run.md` (in the background, log
   outside the repository, only the summary table read; I2), rounds the
-  **Mutation score** down to a whole percent and sets it as
+  **Mutation score** (over `packages/domain`, `scripts/` and the non-test
+  files of `gates/`; design log, Implementation Results, D1) down to a
+  whole percent and sets it as
   `thresholds.break` in `stryker.config.js`. `high` and `low` stay 80 and
   60. Both numbers go into the ticket's Notes.
 - `gates/mutationTesting/mutationTesting.test.ts`: the `break: null`
@@ -25,8 +27,10 @@ PRD "Stryker configuration" and "Gate tests"; design log Q26–Q29).
   that check, and that the configured value passes it.
 - From the merge on, a **Mutation score** below the **Break threshold**
   makes Stryker exit non-zero, so the `mutation` job and the **Daily run**
-  go red on `main`, without blocking any merge: the **Required check** and
-  **Verify** do not run Stryker. Raising and lowering stay with the rules
+  go red on `main`. If `05-nightly-mutation-job.md` added the mutation step
+  to the `pull-request` job (design log, Implementation Results, D2), the
+  same score also fails the **Required check** and blocks the merge;
+  otherwise no merge is blocked. **Verify** never runs Stryker. Raising and lowering stay with the rules
   that already guard gate files (`CLAUDE.md`, Ask first; `CODEOWNERS`);
   no ratchet check against `origin/main` is added (Q28).
 
@@ -47,8 +51,9 @@ Linux **Mutation score** clears the **Break threshold** (story 45).
       it; it passes for the configured value.
 - [ ] The builder's run, no test: `npm run test:mutation` exits 0 with the
       threshold in place.
-- [ ] No check compares the threshold with `origin/main`, and the
-      **Required check** and **Verify** still do not run Stryker.
+- [ ] No check compares the threshold with `origin/main`; **Verify** still
+      does not run Stryker, and the **Required check** runs it only if 05
+      added the pull-request step.
 - [ ] `npm run verify` is green.
 
 ## Blocked by

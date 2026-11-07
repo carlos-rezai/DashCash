@@ -43,14 +43,47 @@ when Stryker cannot run, since there is no **Break threshold** yet.
   `mutate` assertion of `gates/mutationTesting/mutationTesting.test.ts`,
   and record the finding in the ticket's Notes.
 - A test that fails only inside Stryker's sandbox is a finding for the
-  Notes and is fixed at its cause, never by excluding the test or
-  weakening a check (PRD, Further Notes).
+  Notes and is fixed at its cause, never by weakening a check (PRD,
+  Further Notes). The one exception is D4 below: a test that checks the
+  state of the repository rather than code leaves the run by file name.
+- Whole-repository tests (design log, Implementation Results, D4, which
+  supersedes Q18 and A1's five keys). The first run's dry run failed in
+  the sandbox on four tests. Each moves unchanged (same name, assertions
+  and setup; only its file changes) into a file of its own, with the
+  imports, constants and helpers it needs:
+  - "the hook file › is the only file in the hooks folder" and "the hook
+    file › is tracked with mode 100755", from
+    `gates/commitMsgHook/commitMsgHook.test.ts` to
+    `gates/commitMsgHook/commitMsgHookTracking.test.ts`;
+  - "repository tree › passes format:check", from
+    `gates/formatting/formatting.test.ts` to
+    `gates/formatting/formattingTree.test.ts`;
+  - "repository tree › passes lint", from `gates/lint/lint.test.ts` to
+    `gates/lint/lintTree.test.ts`.
+  Every other test stays where it is. The moved tests keep running in
+  **Verify**.
+- `vitest.stryker.config.ts` at the repository root: the root
+  `vitest.config.ts` plus an exclude of exactly those three files, listed
+  by file name, never by pattern; everything else as the root config.
+- `stryker.config.js` gains a sixth key, `vitest`, that points the Vitest
+  runner at `vitest.stryker.config.ts` (`configFile`), the runner's other
+  options at their defaults.
+- `gates/mutationTesting/mutationTesting.test.ts`: the key-set assertion
+  becomes the six keys and pins the `vitest` option; a new check fails
+  when the Stryker Vitest config's excluded test files differ from exactly
+  the three files above (one gained, lost or replaced, or a pattern in
+  place of a name), and checks its other settings equal the root config's.
+- A further test file joins the excluded list only through a ticket that
+  names it (`docs/conventions.md`, Test layers).
 
 This ticket is the approval to add exactly the `test:mutation` script to
-`package.json` and to change `gates/gateWiring/gateWiring.test.ts`; and,
-only if Stryker refuses the domain pattern, to change that one `mutate`
-entry in `stryker.config.js` and its assertion in
-`gates/mutationTesting/mutationTesting.test.ts`.
+`package.json`; to change `gates/gateWiring/gateWiring.test.ts`; to create
+`vitest.stryker.config.ts`; to add the `vitest` key to
+`stryker.config.js`; to change `gates/mutationTesting/mutationTesting.test.ts`;
+and to move the four tests named above out of
+`gates/commitMsgHook/commitMsgHook.test.ts`,
+`gates/formatting/formatting.test.ts` and `gates/lint/lint.test.ts` into
+the three new files, changing nothing else in them.
 
 ## Acceptance criteria
 
@@ -60,6 +93,17 @@ entry in `stryker.config.js` and its assertion in
 - [ ] The domain pattern is in `mutate` although no domain file exists; if
       Stryker refuses it, the form it accepts is used and the finding is in
       the ticket's Notes.
+- [ ] The four whole-repository tests live in
+      `commitMsgHookTracking.test.ts`, `formattingTree.test.ts` and
+      `lintTree.test.ts`, unchanged in name, assertions and setup; nothing
+      else in their old files changed. The ticket's Notes show the diff of
+      each move, so the reviewer can confirm it. `npm test` runs the same
+      number of tests as before the move.
+- [ ] The gate test pins the six keys of `stryker.config.js`, its `vitest`
+      option pointing at `vitest.stryker.config.ts`, and that config's
+      excluded test files as exactly the three files by name; it fails when
+      a file is gained, lost or replaced, or a pattern stands in for a
+      name.
 - [ ] The builder's run, no test: `npm run test:mutation` (with the
       `.stryker-tmp/**` exclude in place) mutates files of `scripts/` and
       `gates/` but no `*.test.ts` file, collects the sandbox's tests,

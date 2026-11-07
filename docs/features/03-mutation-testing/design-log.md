@@ -521,3 +521,28 @@ answers named; those answers stay as they were written.
   version, alone or inside an expression, stops the builder for the
   human's decision; so does any other licence that is not permissive, and
   a package without a licence.
+- **D4. Whole-repository tests leave the Mutation run by file name**
+  (supersedes Q18's "no second Vitest config for Stryker", A1's five
+  keys, and ticket 04's "never by excluding the test"). Set 2026-11-07
+  after ticket 04's first run stopped: Stryker's dry run failed inside its
+  sandbox on four tests that check the state of the repository, not code:
+  - `gates/commitMsgHook/commitMsgHook.test.ts`, "the hook file › is the
+    only file in the hooks folder" and "› is tracked with mode 100755"
+    (`git ls-files` finds nothing in the untracked sandbox);
+  - `gates/formatting/formatting.test.ts`, "repository tree › passes
+    format:check" (Prettier flags the instrumented sources);
+  - `gates/lint/lint.test.ts`, "repository tree › passes lint" (ESLint
+    rejects the `// @ts-nocheck` Stryker adds).
+
+  The four tests move unchanged (same names, assertions and setup; only
+  the file changes) into three files of their own:
+  `gates/commitMsgHook/commitMsgHookTracking.test.ts`,
+  `gates/formatting/formattingTree.test.ts` and
+  `gates/lint/lintTree.test.ts`. They still run in **Verify**. A Stryker
+  Vitest config, `vitest.stryker.config.ts`, is the root Vitest config
+  plus an exclude of exactly those three files, listed by file name, never
+  by pattern. `stryker.config.js` gains a sixth key, `vitest`, pointing
+  the runner at it. The mutationTesting gate test pins the six keys and
+  fails if the excluded list differs from exactly those three files. A
+  further file joins the list only through a ticket that names it. The
+  rule is in `docs/conventions.md`, Test layers.

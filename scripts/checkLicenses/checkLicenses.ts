@@ -129,9 +129,10 @@ export function findLicenseViolations(
   lockfile: unknown,
   allowlist: unknown,
 ): Violation[] {
+  const validAllowlist = isAllowlist(allowlist) ? allowlist : undefined;
   const packages = readPackages(lockfile);
   const malformed: Violation[] = [];
-  if (!isAllowlist(allowlist)) {
+  if (validAllowlist === undefined) {
     malformed.push({
       subject: ALLOWLIST_FILE,
       reason: 'must be a non-empty array of licence ids',
@@ -143,10 +144,10 @@ export function findLicenseViolations(
       reason: 'must be an object with a packages object',
     });
   }
-  if (!isAllowlist(allowlist) || packages === undefined) {
+  if (validAllowlist === undefined || packages === undefined) {
     return malformed;
   }
-  return judgePackages(packages, allowlist);
+  return judgePackages(packages, validAllowlist);
 }
 
 function readJson(path: string): unknown {

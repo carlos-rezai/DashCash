@@ -67,7 +67,7 @@ Each step is one `refactor:` commit with the step's number and description.
 Run `npm run verify` before committing. Every step must leave it green.
 
 - [x] 01 extract judge packages in check licenses
-- [ ] 02 extract read packages in check licenses
+- [x] 02 extract read packages in check licenses
 - [ ] 03 judge the allowlist once in check licenses
 - [ ] 04 align the glossary with the mutation run
 

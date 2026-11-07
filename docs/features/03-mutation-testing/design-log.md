@@ -443,3 +443,17 @@ Alternatives:
   (score measured), and records the result in the ticket's Notes. Reason: a
   test that runs Stryker would put it in `npm test` and so in **Verify**,
   which Q15 keeps it out of; a full run is far slower than every other gate.
+
+### Assumptions from prd-to-plan
+
+- **P1. The Vitest exclude lands in a phase of its own, before Stryker.**
+  **Assumption:** the `.stryker-tmp/**` exclude and its gate test form
+  phase 2, ahead of the informative **Mutation run** (phase 3), unlike the
+  PRD's ticket order, which puts them inside the Stryker ticket. Reason:
+  the plan prefers thin slices, and the exclude is verifiable on its own
+  (a stale sandbox copy no longer runs under `npm test`); landing it first
+  means no **Mutation run** of this feature can leave a sandbox that turns
+  **Verify** red, and the first real run in phase 3 also proves that
+  Stryker's own Vitest run inside the sandbox still collects its tests
+  (story 22). The `.gitignore`, Prettier and ESLint ignores of the folder
+  likewise landed before Stryker (01).

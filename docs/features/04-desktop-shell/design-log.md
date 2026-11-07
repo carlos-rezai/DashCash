@@ -747,3 +747,31 @@ Alternatives:
   `testIgnore`, `testMatch` or `repeatEach` key would each change which
   tests run, or how, without touching the keys Q38 checks; 03, A1 guards
   the Stryker config the same way.
+
+### Assumptions from prd-to-plan
+
+- **P1. The data folder override waits for phase 4.** **Assumption:** the
+  **App fixture** passes `DASHCASH_DATA_FOLDER` from phase 1, and main
+  honours it from phase 4 with the rest of the **Data folder**; until then
+  the end-to-end runs of phases 1 to 3 leave Chromium's files in the
+  default `userData`, which holds no DashCash data yet. Reason: the PRD's
+  ticket order puts the override with the **Database** and the **Startup
+  error**, which a relative override ends in (A4); no phase ships on its
+  own, the feature merges as one pull request.
+- **P2. The App build loads its page as a file until phase 2.**
+  **Assumption:** phase 1's window loads the built `index.html` with
+  `loadFile`, and the dev server URL in dev; phase 2 replaces the file load
+  with `app://dashcash/index.html`. Reason: the PRD's ticket order puts the
+  **App protocol** in the secure window; phase 1 needs a page to open, and
+  the file load is gone before the feature merges.
+- **P3. lint:deps skips the App build from phase 1.** **Assumption:** the
+  exclude of `apps/desktop/out/` (A3) lands in phase 1, where the **App
+  build** first appears, not with the SQLite **Layer rule** in phase 4.
+  Reason: story 73 holds from the first local `npm run build`; cruising
+  bundled output can only produce findings about code that is not source.
+- **P4. The Playwright config gate test starts with five keys.**
+  **Assumption:** the `endToEnd` gate test arrives in phase 1 and pins the
+  five keys of Q38 (`testDir`, `retries`, `forbidOnly`, `reporter`, `use`);
+  phase 6 adds `grepInvert` as the sixth (A9). Reason: the harness is
+  guarded from its first commit (story 101), and the filter needs the
+  **Quarantine** reader, which phase 6 brings.

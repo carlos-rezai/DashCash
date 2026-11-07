@@ -1,5 +1,5 @@
 ---
-status: in-progress
+status: done
 ---
 # Licence check fails closed
 
@@ -42,22 +42,22 @@ This ticket names no gate file.
 
 ## Acceptance criteria
 
-- [ ] A RED commit holds the new core and entry tests and fails on them,
+- [x] A RED commit holds the new core and entry tests and fails on them,
       before the fix.
-- [ ] A lockfile that is `null`, an array, a string or a number, and one
+- [x] A lockfile that is `null`, an array, a string or a number, and one
       whose `packages` is missing, `null`, an array or a string, each give
       exactly `package-lock.json: must be an object with a packages object`
       with a valid allowlist.
-- [ ] A malformed allowlist with a malformed lockfile gives both
+- [x] A malformed allowlist with a malformed lockfile gives both
       violations, the allowlist's first; a malformed allowlist with a valid
       lockfile still gives its one violation (the existing table, unchanged).
-- [ ] A lockfile whose `packages` is an empty object gives no violation.
-- [ ] `npm run check:licenses` exits 1 with that one line on a lockfile
+- [x] A lockfile whose `packages` is an empty object gives no violation.
+- [x] `npm run check:licenses` exits 1 with that one line on a lockfile
       without `packages`, shown by the entry test in a temporary folder.
-- [ ] A missing or unparsable lockfile still fails through the entry's
+- [x] A missing or unparsable lockfile still fails through the entry's
       existing error handling; the entry's code is unchanged.
-- [ ] Row 03 of `docs/feature-checklist.md` names the licence fix.
-- [ ] `npm run check:licenses` passes on the repository's lockfile, and
+- [x] Row 03 of `docs/feature-checklist.md` names the licence fix.
+- [x] `npm run check:licenses` passes on the repository's lockfile, and
       `npm run verify` is green.
 
 ## Blocked by

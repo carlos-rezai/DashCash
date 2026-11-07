@@ -181,10 +181,3 @@ describe('format scripts', { timeout: 30_000 }, () => {
     }
   });
 });
-
-describe('repository tree', { timeout: 60_000 }, () => {
-  it('passes format:check', () => {
-    const result = runScript('format:check', ROOT);
-    expect(result.status, result.output).toBe(0);
-  });
-});

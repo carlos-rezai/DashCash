@@ -13,6 +13,11 @@ const ALLOWLIST_FILE = 'quality/license-allowlist.json';
 
 const ALLOWLIST = ['MIT', 'ISC', 'Apache-2.0'];
 
+const MALFORMED_LOCKFILE = {
+  subject: 'package-lock.json',
+  reason: 'must be an object with a packages object',
+};
+
 // A version-3 lockfile with the root entry first, as npm writes it, and the
 // given entries after it. Every package here is invented.
 function lockfile(packages: Record<string, unknown>): unknown {
@@ -417,6 +422,59 @@ describe('findLicenseViolations', () => {
       },
     );
   });
+
+  describe('a malformed lockfile', () => {
+    it.each([
+      ['null', null],
+      ['an array', [{ packages: {} }]],
+      ['a string', 'packages'],
+      ['a number', 3],
+      [
+        'an object without packages',
+        { name: 'sample-app', lockfileVersion: 3 },
+      ],
+      [
+        'an object whose packages is null',
+        { lockfileVersion: 3, packages: null },
+      ],
+      [
+        'an object whose packages is an array',
+        { lockfileVersion: 3, packages: [{ version: '1.0.0' }] },
+      ],
+      [
+        'an object whose packages is a string',
+        { lockfileVersion: 3, packages: 'node_modules/left-pad' },
+      ],
+    ])(
+      'is exactly one violation naming the lockfile when it is %s',
+      (_case, malformed) => {
+        const violations = findLicenseViolations(malformed, ALLOWLIST);
+
+        expect(violations).toEqual([MALFORMED_LOCKFILE]);
+      },
+    );
+
+    it('reports a malformed allowlist and a malformed lockfile both, the allowlist first', () => {
+      const violations = findLicenseViolations({ lockfileVersion: 3 }, 'MIT');
+
+      expect(violations).toEqual([
+        {
+          subject: ALLOWLIST_FILE,
+          reason: 'must be a non-empty array of licence ids',
+        },
+        MALFORMED_LOCKFILE,
+      ]);
+    });
+
+    it('reports nothing for a lockfile whose packages is an empty object', () => {
+      const violations = findLicenseViolations(
+        { lockfileVersion: 3, packages: {} },
+        ALLOWLIST,
+      );
+
+      expect(violations).toEqual([]);
+    });
+  });
 });
 
 describe('check:licenses', { timeout: 30_000 }, () => {
@@ -476,5 +534,20 @@ describe('check:licenses', { timeout: 30_000 }, () => {
     );
     expect(result.stderr).toContain('bare-pkg@0.1.0: has no licence');
     expect(result.stderr).not.toContain('left-pad');
+  });
+
+  it('fails closed on a lockfile without packages, naming the lockfile', () => {
+    writeTreeFile(
+      tree,
+      'package-lock.json',
+      JSON.stringify({ name: 'sample-app', lockfileVersion: 3 }),
+    );
+
+    const result = runScript('check:licenses', tree, { env: OFFLINE });
+
+    expect(result.status, result.output).toBe(1);
+    expect(result.stderr.trim()).toBe(
+      'package-lock.json: must be an object with a packages object',
+    );
   });
 });

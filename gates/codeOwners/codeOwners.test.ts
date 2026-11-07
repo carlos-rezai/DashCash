@@ -16,11 +16,12 @@ const OWNER = '@carlos-rezai';
 // verify* and test* scripts live in package.json.
 const GATE_FILE_PATTERNS = [
   '.github/',
+  'gates/',
   'eslint.config.*',
   '.prettierrc*',
   'tsconfig*.json',
   '.dependency-cruiser.*',
-  'vitest.config.*',
+  'vitest*.config.*',
   'playwright.config.*',
   'stryker.config.*',
   'quality/',

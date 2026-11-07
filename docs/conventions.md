@@ -33,6 +33,7 @@ feature PR.
 - **Story** (Storybook, `play`): a component's behaviour and states, with a fake bridge.
 - **End-to-end** (Playwright, `e2e/`): one test per main user flow, written RED in the ticket that completes the flow. A main user flow is a goal the user reaches across pages, IPC and the database, such as importing a CSV or creating an account. A behaviour inside one component is never an end-to-end test.
 - Aim for a handful of end-to-end tests per feature at most; everything else belongs a layer lower.
+- A test that checks the state of the repository and so fails inside Stryker's sandbox (formatting, lint, tracked files) is excluded from mutation runs by name, in the Stryker Vitest config; a file joins that list only through a ticket that names it.
 
 ## Branches and pull requests
 

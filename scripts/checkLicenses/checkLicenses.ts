@@ -95,22 +95,28 @@ function judgeLicence(
 }
 
 // Returns every package of the lockfile whose licence is missing or not on
-// the allowlist. A malformed allowlist is one violation naming its file.
+// the allowlist. A malformed allowlist or lockfile is one violation naming its
+// file; packages are judged only when both are well formed.
 export function findLicenseViolations(
   lockfile: unknown,
   allowlist: unknown,
 ): Violation[] {
-  if (!isAllowlist(allowlist)) {
-    return [
-      {
-        subject: ALLOWLIST_FILE,
-        reason: 'must be a non-empty array of licence ids',
-      },
-    ];
-  }
   const packages = isRecord(lockfile) ? lockfile['packages'] : undefined;
+  const malformed: Violation[] = [];
+  if (!isAllowlist(allowlist)) {
+    malformed.push({
+      subject: ALLOWLIST_FILE,
+      reason: 'must be a non-empty array of licence ids',
+    });
+  }
   if (!isRecord(packages)) {
-    return [];
+    malformed.push({
+      subject: LOCKFILE,
+      reason: 'must be an object with a packages object',
+    });
+  }
+  if (!isAllowlist(allowlist) || !isRecord(packages)) {
+    return malformed;
   }
   const violations: Violation[] = [];
   for (const [key, value] of Object.entries(packages)) {

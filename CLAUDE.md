@@ -13,7 +13,7 @@ Read when relevant: `docs/quality-gates.md` before adding or changing a gate, `d
 
 ## Ask first
 
-- Before changing gate files: `.github/`, `eslint.config.*`, `.prettierrc*`, `tsconfig*.json`, `.dependency-cruiser.*`, `vitest.config.*`, `playwright.config.*`, `stryker.config.*`, `quality/`, and the `verify*` / `test*` scripts.
+- Before changing gate files: `.github/`, `gates/`, `eslint.config.*`, `.prettierrc*`, `tsconfig*.json`, `.dependency-cruiser.*`, `vitest*.config.*`, `playwright.config.*`, `stryker.config.*`, `quality/`, and the `verify*` / `test*` scripts.
   - Exception: a ticket whose What to build or Acceptance criteria name a gate file is the approval to create or change exactly that file, for that ticket only. Every other change to a gate file still needs asking.
 - Before changing anything under `.claude/`: skills, agents, hooks, `settings.json`. A ticket never counts as approval for `.claude/`.
 - Before adding `eslint-disable`, `@ts-ignore`, `@ts-expect-error`, `.skip`, `.only` or a retry.
@@ -59,3 +59,4 @@ Run tools only through these scripts or `node_modules/.bin`, never `npx`.
 - Commit to `main`, or commit `.env`, `*.db`, real CSVs or app data.
 - Publish, release or push tags.
 - Add a `Co-Authored-By` line, or any other trailer or body, to a commit message.
+- Work around a refusal: when a hook, a permission rule or a safety check denies an action, stop and report it. Never make the same change through another tool or command.

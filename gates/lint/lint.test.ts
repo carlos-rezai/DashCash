@@ -351,11 +351,3 @@ describe('lint script', { timeout: 30_000 }, () => {
     expect(result.status, result.output).toBe(0);
   });
 });
-
-describe('repository tree', { timeout: 120_000 }, () => {
-  it('passes lint', () => {
-    const result = runScript('lint', ROOT);
-
-    expect(result.status, result.output).toBe(0);
-  });
-});

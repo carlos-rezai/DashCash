@@ -34,8 +34,18 @@ PRD "Stryker configuration" and "Gate tests"; design log Q26–Q29).
   that already guard gate files (`CLAUDE.md`, Ask first; `CODEOWNERS`);
   no ratchet check against `origin/main` is added (Q28).
 
+- The whole-number check lives in a module of its own,
+  `gates/mutationTesting/mutationTesting.ts`, exporting only
+  `hasBreakThreshold(thresholds: unknown): boolean` (true only when
+  `thresholds.break` is a whole number from 1 to 100), so its tests can
+  fail first; the same pattern as `gates/renovate/renovate.ts` and
+  `gates/pinnedActions/pinnedActions.ts`. Stryker mutates it (D1).
+  Approved by the human on 2026-11-07, after the RED step.
+
 This ticket is the approval to change exactly `thresholds.break` in
-`stryker.config.js` and `gates/mutationTesting/mutationTesting.test.ts`.
+`stryker.config.js` and `gates/mutationTesting/mutationTesting.test.ts`,
+and to create `gates/mutationTesting/mutationTesting.ts` holding only
+`hasBreakThreshold`.
 
 Then, by hand, after the feature is merged (not a criterion): the human
 starts the **Daily run** once with `workflow_dispatch` and confirms the

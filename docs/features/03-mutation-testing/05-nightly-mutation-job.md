@@ -1,5 +1,5 @@
 ---
-status: in-progress
+status: done
 ---
 # Nightly mutation job
 
@@ -68,25 +68,25 @@ and, only under the 10-minute condition above,
 
 ## Acceptance criteria
 
-- [ ] `daily.yml` has exactly the jobs `daily` and `mutation`, its name and
+- [x] `daily.yml` has exactly the jobs `daily` and `mutation`, its name and
       triggers unchanged, no job `if:` and no `needs:`.
-- [ ] The `daily` job's steps and every existing daily wiring check are
+- [x] The `daily` job's steps and every existing daily wiring check are
       unchanged; the **Secret scan** jobs stay `verify`, `pull-request` and
       `daily`.
-- [ ] The `mutation` job runs, in order: checkout without `with`,
+- [x] The `mutation` job runs, in order: checkout without `with`,
       setup-node from `.nvmrc` with the npm cache, `npm ci`,
       `npm run test:mutation`, then the upload with only
       `name: mutation-report`, `path: reports/mutation/mutation.html` and
       `if: always()` on the step.
-- [ ] The problem finder names one problem each when the checkout,
+- [x] The problem finder names one problem each when the checkout,
       setup-node, `.nvmrc`, npm cache, `npm ci`, the mutation run, the
       upload, its name, its path or its `if: always()` is removed, and when
       the job gains another npm command or a gitleaks step; each case has
       its own test.
-- [ ] The upload action is pinned to the SHA of its newest release at least
+- [x] The upload action is pinned to the SHA of its newest release at least
       14 days old, with its `# v…` comment; the **Pinned action** gate
       passes unchanged.
-- [ ] The ticket's Notes state 04's wall time and the decision it gives.
+- [x] The ticket's Notes state 04's wall time and the decision it gives.
       Under 10 minutes: the `pull-request` job runs `npm ci`,
       `npm run verify:full`, `npm run check:pr`, `npm run test:mutation` in
       that order, the wiring test fails when the mutation step is removed
@@ -95,7 +95,7 @@ and, only under the 10-minute condition above,
       `README.md` gates table's Mutation testing row names the pull-request
       run beside the nightly one. 10 minutes or longer: `pull-request.yml`,
       its wiring checks and the README cadence are unchanged.
-- [ ] `npm run verify` is green.
+- [x] `npm run verify` is green.
 
 ## Blocked by
 
@@ -104,3 +104,8 @@ and, only under the 10-minute condition above,
 ## User stories addressed
 
 - User stories 32, 33, 34, 35, 36, 37, 38
+
+## Notes
+
+- Wall time of the first full Mutation run (from `04-informative-mutation-run.md`): 3 minutes 25 seconds, under 10 minutes. Decision (design log D2): the `pull-request` job runs `npm run test:mutation` after `npm run check:pr`, the glossary says mutation testing runs in the Required check, and the README cadence reads `pull request and nightly, ratchet`.
+- Upload action: `actions/upload-artifact` v7.0.2 (released 2026-10-07), pinned to `cf430e030ddbb5b0abf93d22962f4752f3646cd9`.

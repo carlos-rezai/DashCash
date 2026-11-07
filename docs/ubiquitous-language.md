@@ -93,7 +93,7 @@
 - A **Renovate PR** passes the same **Required check** as a feature pull request; its workflows use only **Pinned actions**.
 - The **Commit-msg hook** checks one message; the commit gate and the **Ticket check** check the whole **Branch range** in CI.
 - (new) A **Mutation run** produces many **Mutants**, each either a **Killed mutant** or a **Surviving mutant**, one **Mutation score** and one **Mutation report**.
-- (new) **Mutation testing** is an **Informative gate** until its **Break threshold** is set; from then on a **Mutation score** below it fails the **Mutation run** and turns the **Daily run** red. It is not part of **Verify** and not the **Required check**.
+- (new) **Mutation testing** is an **Informative gate** until its **Break threshold** is set; from then on a **Mutation score** below it fails the **Mutation run** and turns the **Daily run** red. It is not part of **Verify**; it runs in the **Required check** and in the **Daily run**.
 - (new) Every gate must **Fail closed**: the licence check on a lockfile that is not an object with a `packages` object, the **Audit** on an unreadable report.
 
 ## Example dialogue

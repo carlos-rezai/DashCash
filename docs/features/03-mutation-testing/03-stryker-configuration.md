@@ -1,5 +1,5 @@
 ---
-status: in-progress
+status: done
 ---
 # Stryker configuration
 
@@ -76,29 +76,51 @@ This ticket is the approval to change exactly the `devDependencies` of
 
 ## Acceptance criteria
 
-- [ ] Both packages are exact root dev dependencies at the same release,
+- [x] Both packages are exact root dev dependencies at the same release,
       at least 14 days old on the day of building.
-- [ ] The gate test imports the configuration and asserts its exact key
+- [x] The gate test imports the configuration and asserts its exact key
       set, the runner, the coverage mode, the `mutate` patterns (domain,
       `scripts/` and `gates/`, without `*.test.ts` and `test-support/`), the
       reporters, `high`, `low` and `break: null`, so a key gained or lost or
       any of these values changed fails it.
-- [ ] The ticket's Notes list every licence the install adds, each with
+- [x] The ticket's Notes list every licence the install adds, each with
       its packages.
-- [ ] Only permissive licences are added to the **License allowlist**
+- [x] Only permissive licences are added to the **License allowlist**
       (`0BSD` and `CC-BY-4.0` on 2026-11-07). A GPL, LGPL or AGPL licence,
       any other licence that is not permissive, or a package without a
       licence stops the builder for the human's decision;
       `npm run check:licenses` passes.
-- [ ] Each open `qs` **Advisory** has one **Audit exception**, added on the
+- [x] Each open `qs` **Advisory** has one **Audit exception**, added on the
       day of building and expiring 90 days later, with the reason above;
       any further advisory open that day gets an exception of the same
       kind; the minimatch reason names Stryker, its dates unchanged;
       `npm run check:audit` passes.
-- [ ] The builder's check, no test: `git grep -n "Stryker disable"` finds
+- [x] The builder's check, no test: `git grep -n "Stryker disable"` finds
       nothing outside `docs/`.
-- [ ] `stryker.config.js` passes the type check and lint of **Verify**,
+- [x] `stryker.config.js` passes the type check and lint of **Verify**,
       and `npm run verify` is green.
+
+## Notes
+
+Licences the install of `@stryker-mutator/core@10.1.1` and
+`@stryker-mutator/vitest-runner@10.1.1` adds to the lockfile on 2026-11-07
+(all permissive; none is GPL, LGPL, AGPL or missing):
+
+- `MIT`: 138 packages, among them `@babel/core`, `@babel/generator`, `js-tokens`
+- `Apache-2.0`: `@stryker-mutator/api`, `@stryker-mutator/core`,
+  `@stryker-mutator/instrumenter`, `@stryker-mutator/util`,
+  `@stryker-mutator/vitest-runner`, `baseline-browser-mapping`,
+  `diff-match-patch`, `human-signals`, `mutation-server-protocol`,
+  `mutation-testing-elements`, `mutation-testing-metrics`,
+  `mutation-testing-report-schema`, `rxjs`, `typed-inject`, `weapon-regex`
+- `ISC`: `cli-width`, `electron-to-chromium`, `inherits`,
+  `minimalistic-assert`, `mute-stream`, `signal-exit`
+- `BSD-3-Clause`: `qs`, `source-map`
+- `0BSD`: `tslib` (added to the allowlist)
+- `CC-BY-4.0`: `caniuse-lite` (added to the allowlist)
+
+`@stryker-mutator/core@10.1.1` was published on 2026-10-23, 15 days before
+the day of building.
 
 ## Blocked by
 

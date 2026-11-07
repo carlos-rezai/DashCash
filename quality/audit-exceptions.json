@@ -1,8 +1,32 @@
 [
   {
     "advisory": "GHSA-g3hv-75wg-m249",
-    "reason": "minimatch is reached only through the lint tooling, where it matches glob patterns from the repository's own configuration, and no fix exists inside the dependents' minimatch@^10 range",
+    "reason": "minimatch is reached only through the lint tooling and Stryker, where it matches glob patterns from the repository's own configuration (Stryker matches the repository's own mutate patterns with it), and no fix exists inside the dependents' minimatch@^10 range",
     "added": "2026-11-02",
     "expires": "2027-01-31"
+  },
+  {
+    "advisory": "GHSA-q8mj-m7cp-5q26",
+    "reason": "qs is reached only through Stryker's typed-rest-client, which serves the dashboard reporter DashCash does not use and pins qs exactly, so no fix exists inside its range",
+    "added": "2026-11-07",
+    "expires": "2027-02-05"
+  },
+  {
+    "advisory": "GHSA-x5fp-wj9c-mxmx",
+    "reason": "qs is reached only through Stryker's typed-rest-client, which serves the dashboard reporter DashCash does not use and pins qs exactly, so no fix exists inside its range",
+    "added": "2026-11-07",
+    "expires": "2027-02-05"
+  },
+  {
+    "advisory": "GHSA-4mjr-xmp4-gh2g",
+    "reason": "qs is reached only through Stryker's typed-rest-client, which serves the dashboard reporter DashCash does not use and pins qs exactly, so no fix exists inside its range",
+    "added": "2026-11-07",
+    "expires": "2027-02-05"
+  },
+  {
+    "advisory": "GHSA-6pq8-jhm2-2vcw",
+    "reason": "qs is reached only through Stryker's typed-rest-client, which serves the dashboard reporter DashCash does not use and pins qs exactly, so no fix exists inside its range",
+    "added": "2026-11-07",
+    "expires": "2027-02-05"
   }
 ]

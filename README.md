@@ -51,7 +51,7 @@ Every change goes through the same gate, whether I wrote it or an AI agent did. 
 | SBOM per release | `npm sbom` | release | 20 |
 | Flaky tests quarantined with expiry | quarantine file + expiry check | CI, daily | 04 |
 | License allowlist | script: lockfile licences against `quality/license-allowlist.json` | CI | 02 |
-| Mutation testing | StrykerJS on `packages/domain` and `scripts/` | nightly, ratchet | 03 |
+| Mutation testing | StrykerJS on `packages/domain`, `scripts/` and `gates/` | nightly, ratchet | 03 |
 | Docs drift | paths named in docs must exist | CI | 01 |
 
 Each gate arrives with the feature in [docs/feature-checklist.md](docs/feature-checklist.md) that first needs it; the rollout rules are in [docs/quality-gates.md](docs/quality-gates.md).

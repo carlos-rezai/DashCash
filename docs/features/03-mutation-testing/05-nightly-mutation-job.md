@@ -38,8 +38,30 @@ run" and "Gate tests"; design log Q25, A4, A5).
   one test per removed or added piece in the style of the daily job's
   `it.each` table.
 
+- On pull requests, only if the wall time of the first full **Mutation
+  run** in the Notes of `04-informative-mutation-run.md` is under 10
+  minutes (design log, Implementation Results, D2):
+  - `.github/workflows/pull-request.yml`: the `pull-request` job gains the
+    step `npm run test:mutation` after `npm run check:pr`; every other
+    step stays as it is. The **Required check** then runs the **Mutation
+    run**: informative until `06-break-threshold.md`, from then on a
+    **Mutation score** below the **Break threshold** fails the pull
+    request.
+  - `gates/gateWiring/gateWiring.test.ts`: the pull-request job's command
+    list becomes `npm ci`, `npm run verify:full`, `npm run check:pr`,
+    `npm run test:mutation`, with a test that fails when the mutation step
+    is removed or moved before `npm run check:pr`.
+  - `docs/ubiquitous-language.md`: the relationship that says **Mutation
+    testing** is "not the **Required check**" says it runs in the
+    **Required check** and in the **Daily run**.
+  - If the wall time is 10 minutes or longer: none of this. Record the
+    time from 04 in this ticket's Notes; mutation testing stays nightly
+    only.
+
 This ticket is the approval to change exactly
-`.github/workflows/daily.yml` and `gates/gateWiring/gateWiring.test.ts`.
+`.github/workflows/daily.yml` and `gates/gateWiring/gateWiring.test.ts`,
+and, only under the 10-minute condition above,
+`.github/workflows/pull-request.yml`.
 
 ## Acceptance criteria
 
@@ -61,6 +83,13 @@ This ticket is the approval to change exactly
 - [ ] The upload action is pinned to the SHA of its newest release at least
       14 days old, with its `# v…` comment; the **Pinned action** gate
       passes unchanged.
+- [ ] The ticket's Notes state 04's wall time and the decision it gives.
+      Under 10 minutes: the `pull-request` job runs `npm ci`,
+      `npm run verify:full`, `npm run check:pr`, `npm run test:mutation` in
+      that order, the wiring test fails when the mutation step is removed
+      or moved before `npm run check:pr`, and the glossary says mutation
+      testing runs in the **Required check**. 10 minutes or longer:
+      `pull-request.yml` and its wiring checks are unchanged.
 - [ ] `npm run verify` is green.
 
 ## Blocked by

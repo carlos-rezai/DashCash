@@ -56,7 +56,7 @@
 | **Killed mutant** (new) | A **Mutant** that makes at least one test fail or time out. | Detected, caught |
 | **Surviving mutant** (new) | A **Mutant** that every test covering it still passes, or that no test covers: a gap in the tests. | Survivor, escaped mutant |
 | **Mutation score** (new) | The share of **Mutants** killed, in percent of all **Mutants**. | Coverage, kill rate |
-| **Mutation run** (new) | One run of `npm run test:mutation`: by hand, or nightly as the `mutation` job of the **Daily run**. | Stryker job, mutation build |
+| **Mutation run** (new) | One run of `npm run test:mutation`: by hand, in the `pull-request` job of the **Required check**, or nightly as the `mutation` job of the **Daily run**. | Stryker job, mutation build |
 | **Mutation report** (new) | The HTML report of a **Mutation run**, listing every **Surviving mutant**; the nightly run keeps it as a CI artifact. | Stryker output, dashboard |
 | **Break threshold** (new) | The lowest **Mutation score** a **Mutation run** passes with; it is only ever raised, and lowering it needs a written decision. | Minimum score, ratchet value |
 | **Informative gate** (new) | A gate that reports its result without failing, as **Mutation testing** does before its **Break threshold** is set. | Soft gate, warning mode |
@@ -86,10 +86,10 @@
 - A **Feature folder** holds one or more **Tickets** and, after the merge, zero or one refactor plan with one or more **Refactor steps**.
 - A **Ticket commit** names exactly one **Ticket**; a `refactor:` commit names exactly one **Refactor step**; a **Planning commit** names only its **Feature**.
 - **Verify** runs every **Gate** except end-to-end tests; **Verify full** runs **Verify** plus build and end-to-end tests.
-- The **Ruleset** names exactly one **Required check**, and that check runs **Verify full** and the **Pull-request check**.
+- The **Ruleset** names exactly one **Required check**, and that check runs **Verify full**, the **Pull-request check** and the **Mutation run**.
 - A **Layer rule** constrains **Shipping code**; tests and stories may import `test-support/`.
 - An **Advisory** fails the **Audit** unless exactly one **Audit exception** names it and its **Expiry date** has not passed; an **Audit exception** whose **Advisory** is no longer reported fails it too.
-- The **Daily run** runs the **Audit** and a **Secret scan**; the **Required check** runs **Verify full**, which includes the **Audit**, and a **Secret scan**.
+- The **Daily run** runs the **Audit** and a **Secret scan**; the **Required check** runs **Verify full**, which includes the **Audit**, a **Secret scan** and the **Mutation run**.
 - A **Renovate PR** passes the same **Required check** as a feature pull request; its workflows use only **Pinned actions**.
 - The **Commit-msg hook** checks one message; the commit gate and the **Ticket check** check the whole **Branch range** in CI.
 - (new) A **Mutation run** produces many **Mutants**, each either a **Killed mutant** or a **Surviving mutant**, one **Mutation score** and one **Mutation report**.
@@ -108,8 +108,8 @@
 > **Domain expert:** "The **Daily run** and **Verify** both run the **Audit**. Either a **Renovate PR** brings the fix, or you ask for an **Audit exception** with a reason and an **Expiry date**; the day after that date the **Audit** fails again."
 > **Dev:** "And if I mistype a **Commit header**? Does the **Commit-msg hook** stop the push?"
 > **Domain expert:** "It stops the commit, before any push. It is feedback, not a **Gate**: the commit gate in CI still decides, over the whole **Branch range**."
-> **Dev:** "This morning the **Daily run** is red, but the audit job is green. What broke?"
-> **Domain expert:** "The **Mutation run**. Yesterday's merge added a gate script whose tests leave **Surviving mutants**, so the **Mutation score** fell below the **Break threshold**. Open the **Mutation report** artifact and write a ticket for the missing tests."
+> **Dev:** "My pull request is red, but **Verify full** passed. What broke?"
+> **Domain expert:** "The **Mutation run** in the **Required check**. Your new gate script's tests leave **Surviving mutants**, so the **Mutation score** fell below the **Break threshold** and the merge is blocked. The log lists the survivors; add the missing tests. The **Daily run** turns red the same way, and there the **Mutation report** artifact shows them."
 > **Dev:** "Can I lower the **Break threshold** instead?"
 > **Domain expert:** "Only with a written decision, and only the human changes that gate file. Before the threshold was set, **Mutation testing** was an **Informative gate**: the same score would only have shown in the report."
 

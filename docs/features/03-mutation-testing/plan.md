@@ -13,8 +13,8 @@ Durable decisions that apply across all phases:
 - **Public interface: npm scripts.** New: `test:mutation` =
   `stryker run stryker.config.js`. `verify` keeps exactly its eleven gates
   in their order; `verify:full` and `check:licenses` are unchanged. Neither
-  `verify` nor `verify:full` runs `test:mutation`; the **Required check**
-  is unchanged.
+  `verify` nor `verify:full` runs `test:mutation`; the `pull-request` job of
+  the **Required check** runs it after `check:pr` (D2).
 - **Licence check core** (Q5–Q10): `findLicenseViolations(lockfile:
   unknown, allowlist: unknown): Violation[]`, signature unchanged. A
   malformed allowlist and a lockfile that is not a plain object with a
@@ -253,8 +253,8 @@ score** down to a whole percent and sets it as the **Break threshold**;
 both numbers go into the ticket's Notes. The `mutationTesting` gate test
 now requires the **Break threshold** to be a whole number from 1 to 100,
 so it cannot be removed or turned off silently. From the merge on, a score
-below it makes the `mutation` job and the **Daily run** red on `main`
-without blocking any merge. Raising and lowering stay with the rules that
+below it fails the `mutation` job, the **Daily run** and the **Required
+check**'s `pull-request` job, which blocks the merge. Raising and lowering stay with the rules that
 already guard gate files; no ratchet check is added.
 
 ### Acceptance criteria
@@ -267,8 +267,9 @@ already guard gate files; no ratchet check is added.
       it; it passes for the configured value.
 - [ ] The builder's `npm run test:mutation` exits 0 with the threshold in
       place.
-- [ ] No check compares the threshold with `origin/main`, and the
-      **Required check** and **Verify** still do not run Stryker.
+- [ ] No check compares the threshold with `origin/main`; **Verify** still
+      does not run Stryker, and the **Required check** runs it as the
+      `pull-request` job's own step.
 - [ ] `npm run verify` is green.
 - [ ] Handover note, not a criterion: after the merge the human starts the
       **Daily run** once with `workflow_dispatch` and confirms the Linux

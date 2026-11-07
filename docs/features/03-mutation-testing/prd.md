@@ -40,8 +40,9 @@ carry the same risk, with higher stakes.
   score, rounded down; from then on a lower score turns the **Daily run**
   red on `main`. The threshold is only raised, through the rules that
   already guard gate files.
-- **Verify** and the **Required check** stay as they are: Stryker is too slow
-  for every push, and the score arrives the morning after a merge.
+- **Verify** stays as it is; the `pull-request` job of the **Required check**
+  runs `npm run test:mutation` as its own step after `check:pr` (D2), so a
+  score below the **Break threshold** also blocks the merge.
 - The new dependencies pass the supply-chain gates: two licences join the
   **License allowlist**, and the advisories they bring get **Audit
   exceptions**.
@@ -121,7 +122,9 @@ threshold**.
     still collect the sandbox's tests, so that the exclusion never empties a
     **Mutation run**.
 23. As the developer, I want the mutation run kept out of **Verify** and
-    **Verify full**, so that pushes and pull requests stay as fast as today.
+    **Verify full** and run as its own step of the `pull-request` job, so
+    that pushes stay as fast as today and the **Required check** still runs
+    it.
 24. As an AI agent or the human, I want to run `npm run test:mutation` by
     hand, so that I can see a score before a merge.
 
@@ -172,8 +175,9 @@ threshold**.
     job loses a step, runs another gate or loses its upload, so that the
     nightly run cannot stop measuring silently.
 39. As the human who merges, I want a score below the **Break threshold** to
-    turn the **Daily run** red without blocking any merge, so that the fix is
-    a ticket that adds the missing tests.
+    turn the **Daily run** red and fail the **Required check**, so that no
+    merge lowers the score and the fix is a ticket that adds the missing
+    tests.
 
 **Supply-chain fallout**
 
@@ -365,14 +369,16 @@ human's `go`.
 
 ## Out of Scope
 
-- Stryker in **Verify**, on pull requests or in the issue-loop's review (the
-  latter under `.claude/`, the human's).
+- Stryker in **Verify** or in the issue-loop's review (the latter under
+  `.claude/`, the human's); on pull requests it runs only as the
+  `pull-request` job's own step (D2).
 - An automatic ratchet that raises the threshold, or a check against the
   value on `origin/main` (Q28).
 - The Stryker dashboard, incremental mode, the TypeScript checker.
 - Everything `docs/quality-gates.md` gives to 04 and later (Playwright,
   flaky quarantine, stories, coverage on changed lines, `Cents`, releases).
-- Changes to `CLAUDE.md` or `README.md` (Q32).
+- Changes to `CLAUDE.md` or `README.md` (Q32), except the cadence of the
+  gates table's Mutation testing row (D2).
 
 ## Further Notes
 

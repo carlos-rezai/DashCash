@@ -76,7 +76,7 @@ Linux **Mutation score** clears the **Break threshold** (story 45).
 ## User stories addressed
 
 - User stories 27, 28, 29, 30
-- User story 39
+- User story 39 (the `pull-request` job fails below the threshold, D2)
 - User story 45 (the handover note)
 
 ## Notes

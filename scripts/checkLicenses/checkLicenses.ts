@@ -94,30 +94,19 @@ function judgeLicence(
     : `licence "${license}" is not on the licence allowlist`;
 }
 
-// Returns every package of the lockfile whose licence is missing or not on
-// the allowlist. A malformed allowlist or lockfile is one violation naming its
-// file; packages are judged only when both are well formed.
-export function findLicenseViolations(
-  lockfile: unknown,
-  allowlist: unknown,
-): Violation[] {
+// Returns the lockfile's packages object, or undefined when the lockfile or
+// its packages is not a plain object.
+function readPackages(lockfile: unknown): Record<string, unknown> | undefined {
   const packages = isRecord(lockfile) ? lockfile['packages'] : undefined;
-  const malformed: Violation[] = [];
-  if (!isAllowlist(allowlist)) {
-    malformed.push({
-      subject: ALLOWLIST_FILE,
-      reason: 'must be a non-empty array of licence ids',
-    });
-  }
-  if (!isRecord(packages)) {
-    malformed.push({
-      subject: LOCKFILE,
-      reason: 'must be an object with a packages object',
-    });
-  }
-  if (!isAllowlist(allowlist) || !isRecord(packages)) {
-    return malformed;
-  }
+  return isRecord(packages) ? packages : undefined;
+}
+
+// Returns every package of the lockfile whose licence is missing or not on
+// the allowlist.
+function judgePackages(
+  packages: Record<string, unknown>,
+  allowlist: readonly string[],
+): Violation[] {
   const violations: Violation[] = [];
   for (const [key, value] of Object.entries(packages)) {
     const folder = key.lastIndexOf(NODE_MODULES);
@@ -132,6 +121,33 @@ export function findLicenseViolations(
     }
   }
   return violations;
+}
+
+// Returns those packages. A malformed allowlist or lockfile is one violation
+// naming its file; both are judged before any package.
+export function findLicenseViolations(
+  lockfile: unknown,
+  allowlist: unknown,
+): Violation[] {
+  const validAllowlist = isAllowlist(allowlist) ? allowlist : undefined;
+  const packages = readPackages(lockfile);
+  const malformed: Violation[] = [];
+  if (validAllowlist === undefined) {
+    malformed.push({
+      subject: ALLOWLIST_FILE,
+      reason: 'must be a non-empty array of licence ids',
+    });
+  }
+  if (packages === undefined) {
+    malformed.push({
+      subject: LOCKFILE,
+      reason: 'must be an object with a packages object',
+    });
+  }
+  if (validAllowlist === undefined || packages === undefined) {
+    return malformed;
+  }
+  return judgePackages(packages, validAllowlist);
 }
 
 function readJson(path: string): unknown {

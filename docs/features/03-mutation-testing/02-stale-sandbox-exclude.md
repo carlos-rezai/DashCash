@@ -1,5 +1,5 @@
 ---
-status: in-progress
+status: done
 ---
 # Stale sandbox ignored by npm test
 
@@ -36,19 +36,19 @@ create `gates/mutationTesting/mutationTesting.test.ts`.
 
 ## Acceptance criteria
 
-- [ ] The exclude holds every entry of Vitest's default excludes and one
+- [x] The exclude holds every entry of Vitest's default excludes and one
       root-anchored `.stryker-tmp/**` pattern; `include` is unchanged.
-- [ ] The gate test shows that
+- [x] The gate test shows that
       `.stryker-tmp/sandbox-1a2b3c/scripts/runGit/runGit.test.ts` matches an
       exclude pattern and `scripts/runGit/runGit.test.ts` matches none,
       using Node's `path.matchesGlob`.
-- [ ] The gate test asserts every default exclude by Vitest's own list,
+- [x] The gate test asserts every default exclude by Vitest's own list,
       not a copy, so dropping one, removing the sandbox pattern or widening
       it to match the sandbox's own test paths fails it.
-- [ ] The builder's check, no test: with an invented failing test copied
+- [x] The builder's check, no test: with an invented failing test copied
       under `.stryker-tmp/` by hand, `npm test` stays green; the copy is
       removed afterwards and the check is recorded in the ticket's Notes.
-- [ ] `npm run verify` is green.
+- [x] `npm run verify` is green.
 
 ## Blocked by
 
@@ -59,3 +59,10 @@ None — can start immediately.
 - User story 21
 - User story 22 (the root-anchored pattern; confirmed by the first real
   **Mutation run** in `04-informative-mutation-run.md`)
+
+## Notes
+
+- Builder's check: an invented failing test copied by hand to
+  `.stryker-tmp/sandbox-1a2b3c/scripts/fake/fake.test.ts` was not collected;
+  `npm test` stayed green (33 files, 1005 tests). The copy was removed
+  afterwards.

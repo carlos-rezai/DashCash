@@ -775,3 +775,66 @@ Alternatives:
   phase 6 adds `grepInvert` as the sixth (A9). Reason: the harness is
   guarded from its first commit (story 101), and the filter needs the
   **Quarantine** reader, which phase 6 brings.
+
+### Assumptions from prd-to-issues
+
+- **I1. One module decides the dev condition.** **Assumption:**
+  `apps/desktop/src/main/readDevServerUrl/` exports
+  `readDevServerUrl(app, env): string | undefined`, the
+  `ELECTRON_RENDERER_URL` when the app is not packaged and the variable is
+  set, else `undefined`. It arrives in `01-electron-window.md`, where the
+  window first chooses between the build's page and the dev server, and the
+  **App origins** (`06-session-hardening.md`), the **Sender check**
+  (`09-sender-check.md`) and the **Debug port** (`14-dev-debug-port.md`)
+  use it. Reason: the PRD states the same condition for the window's URL,
+  the dev origin and `enableDebugPort` ("only when `enableDebugPort`'s dev
+  condition holds"); written once, a security-relevant condition cannot
+  drift between its callers, and the conventions give a shared module its
+  own folder.
+- **I2. The origin matcher is its own module.** **Assumption:**
+  `apps/desktop/src/main/matchAppOrigin/` exports
+  `listAppOrigins(devServerUrl: string | undefined): string[]` and
+  `isAppOrigin(url: string, origins: readonly string[]): boolean`; it
+  arrives with `06-session-hardening.md` and `09-sender-check.md` reuses
+  it. `fitWindowSize` stays in `createMainWindow/` and
+  `resolveRendererPath` in `registerAppProtocol/`, each with one caller.
+  Reason: the PRD calls origin matching "a pure function shared with the
+  Sender check" but names no module; a function two modules share gets a
+  folder of its own (`docs/conventions.md`, Module filing).
+- **I3. The calendar-date reader moves with the Quarantine reader.**
+  **Assumption:** the move of the audit check's date reading into a shared
+  module (A7) lands in `15-quarantined-tests-left-out.md` (plan phase 6),
+  not with the **Quarantine check** (plan phase 7). Reason: phase 6's reader
+  already reports "a date that is not a real `YYYY-MM-DD`", so it is the
+  module's first new caller; moving it a phase later would mean writing the
+  date reading twice.
+- **I4. The renderer's type check is proven by hand.** **Assumption:** in
+  `01-electron-window.md` the builder proves that a Node type in the
+  renderer fails `npm run typecheck` with a temporary renderer file that
+  names `process`, removed afterwards and recorded in the ticket's Notes;
+  no gate test, and no placeholder source file is committed to give the DOM
+  project an input. Reason: the PRD's gate tests name no type-check gate,
+  the renderer holds no TypeScript until 05 (Q3), and a placeholder would
+  be a file nothing uses.
+- **I5. A RED commit fails on its Vitest tests when Electron's defaults
+  already pass the flow.** **Assumption:** in `04-secure-window.md` the
+  extended "Start the app" (context isolation and sandbox on, Node
+  integration off, no `require` or `process`) may already pass before the
+  build, since Electron enables these by default; the RED commit then fails
+  on its Vitest tests, and the end-to-end assertions are still written in
+  it. Reason: the plan asks each phase's RED commit to extend the flow and
+  fail, and these facts guard against a later loosening rather than
+  describe new behaviour (story 82).
+- **I6. The names of the shared scripts modules.** **Assumption:** the
+  calendar-date reader is `scripts/readCalendarDate/`, exporting
+  `readCalendarDate(value: unknown): number | undefined` (the audit check's
+  `readDate`, unchanged: UTC milliseconds, or `undefined` when the value is
+  not a real `YYYY-MM-DD`); the **Quarantine** reader is
+  `scripts/readQuarantine/`, exporting
+  `readQuarantine(quarantine: unknown)`, which returns the well-formed
+  entries and the shape violations, and
+  `buildQuarantinePatterns(entries)`, which returns the `grepInvert`
+  regular expressions. Reason: A7 and A8 name what the modules do, not
+  what they are called; the names follow the verb-first module names of
+  `scripts/` (`readTickets`, `readFeatureFolders`) and
+  `docs/conventions.md`, Naming.

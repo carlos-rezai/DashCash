@@ -387,3 +387,59 @@ Alternatives:
   issue-loop's review (the latter is under `.claude/`, the human's);
   mutating `gates/`; an automatic ratchet that raises the threshold; the
   Stryker dashboard; changes to `CLAUDE.md`.
+
+### Assumptions from write-a-prd
+
+- **A1. The Stryker configuration holds exactly five keys.**
+  **Assumption:** `testRunner`, `coverageAnalysis`, `mutate`, `reporters`
+  and `thresholds`, and the gate test asserts that key set. Reason: Q12 and
+  Q21 reject a checker, incremental mode and the dashboard, but a `plugins`,
+  `incremental`, `dashboard`, `ignoreStatic` or mutator-exclusion key would
+  each weaken or change the run without touching the keys Q30 checks; a
+  configuration gate that can stop enforcing silently gets a test (01, Q3).
+- **A2. How the Vitest exclude is written and tested.** **Assumption:**
+  `exclude` is Vitest's `configDefaults.exclude` plus `.stryker-tmp/**`,
+  anchored at the repository root; the test lives in
+  `gates/mutationTesting/` beside the Stryker configuration test, imports
+  the Vitest config, checks that every default exclude is kept and, with
+  Node's `path.matchesGlob`, that a sandbox test path
+  (`.stryker-tmp/sandbox-1a2b3c/scripts/runGit/runGit.test.ts`) matches an
+  exclude pattern while `scripts/runGit/runGit.test.ts` matches none.
+  Reason: the root-anchored form names only Stryker's default temp folder,
+  so Stryker's own Vitest run inside a sandbox still collects the sandbox's
+  tests; matching the patterns proves Q30's "not collected" without writing
+  into the repository or starting a second Vitest inside `npm test`; the
+  exclude exists only because of Stryker.
+- **A3. An entry test for the malformed lockfile.** **Assumption:** besides
+  Q8's core table, one test in the existing `check:licenses` entry suite
+  writes a lockfile without `packages` and expects exit 1 and the line
+  `package-lock.json: must be an object with a packages object`, committed
+  RED with the core tests. Reason: the Implementation Plan's thinnest path
+  is the entry's behaviour, which Q8's core cases do not show; the entry
+  suite already exists.
+- **A4. The `mutation` job's details.** **Assumption:** checkout with no
+  `with` (default depth), `actions/upload-artifact` at its newest release
+  at least 14 days old (02, D3), pinned, with only `name: mutation-report`,
+  `path: reports/mutation/mutation.html` and the step's `if: always()`;
+  `if-no-files-found`, retention and the job's `timeout-minutes` at
+  GitHub's defaults; no job `if:` and no `needs:`. Reason: Q25 names the
+  steps but not their inputs; defaults keep the gate file short (Q21's
+  reason); `needs:` would chain the job behind `daily`, which Q25 runs in
+  parallel; 02 left no `if:` on any job; with the default `warn`, a run
+  that fails before writing the report shows Stryker's error, not an upload
+  error.
+- **A5. What the wiring test checks on the `mutation` job.**
+  **Assumption:** a problem finder in the style of the daily job's names
+  each missing piece (checkout first, setup-node from `.nvmrc` with the npm
+  cache, `npm ci` before the run, `npm run test:mutation`, the upload with
+  its name, path and `if: always()`), fails on any other npm command or a
+  gitleaks step in the job, and has one test per removed piece; the jobs of
+  `daily.yml` are exactly `daily` and `mutation`; the **Secret scan** jobs
+  stay three. Reason: Q25 and Q30 name what the job does; the existing
+  daily wiring checks follow this pattern (02).
+- **A6. No test runs Stryker.** **Assumption:** the gate tests only read
+  the configurations; the builder runs `npm run test:mutation` by hand in
+  the informative ticket (score printed, exit 0) and the threshold ticket
+  (score measured), and records the result in the ticket's Notes. Reason: a
+  test that runs Stryker would put it in `npm test` and so in **Verify**,
+  which Q15 keeps it out of; a full run is far slower than every other gate.

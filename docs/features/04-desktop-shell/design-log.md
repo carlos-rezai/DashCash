@@ -658,3 +658,92 @@ Alternatives:
   icon, fuses, installer (20); main-to-renderer events (21); moving the
   data folder (22); any table (06, 07); changes to `CLAUDE.md` and
   `README.md`.
+
+### Assumptions from write-a-prd
+
+- **A1. Only the process entries import Electron at runtime.**
+  **Assumption:** `main.ts` and `preload.ts` are the only files that import
+  `electron` as a value; every other module of main and preload receives
+  the Electron objects it uses (`app`, `BrowserWindow`, `session`,
+  `protocol`, `net`, `ipcMain`, `dialog`, `screen`, `contextBridge`,
+  `ipcRenderer`) as parameters, typed with `import type`. Reason: in Vitest
+  on Node, `electron` resolves to the path of the binary, not to its API;
+  Q35 already tests the lock against a fake `app`; the same seam makes every
+  module of the startup order testable without a display, inside **Verify**
+  and inside the **Mutation run**'s dry run.
+- **A2. The preload is bundled as CommonJS.** **Assumption:** electron-vite
+  emits the preload as one CommonJS file (`.cjs`) with the contract bundled
+  in, while main stays ES modules. Reason: Electron loads a sandboxed
+  preload only as CommonJS and lets it `require` nothing but its own
+  modules; the desktop member is `"type": "module"` (Q5), whose default
+  preload output would be ES modules; the sandbox stays on (Q15).
+- **A3. dependency-cruiser skips the App build.** **Assumption:**
+  `.dependency-cruiser.js` gains the desktop member's `out/` folder in
+  `options.exclude`. Reason: `lint:deps` cruises `apps`, and after a local
+  `npm run build` the bundled main imports `node:sqlite` outside `main/db/`
+  and would break the new **Layer rule** (Q47); the folder is already
+  ignored by git, Prettier and ESLint, and holds no source.
+- **A4. Which `DASHCASH_DATA_FOLDER` values count.** **Assumption:** unset
+  or empty means Electron's `userData`; an absolute path is the **Data
+  folder**; a relative path ends in the **Startup error**, naming the
+  variable. Reason: Electron's `app.setPath` takes only absolute paths; the
+  **App fixture** always passes one; resolving a relative path against an
+  unknown working folder could put a **Database** where nobody looks.
+- **A5. The texts of the Startup error and of refused requests.**
+  **Assumption:**
+  - **Startup error**: title "DashCash couldn't start" (Q34), body the cause,
+    a blank line, then `Data folder: <path>`;
+  - a **Database** from a newer DashCash: cause `dashcash.db has schema
+    version <n>, but this DashCash knows only up to <m>.`;
+  - a broken list: cause `The migrations are not numbered 1 to <n> without
+    gaps or duplicates.`;
+  - a relative override: cause `DASHCASH_DATA_FOLDER must be an absolute
+    path.`;
+  - the **Bridge** refusing a channel: `Unknown channel: <channel>`;
+  - the **Sender check**: `Refused <channel> from <origin>`.
+  Reason: the prototype shows none of these states; the copy follows its
+  English error tone ("Couldn't read Kontoauszug_Oktober.pdf"); naming the
+  channel and origin makes a refusal diagnosable from the log.
+- **A6. The Quarantine check's lines.** **Assumption:** every violation's
+  subject is `quality/flaky-quarantine.json`, as the **Audit** names its
+  file; the reasons follow the audit check:
+  `must be an array of quarantine entries`, `cannot be read as JSON: …`,
+  and per entry `entry <i>, field <f>: <why>` with `must not be empty`,
+  `must be a real YYYY-MM-DD date`, `is later than today` (`added`),
+  `is before added` and `is more than 30 days after added` (`expires`),
+  `expired on <date>` (`expires`), `must name a tracked e2e/ spec file`
+  (`file`: a tracked path under `e2e/` ending in `.spec.ts`), `must name a
+  tracked ticket` (`ticket`: a tracked path of the form
+  `docs/features/<NN>-<feature>/<nn>-<name>.md`). Reason: Q45 lists the
+  causes, not the lines; the audit check (02) is the prior art for an
+  expiring entry file; Q44 limits the **Quarantine** to Playwright tests,
+  so a `file` elsewhere could never be left out; an `added` in the future
+  would stretch the 30 days.
+- **A7. Calendar dates are read by one shared module.** **Assumption:** the
+  audit check's private reading of a `YYYY-MM-DD` date moves into its own
+  module in `scripts/`, used by the audit check and the **Quarantine
+  check**; the audit check's behaviour and tests are unchanged. Reason:
+  the **Quarantine check** is its second caller; `isRecord` and
+  `reportViolations` set the precedent for shared gate helpers, and the
+  conventions file one module per folder.
+- **A8. The module the check and the Playwright config share.**
+  **Assumption:** a module in `scripts/` reads the **Quarantine**: it
+  returns the well-formed entries and the shape violations (array, fields,
+  dates readable), and turns entries into Playwright's `grepInvert`
+  patterns, one regular expression per entry built from its file (relative
+  to `e2e/`) and its title, both escaped, so a title matches literally and
+  only in its own file. `playwright.config.ts` throws on any shape
+  violation and always sets `grepInvert`, an empty list when the
+  **Quarantine** is empty; the date and file rules stay in the **Quarantine
+  check**. Reason: Q46 asks for one tested module; `scripts/` holds the
+  shared gate helpers and is measured by **Mutation testing**; Playwright
+  matches `grep` against the test's file name and title together; an
+  unreadable **Quarantine** must not silently run every test (**Fail
+  closed**).
+- **A9. The Playwright config holds exactly six keys.** **Assumption:**
+  `testDir`, `retries`, `forbidOnly`, `reporter`, `use` (only
+  `trace: 'retain-on-failure'`) and `grepInvert`, and the gate test asserts
+  that key set. Reason: Q38 names the settings; a `projects`, `grep`,
+  `testIgnore`, `testMatch` or `repeatEach` key would each change which
+  tests run, or how, without touching the keys Q38 checks; 03, A1 guards
+  the Stryker config the same way.

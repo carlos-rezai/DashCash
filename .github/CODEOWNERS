@@ -2,12 +2,13 @@
 # "Ask first").
 *                        @carlos-rezai
 /.github/                @carlos-rezai
+/gates/                  @carlos-rezai
 /.claude/                @carlos-rezai
 /eslint.config.*         @carlos-rezai
 /.prettierrc*            @carlos-rezai
 /tsconfig*.json          @carlos-rezai
 /.dependency-cruiser.*   @carlos-rezai
-/vitest.config.*         @carlos-rezai
+/vitest*.config.*        @carlos-rezai
 /playwright.config.*     @carlos-rezai
 /stryker.config.*        @carlos-rezai
 /quality/                @carlos-rezai

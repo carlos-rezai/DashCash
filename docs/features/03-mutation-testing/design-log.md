@@ -485,3 +485,39 @@ Alternatives:
   is newly chosen (A4). Reason: no source names their versions; the same
   pins keep the workflows on one release each, which Renovate then updates
   together.
+
+## Implementation Results
+
+Deviations the human set before the build, 2026-11-07. They supersede the
+answers named; those answers stay as they were written.
+
+- **D1. The non-test files of `gates/` are mutated too** (supersedes Q16's
+  "Not `gates/`" and "mutating `gates/`" under Trade-offs, Out of scope;
+  Q17 stands). `mutate` covers `packages/domain/src/**/*.ts`,
+  `scripts/**/*.ts` and the non-test `.ts` files of `gates/`
+  (`gates/**/*.ts`), without every `**/*.test.ts` and without
+  `**/test-support/**`. On 2026-11-07 the non-test files of `gates/` are
+  `gates/pinnedActions/pinnedActions.ts` and `gates/renovate/renovate.ts`.
+  Tickets 03 (configuration and gate test), 04 (first **Mutation run**) and
+  06 (the measured score covers all three).
+- **D2. Mutation testing on pull requests when the run is short**
+  (extends Q25: the nightly `mutation` job stays; supersedes "on pull
+  requests" under Trade-offs, Out of scope, and, if the step lands, the
+  glossary's "not the **Required check**"). If the first full **Mutation
+  run** of ticket 04 takes under 10 minutes (the duration in 04's Notes),
+  ticket 05 also adds `npm run test:mutation` as a step of the
+  `pull-request` job in `.github/workflows/pull-request.yml`, after
+  `npm run check:pr`. Until ticket 06 the step is informative
+  (`break: null`); from ticket 06 on, a **Mutation score** below the
+  **Break threshold** fails the **Required check** and blocks the merge.
+  If the run takes 10 minutes or longer, ticket 05 records the duration in
+  its Notes and mutation testing stays nightly only.
+- **D3. Only permissive licences go on the allowlist without asking**
+  (supersedes Q22's "any further licence the install brings on the day of
+  building after the same review"). Ticket 03 lists in its Notes every
+  licence the install adds to the lockfile, each with the packages that
+  carry it. A permissive licence (such as `0BSD` or `CC-BY-4.0`) is added
+  to the **License allowlist**. Any GPL, LGPL or AGPL licence, in any
+  version, alone or inside an expression, stops the builder for the
+  human's decision; so does any other licence that is not permissive, and
+  a package without a licence.

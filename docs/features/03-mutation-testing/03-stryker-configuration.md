@@ -29,7 +29,9 @@ prd-to-issues, I1).
   - `testRunner: 'vitest'`, `coverageAnalysis: 'perTest'` (the Vitest
     runner's own defaults otherwise: the root Vitest config, related mode);
   - `mutate`: `packages/domain/src/**/*.ts`, `scripts/**/*.ts`,
-    `!**/*.test.ts`, `!**/test-support/**`;
+    `gates/**/*.ts`, `!**/*.test.ts`, `!**/test-support/**`: the non-test
+    `.ts` files of all three folders, never a `*.test.ts` file or anything
+    in `test-support/` (design log, Implementation Results, D1);
   - `reporters`: `clear-text`, `progress`, `html` (Stryker's default report
     file `reports/mutation/mutation.html`);
   - `thresholds`: `high: 80`, `low: 60`, `break: null`.
@@ -41,12 +43,18 @@ prd-to-issues, I1).
   `stryker.config.js` and asserts its exact key set, the runner, the
   coverage mode, the `mutate` patterns, the reporters, `high`, `low` and
   `break: null`.
-- **License allowlist** (`quality/license-allowlist.json`): adds `0BSD`
-  (`tslib`) and `CC-BY-4.0` (`caniuse-lite`) (Q22). If the install brings
-  any further licence, review it the same way: more permissive than MIT,
-  or data in a dev-only tool the app never ships. A package without a
-  licence, or a licence that needs more than that review, stops the
-  builder to ask: there are no per-package licence exceptions.
+- **License allowlist** (`quality/license-allowlist.json`): first list in
+  the ticket's Notes every licence the install adds to the lockfile, each
+  with the packages that carry it (`0BSD` from `tslib` and `CC-BY-4.0`
+  from `caniuse-lite` on 2026-11-07). Then (design log, Implementation
+  Results, D3, which supersedes Q22's review):
+  - a permissive licence, such as `0BSD` or `CC-BY-4.0`, is added to the
+    allowlist;
+  - any GPL, LGPL or AGPL licence, in any version, alone or inside an
+    expression, stops the builder for the human's decision, before
+    anything is added;
+  - so does any other licence that is not permissive, and a package
+    without a licence: there are no per-package licence exceptions.
 - **Audit exceptions** (`quality/audit-exceptions.json`): one entry per
   open `qs` **Advisory** (`GHSA-q8mj-m7cp-5q26`, `GHSA-x5fp-wj9c-mxmx`,
   `GHSA-4mjr-xmp4-gh2g`, `GHSA-6pq8-jhm2-2vcw` on 2026-11-07), `added` on
@@ -71,12 +79,16 @@ This ticket is the approval to change exactly the `devDependencies` of
 - [ ] Both packages are exact root dev dependencies at the same release,
       at least 14 days old on the day of building.
 - [ ] The gate test imports the configuration and asserts its exact key
-      set, the runner, the coverage mode, the `mutate` patterns, the
+      set, the runner, the coverage mode, the `mutate` patterns (domain,
+      `scripts/` and `gates/`, without `*.test.ts` and `test-support/`), the
       reporters, `high`, `low` and `break: null`, so a key gained or lost or
       any of these values changed fails it.
-- [ ] The **License allowlist** gains `0BSD` and `CC-BY-4.0`, and any
-      further licence only after the same review (a package without a
-      licence, or one needing more, stops the builder to ask);
+- [ ] The ticket's Notes list every licence the install adds, each with
+      its packages.
+- [ ] Only permissive licences are added to the **License allowlist**
+      (`0BSD` and `CC-BY-4.0` on 2026-11-07). A GPL, LGPL or AGPL licence,
+      any other licence that is not permissive, or a package without a
+      licence stops the builder for the human's decision;
       `npm run check:licenses` passes.
 - [ ] Each open `qs` **Advisory** has one **Audit exception**, added on the
       day of building and expiring 90 days later, with the reason above;

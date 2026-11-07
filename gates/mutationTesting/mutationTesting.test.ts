@@ -8,8 +8,10 @@ import vitestConfig from '../../vitest.config.ts';
 // The Stryker configuration: exactly six keys, the Vitest runner with
 // per-test coverage pointed at the Stryker Vitest config, the non-test .ts
 // files of the domain, scripts/ and gates/ as the mutate patterns, three
-// reporters, and the thresholds with no Break threshold yet. A key gained or
-// lost, or any of these values changed, fails. No test runs Stryker.
+// reporters, and the thresholds: high 80, low 60 and a Break threshold that is
+// a whole number from 1 to 100, so it cannot be removed or turned off
+// silently. A key gained or lost, or any of these values changed, fails. No
+// test runs Stryker.
 //
 // The Stryker Vitest config: the root Vitest config plus an exclude of exactly
 // the three files that hold the whole-repository tests, listed by file name,
@@ -77,7 +79,9 @@ const MUTATE = [
   '!**/test-support/**',
 ];
 const REPORTERS = ['clear-text', 'progress', 'html'];
-const THRESHOLDS = { high: 80, low: 60, break: null };
+const THRESHOLD_KEYS = ['break', 'high', 'low'];
+const HIGH = 80;
+const LOW = 60;
 
 // Invented paths, each in one of the three mutated folders.
 const MUTATED_FILES = [
@@ -163,10 +167,72 @@ describe('the Stryker configuration', () => {
     expect(config.reporters).toEqual(REPORTERS);
   });
 
-  it('sets high and low and no Break threshold yet', async () => {
+  it('keeps high at 80 and low at 60 beside the Break threshold', async () => {
     const config = await loadStrykerConfig();
+    const thresholds = (config.thresholds ?? {}) as Record<string, unknown>;
 
-    expect(config.thresholds).toStrictEqual(THRESHOLDS);
+    expect(Object.keys(thresholds).sort()).toEqual(THRESHOLD_KEYS);
+    expect(thresholds.high).toBe(HIGH);
+    expect(thresholds.low).toBe(LOW);
+  });
+
+  it('sets a Break threshold that is a whole number from 1 to 100', async () => {
+    const config = await loadStrykerConfig();
+    const hasBreakThreshold = await loadBreakThresholdCheck();
+
+    expect(hasBreakThreshold(config.thresholds)).toBe(true);
+  });
+});
+
+const BREAK_THRESHOLD_CHECK = join(
+  ROOT,
+  'gates',
+  'mutationTesting',
+  'mutationTesting.ts',
+);
+
+type BreakThresholdCheck = (thresholds: unknown) => boolean;
+
+const loadBreakThresholdCheck = async (): Promise<BreakThresholdCheck> => {
+  expect(
+    existsSync(BREAK_THRESHOLD_CHECK),
+    'gates/mutationTesting/mutationTesting.ts beside the gate test',
+  ).toBe(true);
+  const module = (await import(pathToFileURL(BREAK_THRESHOLD_CHECK).href)) as {
+    hasBreakThreshold?: unknown;
+  };
+  expect(
+    typeof module.hasBreakThreshold,
+    'hasBreakThreshold exported by the Break threshold check',
+  ).toBe('function');
+  return module.hasBreakThreshold as BreakThresholdCheck;
+};
+
+// Invented thresholds: high and low as configured, the Break threshold varied.
+const thresholdsWith = (value: unknown): Record<string, unknown> => ({
+  high: HIGH,
+  low: LOW,
+  break: value,
+});
+
+describe('the Break threshold check', () => {
+  it.each([
+    ['null, which turns the Break threshold off', thresholdsWith(null)],
+    ['a missing break', { high: HIGH, low: LOW }],
+    ['0', thresholdsWith(0)],
+    ['101', thresholdsWith(101)],
+    ['a fraction', thresholdsWith(72.5)],
+    ['a string', thresholdsWith('72')],
+  ])('fails %s', async (_case, thresholds) => {
+    const hasBreakThreshold = await loadBreakThresholdCheck();
+
+    expect(hasBreakThreshold(thresholds)).toBe(false);
+  });
+
+  it.each([1, 100])('passes the whole number %i', async (value) => {
+    const hasBreakThreshold = await loadBreakThresholdCheck();
+
+    expect(hasBreakThreshold(thresholdsWith(value))).toBe(true);
   });
 });
 

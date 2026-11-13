@@ -96,4 +96,37 @@ test('Start the app', async ({ app, window }) => {
     process: typeof process,
   }));
   expect(pageGlobals).toEqual({ require: 'undefined', process: 'undefined' });
+
+  // The CSP (design log Q17, Q18): exactly one meta tag carrying exactly the
+  // policy, and still no script in the page.
+  const page = await window.evaluate(() => ({
+    policies: Array.from(
+      document.querySelectorAll('meta[http-equiv="Content-Security-Policy"]'),
+      (meta) => meta.getAttribute('content'),
+    ),
+    scripts: document.querySelectorAll('script').length,
+  }));
+  expect(page).toEqual({
+    policies: [
+      "default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'none'",
+    ],
+    scripts: 0,
+  });
+
+  // The policy is in force, not just present: without 'unsafe-eval' in
+  // script-src the page cannot turn a string into code, so any loosening that
+  // allows it fails here. DevTools lets code evaluated through it generate
+  // code from strings, so the eval waits one task and runs as the page's own.
+  const evalOutcome = await window.evaluate(async () => {
+    await new Promise((resolve) => {
+      setTimeout(resolve, 0);
+    });
+    try {
+      eval('void 0');
+      return 'allowed';
+    } catch (error) {
+      return error instanceof EvalError ? 'blocked' : String(error);
+    }
+  });
+  expect(evalOutcome, 'the CSP blocks eval in the page').toBe('blocked');
 });

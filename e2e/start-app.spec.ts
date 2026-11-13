@@ -15,6 +15,10 @@ import { expect, test } from './test-support/appFixture/appFixture.ts';
 // After the test the fixture has closed the app and deleted the folder; the
 // afterAll hook runs once the test's fixtures are torn down and checks both.
 
+// The worker is given a dev server address, so the check below fails whenever
+// the fixture passes ELECTRON_RENDERER_URL through to the app.
+process.env.ELECTRON_RENDERER_URL = 'http://localhost:5173';
+
 type Launch = { dataFolder: string; appProcess: ChildProcess };
 
 let launch: Launch | undefined;

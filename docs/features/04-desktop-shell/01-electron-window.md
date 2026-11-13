@@ -94,6 +94,12 @@ if the new member needs it to lint green.
       above; `npm run check:licenses` and `npm run check:audit` pass.
 - [ ] `npm run verify` is green.
 
+## Notes
+
+- npm install did not download the Electron binary; the first run did.
+  Make sure the binary is in place after npm ci, before any test or
+  end-to-end run, so no test downloads Electron. Check it in CI too.
+
 ## Blocked by
 
 None — can start immediately.

@@ -1,5 +1,5 @@
 ---
-status: in-progress
+status: done
 ---
 # Start the app flow
 
@@ -81,9 +81,6 @@ only if `e2e/` or the config need it to lint green.
 - `@playwright/test` 1.64.1: 1.65.0 was published on 2026-11-05, under 14
   days before building (2026-11-13). No browser is downloaded; no script
   runs `playwright install`.
-- The fixture declares `desktopFolder` as an option fixture (default
-  `apps/desktop`) because Playwright needs a destructured fixture argument
-  and ESLint's `no-empty-pattern` refuses an empty one.
 - Licences the lockfile gains: Apache-2.0 (`@playwright/test`,
   `playwright`, `playwright-core`), already on
   `quality/license-allowlist.json`. `npm audit` shows no advisory beyond

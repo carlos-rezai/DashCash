@@ -3,7 +3,6 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
-  _electron,
   test as base,
   type ElectronApplication,
   type Page,
@@ -34,15 +33,13 @@ function appEnvironment(dataFolder: string): Record<string, string> {
 }
 
 type AppFixtures = { app: ElectronApplication; window: Page };
-type AppOptions = { desktopFolder: string };
 
-export const test = base.extend<AppFixtures & AppOptions>({
-  desktopFolder: [DESKTOP_FOLDER, { option: true }],
-  app: async ({ desktopFolder }, use) => {
+export const test = base.extend<AppFixtures>({
+  app: async ({ playwright }, use) => {
     const dataFolder = await mkdtemp(join(tmpdir(), DATA_FOLDER_PREFIX));
     try {
-      const app = await _electron.launch({
-        args: [desktopFolder],
+      const app = await playwright._electron.launch({
+        args: [DESKTOP_FOLDER],
         env: appEnvironment(dataFolder),
       });
       try {

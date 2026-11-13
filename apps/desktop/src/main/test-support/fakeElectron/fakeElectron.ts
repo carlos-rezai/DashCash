@@ -3,12 +3,15 @@ import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 
 // A fake of the Electron objects main's modules take as parameters (A1):
-// `app`, `BrowserWindow`, `Menu`, `screen`, `protocol` and `net`. It records
-// what a module does with them (windows created, shown, loaded, closed;
-// quits; menu changes; the sandbox enabled; schemes and protocol handlers
-// registered; the order of the startup calls) so a test can assert behaviour
-// without Electron. Its `net.fetch` serves `file:` URLs from the disk, as
-// Electron's does.
+// `app`, `BrowserWindow`, `Menu`, `screen`, `protocol`, `net` and `session`.
+// It records what a module does with them (windows created, shown, loaded,
+// closed; quits; menu changes; the sandbox enabled; schemes and protocol
+// handlers registered; the order of the startup calls) so a test can assert
+// behaviour without Electron. Its `net.fetch` serves `file:` URLs from the
+// disk, as Electron's does. Its web contents and default session act as the
+// page would (navigate, redirect, open a window, attach a webview, ask for a
+// permission) and answer as Electron does: allowed unless a listener or
+// handler says otherwise.
 
 export type FakeElectronOptions = {
   isPackaged?: boolean;
@@ -51,7 +54,56 @@ export type StartupCall =
   | 'protocol.registerSchemesAsPrivileged'
   | 'ready'
   | 'protocol.handle'
+  | 'session.setPermissionRequestHandler'
+  | 'session.setPermissionCheckHandler'
   | 'new BrowserWindow';
+
+// What Electron does with a navigation, a redirect or a webview: it goes
+// ahead unless a listener calls `event.preventDefault()`.
+export type PageOutcome = 'allowed' | 'prevented';
+
+// The answer of a window open handler, as Electron takes it.
+export type WindowOpenResponse = { action: 'allow' | 'deny' };
+
+type WindowOpenHandler = (details: {
+  url: string;
+  frameName: string;
+  features: string;
+  disposition: string;
+}) => WindowOpenResponse;
+
+// The web contents of a window or a webview, as the page drives it.
+export type FakeWebContents = EventEmitter & {
+  setWindowOpenHandler(handler: WindowOpenHandler): void;
+  // The page navigates its main frame to `url` (`will-navigate`).
+  navigate(url: string): PageOutcome;
+  // A navigation of the main frame is redirected to `url` (`will-redirect`).
+  redirect(url: string): PageOutcome;
+  // The page opens `url` in a new window (`window.open`, a link with a
+  // target); Electron allows it when no handler is set.
+  openWindow(url: string): WindowOpenResponse;
+  // The page attaches a `<webview>` showing `src` (`will-attach-webview`).
+  attachWebview(src: string): PageOutcome;
+};
+
+type PermissionRequestHandler = (
+  webContents: FakeWebContents,
+  permission: string,
+  callback: (granted: boolean) => void,
+  details: { requestingUrl: string; isMainFrame: boolean },
+) => void;
+
+type PermissionCheckHandler = (
+  webContents: FakeWebContents | null,
+  permission: string,
+  requestingOrigin: string,
+  details: { requestingUrl?: string; isMainFrame?: boolean },
+) => boolean;
+
+type FakeSession = {
+  setPermissionRequestHandler(handler: PermissionRequestHandler | null): void;
+  setPermissionCheckHandler(handler: PermissionCheckHandler | null): void;
+};
 
 export type LoadedPage =
   { kind: 'file'; path: string } | { kind: 'url'; url: string };
@@ -65,6 +117,7 @@ type WindowOptions = {
 
 export type FakeBrowserWindow = EventEmitter & {
   readonly options: WindowOptions;
+  readonly webContents: FakeWebContents;
   isVisible(): boolean;
   getTitle(): string;
   setTitle(title: string): void;
@@ -95,6 +148,7 @@ export type FakeElectron = {
     screen: FakeScreen;
     protocol: FakeProtocol;
     net: FakeNet;
+    session: { defaultSession: FakeSession };
   };
   app: FakeApp;
   // Every window created, in order, closed ones included.
@@ -112,6 +166,24 @@ export type FakeElectron = {
   // Sends a request for `url` to the handler registered for its scheme, as
   // the page would; `undefined` when no handler is registered for it.
   request(url: string): Promise<Response | undefined>;
+  // Creates web contents as Electron does for a window or a webview, and
+  // emits the app's `web-contents-created` for it.
+  createWebContents(): FakeWebContents;
+  // The page at `requestingUrl` asks the default session for `permission`;
+  // resolves whether it was granted. Electron grants it when no handler is
+  // set.
+  requestPermission(
+    permission: string,
+    requestingUrl: string,
+    webContents?: FakeWebContents,
+  ): Promise<boolean>;
+  // Chromium checks whether `requestingOrigin` holds `permission` in the
+  // default session. Electron grants it when no handler is set.
+  checkPermission(
+    permission: string,
+    requestingOrigin: string,
+    webContents?: FakeWebContents | null,
+  ): boolean;
   // How often `app.quit()` was called.
   quitCount(): number;
   // Makes the app ready: resolves `whenReady()`, emits `ready`, and lets
@@ -195,8 +267,86 @@ export function createFakeElectron(
     return windows.filter((window) => !window.isDestroyed());
   }
 
+  // Emits an event a listener may prevent, and tells whether one did.
+  function emitPreventable(
+    contents: EventEmitter,
+    eventName: string,
+    fields: Readonly<Record<string, unknown>>,
+    ...rest: unknown[]
+  ): PageOutcome {
+    const state = { prevented: false };
+    const event = {
+      ...fields,
+      preventDefault: () => {
+        state.prevented = true;
+      },
+    };
+    contents.emit(eventName, event, ...rest);
+    return state.prevented ? 'prevented' : 'allowed';
+  }
+
+  // A navigation-like event: Electron passes an event carrying the URL, and
+  // the URL again as the second argument.
+  function emitNavigation(
+    contents: EventEmitter,
+    eventName: 'will-navigate' | 'will-redirect',
+    url: string,
+  ): PageOutcome {
+    return emitPreventable(
+      contents,
+      eventName,
+      { url, isMainFrame: true },
+      url,
+      false,
+      true,
+    );
+  }
+
+  function createWebContents(): FakeWebContents {
+    const windowOpenHandler: { handler?: WindowOpenHandler } = {};
+    const contents: FakeWebContents = Object.assign(new EventEmitter(), {
+      setWindowOpenHandler: (handler: WindowOpenHandler) => {
+        windowOpenHandler.handler = handler;
+      },
+      navigate: (url: string) => emitNavigation(contents, 'will-navigate', url),
+      redirect: (url: string) => emitNavigation(contents, 'will-redirect', url),
+      openWindow: (url: string): WindowOpenResponse =>
+        windowOpenHandler.handler === undefined
+          ? { action: 'allow' }
+          : windowOpenHandler.handler({
+              url,
+              frameName: '',
+              features: '',
+              disposition: 'new-window',
+            }),
+      attachWebview: (src: string): PageOutcome =>
+        emitPreventable(contents, 'will-attach-webview', {}, {}, { src }),
+    });
+    app.emit(
+      'web-contents-created',
+      { preventDefault: () => undefined },
+      contents,
+    );
+    return contents;
+  }
+
+  let permissionRequestHandler: PermissionRequestHandler | null = null;
+  let permissionCheckHandler: PermissionCheckHandler | null = null;
+
+  const defaultSession: FakeSession = {
+    setPermissionRequestHandler: (handler) => {
+      startupCalls.push('session.setPermissionRequestHandler');
+      permissionRequestHandler = handler;
+    },
+    setPermissionCheckHandler: (handler) => {
+      startupCalls.push('session.setPermissionCheckHandler');
+      permissionCheckHandler = handler;
+    },
+  };
+
   class BrowserWindow extends EventEmitter implements FakeBrowserWindow {
     readonly options: WindowOptions;
+    readonly webContents: FakeWebContents;
     private visible: boolean;
     private title: string;
     private readonly pages: LoadedPage[] = [];
@@ -209,6 +359,7 @@ export function createFakeElectron(
       // Electron shows a new window unless `show: false`.
       this.visible = windowOptions.show !== false;
       this.title = windowOptions.title ?? '';
+      this.webContents = createWebContents();
       if (windowOptions.autoHideMenuBar === true) {
         menuChanges.push('autoHideMenuBar');
       }
@@ -347,7 +498,15 @@ export function createFakeElectron(
   };
 
   return {
-    electron: { app, BrowserWindow, Menu, screen, protocol, net },
+    electron: {
+      app,
+      BrowserWindow,
+      Menu,
+      screen,
+      protocol,
+      net,
+      session: { defaultSession },
+    },
     app,
     windows,
     menuChanges,
@@ -362,6 +521,32 @@ export function createFakeElectron(
         return undefined;
       }
       return handler(new Request(url));
+    },
+    createWebContents,
+    requestPermission: (permission, requestingUrl, webContents) => {
+      const handler = permissionRequestHandler;
+      if (handler === null) {
+        return Promise.resolve(true);
+      }
+      return new Promise<boolean>((resolve) => {
+        handler(
+          webContents ?? createWebContents(),
+          permission,
+          (granted) => {
+            resolve(granted);
+          },
+          { requestingUrl, isMainFrame: true },
+        );
+      });
+    },
+    checkPermission: (permission, requestingOrigin, webContents = null) => {
+      if (permissionCheckHandler === null) {
+        return true;
+      }
+      return permissionCheckHandler(webContents, permission, requestingOrigin, {
+        requestingUrl: `${requestingOrigin}/`,
+        isMainFrame: true,
+      });
     },
     quitCount: () => quits,
     ready: async () => {

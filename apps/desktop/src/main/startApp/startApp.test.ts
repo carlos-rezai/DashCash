@@ -177,15 +177,113 @@ describe('startApp', () => {
   it('follows the startup order of the design log', async () => {
     const fake = start();
 
+    expect(fake.startupCalls).toEqual([
+      'app.enableSandbox',
+      'protocol.registerSchemesAsPrivileged',
+    ]);
+
     await fake.ready();
 
-    expect(fake.startupCalls).toEqual([
+    // The protocol handler, then the session's permission handlers (in
+    // either order), then the window.
+    const calls = fake.startupCalls;
+    expect(calls.slice(0, 4)).toEqual([
       'app.enableSandbox',
       'protocol.registerSchemesAsPrivileged',
       'ready',
       'protocol.handle',
-      'new BrowserWindow',
     ]);
+    expect([...calls.slice(4, 6)].sort()).toEqual([
+      'session.setPermissionCheckHandler',
+      'session.setPermissionRequestHandler',
+    ]);
+    expect(calls.slice(6)).toEqual(['new BrowserWindow']);
+  });
+
+  describe('session hardening', () => {
+    it.each([
+      'https://example.com/',
+      'file:///C:/invented/index.html',
+      'app://dashcash.evil/index.html',
+      'app://evil-dashcash/index.html',
+    ])(
+      'keeps the main window on app://dashcash: allows same-origin navigation, prevents navigating or redirecting to %s',
+      async (url) => {
+        const fake = start({ isPackaged: true });
+        await fake.ready();
+        const contents = fake.windows[0]?.webContents;
+
+        expect(contents?.navigate(url)).toBe('prevented');
+        expect(contents?.redirect(url)).toBe('prevented');
+        expect(contents?.navigate('app://dashcash/other.html')).toBe('allowed');
+        expect(contents?.redirect('app://dashcash/index.html')).toBe('allowed');
+      },
+    );
+
+    it.each([
+      {
+        case: 'packaged, even with ELECTRON_RENDERER_URL set',
+        isPackaged: true,
+        env: { ELECTRON_RENDERER_URL: DEV_URL },
+        outcome: 'prevented',
+      },
+      {
+        case: 'not packaged without ELECTRON_RENDERER_URL',
+        isPackaged: false,
+        env: {},
+        outcome: 'prevented',
+      },
+      {
+        case: 'not packaged with ELECTRON_RENDERER_URL set',
+        isPackaged: false,
+        env: { ELECTRON_RENDERER_URL: DEV_URL },
+        outcome: 'allowed',
+      },
+    ])(
+      "navigation to the dev server's origin is $outcome when $case, and to another origin prevented",
+      async ({ isPackaged, env, outcome }) => {
+        const fake = start({ isPackaged }, env);
+        await fake.ready();
+        const contents = fake.windows[0]?.webContents;
+
+        expect(contents?.navigate('http://localhost:5174/')).toBe('prevented');
+        expect(contents?.navigate(`${DEV_URL}/index.html`)).toBe(outcome);
+      },
+    );
+
+    it('denies every window open from the main window', async () => {
+      const fake = start();
+      await fake.ready();
+      const contents = fake.windows[0]?.webContents;
+
+      expect(contents?.openWindow('app://dashcash/index.html')).toEqual({
+        action: 'deny',
+      });
+      expect(contents?.openWindow('https://example.com/')).toEqual({
+        action: 'deny',
+      });
+    });
+
+    it('prevents a webview in the main window', async () => {
+      const fake = start();
+      await fake.ready();
+      const contents = fake.windows[0]?.webContents;
+
+      expect(contents?.attachWebview('https://example.com/')).toBe('prevented');
+    });
+
+    it('denies every permission request and check of the session', async () => {
+      const fake = start();
+      await fake.ready();
+      const contents = fake.windows[0]?.webContents;
+
+      await expect(
+        fake.requestPermission('media', APP_INDEX_URL, contents),
+      ).resolves.toBe(false);
+      expect(fake.checkPermission('media', 'app://dashcash', contents)).toBe(
+        false,
+      );
+    });
   });
 
   it("serves the build's renderer folder through app://dashcash", async () => {

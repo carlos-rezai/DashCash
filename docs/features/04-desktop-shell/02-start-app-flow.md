@@ -56,25 +56,40 @@ only if `e2e/` or the config need it to lint green.
 
 ## Acceptance criteria
 
-- [ ] A RED commit holds `e2e/start-app.spec.ts` and the new gate tests,
+- [x] A RED commit holds `e2e/start-app.spec.ts` and the new gate tests,
       and fails on them.
-- [ ] End-to-end test for "Start the app" in `e2e/`: exactly one window,
+- [x] End-to-end test for "Start the app" in `e2e/`: exactly one window,
       titled "DashCash".
-- [ ] `playwright.config.ts` holds exactly `testDir: 'e2e'`,
+- [x] `playwright.config.ts` holds exactly `testDir: 'e2e'`,
       `retries: 0`, `forbidOnly: true`, `reporter: 'list'` and
       `use: { trace: 'retain-on-failure' }`; the `endToEnd` gate test fails
       when a key is added or removed or a value changes.
-- [ ] The **App fixture** gives each test its own temporary folder, removes
+- [x] The **App fixture** gives each test its own temporary folder, removes
       `ELECTRON_RENDERER_URL` from the app's environment, and closes the
       app and deletes the folder afterwards; no browser is downloaded.
-- [ ] `test:e2e` runs `playwright test`; `verify:full` is exactly
+- [x] `test:e2e` runs `playwright test`; `verify:full` is exactly
       `verify`, `build`, `test:e2e`; the gate wiring test fails on any
       other chain; `verify` is unchanged.
-- [ ] `npm run typecheck` and `npm run lint` cover `e2e/` and
+- [x] `npm run typecheck` and `npm run lint` cover `e2e/` and
       `playwright.config.ts`.
-- [ ] Every licence the lockfile gains is in the Notes and handled as
+- [x] Every licence the lockfile gains is in the Notes and handled as
       above; `npm run check:licenses` and `npm run check:audit` pass.
-- [ ] `npm run verify:full` is green, "Start the app" included.
+- [x] `npm run verify:full` is green, "Start the app" included.
+
+## Notes
+
+- `@playwright/test` 1.64.1: 1.65.0 was published on 2026-11-05, under 14
+  days before building (2026-11-13). No browser is downloaded; no script
+  runs `playwright install`.
+- The fixture declares `desktopFolder` as an option fixture (default
+  `apps/desktop`) because Playwright needs a destructured fixture argument
+  and ESLint's `no-empty-pattern` refuses an empty one.
+- Licences the lockfile gains: Apache-2.0 (`@playwright/test`,
+  `playwright`, `playwright-core`), already on
+  `quality/license-allowlist.json`. `npm audit` shows no advisory beyond
+  those already in `quality/audit-exceptions.json`.
+- `eslint.config.js` needed no change: `e2e/` and `playwright.config.ts`
+  lint green as they are.
 
 ## Blocked by
 

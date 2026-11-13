@@ -28,6 +28,8 @@ npm run dev | storybook | test | test:stories | test:e2e | verify | verify:full
 
 Run tools only through these scripts or `node_modules/.bin`, never `npx`.
 
+Search files with the Grep and Glob tools, not with grep, find or Select-String in Bash.
+
 ## Architecture
 
 - `packages/domain`: pure TypeScript, imports nothing else, no I/O, no `Date.now()`; "today" is a parameter.

@@ -89,10 +89,11 @@ Back to 1.
 When every ticket in the folder is `done`, set the feature's status in
 `docs/feature-checklist.md` to `done`, commit it
 (`docs: [<feature>] mark feature done`) and push, then open the pull request
-into `main`:
+into `main`. Write the body into a file outside the repository with the
+Write tool, never with a heredoc or other Bash command, then:
 
 ```
-gh pr create --base main --title "feat: [<feature>] <description>" --body-file <tmp>
+gh pr create --base main --title "feat: [<feature>] <description>" --body-file <file>
 ```
 
 The body: the feature folder, one line per ticket, and that the agents wrote

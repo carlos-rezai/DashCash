@@ -5,8 +5,9 @@ import { isAbsolute, relative } from 'node:path';
 import { expect, test } from './test-support/appFixture/appFixture.ts';
 
 // The User flow "Start the app" (design log Q40): on a fresh Data folder the
-// App build opens exactly one window, titled "DashCash". Later tickets add
-// their facts to this one test.
+// App build opens exactly one window, titled "DashCash", with context
+// isolation and the sandbox on, Node integration off, and no `require` or
+// `process` in the page. Later tickets add their facts to this one test.
 //
 // The App fixture has no test of its own (design log Q39): this flow checks
 // what it promises. During the test the app runs on its own Data folder, a
@@ -64,4 +65,31 @@ test('Start the app', async ({ app, window }) => {
   expect(titles).toEqual(['DashCash']);
   expect(app.windows()).toHaveLength(1);
   await expect(window).toHaveTitle('DashCash');
+
+  // The Secure defaults (design log Q15), as the window's web contents report
+  // them in main. Electron enables these by default, so they guard against a
+  // later loosening (I5).
+  const webPreferences = await app.evaluate(({ BrowserWindow }) =>
+    BrowserWindow.getAllWindows().map((browserWindow) => {
+      // Not in Electron's typings, but present on every web contents.
+      const webContents = browserWindow.webContents as unknown as {
+        getLastWebPreferences(): Record<string, unknown> | null;
+      };
+      const preferences = webContents.getLastWebPreferences();
+      return {
+        contextIsolation: preferences?.contextIsolation,
+        sandbox: preferences?.sandbox,
+        nodeIntegration: preferences?.nodeIntegration,
+      };
+    }),
+  );
+  expect(webPreferences).toEqual([
+    { contextIsolation: true, sandbox: true, nodeIntegration: false },
+  ]);
+
+  const pageGlobals = await window.evaluate(() => ({
+    require: typeof require,
+    process: typeof process,
+  }));
+  expect(pageGlobals).toEqual({ require: 'undefined', process: 'undefined' });
 });

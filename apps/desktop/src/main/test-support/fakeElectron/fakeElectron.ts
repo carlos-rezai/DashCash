@@ -1,14 +1,21 @@
 import { EventEmitter } from 'node:events';
 
 // A fake of the Electron objects main's modules take as parameters (A1):
-// `app`, `BrowserWindow` and `Menu`. It records what a module does with them
-// (windows created, shown, loaded, closed; quits; menu changes) so a test can
-// assert behaviour without Electron.
+// `app`, `BrowserWindow`, `Menu` and `screen`. It records what a module does
+// with them (windows created, shown, loaded, closed; quits; menu changes; the
+// sandbox enabled) so a test can assert behaviour without Electron.
 
 export type FakeElectronOptions = {
   isPackaged?: boolean;
   appPath?: string;
+  // The primary display's work area; larger than 1440 × 900 unless given.
+  workArea?: WorkArea;
 };
+
+export type WorkArea = { x: number; y: number; width: number; height: number };
+
+// When `app.enableSandbox()` was called: before or after the app was ready.
+export type SandboxCall = 'before-ready' | 'after-ready';
 
 export type LoadedPage =
   { kind: 'file'; path: string } | { kind: 'url'; url: string };
@@ -46,12 +53,15 @@ export type FakeElectron = {
     app: FakeApp;
     BrowserWindow: new (options?: WindowOptions) => FakeBrowserWindow;
     Menu: FakeMenu;
+    screen: FakeScreen;
   };
   app: FakeApp;
   // Every window created, in order, closed ones included.
   windows: FakeBrowserWindow[];
   // Every change to a menu, application or window, as `<call>`.
   menuChanges: string[];
+  // Every call of `app.enableSandbox()`, in order.
+  sandboxCalls: SandboxCall[];
   // How often `app.quit()` was called.
   quitCount(): number;
   // Makes the app ready: resolves `whenReady()`, emits `ready`, and lets
@@ -64,7 +74,12 @@ type FakeApp = EventEmitter & {
   getAppPath(): string;
   isReady(): boolean;
   whenReady(): Promise<void>;
+  enableSandbox(): void;
   quit(): void;
+};
+
+type FakeScreen = {
+  getPrimaryDisplay(): { workArea: WorkArea };
 };
 
 type FakeMenu = {
@@ -74,6 +89,7 @@ type FakeMenu = {
 };
 
 const DEFAULT_APP_PATH = '/invented/dashcash-app';
+const DEFAULT_WORK_AREA: WorkArea = { x: 0, y: 0, width: 1920, height: 1040 };
 
 function flushPromises(): Promise<void> {
   return new Promise((resolve) => {
@@ -86,6 +102,7 @@ export function createFakeElectron(
 ): FakeElectron {
   const windows: FakeBrowserWindow[] = [];
   const menuChanges: string[] = [];
+  const sandboxCalls: SandboxCall[] = [];
   let quits = 0;
   let isReady = false;
   let resolveReady: () => void = () => undefined;
@@ -98,6 +115,9 @@ export function createFakeElectron(
     getAppPath: () => options.appPath ?? DEFAULT_APP_PATH,
     isReady: () => isReady,
     whenReady: () => readyPromise,
+    enableSandbox: () => {
+      sandboxCalls.push(isReady ? 'after-ready' : 'before-ready');
+    },
     quit: () => {
       quits += 1;
     },
@@ -217,11 +237,22 @@ export function createFakeElectron(
     getApplicationMenu: () => null,
   };
 
+  // Electron's `screen` cannot be used before the app is ready.
+  const screen: FakeScreen = {
+    getPrimaryDisplay: () => {
+      if (!isReady) {
+        throw new Error('screen cannot be used before the app is ready');
+      }
+      return { workArea: options.workArea ?? DEFAULT_WORK_AREA };
+    },
+  };
+
   return {
-    electron: { app, BrowserWindow, Menu },
+    electron: { app, BrowserWindow, Menu, screen },
     app,
     windows,
     menuChanges,
+    sandboxCalls,
     quitCount: () => quits,
     ready: async () => {
       isReady = true;

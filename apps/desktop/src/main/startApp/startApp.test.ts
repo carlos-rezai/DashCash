@@ -39,6 +39,57 @@ describe('startApp', () => {
     ]);
   });
 
+  it('enables the sandbox once, before the app is ready', async () => {
+    const fake = start();
+
+    expect(fake.sandboxCalls).toEqual(['before-ready']);
+
+    await fake.ready();
+
+    expect(fake.sandboxCalls).toEqual(['before-ready']);
+  });
+
+  it.each([
+    {
+      case: "a primary display's work area larger than 1440 × 900",
+      workArea: { x: 0, y: 0, width: 2560, height: 1400 },
+      size: { width: 1440, height: 900 },
+    },
+    {
+      case: "a smaller primary display's work area",
+      workArea: { x: 0, y: 25, width: 1366, height: 743 },
+      size: { width: 1366, height: 743 },
+    },
+  ])(
+    'sizes the window content $size.width × $size.height for $case',
+    async ({ workArea, size }) => {
+      const fake = start({ workArea });
+
+      await fake.ready();
+
+      expect(fake.windows[0]?.options).toMatchObject({
+        ...size,
+        useContentSize: true,
+      });
+    },
+  );
+
+  it('gives the window the web preferences of the Secure defaults', async () => {
+    const fake = start();
+
+    await fake.ready();
+
+    expect(fake.windows[0]?.options.webPreferences).toEqual({
+      contextIsolation: true,
+      sandbox: true,
+      nodeIntegration: false,
+      webSecurity: true,
+      allowRunningInsecureContent: false,
+      webviewTag: false,
+      spellcheck: false,
+    });
+  });
+
   it('keeps the window hidden until ready-to-show, then shows it', async () => {
     const fake = start();
     await fake.ready();

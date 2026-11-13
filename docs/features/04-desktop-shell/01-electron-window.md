@@ -1,5 +1,5 @@
 ---
-status: in-progress
+status: done
 ---
 # Electron window
 
@@ -68,31 +68,31 @@ if the new member needs it to lint green.
 
 ## Acceptance criteria
 
-- [ ] A RED commit holds the new Vitest tests and the layer-rule gate
+- [x] A RED commit holds the new Vitest tests and the layer-rule gate
       test case, and fails on them.
-- [ ] `@dashcash/desktop` is private, `"type": "module"`, `productName`
+- [x] `@dashcash/desktop` is private, `"type": "module"`, `productName`
       "DashCash", version `0.0.0`, `main` at the built main entry, scripts
       `dev` and `build`; `electron`, `electron-vite` and `vite` are its
       exact dev dependencies at the newest releases at least 14 days old on
       the day of building.
-- [ ] `npm run build` writes main and renderer into `apps/desktop/out/`;
+- [x] `npm run build` writes main and renderer into `apps/desktop/out/`;
       `npm run dev` opens the window with hot reload (checked by hand,
       recorded in the Notes).
-- [ ] Only `main.ts` imports `electron` as a value; Vitest tests drive
+- [x] Only `main.ts` imports `electron` as a value; Vitest tests drive
       `startApp` and `createMainWindow` with fake Electron objects: window
       hidden until `ready-to-show`, title "DashCash", the build's page and
       the dev URL, quit when all windows are closed, no custom menu.
-- [ ] `readDevServerUrl` returns the URL only when unpackaged with
+- [x] `readDevServerUrl` returns the URL only when unpackaged with
       `ELECTRON_RENDERER_URL` set; packaged, unset or empty, `undefined`.
-- [ ] `npm run typecheck` covers both desktop projects and writes nothing
+- [x] `npm run typecheck` covers both desktop projects and writes nothing
       tracked; a temporary renderer file naming `process` fails it
       (checked by hand, recorded in the Notes, file removed).
-- [ ] `.dependency-cruiser.js` excludes `apps/desktop/out/`; the gate test
+- [x] `.dependency-cruiser.js` excludes `apps/desktop/out/`; the gate test
       shows a file there is not cruised; after a local build
       `npm run lint:deps` stays green.
-- [ ] Every licence the lockfile gains is in the Notes and handled as
+- [x] Every licence the lockfile gains is in the Notes and handled as
       above; `npm run check:licenses` and `npm run check:audit` pass.
-- [ ] `npm run verify` is green.
+- [x] `npm run verify` is green.
 
 ## Notes
 
@@ -103,6 +103,25 @@ if the new member needs it to lint green.
   through Renovate once 14 days old, well before feature 20 builds the first
   installer. The app loads only its own code over app://dashcash, so the
   Chromium fixes do not apply to an exposed surface yet.
+- `skipLibCheck` is set in `apps/desktop/tsconfig.node.json` only:
+  electron-vite's type files import the optional peer `@swc/core`, which is
+  not installed. No other tsconfig skips library checks.
+- Hand check, `npm run dev`: the window opens and shows a loaded page
+  (checked with a temporary visible line in `index.html`, removed before
+  this commit).
+- Hand check, hot reload: editing the renderer updates the window without
+  a restart.
+- Hand check, `npm run build`: writes `apps/desktop/out/main/main.js` and
+  `apps/desktop/out/renderer/index.html`; `npm run lint:deps` stays green
+  afterwards.
+- Hand check, typecheck: a temporary `apps/desktop/src/renderer/tmpProbe.ts`
+  naming `process` failed `npm run typecheck` with TS2591; file removed.
+  The script writes nothing tracked.
+- Licences the lockfile gains: MIT, ISC, Apache-2.0, all already on
+  `quality/license-allowlist.json`. `npm audit` shows no advisory beyond
+  those already in `quality/audit-exceptions.json`.
+- `gates/gateWiring/gateWiring.test.ts` pins the new `typecheck` script
+  exactly (approved by the human for this ticket).
 
 ## Blocked by
 

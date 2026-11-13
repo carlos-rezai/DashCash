@@ -122,7 +122,7 @@ export default {
   ],
   options: {
     doNotFollow: { path: 'node_modules' },
-    exclude: { path: '(^|/)\\.gitkeep$' },
+    exclude: { path: ['(^|/)\\.gitkeep$', '^apps/desktop/out/'] },
     tsPreCompilationDeps: true,
   },
 };

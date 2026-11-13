@@ -1,3 +1,5 @@
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
@@ -9,9 +11,8 @@ import { startApp } from './startApp.ts';
 const APP_PATH = join('/invented', 'dashcash-app');
 const DEV_URL = 'http://localhost:5173';
 
-// The build's page: electron-vite writes the renderer to out/renderer/ in the
-// desktop member, whose folder is the app path.
-const BUILT_INDEX = join(APP_PATH, 'out', 'renderer', 'index.html');
+// The build's page, served through the App protocol (design log Q16).
+const APP_INDEX_URL = 'app://dashcash/index.html';
 
 function start(
   options: FakeElectronOptions = {},
@@ -113,16 +114,18 @@ describe('startApp', () => {
       isPackaged: false,
       env: {},
     },
-  ])("loads the build's page when $case", async ({ isPackaged, env }) => {
-    const fake = start({ isPackaged }, env);
+  ])(
+    'loads app://dashcash/index.html, and nothing else, when $case',
+    async ({ isPackaged, env }) => {
+      const fake = start({ isPackaged }, env);
 
-    await fake.ready();
+      await fake.ready();
 
-    expect(fake.windows[0]?.loadedPage()).toEqual({
-      kind: 'file',
-      path: BUILT_INDEX,
-    });
-  });
+      expect(fake.windows[0]?.pageLoads()).toEqual([
+        { kind: 'url', url: APP_INDEX_URL },
+      ]);
+    },
+  );
 
   it('loads the dev server URL when not packaged with ELECTRON_RENDERER_URL set', async () => {
     const fake = start(
@@ -136,6 +139,73 @@ describe('startApp', () => {
       kind: 'url',
       url: DEV_URL,
     });
+  });
+
+  it('registers the scheme app as privileged, standard and secure, once, before the app is ready', async () => {
+    const fake = start();
+
+    expect(fake.privilegedSchemes).toEqual([
+      {
+        when: 'before-ready',
+        schemes: [
+          {
+            scheme: 'app',
+            privileges: expect.objectContaining({
+              standard: true,
+              secure: true,
+            }) as unknown,
+          },
+        ],
+      },
+    ]);
+
+    await fake.ready();
+
+    expect(fake.privilegedSchemes).toHaveLength(1);
+  });
+
+  it('registers the handler of the scheme app, once, when the app is ready', async () => {
+    const fake = start();
+
+    await fake.ready();
+
+    expect(fake.protocolHandlers).toEqual([
+      { scheme: 'app', when: 'after-ready' },
+    ]);
+  });
+
+  it('follows the startup order of the design log', async () => {
+    const fake = start();
+
+    await fake.ready();
+
+    expect(fake.startupCalls).toEqual([
+      'app.enableSandbox',
+      'protocol.registerSchemesAsPrivileged',
+      'ready',
+      'protocol.handle',
+      'new BrowserWindow',
+    ]);
+  });
+
+  it("serves the build's renderer folder through app://dashcash", async () => {
+    // A temporary app path holding an invented built page.
+    const appPath = mkdtempSync(join(tmpdir(), 'dashcash-start-app-'));
+    try {
+      const rendererFolder = join(appPath, 'out', 'renderer');
+      mkdirSync(rendererFolder, { recursive: true });
+      const page = '<!doctype html><title>Invented built page</title>';
+      writeFileSync(join(rendererFolder, 'index.html'), page);
+      const fake = start({ appPath, isPackaged: true });
+      await fake.ready();
+
+      const response = await fake.request(APP_INDEX_URL);
+
+      expect(response?.status).toBe(200);
+      expect(await response?.text()).toBe(page);
+    } finally {
+      rmSync(appPath, { recursive: true, force: true });
+    }
   });
 
   it('does not quit while a window is open', async () => {

@@ -66,6 +66,10 @@ test('Start the app', async ({ app, window }) => {
   expect(app.windows()).toHaveLength(1);
   await expect(window).toHaveTitle('DashCash');
 
+  // The App build serves its page through the App protocol, not file://
+  // (design log Q16); the path check and the 404 stay in Vitest (Q41).
+  expect(window.url()).toBe('app://dashcash/index.html');
+
   // The Secure defaults (design log Q15), as the window's web contents report
   // them in main. Electron enables these by default, so they guard against a
   // later loosening (I5).

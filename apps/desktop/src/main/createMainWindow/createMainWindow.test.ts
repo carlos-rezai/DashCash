@@ -5,7 +5,8 @@ import {
 } from '../test-support/fakeElectron/fakeElectron.ts';
 import { createMainWindow, fitWindowSize } from './createMainWindow.ts';
 
-const INDEX_FILE = '/invented/dashcash-app/out/renderer/index.html';
+// The App build's page, served through the App protocol (design log Q16).
+const APP_INDEX_URL = 'app://dashcash/index.html';
 const DEV_URL = 'http://localhost:5173';
 const LARGE_WORK_AREA: WorkArea = { x: 0, y: 0, width: 2560, height: 1400 };
 
@@ -23,7 +24,6 @@ const SECURE_WEB_PREFERENCES = {
 function create(devServerUrl?: string, workArea: WorkArea = LARGE_WORK_AREA) {
   const fake = createFakeElectron();
   const window = createMainWindow(fake.electron.BrowserWindow, {
-    indexFile: INDEX_FILE,
     devServerUrl,
     workArea,
   });
@@ -91,16 +91,16 @@ describe('createMainWindow', () => {
     expect(window?.isVisible()).toBe(true);
   });
 
-  it("loads the build's index.html as a file without a dev server", () => {
+  it('loads app://dashcash/index.html, and nothing else, without a dev server', () => {
     const { window } = create(undefined);
 
-    expect(window.loadedPage()).toEqual({ kind: 'file', path: INDEX_FILE });
+    expect(window.pageLoads()).toEqual([{ kind: 'url', url: APP_INDEX_URL }]);
   });
 
-  it('loads the dev server URL in dev', () => {
+  it('loads the dev server URL, and nothing else, in dev', () => {
     const { window } = create(DEV_URL);
 
-    expect(window.loadedPage()).toEqual({ kind: 'url', url: DEV_URL });
+    expect(window.pageLoads()).toEqual([{ kind: 'url', url: DEV_URL }]);
   });
 
   it.each([

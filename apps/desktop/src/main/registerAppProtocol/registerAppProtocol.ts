@@ -1,4 +1,4 @@
-import { isAbsolute, join, relative, resolve } from 'node:path';
+import { join, relative, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 // The App protocol (design log Q16): the scheme `app`, origin
@@ -50,11 +50,7 @@ export function resolveRendererPath(
   }
   const path = resolve(join(rendererFolder, requested));
   const fromFolder = relative(resolve(rendererFolder), path);
-  if (
-    fromFolder === '' ||
-    isAbsolute(fromFolder) ||
-    fromFolder.split(/[\\/]/).includes('..')
-  ) {
+  if (fromFolder === '' || fromFolder.split(/[\\/]/).includes('..')) {
     return undefined;
   }
   return path;

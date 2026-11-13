@@ -55,6 +55,12 @@ const REFUSED_URLS = [
     case: 'a path on another root',
     url: 'app://dashcash/%5C%5Cinvented-server%5Cshare%5Csecret.txt',
   },
+  {
+    case: 'malformed percent-encoding',
+    url: 'app://dashcash/%E0%A4%A',
+  },
+  { case: 'the renderer folder itself', url: 'app://dashcash/' },
+  { case: 'the renderer folder as a dot', url: 'app://dashcash/.' },
 ];
 
 describe('resolveRendererPath', () => {

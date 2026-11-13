@@ -1,5 +1,5 @@
 ---
-status: in-progress
+status: done
 ---
 # Secure window
 
@@ -32,17 +32,17 @@ Q15, I5).
 
 ## Acceptance criteria
 
-- [ ] A RED commit extends "Start the app" and adds the Vitest tests, and
+- [x] A RED commit extends "Start the app" and adds the Vitest tests, and
       fails on the Vitest tests.
-- [ ] `fitWindowSize` returns 1440 × 900 for larger and equal work areas
+- [x] `fitWindowSize` returns 1440 × 900 for larger and equal work areas
       and caps each side on its own for smaller ones; the window's content
       size comes from it.
-- [ ] The window's web preferences are exactly the **Secure defaults** of
+- [x] The window's web preferences are exactly the **Secure defaults** of
       Q15, `app.enableSandbox()` runs before ready, and the Vitest tests
       fail when any one is dropped or changed.
-- [ ] "Start the app" asserts context isolation and sandbox on, Node
+- [x] "Start the app" asserts context isolation and sandbox on, Node
       integration off, and no `require` or `process` in the page.
-- [ ] `npm run verify:full` is green.
+- [x] `npm run verify:full` is green.
 
 ## Blocked by
 

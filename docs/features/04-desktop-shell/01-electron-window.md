@@ -101,8 +101,9 @@ if the new member needs it to lint green.
   end-to-end run, so no test downloads Electron. Check it in CI too.
 - Electron 45.1.0 per the 14-day rule; 45.2.x/45.3.x security fixes arrive
   through Renovate once 14 days old, well before feature 20 builds the first
-  installer. The app loads only its own code over app://dashcash, so the
-  Chromium fixes do not apply to an exposed surface yet.
+  installer. The app loads only its own local files (loadFile until ticket
+  05, then app://dashcash), so the Chromium fixes do not apply to an exposed
+  surface yet.
 - `skipLibCheck` is set in `apps/desktop/tsconfig.node.json` only:
   electron-vite's type files import the optional peer `@swc/core`, which is
   not installed. No other tsconfig skips library checks.

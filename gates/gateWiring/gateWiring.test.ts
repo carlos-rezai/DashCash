@@ -18,6 +18,7 @@ type WorkflowStep = {
 type WorkflowJob = {
   if?: unknown;
   needs?: unknown;
+  env?: Record<string, unknown>;
   steps?: WorkflowStep[];
 };
 
@@ -38,9 +39,16 @@ const MUTATION_COMMANDS = ['npm ci', 'npm run test:mutation'];
 const MUTATION_REPORT_NAME = 'mutation-report';
 const MUTATION_REPORT_PATH = 'reports/mutation/mutation.html';
 const UPLOAD_ACTION = 'actions/upload-artifact';
+// The pull-request job allows the Linux sandbox with this step, then runs
+// Verify full under a virtual display; nothing passes --no-sandbox.
+const SANDBOX_STEP =
+  'sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0';
+const VIRTUAL_DISPLAY = 'xvfb-run --auto-servernum';
+const VERIFY_FULL_UNDER_DISPLAY = `${VIRTUAL_DISPLAY} npm run verify:full`;
+const NO_SANDBOX = '--no-sandbox';
 const PULL_REQUEST_COMMANDS = [
   'npm ci',
-  'npm run verify:full',
+  VERIFY_FULL_UNDER_DISPLAY,
   'npm run check:pr',
   'npm run test:mutation',
 ];
@@ -367,6 +375,50 @@ function findPullRequestMutationProblems(workflow: Workflow): string[] {
   return [];
 }
 
+function runsVerifyFull(command: string): boolean {
+  return command.includes('npm run verify:full');
+}
+
+// What the pull-request job lacks in its Linux sandbox and display wiring,
+// one line each: the sysctl step, its place before verify:full, the
+// xvfb-run wrapping, and a --no-sandbox anywhere in the job.
+function findPullRequestSandboxProblems(workflow: Workflow): string[] {
+  const problems: string[] = [];
+  const commands = jobCommands(workflow, 'pull-request');
+  const sandboxStep = commands.indexOf(SANDBOX_STEP);
+  const verifyFull = commands.findIndex(runsVerifyFull);
+  if (sandboxStep === -1) {
+    problems.push(`the pull-request job does not run ${SANDBOX_STEP}`);
+  } else if (verifyFull !== -1 && sandboxStep > verifyFull) {
+    problems.push(
+      'the pull-request job runs the sysctl step after npm run verify:full',
+    );
+  }
+  if (!commands.includes(VERIFY_FULL_UNDER_DISPLAY)) {
+    problems.push(
+      `the pull-request job does not run npm run verify:full under ${VIRTUAL_DISPLAY}`,
+    );
+  }
+  if (
+    JSON.stringify(workflow.jobs?.['pull-request'] ?? {}).includes(NO_SANDBOX)
+  ) {
+    problems.push(`the pull-request job passes ${NO_SANDBOX}`);
+  }
+  return problems;
+}
+
+// The workflow files and jobs whose commands hold `text`, as `file: job`.
+function jobsRunning(text: string): string[] {
+  return workflowFiles().flatMap((file) => {
+    const workflow = readWorkflow(file);
+    return Object.keys(workflow.jobs ?? {})
+      .filter((job) =>
+        jobCommands(workflow, job).some((command) => command.includes(text)),
+      )
+      .map((job) => `${file}: ${job}`);
+  });
+}
+
 // The workflow with the named job's steps changed by `change`.
 function withJobSteps(
   workflow: Workflow,
@@ -539,6 +591,67 @@ function withPullRequestMutationBeforeCheck(workflow: Workflow): Workflow {
   });
 }
 
+function isSandboxStep(step: WorkflowStep): boolean {
+  return (step.run ?? '').includes(SANDBOX_STEP);
+}
+
+function withoutSandboxStep(workflow: Workflow): Workflow {
+  return withJobSteps(workflow, 'pull-request', (steps) =>
+    steps.filter((step) => !isSandboxStep(step)),
+  );
+}
+
+function withSandboxStepAfterVerifyFull(workflow: Workflow): Workflow {
+  return withJobSteps(workflow, 'pull-request', (steps) => {
+    const others = steps.filter((step) => !isSandboxStep(step));
+    const verifyFull = others.findIndex((step) =>
+      runsVerifyFull(step.run ?? ''),
+    );
+    return [
+      ...others.slice(0, verifyFull + 1),
+      ...steps.filter(isSandboxStep),
+      ...others.slice(verifyFull + 1),
+    ];
+  });
+}
+
+function withoutVirtualDisplay(workflow: Workflow): Workflow {
+  return withJobSteps(workflow, 'pull-request', (steps) =>
+    steps.map((step) =>
+      step.run === undefined
+        ? step
+        : { ...step, run: step.run.replace(`${VIRTUAL_DISPLAY} `, '') },
+    ),
+  );
+}
+
+function withNoSandboxOnVerifyFull(workflow: Workflow): Workflow {
+  return withJobSteps(workflow, 'pull-request', (steps) =>
+    steps.map((step) =>
+      runsVerifyFull(step.run ?? '')
+        ? {
+            ...step,
+            env: { ...step.env, ELECTRON_EXTRA_LAUNCH_ARGS: NO_SANDBOX },
+          }
+        : step,
+    ),
+  );
+}
+
+function withNoSandboxOnJob(workflow: Workflow): Workflow {
+  const job = workflow.jobs?.['pull-request'] ?? {};
+  return {
+    ...workflow,
+    jobs: {
+      ...workflow.jobs,
+      'pull-request': {
+        ...job,
+        env: { ...job.env, ELECTRON_EXTRA_LAUNCH_ARGS: NO_SANDBOX },
+      },
+    },
+  };
+}
+
 const packageJson = JSON.parse(readRootFile('package.json')) as PackageJson;
 const pushWorkflow = readWorkflow(PUSH_WORKFLOW);
 const pullRequestWorkflow = readWorkflow(PULL_REQUEST_WORKFLOW);
@@ -624,10 +737,66 @@ describe('gate wiring', () => {
     },
   );
 
-  it('runs npm ci, npm run verify:full, npm run check:pr, then npm run test:mutation in the pull-request job', () => {
-    expect(jobCommands(pullRequestWorkflow, 'pull-request')).toEqual(
+  it('runs npm ci, npm run verify:full under xvfb-run, npm run check:pr, then npm run test:mutation in the pull-request job, beside the sysctl step', () => {
+    const commands = jobCommands(pullRequestWorkflow, 'pull-request');
+
+    expect(commands.filter((command) => command === SANDBOX_STEP)).toEqual([
+      SANDBOX_STEP,
+    ]);
+    expect(commands.filter((command) => command !== SANDBOX_STEP)).toEqual(
       PULL_REQUEST_COMMANDS,
     );
+  });
+
+  it('finds nothing missing from the sandbox and display wiring of the pull-request job', () => {
+    expect(findPullRequestSandboxProblems(pullRequestWorkflow)).toEqual([]);
+  });
+
+  it.each([
+    [
+      'its sysctl step is removed',
+      withoutSandboxStep,
+      `the pull-request job does not run ${SANDBOX_STEP}`,
+    ],
+    [
+      'its sysctl step is moved after npm run verify:full',
+      withSandboxStepAfterVerifyFull,
+      'the pull-request job runs the sysctl step after npm run verify:full',
+    ],
+    [
+      'its xvfb-run wrapping is removed',
+      withoutVirtualDisplay,
+      `the pull-request job does not run npm run verify:full under ${VIRTUAL_DISPLAY}`,
+    ],
+    [
+      'its verify:full step passes --no-sandbox',
+      withNoSandboxOnVerifyFull,
+      `the pull-request job passes ${NO_SANDBOX}`,
+    ],
+    [
+      'the job passes --no-sandbox',
+      withNoSandboxOnJob,
+      `the pull-request job passes ${NO_SANDBOX}`,
+    ],
+  ])(
+    'fails the sandbox wiring of the pull-request job when %s',
+    (_change, change, problem) => {
+      const before = findPullRequestSandboxProblems(pullRequestWorkflow);
+      const after = findPullRequestSandboxProblems(change(pullRequestWorkflow));
+
+      expect(before).toEqual([]);
+      expect(after).toEqual([problem]);
+    },
+  );
+
+  it('runs the sysctl step and xvfb-run only in the pull-request job, and --no-sandbox in no job', () => {
+    expect(jobsRunning(SANDBOX_STEP)).toEqual([
+      `${PULL_REQUEST_WORKFLOW}: pull-request`,
+    ]);
+    expect(jobsRunning(VIRTUAL_DISPLAY)).toEqual([
+      `${PULL_REQUEST_WORKFLOW}: pull-request`,
+    ]);
+    expect(jobsRunning(NO_SANDBOX)).toEqual([]);
   });
 
   it('finds nothing missing from the mutation run of the pull-request job', () => {
@@ -654,9 +823,9 @@ describe('gate wiring', () => {
     expect(added).toEqual([problem]);
   });
 
-  it('runs npm run verify:full in the pull-request job', () => {
+  it('runs npm run verify:full under xvfb-run --auto-servernum in the pull-request job', () => {
     expect(jobCommands(pullRequestWorkflow, 'pull-request')).toContain(
-      'npm run verify:full',
+      VERIFY_FULL_UNDER_DISPLAY,
     );
   });
 
@@ -680,7 +849,7 @@ describe('gate wiring', () => {
 
   it('runs npm run check:pr after npm run verify:full in the pull-request job', () => {
     const commands = jobCommands(pullRequestWorkflow, 'pull-request');
-    const verifyFull = commands.indexOf('npm run verify:full');
+    const verifyFull = commands.indexOf(VERIFY_FULL_UNDER_DISPLAY);
 
     expect(verifyFull).toBeGreaterThanOrEqual(0);
     expect(commands.indexOf('npm run check:pr')).toBeGreaterThan(verifyFull);

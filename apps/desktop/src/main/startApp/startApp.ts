@@ -9,9 +9,14 @@ import {
   registerAppProtocol,
   type AppProtocolElectron,
 } from '../registerAppProtocol/registerAppProtocol.ts';
+import {
+  hardenSession,
+  type HardenSessionElectron,
+} from '../hardenSession/hardenSession.ts';
+import { listAppOrigins } from '../matchAppOrigin/matchAppOrigin.ts';
 import { readDevServerUrl } from '../readDevServerUrl/readDevServerUrl.ts';
 
-type App = {
+type App = HardenSessionElectron['app'] & {
   readonly isPackaged: boolean;
   getAppPath(): string;
   whenReady(): Promise<void>;
@@ -30,12 +35,14 @@ export type ElectronParts<Window extends MainWindow> = {
   screen: Screen;
   protocol: AppProtocolElectron['protocol'];
   net: AppProtocolElectron['net'];
+  session: HardenSessionElectron['session'];
 };
 
-// Registers the App protocol, opens the main window once the app is ready
-// and quits when the last window closes. Electron's default menu stays.
+// Registers the App protocol; once the app is ready, hardens the session and
+// opens the main window. Quits when the last window closes. Electron's default
+// menu stays.
 export function startApp<Window extends MainWindow>(
-  { app, BrowserWindow, screen, protocol, net }: ElectronParts<Window>,
+  { app, BrowserWindow, screen, protocol, net, session }: ElectronParts<Window>,
   env: Readonly<Record<string, string | undefined>>,
 ): void {
   app.enableSandbox();
@@ -47,8 +54,10 @@ export function startApp<Window extends MainWindow>(
     app.quit();
   });
   void app.whenReady().then(() => {
+    const devServerUrl = readDevServerUrl(app, env);
+    hardenSession({ app, session }, listAppOrigins(devServerUrl));
     createMainWindow(BrowserWindow, {
-      devServerUrl: readDevServerUrl(app, env),
+      devServerUrl,
       workArea: screen.getPrimaryDisplay().workArea,
     });
   });

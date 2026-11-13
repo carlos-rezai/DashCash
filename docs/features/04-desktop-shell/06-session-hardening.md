@@ -1,5 +1,5 @@
 ---
-status: in-progress
+status: done
 ---
 # Session hardening
 
@@ -29,17 +29,17 @@ design log Q15, I1, I2).
 
 ## Acceptance criteria
 
-- [ ] A RED commit adds the Vitest tests and fails on them.
-- [ ] The origin matcher accepts the **App origins** only; look-alike
+- [x] A RED commit adds the Vitest tests and fails on them.
+- [x] The origin matcher accepts the **App origins** only; look-alike
       hosts (`app://dashcash.evil`, `app://evil-dashcash`), other schemes
       and other ports are refused.
-- [ ] The dev server's origin is an **App origin** only when unpackaged
+- [x] The dev server's origin is an **App origin** only when unpackaged
       with `ELECTRON_RENDERER_URL` set.
-- [ ] Same-origin navigation is allowed; `will-navigate` and
+- [x] Same-origin navigation is allowed; `will-navigate` and
       `will-redirect` off-origin are prevented; window opens are denied;
       `will-attach-webview` is prevented; every permission request and
       check is denied.
-- [ ] `npm run verify:full` is green.
+- [x] `npm run verify:full` is green.
 
 ## Blocked by
 

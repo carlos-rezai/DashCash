@@ -99,6 +99,10 @@ if the new member needs it to lint green.
 - npm install did not download the Electron binary; the first run did.
   Make sure the binary is in place after npm ci, before any test or
   end-to-end run, so no test downloads Electron. Check it in CI too.
+- Electron 45.1.0 per the 14-day rule; 45.2.x/45.3.x security fixes arrive
+  through Renovate once 14 days old, well before feature 20 builds the first
+  installer. The app loads only its own code over app://dashcash, so the
+  Chromium fixes do not apply to an exposed surface yet.
 
 ## Blocked by
 

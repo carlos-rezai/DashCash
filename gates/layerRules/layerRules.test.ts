@@ -527,6 +527,24 @@ describe('dependency-cruiser config', { timeout: 60_000 }, () => {
     });
   });
 
+  describe('the App build in apps/desktop/out/ is not cruised', () => {
+    it('leaves out every file under apps/desktop/out/ and cruises the source', async () => {
+      const builtMain = 'apps/desktop/out/main/main.js';
+      const builtChunk = 'apps/desktop/out/main/chunk.js';
+
+      const { modules } = await cruiseTree({
+        ...importTree(builtMain, builtChunk),
+        [MAIN]: LEAF,
+      });
+      const sources = modules.map((module) => module.source);
+
+      expect(sources, 'the source file beside the build').toContain(MAIN);
+      expect(
+        sources.filter((source) => source.startsWith('apps/desktop/out/')),
+      ).toEqual([]);
+    });
+  });
+
   describe('lint:deps', () => {
     function writeGateTree(tree: Tree): void {
       writeTree(root, {

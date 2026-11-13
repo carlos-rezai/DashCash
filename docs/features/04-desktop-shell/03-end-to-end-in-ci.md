@@ -1,5 +1,5 @@
 ---
-status: in-progress
+status: done
 ---
 # End-to-end tests in CI
 
@@ -32,15 +32,21 @@ and `gates/gateWiring/gateWiring.test.ts`.
 
 ## Acceptance criteria
 
-- [ ] A RED commit holds the gate wiring test changes and fails on them.
-- [ ] The `pull-request` job runs the sysctl step before `verify:full`,
+- [x] A RED commit holds the gate wiring test changes and fails on them.
+- [x] The `pull-request` job runs the sysctl step before `verify:full`,
       runs `verify:full` under `xvfb-run --auto-servernum`, keeps the order
       `npm ci`, `verify:full`, `check:pr`, `test:mutation`, and never
       passes `--no-sandbox`.
-- [ ] The wiring test names each missing piece: the sysctl step, its
+- [x] The wiring test names each missing piece: the sysctl step, its
       place, the `xvfb-run` wrapping, a `--no-sandbox` anywhere in the job.
-- [ ] The push workflow is unchanged.
-- [ ] `npm run verify` is green.
+- [x] The push workflow is unchanged.
+- [x] `npm run verify` is green.
+
+## Notes
+
+- `gates/ruleset/ruleset.test.ts` pins the wrapped command exactly,
+  `xvfb-run --auto-servernum npm run verify:full` (approved by the human
+  for this ticket).
 
 ## Blocked by
 

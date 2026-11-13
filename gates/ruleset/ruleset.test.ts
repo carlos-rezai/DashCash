@@ -172,7 +172,7 @@ describe('the Ruleset wiring', () => {
     );
     const commands = job === undefined ? [] : jobCommands(workflow, job);
 
-    expect(commands).toContain('npm run verify:full');
+    expect(commands).toContain('xvfb-run --auto-servernum npm run verify:full');
     expect(commands).toContain('npm run check:pr');
   });
 

@@ -838,3 +838,24 @@ Alternatives:
   what they are called; the names follow the verb-first module names of
   `scripts/` (`readTickets`, `readFeatureFolders`) and
   `docs/conventions.md`, Naming.
+
+## Implementation Results
+
+Deviations the human set before the build, 2026-11-13. They supersede the
+answers named; those answers stay as they were written.
+
+- **D1. `node:sqlite` is proven in Electron's own Node before it is built
+  on** (corrects the reason in Q31 and the Background line on
+  `node:sqlite`; the choice of driver in Q31 stands). On 2026-11-13 the
+  tooling's Node 24.14.0 loads `node:sqlite` without a flag but prints
+  `ExperimentalWarning: SQLite is an experimental feature and might change
+  at any time`: the module is experimental in Node 24, not only "in
+  development", and that it runs unchanged in Electron's main process
+  rests on an Electron pull request, not on a run. Ticket 11 therefore
+  first runs the pinned Electron with `ELECTRON_RUN_AS_NODE=1` and checks,
+  in a test of its own, that `node:sqlite` loads and opens an in-memory
+  database without an experimental warning and without a flag. Should it
+  fail, the driver becomes `better-sqlite3`, rebuilt for Electron, and
+  every doc that names `node:sqlite` (Q31 through a further deviation
+  here, `plan.md`, `prd.md`, tickets 11 and 12) is updated, recorded as a
+  deviation from Q51.

@@ -558,8 +558,16 @@ describe('gate wiring', () => {
     }
   });
 
-  it('runs verify from verify:full', () => {
-    expect(chainedCommands(scripts['verify:full'])).toContain('npm run verify');
+  it('runs exactly verify, the App build, then the end-to-end tests from verify:full, failing fast', () => {
+    expect(chainedCommands(scripts['verify:full'])).toEqual([
+      'npm run verify',
+      'npm run build',
+      'npm run test:e2e',
+    ]);
+  });
+
+  it('runs the end-to-end tests with Playwright from test:e2e', () => {
+    expect(scripts['test:e2e']).toBe('playwright test');
   });
 
   it('keeps every npm script free of command substitution, pipes and globs', () => {

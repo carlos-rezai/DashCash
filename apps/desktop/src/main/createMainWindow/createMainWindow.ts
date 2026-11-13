@@ -1,5 +1,8 @@
 export const WINDOW_TITLE = 'DashCash';
 
+// The App build's page, served through the App protocol.
+const APP_INDEX_URL = 'app://dashcash/index.html';
+
 const WINDOW_WIDTH = 1440;
 const WINDOW_HEIGHT = 900;
 
@@ -20,7 +23,6 @@ const SECURE_WEB_PREFERENCES = {
 export type MainWindow = {
   once(event: 'ready-to-show', listener: () => void): unknown;
   show(): void;
-  loadFile(path: string): Promise<void>;
   loadURL(url: string): Promise<void>;
 };
 
@@ -38,8 +40,6 @@ export type MainWindowConstructor<Window extends MainWindow> = new (options: {
 }) => Window;
 
 export type MainWindowOptions = {
-  // The built renderer page, loaded as a file.
-  indexFile: string;
   // Set in dev: the page comes from the dev server instead.
   devServerUrl: string | undefined;
   // The primary display's work area, which caps the window's size.
@@ -56,7 +56,7 @@ export function fitWindowSize(workArea: WorkArea): WindowSize {
 
 export function createMainWindow<Window extends MainWindow>(
   BrowserWindow: MainWindowConstructor<Window>,
-  { indexFile, devServerUrl, workArea }: MainWindowOptions,
+  { devServerUrl, workArea }: MainWindowOptions,
 ): Window {
   const window = new BrowserWindow({
     show: false,
@@ -69,7 +69,7 @@ export function createMainWindow<Window extends MainWindow>(
     window.show();
   });
   if (devServerUrl === undefined) {
-    void window.loadFile(indexFile);
+    void window.loadURL(APP_INDEX_URL);
   } else {
     void window.loadURL(devServerUrl);
   }

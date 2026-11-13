@@ -29,15 +29,15 @@ The **App build** serves its page from `app://dashcash` instead of
 
 ## Acceptance criteria
 
-- [ ] A RED commit adds the Vitest tests and fails on them.
-- [ ] `resolveRendererPath` serves files inside the renderer folder and
+- [x] A RED commit adds the Vitest tests and fails on them.
+- [x] `resolveRendererPath` serves files inside the renderer folder and
       returns `undefined` for `..`, encoded `..`, absolute paths and paths
       on another drive or root; the handler answers those with 404.
-- [ ] The scheme is registered privileged, standard and secure before
+- [x] The scheme is registered privileged, standard and secure before
       ready; the handler is registered when ready.
-- [ ] The **App build** loads `app://dashcash/index.html`; dev loads the
+- [x] The **App build** loads `app://dashcash/index.html`; dev loads the
       dev server URL; no file load remains.
-- [ ] `npm run verify:full` is green.
+- [x] `npm run verify:full` is green.
 
 ## Blocked by
 

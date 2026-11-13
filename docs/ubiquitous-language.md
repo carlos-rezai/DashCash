@@ -92,6 +92,7 @@
 | **Bridge** (new) | The object `window.dashcash` the **Preload** exposes; its `invoke` sends a request on a **Channel** the **Contract** lists and refuses any other. | ipcRenderer, preload API |
 | **Sender check** (new) | The **Main process** refusing an IPC request whose frame is not on the app's origin, before any handler runs. | Origin check, auth |
 | **App protocol** (new) | The custom scheme `app://dashcash` that serves the built **Renderer** files and nothing outside their folder. | File URL, local server |
+| **App origins** (new) | The origins the app trusts as its own: `app://dashcash` in an **App build**, the dev server's origin in `npm run dev`. | Allowed hosts, whitelist |
 | **CSP** (new) | The Content Security Policy meta tag in the **Renderer**'s HTML, listing every source the page may load; anything unlisted is blocked. | Security header |
 | **Secure defaults** (new) | The Electron security settings every window and session gets: sandbox and context isolation on, Node integration off, navigation, new windows, webviews and permissions refused. | Hardening flags |
 | **Data folder** (new) | The folder holding the **Database** and the imported CSVs: Electron's `userData` (`%APPDATA%\DashCash` on Windows), or the folder in `DASHCASH_DATA_FOLDER` when set. | App data, profile, database folder |

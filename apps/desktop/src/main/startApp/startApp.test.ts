@@ -14,6 +14,9 @@ const DEV_URL = 'http://localhost:5173';
 // The build's page, served through the App protocol (design log Q16).
 const APP_INDEX_URL = 'app://dashcash/index.html';
 
+// The App build's preload: one CommonJS file (A2).
+const PRELOAD_PATH = join(APP_PATH, 'out', 'preload', 'preload.cjs');
+
 function start(
   options: FakeElectronOptions = {},
   env: Record<string, string | undefined> = {},
@@ -75,7 +78,7 @@ describe('startApp', () => {
     },
   );
 
-  it('gives the window the web preferences of the Secure defaults', async () => {
+  it("gives the window the web preferences of the Secure defaults and the App build's preload", async () => {
     const fake = start();
 
     await fake.ready();
@@ -88,7 +91,32 @@ describe('startApp', () => {
       allowRunningInsecureContent: false,
       webviewTag: false,
       spellcheck: false,
+      preload: PRELOAD_PATH,
     });
+  });
+
+  it('registers one IPC handler per Channel when the app is ready, none before', async () => {
+    const fake = start();
+
+    expect(fake.ipcHandlers).toEqual([]);
+
+    await fake.ready();
+
+    expect(fake.ipcHandlers).toEqual([
+      { channel: 'app:info', when: 'after-ready' },
+    ]);
+  });
+
+  it("answers the page's app:info with the App version, ignoring what the page sends", async () => {
+    const fake = start({ version: '4.5.6-invented' });
+    await fake.ready();
+
+    await expect(fake.invoke('app:info')).resolves.toStrictEqual({
+      version: '4.5.6-invented',
+    });
+    await expect(
+      fake.invoke('app:info', { version: '6.6.6-forged' }),
+    ).resolves.toStrictEqual({ version: '4.5.6-invented' });
   });
 
   it('keeps the window hidden until ready-to-show, then shows it', async () => {
@@ -185,7 +213,7 @@ describe('startApp', () => {
     await fake.ready();
 
     // The protocol handler, then the session's permission handlers (in
-    // either order), then the window.
+    // either order), then the IPC handlers, then the window.
     const calls = fake.startupCalls;
     expect(calls.slice(0, 4)).toEqual([
       'app.enableSandbox',
@@ -197,7 +225,7 @@ describe('startApp', () => {
       'session.setPermissionCheckHandler',
       'session.setPermissionRequestHandler',
     ]);
-    expect(calls.slice(6)).toEqual(['new BrowserWindow']);
+    expect(calls.slice(6)).toEqual(['ipcMain.handle', 'new BrowserWindow']);
   });
 
   describe('session hardening', () => {

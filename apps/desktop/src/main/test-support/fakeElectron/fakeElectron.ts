@@ -3,7 +3,8 @@ import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 
 // A fake of the Electron objects main's modules take as parameters (A1):
-// `app`, `BrowserWindow`, `Menu`, `screen`, `protocol`, `net` and `session`.
+// `app`, `BrowserWindow`, `Menu`, `screen`, `protocol`, `net`, `session` and
+// `ipcMain`.
 // It records what a module does with them (windows created, shown, loaded,
 // closed; quits; menu changes; the sandbox enabled; schemes and protocol
 // handlers registered; the order of the startup calls) so a test can assert
@@ -11,11 +12,14 @@ import { fileURLToPath } from 'node:url';
 // disk, as Electron's does. Its web contents and default session act as the
 // page would (navigate, redirect, open a window, attach a webview, ask for a
 // permission) and answer as Electron does: allowed unless a listener or
-// handler says otherwise.
+// handler says otherwise. Its `invoke` sends a request on a channel as the
+// page's `ipcRenderer.invoke` would, and settles as Electron settles it.
 
 export type FakeElectronOptions = {
   isPackaged?: boolean;
   appPath?: string;
+  // What `app.getVersion()` returns; an invented version unless given.
+  version?: string;
   // The primary display's work area; larger than 1440 × 900 unless given.
   workArea?: WorkArea;
 };
@@ -56,7 +60,26 @@ export type StartupCall =
   | 'protocol.handle'
   | 'session.setPermissionRequestHandler'
   | 'session.setPermissionCheckHandler'
+  | 'ipcMain.handle'
   | 'new BrowserWindow';
+
+// The event Electron hands an `ipcMain.handle` listener: the frame that sent
+// the request.
+export type FakeIpcMainInvokeEvent = {
+  senderFrame: { url: string; origin: string } | null;
+};
+
+export type IpcMainHandler = (
+  event: FakeIpcMainInvokeEvent,
+  ...args: unknown[]
+) => unknown;
+
+// One call of `ipcMain.handle`.
+export type IpcHandlerCall = { channel: string; when: ReadyPhase };
+
+type FakeIpcMain = {
+  handle(channel: string, listener: IpcMainHandler): void;
+};
 
 // What Electron does with a navigation, a redirect or a webview: it goes
 // ahead unless a listener calls `event.preventDefault()`.
@@ -149,6 +172,7 @@ export type FakeElectron = {
     protocol: FakeProtocol;
     net: FakeNet;
     session: { defaultSession: FakeSession };
+    ipcMain: FakeIpcMain;
   };
   app: FakeApp;
   // Every window created, in order, closed ones included.
@@ -163,6 +187,14 @@ export type FakeElectron = {
   protocolHandlers: ProtocolHandlerCall[];
   // The startup calls, in the order they happened.
   startupCalls: StartupCall[];
+  // Every call of `ipcMain.handle`, in order.
+  ipcHandlers: IpcHandlerCall[];
+  // The page at app://dashcash/index.html calls `ipcRenderer.invoke(channel,
+  // ...args)`. As in Electron, it resolves with what the channel's handler
+  // returns or resolves, rejects with "Error invoking remote method" and the
+  // handler's error when it throws or rejects, and rejects when no handler is
+  // registered for the channel.
+  invoke(channel: string, ...args: unknown[]): Promise<unknown>;
   // Sends a request for `url` to the handler registered for its scheme, as
   // the page would; `undefined` when no handler is registered for it.
   request(url: string): Promise<Response | undefined>;
@@ -194,6 +226,7 @@ export type FakeElectron = {
 type FakeApp = EventEmitter & {
   readonly isPackaged: boolean;
   getAppPath(): string;
+  getVersion(): string;
   isReady(): boolean;
   whenReady(): Promise<void>;
   enableSandbox(): void;
@@ -220,6 +253,11 @@ type FakeNet = {
 };
 
 const DEFAULT_APP_PATH = '/invented/dashcash-app';
+const DEFAULT_VERSION = '0.0.0-invented';
+
+// The page the fake's `invoke` sends from.
+const PAGE_URL = 'app://dashcash/index.html';
+const PAGE_ORIGIN = 'app://dashcash';
 const DEFAULT_WORK_AREA: WorkArea = { x: 0, y: 0, width: 1920, height: 1040 };
 
 function flushPromises(): Promise<void> {
@@ -238,6 +276,8 @@ export function createFakeElectron(
   const protocolHandlers: ProtocolHandlerCall[] = [];
   const handlers = new Map<string, ProtocolHandler>();
   const startupCalls: StartupCall[] = [];
+  const ipcHandlers: IpcHandlerCall[] = [];
+  const ipcListeners = new Map<string, IpcMainHandler>();
   let quits = 0;
   let isReady = false;
   let resolveReady: () => void = () => undefined;
@@ -252,6 +292,7 @@ export function createFakeElectron(
   const app = Object.assign(new EventEmitter(), {
     isPackaged: options.isPackaged ?? false,
     getAppPath: () => options.appPath ?? DEFAULT_APP_PATH,
+    getVersion: () => options.version ?? DEFAULT_VERSION,
     isReady: () => isReady,
     whenReady: () => readyPromise,
     enableSandbox: () => {
@@ -497,6 +538,42 @@ export function createFakeElectron(
     },
   };
 
+  // Electron allows one handler per channel and refuses a second.
+  const ipcMain: FakeIpcMain = {
+    handle: (channel, listener) => {
+      if (ipcListeners.has(channel)) {
+        throw new Error(
+          `Attempted to register a second handler for '${channel}'`,
+        );
+      }
+      startupCalls.push('ipcMain.handle');
+      ipcHandlers.push({ channel, when: readyPhase() });
+      ipcListeners.set(channel, listener);
+    },
+  };
+
+  // Electron runs the listener in main and hands the page its result; an
+  // error crosses as its string, prefixed with the channel.
+  async function invoke(channel: string, ...args: unknown[]): Promise<unknown> {
+    const listener = ipcListeners.get(channel);
+    if (listener === undefined) {
+      throw new Error(
+        `Error invoking remote method '${channel}': Error: No handler registered for '${channel}'`,
+      );
+    }
+    try {
+      return await listener(
+        { senderFrame: { url: PAGE_URL, origin: PAGE_ORIGIN } },
+        ...args,
+      );
+    } catch (error) {
+      throw new Error(
+        `Error invoking remote method '${channel}': ${String(error)}`,
+        { cause: error },
+      );
+    }
+  }
+
   return {
     electron: {
       app,
@@ -506,6 +583,7 @@ export function createFakeElectron(
       protocol,
       net,
       session: { defaultSession },
+      ipcMain,
     },
     app,
     windows,
@@ -514,6 +592,8 @@ export function createFakeElectron(
     privilegedSchemes,
     protocolHandlers,
     startupCalls,
+    ipcHandlers,
+    invoke,
     request: async (url) => {
       const scheme = url.slice(0, url.indexOf(':'));
       const handler = handlers.get(scheme);

@@ -9,6 +9,7 @@ import { createMainWindow, fitWindowSize } from './createMainWindow.ts';
 const APP_INDEX_URL = 'app://dashcash/index.html';
 const DEV_URL = 'http://localhost:5173';
 const LARGE_WORK_AREA: WorkArea = { x: 0, y: 0, width: 2560, height: 1400 };
+const PRELOAD_PATH = '/invented/dashcash-app/out/preload/preload.cjs';
 
 // The Secure defaults' web preferences, exactly those of design log Q15.
 const SECURE_WEB_PREFERENCES = {
@@ -26,6 +27,7 @@ function create(devServerUrl?: string, workArea: WorkArea = LARGE_WORK_AREA) {
   const window = createMainWindow(fake.electron.BrowserWindow, {
     devServerUrl,
     workArea,
+    preloadPath: PRELOAD_PATH,
   });
   return { fake, window };
 }
@@ -132,10 +134,22 @@ describe('createMainWindow', () => {
     },
   );
 
-  it('sets exactly the web preferences of the Secure defaults', () => {
+  it('loads the preload it is given, with the sandbox on', () => {
     const { window } = create();
 
-    expect(window.options.webPreferences).toEqual(SECURE_WEB_PREFERENCES);
+    expect(window.options.webPreferences).toMatchObject({
+      preload: PRELOAD_PATH,
+      sandbox: true,
+    });
+  });
+
+  it('sets exactly the web preferences of the Secure defaults and the preload', () => {
+    const { window } = create();
+
+    expect(window.options.webPreferences).toEqual({
+      ...SECURE_WEB_PREFERENCES,
+      preload: PRELOAD_PATH,
+    });
   });
 
   it('leaves the menu alone', () => {

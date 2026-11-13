@@ -1,8 +1,21 @@
 import type { ChildProcess } from 'node:child_process';
-import { existsSync, statSync } from 'node:fs';
+import { existsSync, readFileSync, statSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { isAbsolute, relative } from 'node:path';
+import type { DashCashBridge } from '@dashcash/contract';
 import { expect, test } from './test-support/appFixture/appFixture.ts';
+
+// The desktop member's manifest, whose version is the App version.
+const DESKTOP_MANIFEST = new URL(
+  '../apps/desktop/package.json',
+  import.meta.url,
+);
+
+// The App build's preload: one CommonJS file with the Contract bundled (A2).
+const BUILT_PRELOAD = new URL(
+  '../apps/desktop/out/preload/preload.cjs',
+  import.meta.url,
+);
 
 // The User flow "Start the app" (design log Q40): on a fresh Data folder the
 // App build opens exactly one window, titled "DashCash", with context
@@ -129,4 +142,51 @@ test('Start the app', async ({ app, window }) => {
     }
   });
   expect(evalOutcome, 'the CSP blocks eval in the page').toBe('blocked');
+
+  // The Bridge (design log Q21, A2): the Preload exposes `dashcash` with
+  // `invoke` and nothing else, never `ipcRenderer`. The sandbox is on (above),
+  // so the page has a Bridge only if the preload is CommonJS and requires
+  // nothing but electron.
+  const exposed = await window.evaluate(() => {
+    const dashcash: unknown = Reflect.get(window, 'dashcash');
+    return {
+      dashcash:
+        typeof dashcash === 'object' && dashcash !== null
+          ? Object.keys(dashcash)
+          : typeof dashcash,
+      ipcRenderer: 'ipcRenderer' in window,
+      electron: 'electron' in window,
+    };
+  });
+  expect(exposed).toEqual({
+    dashcash: ['invoke'],
+    ipcRenderer: false,
+    electron: false,
+  });
+
+  expect(existsSync(BUILT_PRELOAD), 'the App build emits preload.cjs').toBe(
+    true,
+  );
+  const preloadSource = readFileSync(BUILT_PRELOAD, 'utf8');
+  const required = Array.from(
+    preloadSource.matchAll(/\brequire\(\s*["']([^"']+)["']\s*\)/g),
+    (match) => match[1],
+  );
+  expect(
+    [...new Set(required)],
+    'the preload requires only electron, with the Contract bundled',
+  ).toEqual(['electron']);
+
+  // The first Channel answers with the App version, read from the desktop
+  // member's manifest, never a literal.
+  const { version } = JSON.parse(readFileSync(DESKTOP_MANIFEST, 'utf8')) as {
+    version: string;
+  };
+  const appInfo = await window.evaluate(() =>
+    (window as unknown as { dashcash: DashCashBridge }).dashcash.invoke(
+      'app:info',
+      undefined,
+    ),
+  );
+  expect(appInfo).toEqual({ version });
 });

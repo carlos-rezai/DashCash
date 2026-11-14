@@ -28,7 +28,7 @@ type PageView = {
 };
 
 function asPage(bridge: DashCashBridge): PageView {
-  return bridge as unknown as PageView;
+  return bridge;
 }
 
 describe('createBridge', () => {

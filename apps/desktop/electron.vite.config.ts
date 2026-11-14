@@ -10,6 +10,15 @@ export default defineConfig({
       },
     },
   },
+  preload: {
+    build: {
+      outDir: 'out/preload',
+      rollupOptions: {
+        input: resolve(import.meta.dirname, 'src/preload/preload.ts'),
+        output: { format: 'cjs', entryFileNames: 'preload.cjs' },
+      },
+    },
+  },
   renderer: {
     root: resolve(import.meta.dirname, 'src/renderer'),
     build: {

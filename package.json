@@ -14,7 +14,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "eslint . --max-warnings 0",
-    "typecheck": "tsc && tsc -p apps/desktop/tsconfig.node.json && tsc -p apps/desktop/tsconfig.web.json",
+    "typecheck": "tsc && tsc -p apps/desktop/tsconfig.node.json && tsc -p apps/desktop/tsconfig.web.json && tsc -p packages/contract/tsconfig.json",
     "dev": "npm run dev -w @dashcash/desktop",
     "build": "npm run build -w @dashcash/desktop",
     "lint:deps": "depcruise --config .dependency-cruiser.js apps packages scripts e2e",

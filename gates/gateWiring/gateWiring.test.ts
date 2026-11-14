@@ -82,7 +82,7 @@ const GATE_COMMANDS: Record<string, string> = {
   'format:check': 'prettier --check .',
   lint: 'eslint . --max-warnings 0',
   typecheck:
-    'tsc && tsc -p apps/desktop/tsconfig.node.json && tsc -p apps/desktop/tsconfig.web.json',
+    'tsc && tsc -p apps/desktop/tsconfig.node.json && tsc -p apps/desktop/tsconfig.web.json && tsc -p packages/contract/tsconfig.json',
   'lint:deps':
     'depcruise --config .dependency-cruiser.js apps packages scripts e2e',
   test: 'vitest run',

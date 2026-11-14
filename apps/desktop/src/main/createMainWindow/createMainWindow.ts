@@ -36,7 +36,7 @@ export type MainWindowConstructor<Window extends MainWindow> = new (options: {
   width: number;
   height: number;
   useContentSize: boolean;
-  webPreferences: typeof SECURE_WEB_PREFERENCES;
+  webPreferences: typeof SECURE_WEB_PREFERENCES & { preload: string };
 }) => Window;
 
 export type MainWindowOptions = {
@@ -44,6 +44,8 @@ export type MainWindowOptions = {
   devServerUrl: string | undefined;
   // The primary display's work area, which caps the window's size.
   workArea: WorkArea;
+  // The App build's preload: one CommonJS file.
+  preloadPath: string;
 };
 
 // 1440 x 900, each side capped on its own at the work area.
@@ -56,14 +58,14 @@ export function fitWindowSize(workArea: WorkArea): WindowSize {
 
 export function createMainWindow<Window extends MainWindow>(
   BrowserWindow: MainWindowConstructor<Window>,
-  { devServerUrl, workArea }: MainWindowOptions,
+  { devServerUrl, workArea, preloadPath }: MainWindowOptions,
 ): Window {
   const window = new BrowserWindow({
     show: false,
     title: WINDOW_TITLE,
     ...fitWindowSize(workArea),
     useContentSize: true,
-    webPreferences: SECURE_WEB_PREFERENCES,
+    webPreferences: { ...SECURE_WEB_PREFERENCES, preload: preloadPath },
   });
   window.once('ready-to-show', () => {
     window.show();

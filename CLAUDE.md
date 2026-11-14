@@ -15,6 +15,7 @@ Read when relevant: `docs/quality-gates.md` before adding or changing a gate, `d
 
 - Before changing gate files: `.github/`, `gates/`, `eslint.config.*`, `.prettierrc*`, `tsconfig*.json`, `.dependency-cruiser.*`, `vitest*.config.*`, `playwright.config.*`, `stryker.config.*`, `quality/`, and the `verify*` / `test*` scripts.
   - Exception: a ticket whose What to build or Acceptance criteria name a gate file is the approval to create or change exactly that file, for that ticket only. Every other change to a gate file still needs asking.
+  - A ticket that approves a gate file also approves updating a gate test that pins that file's content, but only to pin the new content exactly. Never loosen a check this way: a pin may change, a check may not become weaker.
 - Before changing anything under `.claude/`: skills, agents, hooks, `settings.json`. A ticket never counts as approval for `.claude/`.
 - Before adding `eslint-disable`, `@ts-ignore`, `@ts-expect-error`, `.skip`, `.only` or a retry.
 - Before a larger change: write a short plan and wait.
@@ -29,6 +30,8 @@ npm run dev | storybook | test | test:stories | test:e2e | verify | verify:full
 Run tools only through these scripts or `node_modules/.bin`, never `npx`.
 
 Search files with the Grep and Glob tools, not with grep, find or Select-String in Bash.
+
+Edit files with the Edit and Write tools, not with sed or shell redirection in Bash.
 
 ## Architecture
 

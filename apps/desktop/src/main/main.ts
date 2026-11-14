@@ -1,6 +1,7 @@
 import {
   app,
   BrowserWindow,
+  dialog,
   ipcMain,
   net,
   protocol,
@@ -10,6 +11,6 @@ import {
 import { startApp } from './startApp/startApp.ts';
 
 startApp(
-  { app, BrowserWindow, screen, protocol, net, session, ipcMain },
+  { app, BrowserWindow, screen, protocol, net, session, ipcMain, dialog },
   process.env,
 );

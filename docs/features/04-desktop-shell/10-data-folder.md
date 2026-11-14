@@ -1,5 +1,5 @@
 ---
-status: in-progress
+status: done
 ---
 # Data folder
 
@@ -35,17 +35,17 @@ Q34, A4, A5, P1). The **Database** in that folder follows in
 
 ## Acceptance criteria
 
-- [ ] A RED commit adds the Vitest tests and fails on them.
-- [ ] `resolveDataFolder` returns `userData` when the variable is unset or
+- [x] A RED commit adds the Vitest tests and fails on them.
+- [x] `resolveDataFolder` returns `userData` when the variable is unset or
       empty, the path when it is absolute, and the cause
       `DASHCASH_DATA_FOLDER must be an absolute path.` when it is
       relative.
-- [ ] The startup tests show the override setting `userData` before ready,
+- [x] The startup tests show the override setting `userData` before ready,
       the folder created when ready, and a relative override or a failing
       folder ending in the **Startup error** with no window created.
-- [ ] `showStartupError` shows "DashCash couldn't start" with the cause, a
+- [x] `showStartupError` shows "DashCash couldn't start" with the cause, a
       blank line and `Data folder: <path>`, then quits.
-- [ ] `npm run verify:full` is green.
+- [x] `npm run verify:full` is green.
 
 ## Blocked by
 

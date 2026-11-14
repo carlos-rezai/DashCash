@@ -70,8 +70,13 @@ export function startApp<Window extends MainWindow>(
   });
   void app.whenReady().then(() => {
     const devServerUrl = readDevServerUrl(app, env);
-    hardenSession({ app, session }, listAppOrigins(devServerUrl));
-    registerIpcHandlers(ipcMain, { 'app:info': () => getAppInfo(app) });
+    const origins = listAppOrigins(devServerUrl);
+    hardenSession({ app, session }, origins);
+    registerIpcHandlers(
+      ipcMain,
+      { 'app:info': () => getAppInfo(app) },
+      origins,
+    );
     createMainWindow(BrowserWindow, {
       devServerUrl,
       workArea: screen.getPrimaryDisplay().workArea,

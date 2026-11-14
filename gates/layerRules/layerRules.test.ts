@@ -367,6 +367,38 @@ describe('dependency-cruiser config', { timeout: 60_000 }, () => {
     });
   });
 
+  describe('only main/db/ imports node:sqlite', () => {
+    it.each([
+      [
+        'a main/db/ file',
+        'apps/desktop/src/main/db/openDatabase/openDatabase.ts',
+      ],
+      [
+        'a main/db/ test',
+        'apps/desktop/src/main/db/migrateDatabase/migrateDatabase.test.ts',
+      ],
+    ])('allows %s to import node:sqlite', async (_kind, from) => {
+      await expectAllowed(importTree(from, 'node:sqlite'));
+    });
+
+    it.each([
+      ['a main file outside main/db/', MAIN],
+      [
+        'a main test outside main/db/',
+        'apps/desktop/src/main/startApp/startApp.test.ts',
+      ],
+      ['the renderer', RENDERER_FILE],
+      ['the preload', PRELOAD],
+      ['an e2e/ file', 'e2e/start-app.spec.ts'],
+    ])('forbids %s to import node:sqlite', async (_kind, from) => {
+      await expectForbidden(
+        importTree(from, 'node:sqlite'),
+        from,
+        'node:sqlite',
+      );
+    });
+  });
+
   describe('test-support/ is imported only by tests', () => {
     it.each([
       ['a test', 'apps/desktop/src/renderer/components/Meter/Meter.test.tsx'],

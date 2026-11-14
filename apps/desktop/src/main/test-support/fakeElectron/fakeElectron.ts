@@ -1,13 +1,15 @@
 import { EventEmitter } from 'node:events';
 import { readFile } from 'node:fs/promises';
+import { isAbsolute } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 // A fake of the Electron objects main's modules take as parameters (A1):
-// `app`, `BrowserWindow`, `Menu`, `screen`, `protocol`, `net`, `session` and
-// `ipcMain`.
+// `app`, `BrowserWindow`, `Menu`, `screen`, `protocol`, `net`, `session`,
+// `ipcMain` and `dialog`.
 // It records what a module does with them (windows created, shown, loaded,
 // closed; quits; menu changes; the sandbox enabled; schemes and protocol
-// handlers registered; the order of the startup calls) so a test can assert
+// handlers registered; paths set; error boxes shown; the order of the
+// startup calls) so a test can assert
 // behaviour without Electron. Its `net.fetch` serves `file:` URLs from the
 // disk, as Electron's does. Its web contents and default session act as the
 // page would (navigate, redirect, open a window, attach a webview, ask for a
@@ -22,7 +24,17 @@ export type FakeElectronOptions = {
   version?: string;
   // The primary display's work area; larger than 1440 × 900 unless given.
   workArea?: WorkArea;
+  // What `app.getPath('userData')` returns until `app.setPath` changes it;
+  // an invented path unless given.
+  userData?: string;
 };
+
+// One call of `app.setPath`.
+export type PathChange = { name: string; path: string; when: ReadyPhase };
+
+// One call of `dialog.showErrorBox`, with how often the app had quit when
+// the box was shown.
+export type ErrorBox = { title: string; content: string; quitsBefore: number };
 
 export type WorkArea = { x: number; y: number; width: number; height: number };
 
@@ -54,6 +66,7 @@ export type ProtocolHandlerCall = { scheme: string; when: ReadyPhase };
 // The startup calls whose order the design log fixes, as `startupCalls`
 // records them; `ready` is the moment the app became ready.
 export type StartupCall =
+  | 'app.setPath'
   | 'app.enableSandbox'
   | 'protocol.registerSchemesAsPrivileged'
   | 'ready'
@@ -173,8 +186,13 @@ export type FakeElectron = {
     net: FakeNet;
     session: { defaultSession: FakeSession };
     ipcMain: FakeIpcMain;
+    dialog: FakeDialog;
   };
   app: FakeApp;
+  // Every call of `app.setPath`, in order.
+  pathChanges: PathChange[];
+  // Every error box shown through `dialog.showErrorBox`, in order.
+  errorBoxes: ErrorBox[];
   // Every window created, in order, closed ones included.
   windows: FakeBrowserWindow[];
   // Every change to a menu, application or window, as `<call>`.
@@ -235,10 +253,17 @@ type FakeApp = EventEmitter & {
   readonly isPackaged: boolean;
   getAppPath(): string;
   getVersion(): string;
+  // Electron's paths; the fake knows only `userData`.
+  getPath(name: string): string;
+  setPath(name: string, path: string): void;
   isReady(): boolean;
   whenReady(): Promise<void>;
   enableSandbox(): void;
   quit(): void;
+};
+
+type FakeDialog = {
+  showErrorBox(title: string, content: string): void;
 };
 
 type FakeScreen = {
@@ -262,6 +287,7 @@ type FakeNet = {
 
 const DEFAULT_APP_PATH = '/invented/dashcash-app';
 const DEFAULT_VERSION = '0.0.0-invented';
+const DEFAULT_USER_DATA = '/invented/DashCash';
 
 // The page the fake's `invoke` sends from.
 const PAGE_URL = 'app://dashcash/index.html';
@@ -286,6 +312,9 @@ export function createFakeElectron(
   const startupCalls: StartupCall[] = [];
   const ipcHandlers: IpcHandlerCall[] = [];
   const ipcListeners = new Map<string, IpcMainHandler>();
+  const pathChanges: PathChange[] = [];
+  const errorBoxes: ErrorBox[] = [];
+  let userData = options.userData ?? DEFAULT_USER_DATA;
   let quits = 0;
   let isReady = false;
   let resolveReady: () => void = () => undefined;
@@ -301,6 +330,23 @@ export function createFakeElectron(
     isPackaged: options.isPackaged ?? false,
     getAppPath: () => options.appPath ?? DEFAULT_APP_PATH,
     getVersion: () => options.version ?? DEFAULT_VERSION,
+    getPath: (name: string) => {
+      if (name !== 'userData') {
+        throw new Error(`The fake app knows only the path userData: ${name}`);
+      }
+      return userData;
+    },
+    // Electron takes only absolute paths and refuses any other.
+    setPath: (name: string, path: string) => {
+      startupCalls.push('app.setPath');
+      pathChanges.push({ name, path, when: readyPhase() });
+      if (!isAbsolute(path)) {
+        throw new Error(`Path must be absolute: ${path}`);
+      }
+      if (name === 'userData') {
+        userData = path;
+      }
+    },
     isReady: () => isReady,
     whenReady: () => readyPromise,
     enableSandbox: () => {
@@ -587,6 +633,13 @@ export function createFakeElectron(
     return invokeFrom({ url: PAGE_URL, origin: PAGE_ORIGIN }, channel, ...args);
   }
 
+  // Electron's error box blocks until closed, and may be shown before ready.
+  const dialog: FakeDialog = {
+    showErrorBox: (title, content) => {
+      errorBoxes.push({ title, content, quitsBefore: quits });
+    },
+  };
+
   return {
     electron: {
       app,
@@ -597,8 +650,11 @@ export function createFakeElectron(
       net,
       session: { defaultSession },
       ipcMain,
+      dialog,
     },
     app,
+    pathChanges,
+    errorBoxes,
     windows,
     menuChanges,
     sandboxCalls,

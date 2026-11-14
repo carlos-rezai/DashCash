@@ -1,7 +1,15 @@
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  statSync,
+  writeFileSync,
+} from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
-import { describe, expect, it } from 'vitest';
+import { join, resolve } from 'node:path';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import {
   createFakeElectron,
   type FakeElectronOptions,
@@ -17,11 +25,51 @@ const APP_INDEX_URL = 'app://dashcash/index.html';
 // The App build's preload: one CommonJS file (A2).
 const PRELOAD_PATH = join(APP_PATH, 'out', 'preload', 'preload.cjs');
 
+// The title of the Startup error (Q34, A5).
+const STARTUP_ERROR_TITLE = "DashCash couldn't start";
+
+// A temporary folder holding every Data folder the tests create, so no test
+// touches a real `userData`.
+let dataRoot = '';
+let folderCount = 0;
+
+beforeAll(() => {
+  dataRoot = mkdtempSync(join(tmpdir(), 'dashcash-data-folder-'));
+});
+
+afterAll(() => {
+  rmSync(dataRoot, { recursive: true, force: true });
+});
+
+// A path in the temporary folder that nothing has used yet.
+function freshPath(name: string): string {
+  folderCount += 1;
+  return join(dataRoot, `${name}-${String(folderCount)}`);
+}
+
+function isFolder(path: string): boolean {
+  return existsSync(path) && statSync(path).isDirectory();
+}
+
+// The message Node gives when creating `folder` fails.
+function readCreateFailure(folder: string): string {
+  try {
+    mkdirSync(folder, { recursive: true });
+  } catch (error) {
+    return error instanceof Error ? error.message : String(error);
+  }
+  throw new Error(`Creating ${folder} was expected to fail`);
+}
+
 function start(
   options: FakeElectronOptions = {},
   env: Record<string, string | undefined> = {},
 ) {
-  const fake = createFakeElectron({ appPath: APP_PATH, ...options });
+  const fake = createFakeElectron({
+    appPath: APP_PATH,
+    userData: freshPath('user-data'),
+    ...options,
+  });
   startApp(fake.electron, env);
   return fake;
 }
@@ -412,5 +460,116 @@ describe('startApp', () => {
     await fake.ready();
 
     expect(fake.menuChanges).toEqual([]);
+  });
+
+  describe('Data folder', () => {
+    it.each([
+      { case: 'unset', env: {} },
+      { case: 'empty', env: { DASHCASH_DATA_FOLDER: '' } },
+    ])(
+      'leaves userData where it is and creates it when the app is ready, with DASHCASH_DATA_FOLDER $case',
+      async ({ env }) => {
+        const userData = freshPath('user-data');
+        const fake = start({ userData }, env);
+
+        expect(fake.pathChanges).toEqual([]);
+        expect(existsSync(userData)).toBe(false);
+
+        await fake.ready();
+
+        expect(fake.pathChanges).toEqual([]);
+        expect(isFolder(userData)).toBe(true);
+        expect(fake.errorBoxes).toEqual([]);
+        expect(fake.windows).toHaveLength(1);
+      },
+    );
+
+    it('sets userData to an absolute DASHCASH_DATA_FOLDER first of all, once, before the app is ready', async () => {
+      const folder = freshPath('data');
+      const fake = start({}, { DASHCASH_DATA_FOLDER: folder });
+
+      expect(fake.pathChanges).toEqual([
+        { name: 'userData', path: folder, when: 'before-ready' },
+      ]);
+      expect(fake.startupCalls[0]).toBe('app.setPath');
+      expect(fake.app.getPath('userData')).toBe(folder);
+
+      await fake.ready();
+
+      expect(fake.pathChanges).toHaveLength(1);
+    });
+
+    it('creates a missing Data folder, its parents included, when the app is ready, then opens the window', async () => {
+      const folder = join(freshPath('parent'), 'nested', 'data');
+      const fake = start({}, { DASHCASH_DATA_FOLDER: folder });
+
+      expect(existsSync(folder)).toBe(false);
+
+      await fake.ready();
+
+      expect(isFolder(folder)).toBe(true);
+      expect(fake.errorBoxes).toEqual([]);
+      expect(fake.windows).toHaveLength(1);
+    });
+
+    it('keeps an existing Data folder and what it holds', async () => {
+      const folder = freshPath('data');
+      mkdirSync(folder);
+      const kept = join(folder, 'invented-kept.txt');
+      writeFileSync(kept, 'invented content');
+      const fake = start({}, { DASHCASH_DATA_FOLDER: folder });
+
+      await fake.ready();
+
+      expect(readFileSync(kept, 'utf8')).toBe('invented content');
+      expect(fake.errorBoxes).toEqual([]);
+      expect(fake.windows).toHaveLength(1);
+    });
+
+    it('ends a relative DASHCASH_DATA_FOLDER in the Startup error before the app is ready, and creates no window', async () => {
+      const relative = join('invented-relative', 'data');
+      const fake = start({}, { DASHCASH_DATA_FOLDER: relative });
+
+      expect(fake.errorBoxes).toEqual([
+        {
+          title: STARTUP_ERROR_TITLE,
+          content: `DASHCASH_DATA_FOLDER must be an absolute path.\n\nData folder: ${relative}`,
+          quitsBefore: 0,
+        },
+      ]);
+      expect(fake.quitCount()).toBe(1);
+      expect(fake.pathChanges).toEqual([]);
+
+      await fake.ready();
+
+      expect(fake.errorBoxes).toHaveLength(1);
+      expect(fake.windows).toEqual([]);
+      expect(fake.ipcHandlers).toEqual([]);
+      expect(fake.protocolHandlers).toEqual([]);
+      expect(existsSync(resolve('invented-relative'))).toBe(false);
+    });
+
+    it('ends a Data folder that cannot be created in the Startup error with its cause, and creates no window', async () => {
+      // A file where the Data folder's parent should be.
+      const blocker = freshPath('blocker');
+      writeFileSync(blocker, 'invented, not a folder');
+      const folder = join(blocker, 'data');
+      const cause = readCreateFailure(folder);
+      const fake = start({}, { DASHCASH_DATA_FOLDER: folder });
+
+      await fake.ready();
+
+      expect(fake.errorBoxes).toEqual([
+        {
+          title: STARTUP_ERROR_TITLE,
+          content: `${cause}\n\nData folder: ${folder}`,
+          quitsBefore: 0,
+        },
+      ]);
+      expect(fake.quitCount()).toBe(1);
+      expect(fake.windows).toEqual([]);
+      expect(fake.ipcHandlers).toEqual([]);
+      expect(fake.protocolHandlers).toEqual([]);
+    });
   });
 });

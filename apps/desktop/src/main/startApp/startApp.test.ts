@@ -119,6 +119,61 @@ describe('startApp', () => {
     ).resolves.toStrictEqual({ version: '4.5.6-invented' });
   });
 
+  describe('Sender check', () => {
+    const devFrame = { url: `${DEV_URL}/index.html`, origin: DEV_URL };
+    const otherPortFrame = {
+      url: 'http://localhost:5174/index.html',
+      origin: 'http://localhost:5174',
+    };
+
+    it.each([
+      {
+        case: 'packaged, even with ELECTRON_RENDERER_URL set',
+        isPackaged: true,
+        env: { ELECTRON_RENDERER_URL: DEV_URL },
+      },
+      {
+        case: 'not packaged without ELECTRON_RENDERER_URL',
+        isPackaged: false,
+        env: {},
+      },
+    ])(
+      "refuses app:info from the dev server's origin when $case",
+      async ({ isPackaged, env }) => {
+        const fake = start({ isPackaged }, env);
+        await fake.ready();
+
+        await expect(fake.invokeFrom(devFrame, 'app:info')).rejects.toThrow(
+          /Error: Refused app:info from http:\/\/localhost:5173$/,
+        );
+      },
+    );
+
+    it("answers app:info from the dev server's origin when not packaged with ELECTRON_RENDERER_URL set, and refuses another origin", async () => {
+      const fake = start(
+        { isPackaged: false, version: '4.5.6-invented' },
+        { ELECTRON_RENDERER_URL: DEV_URL },
+      );
+      await fake.ready();
+
+      await expect(fake.invokeFrom(devFrame, 'app:info')).resolves.toEqual({
+        version: '4.5.6-invented',
+      });
+      await expect(fake.invokeFrom(otherPortFrame, 'app:info')).rejects.toThrow(
+        /Error: Refused app:info from http:\/\/localhost:5174$/,
+      );
+    });
+
+    it('refuses app:info from a missing frame', async () => {
+      const fake = start({ isPackaged: true });
+      await fake.ready();
+
+      await expect(fake.invokeFrom(null, 'app:info')).rejects.toThrow(
+        /Error: Refused app:info from .+$/,
+      );
+    });
+  });
+
   it('keeps the window hidden until ready-to-show, then shows it', async () => {
     const fake = start();
     await fake.ready();

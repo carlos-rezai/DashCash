@@ -195,6 +195,14 @@ export type FakeElectron = {
   // handler's error when it throws or rejects, and rejects when no handler is
   // registered for the channel.
   invoke(channel: string, ...args: unknown[]): Promise<unknown>;
+  // As `invoke`, but sent from `senderFrame`: a frame at another URL, or
+  // `null` when the frame is gone (navigated away or destroyed), as Electron
+  // hands it to the listener.
+  invokeFrom(
+    senderFrame: FakeIpcMainInvokeEvent['senderFrame'],
+    channel: string,
+    ...args: unknown[]
+  ): Promise<unknown>;
   // Sends a request for `url` to the handler registered for its scheme, as
   // the page would; `undefined` when no handler is registered for it.
   request(url: string): Promise<Response | undefined>;
@@ -554,7 +562,11 @@ export function createFakeElectron(
 
   // Electron runs the listener in main and hands the page its result; an
   // error crosses as its string, prefixed with the channel.
-  async function invoke(channel: string, ...args: unknown[]): Promise<unknown> {
+  async function invokeFrom(
+    senderFrame: FakeIpcMainInvokeEvent['senderFrame'],
+    channel: string,
+    ...args: unknown[]
+  ): Promise<unknown> {
     const listener = ipcListeners.get(channel);
     if (listener === undefined) {
       throw new Error(
@@ -562,16 +574,17 @@ export function createFakeElectron(
       );
     }
     try {
-      return await listener(
-        { senderFrame: { url: PAGE_URL, origin: PAGE_ORIGIN } },
-        ...args,
-      );
+      return await listener({ senderFrame }, ...args);
     } catch (error) {
       throw new Error(
         `Error invoking remote method '${channel}': ${String(error)}`,
         { cause: error },
       );
     }
+  }
+
+  function invoke(channel: string, ...args: unknown[]): Promise<unknown> {
+    return invokeFrom({ url: PAGE_URL, origin: PAGE_ORIGIN }, channel, ...args);
   }
 
   return {
@@ -594,6 +607,7 @@ export function createFakeElectron(
     startupCalls,
     ipcHandlers,
     invoke,
+    invokeFrom,
     request: async (url) => {
       const scheme = url.slice(0, url.indexOf(':'));
       const handler = handlers.get(scheme);

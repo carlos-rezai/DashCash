@@ -24,6 +24,9 @@ export type ReadQuarantine = {
   violations: Violation[];
 };
 
+export type ReadQuarantineEntry =
+  { entry: QuarantineEntry } | { problems: Violation[] };
+
 export type LoadedQuarantine =
   { quarantine: unknown } | { violation: Violation };
 
@@ -87,6 +90,20 @@ function findEntryProblems(
   return problems;
 }
 
+// Reads one value of the Quarantine: the entry when it is well-formed, its
+// shape violations, numbered by `index`, otherwise. A value that is not an
+// object reads as an empty entry.
+export function readQuarantineEntry(
+  value: unknown,
+  index: number,
+): ReadQuarantineEntry {
+  const entry = isRecord(value) ? value : {};
+  const problems = findEntryProblems(entry, index);
+  return problems.length === 0
+    ? { entry: entry as QuarantineEntry }
+    : { problems };
+}
+
 // Splits the Quarantine into its well-formed entries and the shape violations
 // of the rest. A value that is not an array has no entries and one violation.
 // The date and file rules belong to the Quarantine check.
@@ -105,12 +122,11 @@ export function readQuarantine(quarantine: unknown): ReadQuarantine {
   const entries: QuarantineEntry[] = [];
   const violations: Violation[] = [];
   (quarantine as unknown[]).forEach((value, index) => {
-    const entry = isRecord(value) ? value : {};
-    const problems = findEntryProblems(entry, index);
-    if (problems.length === 0) {
-      entries.push(entry as QuarantineEntry);
+    const read = readQuarantineEntry(value, index);
+    if ('entry' in read) {
+      entries.push(read.entry);
     } else {
-      violations.push(...problems);
+      violations.push(...read.problems);
     }
   });
   return { entries, violations };

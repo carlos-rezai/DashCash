@@ -25,13 +25,13 @@ process: IPC"; design log Q27, A5, I1, I2).
 
 ## Acceptance criteria
 
-- [ ] A RED commit adds the Vitest tests and fails on them.
-- [ ] A sender on the app's origin reaches its handler; another origin, a
+- [x] A RED commit adds the Vitest tests and fails on them.
+- [x] A sender on the app's origin reaches its handler; another origin, a
       look-alike host and a missing frame are refused with
       `Refused <channel> from <origin>` and the handler is not called.
-- [ ] In the **App build** the dev origin is refused; in dev it is
+- [x] In the **App build** the dev origin is refused; in dev it is
       accepted.
-- [ ] `npm run verify:full` is green.
+- [x] `npm run verify:full` is green.
 
 ## Blocked by
 

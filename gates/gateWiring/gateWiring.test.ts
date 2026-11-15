@@ -41,7 +41,10 @@ const DAILY_COMMANDS = [
 // The gates of Verify the daily job runs too.
 const DAILY_GATES = ['check:audit', 'check:quarantine'];
 const DAILY_JOBS = ['daily', 'mutation'];
-const MUTATION_COMMANDS = ['npm ci', 'npm run test:mutation'];
+// Electron 45 downloads its binary on the first require('electron'), so every
+// job that runs tests installs it in its own step right after npm ci.
+const INSTALL_ELECTRON = 'node_modules/.bin/install-electron';
+const MUTATION_COMMANDS = ['npm ci', INSTALL_ELECTRON, 'npm run test:mutation'];
 const MUTATION_REPORT_NAME = 'mutation-report';
 const MUTATION_REPORT_PATH = 'reports/mutation/mutation.html';
 const UPLOAD_ACTION = 'actions/upload-artifact';
@@ -54,6 +57,7 @@ const VERIFY_FULL_UNDER_DISPLAY = `${VIRTUAL_DISPLAY} npm run verify:full`;
 const NO_SANDBOX = '--no-sandbox';
 const PULL_REQUEST_COMMANDS = [
   'npm ci',
+  INSTALL_ELECTRON,
   VERIFY_FULL_UNDER_DISPLAY,
   'npm run check:pr',
   'npm run test:mutation',
@@ -67,6 +71,15 @@ const SECRET_SCAN_JOBS: [job: string, file: string][] = [
   ['pull-request', PULL_REQUEST_WORKFLOW],
   ['daily', DAILY_WORKFLOW],
 ];
+
+// The three jobs that run tests, each with its workflow file and its first
+// test command; the daily job runs no tests.
+const ELECTRON_INSTALL_JOBS: [job: string, file: string, firstTest: string][] =
+  [
+    ['verify', PUSH_WORKFLOW, 'npm run verify'],
+    ['pull-request', PULL_REQUEST_WORKFLOW, VERIFY_FULL_UNDER_DISPLAY],
+    ['mutation', DAILY_WORKFLOW, 'npm run test:mutation'],
+  ];
 
 // The gates of Verify, in their fixed order. Every ticket that adds a gate
 // inserts it here at its place.
@@ -272,6 +285,74 @@ function findSecretScanProblems(workflow: Workflow, job: string): string[] {
   }
   return problems;
 }
+
+function isInstallElectronStep(step: WorkflowStep): boolean {
+  return step.run === INSTALL_ELECTRON;
+}
+
+// What a job lacks in its Electron install, one line each: the install in its
+// own step, directly after the npm ci step and before the job's first test
+// command.
+function findElectronInstallProblems(
+  workflow: Workflow,
+  job: string,
+  firstTest: string,
+): string[] {
+  const steps = jobSteps(workflow, job);
+  const install = steps.findIndex(isInstallElectronStep);
+  if (install === -1) {
+    return [`the ${job} job does not run ${INSTALL_ELECTRON}`];
+  }
+
+  const problems: string[] = [];
+  const npmCi = steps.findIndex((step) => step.run === 'npm ci');
+  if (npmCi === -1 || install !== npmCi + 1) {
+    problems.push(
+      `the ${job} job does not run ${INSTALL_ELECTRON} directly after npm ci`,
+    );
+  }
+  const test = steps.findIndex((step) => step.run === firstTest);
+  if (test === -1 || install > test) {
+    problems.push(
+      `the ${job} job does not run ${INSTALL_ELECTRON} before ${firstTest}`,
+    );
+  }
+  return problems;
+}
+
+function withoutInstallElectron(workflow: Workflow, job: string): Workflow {
+  return withJobSteps(workflow, job, (steps) =>
+    steps.filter((step) => !isInstallElectronStep(step)),
+  );
+}
+
+// The job with its install step moved to just before (offset 0) or just
+// after (offset 1) the first step whose command is `anchor`.
+function withInstallElectronMoved(
+  anchor: (firstTest: string) => string,
+  offset: 0 | 1,
+): (workflow: Workflow, job: string, firstTest: string) => Workflow {
+  return (workflow, job, firstTest) =>
+    withJobSteps(workflow, job, (steps) => {
+      const others = steps.filter((step) => !isInstallElectronStep(step));
+      const at =
+        others.findIndex((step) => step.run === anchor(firstTest)) + offset;
+      return [
+        ...others.slice(0, at),
+        ...steps.filter(isInstallElectronStep),
+        ...others.slice(at),
+      ];
+    });
+}
+
+const withInstallElectronBeforeNpmCi = withInstallElectronMoved(
+  () => 'npm ci',
+  0,
+);
+const withInstallElectronAfterFirstTest = withInstallElectronMoved(
+  (firstTest) => firstTest,
+  1,
+);
 
 function isGitleaksStep(step: WorkflowStep): boolean {
   return (step.uses ?? '').startsWith(`${GITLEAKS_ACTION}@`);
@@ -744,6 +825,82 @@ describe('gate wiring', () => {
     expect(jobCommands(pushWorkflow, 'verify')).toContain('npm run verify');
   });
 
+  it('runs exactly npm ci, node_modules/.bin/install-electron, then npm run verify in the verify job', () => {
+    expect(jobCommands(pushWorkflow, 'verify')).toEqual([
+      'npm ci',
+      INSTALL_ELECTRON,
+      'npm run verify',
+    ]);
+  });
+
+  it.each(ELECTRON_INSTALL_JOBS)(
+    'installs the Electron binary in its own step directly after npm ci and before the first test command in the %s job',
+    (job, file, firstTest) => {
+      expect(
+        findElectronInstallProblems(readWorkflow(file), job, firstTest),
+      ).toEqual([]);
+    },
+  );
+
+  it.each(
+    ELECTRON_INSTALL_JOBS.flatMap(
+      ([job, file, firstTest]) =>
+        [
+          [
+            job,
+            'its install-electron step is removed',
+            file,
+            firstTest,
+            withoutInstallElectron,
+            [`the ${job} job does not run ${INSTALL_ELECTRON}`],
+          ],
+          [
+            job,
+            'its install-electron step is moved before npm ci',
+            file,
+            firstTest,
+            withInstallElectronBeforeNpmCi,
+            [
+              `the ${job} job does not run ${INSTALL_ELECTRON} directly after npm ci`,
+            ],
+          ],
+          [
+            job,
+            'its install-electron step is moved after its first test command',
+            file,
+            firstTest,
+            withInstallElectronAfterFirstTest,
+            [
+              `the ${job} job does not run ${INSTALL_ELECTRON} directly after npm ci`,
+              `the ${job} job does not run ${INSTALL_ELECTRON} before ${firstTest}`,
+            ],
+          ],
+        ] as const,
+    ),
+  )(
+    'fails the Electron install of the %s job when %s',
+    (job, _change, file, firstTest, change, problems) => {
+      const workflow = readWorkflow(file);
+      const before = findElectronInstallProblems(workflow, job, firstTest);
+      const after = findElectronInstallProblems(
+        change(workflow, job, firstTest),
+        job,
+        firstTest,
+      );
+
+      expect(before).toEqual([]);
+      expect(after).toEqual(problems);
+    },
+  );
+
+  it('installs the Electron binary only in the verify, pull-request and mutation jobs', () => {
+    expect(jobsRunning(INSTALL_ELECTRON)).toEqual([
+      `${PUSH_WORKFLOW}: verify`,
+      `${DAILY_WORKFLOW}: mutation`,
+      `${PULL_REQUEST_WORKFLOW}: pull-request`,
+    ]);
+  });
+
   it('triggers the pull-request workflow, Pull request, only by pull_request into main', () => {
     expect(pullRequestWorkflow.name).toBe('Pull request');
     expect(triggers(pullRequestWorkflow)).toEqual({
@@ -777,7 +934,7 @@ describe('gate wiring', () => {
     },
   );
 
-  it('runs npm ci, npm run verify:full under xvfb-run, npm run check:pr, then npm run test:mutation in the pull-request job, beside the sysctl step', () => {
+  it('runs npm ci, node_modules/.bin/install-electron, npm run verify:full under xvfb-run, npm run check:pr, then npm run test:mutation in the pull-request job, beside the sysctl step', () => {
     const commands = jobCommands(pullRequestWorkflow, 'pull-request');
 
     expect(commands.filter((command) => command === SANDBOX_STEP)).toEqual([
@@ -929,7 +1086,7 @@ describe('gate wiring', () => {
     expect(job?.needs).toBeUndefined();
   });
 
-  it('runs checkout, setup-node, npm ci, npm run test:mutation, then the upload of the mutation report in the mutation job', () => {
+  it('runs checkout, setup-node, npm ci, node_modules/.bin/install-electron, npm run test:mutation, then the upload of the mutation report in the mutation job', () => {
     const steps = jobSteps(dailyWorkflow, 'mutation');
     const kinds = steps.map(
       (step) => step.run ?? (step.uses ?? '').split('@')[0],
@@ -939,6 +1096,7 @@ describe('gate wiring', () => {
       'actions/checkout',
       'actions/setup-node',
       'npm ci',
+      INSTALL_ELECTRON,
       'npm run test:mutation',
       UPLOAD_ACTION,
     ]);
@@ -947,14 +1105,14 @@ describe('gate wiring', () => {
       'node-version-file': '.nvmrc',
       cache: 'npm',
     });
-    expect(steps[4]?.with).toEqual({
+    expect(steps[5]?.with).toEqual({
       name: MUTATION_REPORT_NAME,
       path: MUTATION_REPORT_PATH,
     });
-    expect(steps[4]?.if).toBe('always()');
+    expect(steps[5]?.if).toBe('always()');
   });
 
-  it('runs exactly npm ci, then npm run test:mutation in the mutation job', () => {
+  it('runs exactly npm ci, node_modules/.bin/install-electron, then npm run test:mutation in the mutation job', () => {
     expect(jobCommands(dailyWorkflow, 'mutation')).toEqual(MUTATION_COMMANDS);
   });
 

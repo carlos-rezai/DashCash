@@ -1,7 +1,8 @@
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
 import { readCalendarDate } from '../readCalendarDate/readCalendarDate.ts';
 import {
+  buildEntryViolation,
+  E2E_FOLDER,
+  loadQuarantine,
   readQuarantine,
   type QuarantineEntry,
 } from '../readQuarantine/readQuarantine.ts';
@@ -11,23 +12,10 @@ import {
 } from '../reportViolations/reportViolations.ts';
 import { listTrackedPaths } from '../runGit/runGit.ts';
 
-const QUARANTINE_FILE = 'quality/flaky-quarantine.json';
 const MAX_QUARANTINE_DAYS = 30;
 const MS_PER_DAY = 86_400_000;
-const SPEC_FOLDER = 'e2e/';
 const SPEC_SUFFIX = '.spec.ts';
 const TICKET_PATH = /^docs\/features\/\d{2}-[^/]+\/\d{2}-[^/]+\.md$/;
-
-function buildEntryViolation(
-  index: number,
-  field: string,
-  why: string,
-): Violation {
-  return {
-    subject: QUARANTINE_FILE,
-    reason: `entry ${String(index)}, field ${field}: ${why}`,
-  };
-}
 
 // The date violations of one well-formed entry, judged against today.
 function findDateViolations(
@@ -69,7 +57,7 @@ function findPathViolations(
   const violations: Violation[] = [];
   if (
     !tracked.has(entry.file) ||
-    !entry.file.startsWith(SPEC_FOLDER) ||
+    !entry.file.startsWith(E2E_FOLDER) ||
     !entry.file.endsWith(SPEC_SUFFIX)
   ) {
     violations.push(
@@ -114,22 +102,12 @@ export function findQuarantineViolations(
 
 if (import.meta.main) {
   await runGate(() => {
-    let quarantine: unknown;
-    try {
-      quarantine = JSON.parse(
-        readFileSync(join(process.cwd(), QUARANTINE_FILE), 'utf8'),
-      );
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      return [
-        {
-          subject: QUARANTINE_FILE,
-          reason: `cannot be read as JSON: ${message.split('\n')[0] ?? ''}`,
-        },
-      ];
+    const loaded = loadQuarantine(process.cwd());
+    if ('violation' in loaded) {
+      return [loaded.violation];
     }
     return findQuarantineViolations(
-      quarantine,
+      loaded.quarantine,
       new Date().toISOString().slice(0, 10),
       listTrackedPaths(process.cwd()),
     );

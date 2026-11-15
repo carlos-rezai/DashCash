@@ -1,36 +1,28 @@
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
 import { defineConfig } from '@playwright/test';
 import {
   buildQuarantinePatterns,
+  loadQuarantine,
   readQuarantine,
 } from './scripts/readQuarantine/readQuarantine.ts';
+import type { Violation } from './scripts/reportViolations/reportViolations.ts';
 
-const QUARANTINE_FILE = 'quality/flaky-quarantine.json';
+function throwViolations(violations: readonly Violation[]): never {
+  throw new Error(
+    violations.map(({ subject, reason }) => `${subject}: ${reason}`).join('\n'),
+  );
+}
 
 // The patterns of the Quarantine, which grepInvert leaves out of the run. A
 // Quarantine that cannot be read or is malformed throws, so a run never
 // skips tests silently.
 function readQuarantinePatterns(): RegExp[] {
-  let quarantine: unknown;
-  try {
-    quarantine = JSON.parse(
-      readFileSync(join(process.cwd(), QUARANTINE_FILE), 'utf8'),
-    );
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    throw new Error(
-      `${QUARANTINE_FILE}: cannot be read as JSON: ${message.split('\n')[0] ?? ''}`,
-      { cause: error },
-    );
+  const loaded = loadQuarantine(process.cwd());
+  if ('violation' in loaded) {
+    return throwViolations([loaded.violation]);
   }
-  const { entries, violations } = readQuarantine(quarantine);
+  const { entries, violations } = readQuarantine(loaded.quarantine);
   if (violations.length > 0) {
-    throw new Error(
-      violations
-        .map(({ subject, reason }) => `${subject}: ${reason}`)
-        .join('\n'),
-    );
+    return throwViolations(violations);
   }
   return buildQuarantinePatterns(entries);
 }

@@ -29,8 +29,12 @@ quarantine follows in `16-quarantine-check.md`.
   `buildQuarantinePatterns(entries)` turns each entry into one regular
   expression from its file (relative to `e2e/`) and its title, both
   escaped, so a title matches literally and only in its own file. The date
-  and file rules stay in the **Quarantine check**.
-- `playwright.config.ts` reads the committed file, throws on any shape
+  and file rules stay in the **Quarantine check**. The module also holds
+  what the config and the check share (Q46): `loadQuarantine(root)`, which
+  reads and parses the committed file or returns the one violation
+  `cannot be read as JSON: …`, the file name `QUARANTINE_FILE`, the folder
+  `E2E_FOLDER` and `buildEntryViolation`, each tested in its own tests.
+- `playwright.config.ts` loads the committed file through that loader, throws on any shape
   violation or unreadable file, so `test:e2e` fails rather than running or
   skipping tests silently, and always sets `grepInvert` to the reader's
   patterns, an empty list for an empty **Quarantine**; six keys in all

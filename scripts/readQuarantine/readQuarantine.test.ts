@@ -1,11 +1,16 @@
-import { describe, expect, it } from 'vitest';
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { dirname, join } from 'node:path';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
+  buildEntryViolation,
   buildQuarantinePatterns,
+  E2E_FOLDER,
+  loadQuarantine,
+  QUARANTINE_FILE,
   readQuarantine,
   type QuarantineEntry,
 } from './readQuarantine.ts';
-
-const QUARANTINE_FILE = 'quality/flaky-quarantine.json';
 
 const FIELDS = ['file', 'title', 'ticket', 'owner', 'added', 'expires'];
 
@@ -55,6 +60,78 @@ function entryViolation(index: number, field: string, why: string): unknown {
     reason: `entry ${String(index)}, field ${field}: ${why}`,
   };
 }
+
+describe('the shared names', () => {
+  it('names the committed Quarantine file and the end-to-end folder', () => {
+    expect(QUARANTINE_FILE).toBe('quality/flaky-quarantine.json');
+    expect(E2E_FOLDER).toBe('e2e/');
+  });
+
+  it('builds an entry violation with the Quarantine file as its subject', () => {
+    expect(buildEntryViolation(2, 'owner', 'must not be empty')).toEqual({
+      subject: 'quality/flaky-quarantine.json',
+      reason: 'entry 2, field owner: must not be empty',
+    });
+  });
+});
+
+describe('loadQuarantine', () => {
+  let root: string;
+
+  function writeQuarantine(content: string): void {
+    const path = join(root, QUARANTINE_FILE);
+    mkdirSync(dirname(path), { recursive: true });
+    writeFileSync(path, content);
+  }
+
+  beforeEach(() => {
+    root = mkdtempSync(join(tmpdir(), 'dashcash-load-quarantine-'));
+  });
+
+  afterEach(() => {
+    rmSync(root, { recursive: true, force: true });
+  });
+
+  it('parses the Quarantine file under the given root', () => {
+    writeQuarantine(`${JSON.stringify([START_ENTRY], null, 2)}\n`);
+
+    expect(loadQuarantine(root)).toEqual({ quarantine: [START_ENTRY] });
+  });
+
+  it('returns a value that is no array as it is, for the reader to judge', () => {
+    writeQuarantine('{ "entries": [] }');
+
+    expect(loadQuarantine(root)).toEqual({ quarantine: { entries: [] } });
+  });
+
+  it('reports a missing file as one violation on one line', () => {
+    const loaded = loadQuarantine(root);
+
+    expect(loaded).toEqual({
+      violation: {
+        subject: QUARANTINE_FILE,
+        reason: expect.stringMatching(
+          /^cannot be read as JSON: [^\n]+$/,
+        ) as string,
+      },
+    });
+  });
+
+  it('reports a file that is no JSON as one violation on one line', () => {
+    writeQuarantine('[{ "file": ');
+
+    const loaded = loadQuarantine(root);
+
+    expect(loaded).toEqual({
+      violation: {
+        subject: QUARANTINE_FILE,
+        reason: expect.stringMatching(
+          /^cannot be read as JSON: [^\n]+$/,
+        ) as string,
+      },
+    });
+  });
+});
 
 describe('readQuarantine', () => {
   it('reads an empty Quarantine as no entries and no violations', () => {

@@ -1,11 +1,13 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { isRecord } from '../isRecord/isRecord.ts';
 import { readCalendarDate } from '../readCalendarDate/readCalendarDate.ts';
 import type { Violation } from '../reportViolations/reportViolations.ts';
 
-const QUARANTINE_FILE = 'quality/flaky-quarantine.json';
+export const QUARANTINE_FILE = 'quality/flaky-quarantine.json';
+export const E2E_FOLDER = 'e2e/';
 const TEXT_FIELDS = ['file', 'title', 'ticket', 'owner'] as const;
 const DATE_FIELDS = ['added', 'expires'] as const;
-const E2E_FOLDER = 'e2e/';
 const REGEX_CHARACTERS = /[.*+?^${}()|[\]\\]/g;
 
 export type QuarantineEntry = {
@@ -22,7 +24,30 @@ export type ReadQuarantine = {
   violations: Violation[];
 };
 
-function buildEntryViolation(
+export type LoadedQuarantine =
+  { quarantine: unknown } | { violation: Violation };
+
+// Reads and parses the Quarantine file under `root`. A file that cannot be
+// read or parsed gives one violation instead of a value.
+export function loadQuarantine(root: string): LoadedQuarantine {
+  try {
+    return {
+      quarantine: JSON.parse(
+        readFileSync(join(root, QUARANTINE_FILE), 'utf8'),
+      ) as unknown,
+    };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    return {
+      violation: {
+        subject: QUARANTINE_FILE,
+        reason: `cannot be read as JSON: ${message.split('\n')[0] ?? ''}`,
+      },
+    };
+  }
+}
+
+export function buildEntryViolation(
   index: number,
   field: string,
   why: string,

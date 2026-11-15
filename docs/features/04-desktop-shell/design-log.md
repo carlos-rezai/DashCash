@@ -859,3 +859,17 @@ answers named; those answers stay as they were written.
   every doc that names `node:sqlite` (Q31 through a further deviation
   here, `plan.md`, `prd.md`, tickets 11 and 12) is updated, recorded as a
   deviation from Q51.
+
+- **D2. `scripts/readQuarantine/` also holds the shared file loading**
+  (extends I6, which names two exports; `prd.md` and `plan.md` name the
+  reader and the patterns only). The module also exports
+  `loadQuarantine(root)`, `QUARANTINE_FILE`, `E2E_FOLDER` and
+  `buildEntryViolation`, and `playwright.config.ts` and
+  `scripts/checkQuarantine/` use them instead of each carrying a copy.
+  Reason: Q46 says the check and the config share the file parsing in one
+  tested module; after ticket 15 the read, the `JSON.parse`, the `cannot be
+  read as JSON` message, the file name, the folder and the entry violation
+  were each written twice. `loadQuarantine` returns the one violation
+  instead of throwing, so the check reports it as before and the config
+  throws it with the same message; the config's error no longer carries the
+  original error as its `cause`.

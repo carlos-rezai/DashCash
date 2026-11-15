@@ -29,6 +29,8 @@ npm run dev | storybook | test | test:stories | test:e2e | verify | verify:full
 
 Run tools only through these scripts or `node_modules/.bin`, never `npx`.
 
+Run `git push` as its own command, never chained with other commands.
+
 Search files with the Grep and Glob tools, not with grep, find or Select-String in Bash.
 
 Edit files with the Edit and Write tools, not with sed or shell redirection in Bash.

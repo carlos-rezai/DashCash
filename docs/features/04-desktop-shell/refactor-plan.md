@@ -82,7 +82,7 @@ the **Mutation score** must stay at or above the **Break threshold** of 81.
 - [x] 05 split the app protocol handler from its scheme
 - [x] 06 add the data folder database module
 - [x] 07 use the data folder database in start app
-- [ ] 08 rename stored version to read schema version
+- [x] 08 rename stored version to read schema version
 - [ ] 09 rename origin key to read origin key
 - [ ] 10 export the one-entry quarantine reader
 - [ ] 11 use the one-entry reader in check quarantine

@@ -873,3 +873,17 @@ answers named; those answers stay as they were written.
   instead of throwing, so the check reports it as before and the config
   throws it with the same message; the config's error no longer carries the
   original error as its `cause`.
+
+- **D3. A separate step installs the Electron binary; `npm ci` no longer
+  does** (deviates from Trade-offs, line 646, and `prd.md` line 677, which
+  take the binary download as part of `npm ci`). Electron 45 downloads its
+  binary on the first `require('electron')`, not during `npm ci`
+  (`node_modules/electron/index.js`). The probe of ticket 11
+  (`nodeSqliteProbe.test.ts`) and every end-to-end run call it, so
+  `npm run test` downloaded about 100 MB in CI, in the Stryker runs and on a
+  fresh checkout. Every job that runs tests, `verify`, `pull-request` and
+  `mutation`, therefore runs `node_modules/.bin/install-electron` in its own
+  step directly after `npm ci` and before its first test command; the
+  `daily` job runs no tests and stays as it was. `gateWiring.test.ts` pins
+  the step, and the README's Getting started shows it after `npm ci`
+  (ticket 17).

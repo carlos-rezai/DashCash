@@ -40,17 +40,17 @@ This ticket is the approval to change `.github/workflows/ci.yml`,
 
 ## Acceptance criteria
 
-- [ ] A RED commit holds the gate wiring test changes and fails on them.
-- [ ] `verify`, `pull-request` and `mutation` each run
+- [x] A RED commit holds the gate wiring test changes and fails on them.
+- [x] `verify`, `pull-request` and `mutation` each run
       `node_modules/.bin/install-electron` directly after `npm ci` and
       before their first test command; the `daily` job is unchanged.
-- [ ] The wiring test names each missing or misplaced install step, per
+- [x] The wiring test names each missing or misplaced install step, per
       job.
-- [ ] README's Getting started shows the step after `npm ci`.
-- [ ] The deviation is in `design-log.md` Implementation Results.
+- [x] README's Getting started shows the step after `npm ci`.
+- [x] The deviation is in `design-log.md` Implementation Results.
 - [ ] The first CI run after the change shows no `Downloading Electron
       binary...` line in the test steps (recorded in the Notes).
-- [ ] `npm run verify` is green.
+- [x] `npm run verify` is green.
 
 ## Blocked by
 

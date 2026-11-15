@@ -78,7 +78,7 @@ the **Mutation score** must stay at or above the **Break threshold** of 81.
 - [x] 01 pin the quarantine check violation order
 - [x] 02 use the contract channel guard in the bridge
 - [x] 03 take the app origin from the app protocol
-- [ ] 04 build the window page url from the app origin
+- [x] 04 build the window page url from the app origin
 - [ ] 05 split the app protocol handler from its scheme
 - [ ] 06 add the data folder database module
 - [ ] 07 use the data folder database in start app

@@ -1,10 +1,12 @@
 import { CHANNELS, type Channel, type ChannelMap } from '@dashcash/contract';
 import { isAppOrigin } from '../../matchAppOrigin/matchAppOrigin.ts';
 
-// One handler per Channel: a missing one fails the type check.
+// One handler per Channel: a missing one fails the type check. The request is
+// `unknown`: it comes unchecked from the page, so a handler that takes one
+// narrows it with its Contract guard before using it (design log Q23).
 export type IpcHandlers = {
   [C in Channel]: (
-    request: ChannelMap[C]['request'],
+    request: unknown,
   ) => ChannelMap[C]['response'] | Promise<ChannelMap[C]['response']>;
 };
 
@@ -47,7 +49,7 @@ export function registerIpcHandlers(
   origins: readonly string[],
 ): void {
   for (const channel of CHANNELS) {
-    const handler = handlers[channel] as (request: unknown) => unknown;
+    const handler = handlers[channel];
     ipcMain.handle(channel, (event, request) => {
       checkSender(channel, event, origins);
       return handler(request);

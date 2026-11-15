@@ -35,7 +35,9 @@ follows in `09-sender-check.md`.
   the **Contract** by package name.
 - Main: `registerIpcHandlers(ipcMain, handlers)` takes a mapped type with
   one handler per **Channel**, so a missing handler fails the type check,
-  and registers each with `ipcMain.handle`; a handler that throws rejects
+  each taking its request as `unknown` (the page's value arrives unchecked;
+  a handler that takes one narrows it with its Contract guard, Q23), and
+  registers each with `ipcMain.handle`; a handler that throws rejects
   the page's promise with its message, no error envelope (Q24).
   `getAppInfo(app)` returns `{ version: app.getVersion() }` and ignores any
   argument. `startApp` registers the handlers when ready, before the
@@ -52,27 +54,27 @@ its `tsconfig.json`; to change the desktop member's `package.json` and
 
 ## Acceptance criteria
 
-- [ ] A RED commit extends "Start the app" and adds the Vitest tests, and
+- [x] A RED commit extends "Start the app" and adds the Vitest tests, and
       fails on them.
-- [ ] `@dashcash/contract` is private, `"type": "module"`, its `exports`
+- [x] `@dashcash/contract` is private, `"type": "module"`, its `exports`
       at its source; it imports nothing; `npm run typecheck` covers it;
       main and preload import it by package name.
-- [ ] `isChannel` accepts every entry of `CHANNELS` and refuses other
+- [x] `isChannel` accepts every entry of `CHANNELS` and refuses other
       strings and non-strings.
-- [ ] `createBridge` forwards a listed channel with its request and
+- [x] `createBridge` forwards a listed channel with its request and
       rejects an unknown one with `Unknown channel: <channel>` without
       calling `invoke`.
-- [ ] The **Preload** exposes only `dashcash` with `invoke`, never
+- [x] The **Preload** exposes only `dashcash` with `invoke`, never
       `ipcRenderer`; the **App build** emits it as CommonJS with the
       **Contract** bundled, and the window loads it with the sandbox on.
-- [ ] `registerIpcHandlers` registers one `handle` per **Channel**; a
+- [x] `registerIpcHandlers` registers one `handle` per **Channel**; a
       throwing handler rejects with its message.
-- [ ] `getAppInfo` returns the fake app's version and ignores any
+- [x] `getAppInfo` returns the fake app's version and ignores any
       argument.
-- [ ] "Start the app" asserts that `invoke('app:info')` resolves with
+- [x] "Start the app" asserts that `invoke('app:info')` resolves with
       `{ version }` equal to `apps/desktop/package.json`'s version, read
       from the file.
-- [ ] `npm run verify:full` is green.
+- [x] `npm run verify:full` is green.
 
 ## Blocked by
 

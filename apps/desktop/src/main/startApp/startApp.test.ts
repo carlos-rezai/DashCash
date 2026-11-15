@@ -368,6 +368,38 @@ describe('startApp', () => {
     expect(calls.slice(7)).toEqual(['ipcMain.handle', 'new BrowserWindow']);
   });
 
+  describe('Debug port', () => {
+    it('appends remote-debugging-port=9222 once, before the app is ready, right after the sandbox and the scheme, when not packaged with ELECTRON_RENDERER_URL set', async () => {
+      const fake = start(
+        { isPackaged: false },
+        { ELECTRON_RENDERER_URL: DEV_URL },
+      );
+
+      expect(fake.commandLineSwitches).toEqual([
+        { name: 'remote-debugging-port', value: '9222', when: 'before-ready' },
+      ]);
+      expect(fake.startupCalls).toEqual([
+        'app.requestSingleInstanceLock',
+        'app.enableSandbox',
+        'protocol.registerSchemesAsPrivileged',
+        'app.commandLine.appendSwitch',
+      ]);
+
+      await fake.ready();
+
+      expect(fake.commandLineSwitches).toHaveLength(1);
+      expect(fake.startupCalls.slice(0, 6)).toEqual([
+        'app.requestSingleInstanceLock',
+        'app.enableSandbox',
+        'protocol.registerSchemesAsPrivileged',
+        'app.commandLine.appendSwitch',
+        'ready',
+        'protocol.handle',
+      ]);
+      expect(fake.windows).toHaveLength(1);
+    });
+  });
+
   describe('session hardening', () => {
     it.each([
       'https://example.com/',

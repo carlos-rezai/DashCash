@@ -8,8 +8,8 @@ import { fileURLToPath } from 'node:url';
 // `ipcMain` and `dialog`.
 // It records what a module does with them (windows created, shown, loaded,
 // closed; quits; menu changes; the sandbox enabled; schemes and protocol
-// handlers registered; paths set; error boxes shown; Single-instance lock
-// requests; the order of the startup calls) so a test can assert
+// handlers registered; paths set; Chromium switches appended; error boxes
+// shown; Single-instance lock requests; the order of the startup calls) so a test can assert
 // behaviour without Electron. Its `net.fetch` serves `file:` URLs from the
 // disk, as Electron's does. Its web contents and default session act as the
 // page would (navigate, redirect, open a window, attach a webview, ask for a
@@ -43,6 +43,14 @@ export type LockRequest = {
 
 // One call of `app.setPath`.
 export type PathChange = { name: string; path: string; when: ReadyPhase };
+
+// One call of `app.commandLine.appendSwitch`: Chromium's switch, its value
+// (`undefined` when none was given), and when.
+export type CommandLineSwitch = {
+  name: string;
+  value: string | undefined;
+  when: ReadyPhase;
+};
 
 // One call of `dialog.showErrorBox`, with how often the app had quit when
 // the box was shown.
@@ -82,6 +90,7 @@ export type StartupCall =
   | 'app.requestSingleInstanceLock'
   | 'app.enableSandbox'
   | 'protocol.registerSchemesAsPrivileged'
+  | 'app.commandLine.appendSwitch'
   | 'ready'
   | 'protocol.handle'
   | 'session.setPermissionRequestHandler'
@@ -209,6 +218,8 @@ export type FakeElectron = {
   app: FakeApp;
   // Every call of `app.setPath`, in order.
   pathChanges: PathChange[];
+  // Every call of `app.commandLine.appendSwitch`, in order.
+  commandLineSwitches: CommandLineSwitch[];
   // Every error box shown through `dialog.showErrorBox`, in order.
   errorBoxes: ErrorBox[];
   // Every window created, in order, closed ones included.
@@ -283,7 +294,16 @@ type FakeApp = EventEmitter & {
   isReady(): boolean;
   whenReady(): Promise<void>;
   enableSandbox(): void;
+  // Chromium's command line; a switch takes effect only when appended before
+  // the app is ready, which the tests assert through `when`.
+  readonly commandLine: FakeCommandLine;
   quit(): void;
+};
+
+type FakeCommandLine = {
+  appendSwitch(name: string, value?: string): void;
+  hasSwitch(name: string): boolean;
+  getSwitchValue(name: string): string;
 };
 
 type FakeDialog = {
@@ -337,6 +357,7 @@ export function createFakeElectron(
   const ipcHandlers: IpcHandlerCall[] = [];
   const ipcListeners = new Map<string, IpcMainHandler>();
   const pathChanges: PathChange[] = [];
+  const commandLineSwitches: CommandLineSwitch[] = [];
   const errorBoxes: ErrorBox[] = [];
   const lockRequests: LockRequest[] = [];
   let userData = options.userData ?? DEFAULT_USER_DATA;
@@ -383,6 +404,19 @@ export function createFakeElectron(
     enableSandbox: () => {
       startupCalls.push('app.enableSandbox');
       sandboxCalls.push(readyPhase());
+    },
+    // As in Chromium, the last value appended for a switch wins, and a switch
+    // without a value reads as ''.
+    commandLine: {
+      appendSwitch: (name: string, value?: string) => {
+        startupCalls.push('app.commandLine.appendSwitch');
+        commandLineSwitches.push({ name, value, when: readyPhase() });
+      },
+      hasSwitch: (name: string) =>
+        commandLineSwitches.some((entry) => entry.name === name),
+      getSwitchValue: (name: string) =>
+        commandLineSwitches.filter((entry) => entry.name === name).at(-1)
+          ?.value ?? '',
     },
     quit: () => {
       quits += 1;
@@ -709,6 +743,7 @@ export function createFakeElectron(
     },
     app,
     pathChanges,
+    commandLineSwitches,
     errorBoxes,
     windows,
     menuChanges,

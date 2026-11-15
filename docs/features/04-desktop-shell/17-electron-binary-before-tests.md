@@ -1,5 +1,5 @@
 ---
-status: in-progress
+status: done
 ---
 # Electron binary before tests
 
@@ -48,9 +48,18 @@ This ticket is the approval to change `.github/workflows/ci.yml`,
       job.
 - [x] README's Getting started shows the step after `npm ci`.
 - [x] The deviation is in `design-log.md` Implementation Results.
-- [ ] The first CI run after the change shows no `Downloading Electron
+- [x] The first CI run after the change shows no `Downloading Electron
       binary...` line in the test steps (recorded in the Notes).
 - [x] `npm run verify` is green.
+
+## Notes
+
+- First CI runs after the change, on 83f491d: the push run of `ci.yml`
+  (43724144388, green) and the `pull-request.yml` run (43724149596). Both
+  logs run `node_modules/.bin/install-electron` as its own step after
+  `npm ci`, and neither holds a `Downloading Electron binary...` line. The
+  `pull-request` run's tests and `verify:full` passed; its `check:pr` step
+  failed only because this ticket was not yet `status: done`.
 
 ## Blocked by
 

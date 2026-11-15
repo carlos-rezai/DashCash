@@ -583,3 +583,43 @@ Alternatives:
   one part of the **Gate wiring** and gives its own ticket a clear edge;
   the smallest (`pushWorkflow`, `workflows`) still check a part no other
   folder checks.
+
+### Assumptions from prd-to-plan
+
+- **P1. Phases thinner than the PRD's ticket order.** **Assumption:** the
+  plan cuts Renovate into two phases (titles from the **Commit-message
+  parts**, then the **Hold rules**), the **Gate wiring** split into four
+  (the workflow readers with the four folders that hold no **Problem
+  finder**; `pullRequestSandbox` and `pullRequestMutation`; `dailyRun` and
+  `dailyMutation`; `secretScan` and `electronInstall` with `gateWiring/`
+  removed), and the date work into two (`checkQuarantine` taking today,
+  then the shared **Entry date rules**). Reason: thin slices keep each
+  issue-loop step inside its budget; the finder-less folders ride with the
+  readers because a bare move of passing assertions has no test that fails
+  first (`.claude/skills/tdd/SKILL.md`), while their tests importing the
+  not-yet-built readers do.
+- **P2. The Electron install check moves before it changes.**
+  **Assumption:** the wiring split moves the Electron install finder and
+  its assertions unchanged into `gates/electronInstall/` (phase 8), and the
+  `postinstall` phase (12) changes it there, together with the pinned job
+  commands in `pushWorkflow/`, `pullRequestWorkflow/` and
+  `dailyMutation/`. Reason: the PRD's ticket order puts the structure
+  before the local setup, and "every assertion moves unchanged" can only be
+  checked when the move and the change are separate commits.
+- **P3. The ratchet has no failing test.** **Assumption:** the ratchet
+  phase writes no new test: `gates/mutationTesting/` stays unchanged (PRD)
+  and a floor on the **Break threshold** is out of scope (Q31); its
+  evidence is the builder's measured run in the ticket's Notes. If the
+  issue-loop's RED step cannot pass a ticket without a failing test, the
+  loop stops at the ratchet ticket and the human raises the threshold by
+  hand, as the human builds the hook ticket that follows. Reason: no
+  source gives this ticket a behaviour a test could pin without the pin
+  Q31 rules out; the human sees this at the post-planning pause and can
+  overturn it there.
+- **P4. Date-free entry tests.** **Assumption:** the spawned
+  **Quarantine check** entry tests show the exit code and the
+  `<subject>: <reason>` line format with a malformed entry (a missing
+  field), not with a date rule. Reason: Q23 keeps "the exit code and line
+  format" in the entry tests but only cases that do not depend on the
+  date; an entry with a shape problem is judged by that alone
+  (`findQuarantineViolations`), so its line never depends on today.

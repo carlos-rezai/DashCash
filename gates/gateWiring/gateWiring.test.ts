@@ -33,7 +33,13 @@ const PUSH_WORKFLOW = 'ci.yml';
 const PULL_REQUEST_WORKFLOW = 'pull-request.yml';
 const DAILY_WORKFLOW = 'daily.yml';
 const DAILY_SCHEDULE = '0 5 * * *';
-const DAILY_COMMANDS = ['npm ci', 'npm run check:audit'];
+const DAILY_COMMANDS = [
+  'npm ci',
+  'npm run check:audit',
+  'npm run check:quarantine',
+];
+// The gates of Verify the daily job runs too.
+const DAILY_GATES = ['check:audit', 'check:quarantine'];
 const DAILY_JOBS = ['daily', 'mutation'];
 const MUTATION_COMMANDS = ['npm ci', 'npm run test:mutation'];
 const MUTATION_REPORT_NAME = 'mutation-report';
@@ -76,6 +82,7 @@ const VERIFY_GATES = [
   'check:docs-drift',
   'check:licenses',
   'check:audit',
+  'check:quarantine',
 ];
 
 const GATE_COMMANDS: Record<string, string> = {
@@ -92,6 +99,7 @@ const GATE_COMMANDS: Record<string, string> = {
   'check:docs-drift': 'node scripts/checkDocsDrift/checkDocsDrift.ts',
   'check:licenses': 'node scripts/checkLicenses/checkLicenses.ts',
   'check:audit': 'node scripts/checkAudit/checkAudit.ts',
+  'check:quarantine': 'node scripts/checkQuarantine/checkQuarantine.ts',
 };
 
 function readRootFile(path: string): string {
@@ -205,6 +213,7 @@ function findDailyWiringProblems(workflow: Workflow): string[] {
   const commands = jobCommands(workflow, 'daily');
   const npmCi = commands.indexOf('npm ci');
   const audit = commands.indexOf('npm run check:audit');
+  const quarantine = commands.indexOf('npm run check:quarantine');
   const npmCiStep = steps.findIndex((step) => step.run === 'npm ci');
   if (
     npmCi === -1 ||
@@ -217,6 +226,13 @@ function findDailyWiringProblems(workflow: Workflow): string[] {
   }
   if (audit === -1) {
     problems.push('the daily job does not run npm run check:audit');
+  }
+  if (quarantine === -1) {
+    problems.push('the daily job does not run npm run check:quarantine');
+  } else if (npmCi === -1 || quarantine < npmCi) {
+    problems.push(
+      'the daily job does not run npm ci before the quarantine check',
+    );
   }
   for (const command of commands) {
     if (!DAILY_COMMANDS.includes(command)) {
@@ -487,11 +503,28 @@ function withoutFullHistory(workflow: Workflow): Workflow {
   );
 }
 
-function withoutAuditStep(workflow: Workflow): Workflow {
-  return withJobSteps(workflow, 'daily', (steps) =>
-    steps.filter((step) => !(step.run ?? '').includes('npm run check:audit')),
-  );
+// The daily job without the command, wherever a step runs it; a step left
+// with no command is dropped.
+function withoutDailyCommand(
+  command: string,
+): (workflow: Workflow) => Workflow {
+  return (workflow) =>
+    withJobSteps(workflow, 'daily', (steps) =>
+      steps.flatMap((step) => {
+        if (step.run === undefined) {
+          return [step];
+        }
+        const run = step.run
+          .split('\n')
+          .filter((line) => line.trim() !== command)
+          .join('\n');
+        return run.trim() === '' ? [] : [{ ...step, run }];
+      }),
+    );
 }
+
+const withoutAuditStep = withoutDailyCommand('npm run check:audit');
+const withoutQuarantineStep = withoutDailyCommand('npm run check:quarantine');
 
 function withMutationJob(
   workflow: Workflow,
@@ -663,6 +696,13 @@ describe('gate wiring', () => {
     expect(chainedCommands(scripts.verify)).toEqual(
       VERIFY_GATES.map((gate) => `npm run ${gate}`),
     );
+  });
+
+  it('runs the quarantine check as the last of the twelve gates of verify', () => {
+    const commands = chainedCommands(scripts.verify);
+
+    expect(commands).toHaveLength(12);
+    expect(commands.at(-1)).toBe('npm run check:quarantine');
   });
 
   it('runs each gate once with its tool', () => {
@@ -842,7 +882,7 @@ describe('gate wiring', () => {
 
   it('runs a Mutation run with Stryker from test:mutation, and from neither verify nor verify:full', () => {
     expect(scripts['test:mutation']).toBe('stryker run stryker.config.js');
-    expect(chainedCommands(scripts.verify)).toHaveLength(11);
+    expect(chainedCommands(scripts.verify)).toHaveLength(12);
     expect(scripts.verify).not.toMatch(/test:mutation|stryker/);
     expect(scripts['verify:full']).not.toMatch(/test:mutation|stryker/);
   });
@@ -1010,11 +1050,13 @@ describe('gate wiring', () => {
     expect(added).toEqual([problem]);
   });
 
-  it('runs npm ci, then npm run check:audit and no other gate of verify in the daily job', () => {
+  it('runs npm ci, then npm run check:audit and npm run check:quarantine and no other gate of verify in the daily job', () => {
     const commands = jobCommands(dailyWorkflow, 'daily');
 
     expect(commands).toEqual(DAILY_COMMANDS);
-    for (const gate of VERIFY_GATES.filter((name) => name !== 'check:audit')) {
+    for (const gate of VERIFY_GATES.filter(
+      (name) => !DAILY_GATES.includes(name),
+    )) {
       expect(commands, gate).not.toContain(`npm run ${gate}`);
     }
     expect(commands).not.toContain('npm run verify');
@@ -1045,6 +1087,11 @@ describe('gate wiring', () => {
       'audit step',
       withoutAuditStep,
       'the daily job does not run npm run check:audit',
+    ],
+    [
+      'quarantine step',
+      withoutQuarantineStep,
+      'the daily job does not run npm run check:quarantine',
     ],
   ])(
     'fails the daily wiring when the %s is removed',

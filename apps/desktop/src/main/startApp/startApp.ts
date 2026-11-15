@@ -1,4 +1,3 @@
-import { mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import {
   createMainWindow,
@@ -17,8 +16,7 @@ import {
 } from '../hardenSession/hardenSession.ts';
 import { listAppOrigins } from '../matchAppOrigin/matchAppOrigin.ts';
 import { enableDebugPort } from '../enableDebugPort/enableDebugPort.ts';
-import { openDatabase } from '../db/openDatabase/openDatabase.ts';
-import { MIGRATIONS } from '../db/migrations/migrations.ts';
+import { openDataFolderDatabase } from '../db/openDataFolderDatabase/openDataFolderDatabase.ts';
 import { getAppInfo } from '../ipc/getAppInfo/getAppInfo.ts';
 import {
   registerIpcHandlers,
@@ -108,11 +106,7 @@ export function startApp<Window extends MainWindow & FocusableWindow>(
   const dataFolderReady = new Promise<void>((resolve) => {
     void app.whenReady().then(() => {
       try {
-        mkdirSync(dataFolder.folder, { recursive: true });
-        const database = openDatabase(
-          join(dataFolder.folder, 'dashcash.db'),
-          MIGRATIONS,
-        );
+        const database = openDataFolderDatabase(dataFolder.folder);
         app.on('will-quit', () => {
           database.close();
         });

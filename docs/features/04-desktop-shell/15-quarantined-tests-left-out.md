@@ -1,5 +1,5 @@
 ---
-status: in-progress
+status: done
 ---
 # Quarantined tests left out
 
@@ -45,29 +45,33 @@ add `grepInvert` and the reading of the **Quarantine** to
 
 ## Acceptance criteria
 
-- [ ] A RED commit adds the readers' tests and the gate test changes, and
+- [x] A RED commit adds the readers' tests and the gate test changes, and
       fails on them.
-- [ ] `readCalendarDate` accepts real dates and refuses malformed and
+- [x] `readCalendarDate` accepts real dates and refuses malformed and
       impossible ones; the audit check uses it and its existing tests stay
       unchanged and green.
-- [ ] `quality/flaky-quarantine.json` is `[]`.
-- [ ] `readQuarantine` reports a non-array, a missing or empty field and a
+- [x] `quality/flaky-quarantine.json` is `[]`.
+- [x] `readQuarantine` reports a non-array, a missing or empty field and a
       date that is not a real `YYYY-MM-DD` with the lines of A6, and
       returns the well-formed entries.
-- [ ] A quarantined title in its file matches its pattern; the same title
+- [x] A quarantined title in its file matches its pattern; the same title
       in another file, and a title with regex characters matched loosely,
       do not.
-- [ ] The config holds exactly six keys, `grepInvert` equal to the
+- [x] The config holds exactly six keys, `grepInvert` equal to the
       reader's patterns for the committed file; the gate test fails when
       the filter is removed or a seventh key appears.
-- [ ] The config throws on a malformed **Quarantine**.
-- [ ] The **Mutation score** stays at or above the **Break threshold** of
+- [x] The config throws on a malformed **Quarantine**.
+- [x] The **Mutation score** stays at or above the **Break threshold** of
       81 (`npm run test:mutation`, run by the builder, score in the Notes).
-- [ ] `npm run verify:full` is green.
+- [x] `npm run verify:full` is green.
 
 ## Blocked by
 
 - Blocked by `02-start-app-flow.md`
+
+## Notes
+
+- Mutation score: 82.97 (Break threshold 81), `npm run test:mutation`.
 
 ## User stories addressed
 

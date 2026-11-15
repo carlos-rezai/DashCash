@@ -6,12 +6,12 @@ import {
   type Violation,
 } from '../reportViolations/reportViolations.ts';
 import { isRecord } from '../isRecord/isRecord.ts';
+import { readCalendarDate } from '../readCalendarDate/readCalendarDate.ts';
 
 const EXCEPTIONS_FILE = 'quality/audit-exceptions.json';
 const NPM_AUDIT = 'npm audit';
 const RUN_AGAIN = 'run `npm run check:audit` to check the audit';
 const GHSA_ID = /^GHSA-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}$/;
-const CALENDAR_DATE = /^(\d{4})-(\d{2})-(\d{2})$/;
 const MAX_EXCEPTION_DAYS = 90;
 const MS_PER_DAY = 86_400_000;
 
@@ -23,21 +23,6 @@ type Advisory = {
   title: string;
   packages: string[];
 };
-
-// The time of a `YYYY-MM-DD` string in UTC milliseconds, or undefined when it
-// is not a real calendar date.
-function readDate(value: unknown): number | undefined {
-  if (typeof value !== 'string') {
-    return undefined;
-  }
-  const match = CALENDAR_DATE.exec(value);
-  if (match === null) {
-    return undefined;
-  }
-  const [year, month, day] = [match[1], match[2], match[3]].map(Number);
-  const time = Date.UTC(year ?? 0, (month ?? 0) - 1, day ?? 0);
-  return new Date(time).toISOString().startsWith(value) ? time : undefined;
-}
 
 type ReadAdvisories = { advisories: Advisory[]; withoutId: Violation[] };
 
@@ -111,8 +96,8 @@ function findEntryProblems(
   if (typeof reason !== 'string' || reason === '') {
     problems.push(buildEntryViolation(index, 'reason', 'must not be empty'));
   }
-  const added = readDate(entry['added']);
-  const expires = readDate(entry['expires']);
+  const added = readCalendarDate(entry['added']);
+  const expires = readCalendarDate(entry['expires']);
   if (added === undefined) {
     problems.push(
       buildEntryViolation(index, 'added', 'must be a real YYYY-MM-DD date'),
@@ -192,7 +177,7 @@ function findLapsedExceptions(
   const expired: Violation[] = [];
   const stale: Violation[] = [];
   for (const { advisory, expires } of valid) {
-    if ((readDate(expires) ?? 0) < today) {
+    if ((readCalendarDate(expires) ?? 0) < today) {
       expired.push({
         subject: advisory,
         reason: `audit exception expired on ${expires}`,
@@ -251,7 +236,7 @@ export function findAuditViolations(
   exceptions: unknown,
   today: string,
 ): Violation[] {
-  const todayTime = readDate(today) ?? Number.NaN;
+  const todayTime = readCalendarDate(today) ?? Number.NaN;
   const { valid, violations: problems } = readExceptions(exceptions, todayTime);
 
   const vulnerabilities = isRecord(report) ? report['vulnerabilities'] : null;

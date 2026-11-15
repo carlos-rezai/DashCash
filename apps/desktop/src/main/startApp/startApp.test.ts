@@ -9,7 +9,19 @@ import {
 } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+} from 'vitest';
+import {
+  watchConnections,
+  type ConnectionWatch,
+} from '../db/test-support/watchConnections/watchConnections.ts';
 import {
   createFakeElectron,
   type FakeElectronOptions,
@@ -40,6 +52,28 @@ beforeAll(() => {
 afterAll(() => {
   rmSync(dataRoot, { recursive: true, force: true });
 });
+
+// Every SQLite connection a test's app uses is watched, and closed after the
+// test, so no Database stays open in the temporary folder.
+let watch: ConnectionWatch;
+
+beforeEach(() => {
+  watch = watchConnections();
+});
+
+afterEach(() => {
+  watch.stop();
+  for (const db of watch.connections()) {
+    if (db.isOpen) {
+      db.close();
+    }
+  }
+});
+
+// Whether each SQLite connection used since the test began is still open.
+function openStates(): boolean[] {
+  return watch.connections().map((db) => db.isOpen);
+}
 
 // A path in the temporary folder that nothing has used yet.
 function freshPath(name: string): string {
@@ -570,6 +604,71 @@ describe('startApp', () => {
       expect(fake.windows).toEqual([]);
       expect(fake.ipcHandlers).toEqual([]);
       expect(fake.protocolHandlers).toEqual([]);
+    });
+  });
+
+  describe('Database', () => {
+    // SQLite's message for a file that is not a database (SQLITE_NOTADB).
+    const NOT_A_DATABASE = 'file is not a database';
+
+    it('opens dashcash.db in the Data folder when the app is ready, then opens the window', async () => {
+      const folder = freshPath('data');
+      const database = join(folder, 'dashcash.db');
+      const fake = start({}, { DASHCASH_DATA_FOLDER: folder });
+
+      expect(existsSync(database)).toBe(false);
+
+      await fake.ready();
+
+      expect(existsSync(database) && statSync(database).isFile()).toBe(true);
+      expect(watch.connections().map((db) => db.location())).toEqual([
+        database,
+      ]);
+      expect(openStates()).toEqual([true]);
+      expect(fake.errorBoxes).toEqual([]);
+      expect(fake.windows).toHaveLength(1);
+    });
+
+    it('closes the Database on will-quit', async () => {
+      const fake = start({}, { DASHCASH_DATA_FOLDER: freshPath('data') });
+      await fake.ready();
+
+      expect(openStates()).toEqual([true]);
+
+      fake.app.emit('will-quit', { preventDefault: () => undefined });
+
+      expect(openStates()).toEqual([false]);
+    });
+
+    it('ends a Database that cannot be opened in the Startup error with its cause, keeps the file, and sets up no handler, protocol or window', async () => {
+      const folder = freshPath('data');
+      mkdirSync(folder);
+      const database = join(folder, 'dashcash.db');
+      const content = 'invented, not a SQLite database\n'.repeat(8);
+      writeFileSync(database, content);
+      const fake = start({}, { DASHCASH_DATA_FOLDER: folder });
+
+      await fake.ready();
+
+      expect(fake.errorBoxes).toEqual([
+        {
+          title: STARTUP_ERROR_TITLE,
+          content: `${NOT_A_DATABASE}\n\nData folder: ${folder}`,
+          quitsBefore: 0,
+        },
+      ]);
+      expect(fake.quitCount()).toBe(1);
+      expect(fake.startupCalls).toEqual([
+        'app.setPath',
+        'app.enableSandbox',
+        'protocol.registerSchemesAsPrivileged',
+        'ready',
+      ]);
+      expect(fake.windows).toEqual([]);
+      expect(fake.ipcHandlers).toEqual([]);
+      expect(fake.protocolHandlers).toEqual([]);
+      expect(readFileSync(database, 'utf8')).toBe(content);
+      expect(openStates()).not.toContain(true);
     });
   });
 });

@@ -1,7 +1,7 @@
 import type { ChildProcess } from 'node:child_process';
 import { existsSync, readFileSync, statSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { isAbsolute, relative } from 'node:path';
+import { isAbsolute, join, relative } from 'node:path';
 import type { DashCashBridge } from '@dashcash/contract';
 import { expect, test } from './test-support/appFixture/appFixture.ts';
 
@@ -69,6 +69,14 @@ test('Start the app', async ({ app, window }) => {
   ).toBe(true);
   expect(statSync(dataFolder).isDirectory()).toBe(true);
   expect(rendererUrl).toBeUndefined();
+
+  // The Database (design log Q30): the app opened dashcash.db in its Data
+  // folder before its window.
+  const database = join(dataFolder, 'dashcash.db');
+  expect(
+    existsSync(database) && statSync(database).isFile(),
+    `${database} exists in the Data folder`,
+  ).toBe(true);
 
   const titles = await app.evaluate(({ BrowserWindow }) =>
     BrowserWindow.getAllWindows().map((browserWindow) =>

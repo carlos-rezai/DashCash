@@ -89,6 +89,7 @@ Requirements: Node (version in `.nvmrc`), npm.
 
 ```bash
 npm ci
+node_modules/.bin/install-electron  # Electron 45 downloads its binary on first use, not during npm ci
 npm run dev          # start the app with hot reload
 npm run storybook    # browse every component in isolation
 npm run verify       # everything CI checks, except end-to-end tests

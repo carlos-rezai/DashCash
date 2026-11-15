@@ -18,6 +18,7 @@ type WorkflowStep = {
 type WorkflowJob = {
   if?: unknown;
   needs?: unknown;
+  env?: Record<string, unknown>;
   steps?: WorkflowStep[];
 };
 
@@ -32,15 +33,32 @@ const PUSH_WORKFLOW = 'ci.yml';
 const PULL_REQUEST_WORKFLOW = 'pull-request.yml';
 const DAILY_WORKFLOW = 'daily.yml';
 const DAILY_SCHEDULE = '0 5 * * *';
-const DAILY_COMMANDS = ['npm ci', 'npm run check:audit'];
+const DAILY_COMMANDS = [
+  'npm ci',
+  'npm run check:audit',
+  'npm run check:quarantine',
+];
+// The gates of Verify the daily job runs too.
+const DAILY_GATES = ['check:audit', 'check:quarantine'];
 const DAILY_JOBS = ['daily', 'mutation'];
-const MUTATION_COMMANDS = ['npm ci', 'npm run test:mutation'];
+// Electron 45 downloads its binary on the first require('electron'), so every
+// job that runs tests installs it in its own step right after npm ci.
+const INSTALL_ELECTRON = 'node_modules/.bin/install-electron';
+const MUTATION_COMMANDS = ['npm ci', INSTALL_ELECTRON, 'npm run test:mutation'];
 const MUTATION_REPORT_NAME = 'mutation-report';
 const MUTATION_REPORT_PATH = 'reports/mutation/mutation.html';
 const UPLOAD_ACTION = 'actions/upload-artifact';
+// The pull-request job allows the Linux sandbox with this step, then runs
+// Verify full under a virtual display; nothing passes --no-sandbox.
+const SANDBOX_STEP =
+  'sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0';
+const VIRTUAL_DISPLAY = 'xvfb-run --auto-servernum';
+const VERIFY_FULL_UNDER_DISPLAY = `${VIRTUAL_DISPLAY} npm run verify:full`;
+const NO_SANDBOX = '--no-sandbox';
 const PULL_REQUEST_COMMANDS = [
   'npm ci',
-  'npm run verify:full',
+  INSTALL_ELECTRON,
+  VERIFY_FULL_UNDER_DISPLAY,
   'npm run check:pr',
   'npm run test:mutation',
 ];
@@ -53,6 +71,15 @@ const SECRET_SCAN_JOBS: [job: string, file: string][] = [
   ['pull-request', PULL_REQUEST_WORKFLOW],
   ['daily', DAILY_WORKFLOW],
 ];
+
+// The three jobs that run tests, each with its workflow file and its first
+// test command; the daily job runs no tests.
+const ELECTRON_INSTALL_JOBS: [job: string, file: string, firstTest: string][] =
+  [
+    ['verify', PUSH_WORKFLOW, 'npm run verify'],
+    ['pull-request', PULL_REQUEST_WORKFLOW, VERIFY_FULL_UNDER_DISPLAY],
+    ['mutation', DAILY_WORKFLOW, 'npm run test:mutation'],
+  ];
 
 // The gates of Verify, in their fixed order. Every ticket that adds a gate
 // inserts it here at its place.
@@ -68,12 +95,14 @@ const VERIFY_GATES = [
   'check:docs-drift',
   'check:licenses',
   'check:audit',
+  'check:quarantine',
 ];
 
 const GATE_COMMANDS: Record<string, string> = {
   'format:check': 'prettier --check .',
   lint: 'eslint . --max-warnings 0',
-  typecheck: 'tsc',
+  typecheck:
+    'tsc && tsc -p apps/desktop/tsconfig.node.json && tsc -p apps/desktop/tsconfig.web.json && tsc -p packages/contract/tsconfig.json',
   'lint:deps':
     'depcruise --config .dependency-cruiser.js apps packages scripts e2e',
   test: 'vitest run',
@@ -83,6 +112,7 @@ const GATE_COMMANDS: Record<string, string> = {
   'check:docs-drift': 'node scripts/checkDocsDrift/checkDocsDrift.ts',
   'check:licenses': 'node scripts/checkLicenses/checkLicenses.ts',
   'check:audit': 'node scripts/checkAudit/checkAudit.ts',
+  'check:quarantine': 'node scripts/checkQuarantine/checkQuarantine.ts',
 };
 
 function readRootFile(path: string): string {
@@ -196,6 +226,7 @@ function findDailyWiringProblems(workflow: Workflow): string[] {
   const commands = jobCommands(workflow, 'daily');
   const npmCi = commands.indexOf('npm ci');
   const audit = commands.indexOf('npm run check:audit');
+  const quarantine = commands.indexOf('npm run check:quarantine');
   const npmCiStep = steps.findIndex((step) => step.run === 'npm ci');
   if (
     npmCi === -1 ||
@@ -208,6 +239,13 @@ function findDailyWiringProblems(workflow: Workflow): string[] {
   }
   if (audit === -1) {
     problems.push('the daily job does not run npm run check:audit');
+  }
+  if (quarantine === -1) {
+    problems.push('the daily job does not run npm run check:quarantine');
+  } else if (npmCi === -1 || quarantine < npmCi) {
+    problems.push(
+      'the daily job does not run npm ci before the quarantine check',
+    );
   }
   for (const command of commands) {
     if (!DAILY_COMMANDS.includes(command)) {
@@ -247,6 +285,74 @@ function findSecretScanProblems(workflow: Workflow, job: string): string[] {
   }
   return problems;
 }
+
+function isInstallElectronStep(step: WorkflowStep): boolean {
+  return step.run === INSTALL_ELECTRON;
+}
+
+// What a job lacks in its Electron install, one line each: the install in its
+// own step, directly after the npm ci step and before the job's first test
+// command.
+function findElectronInstallProblems(
+  workflow: Workflow,
+  job: string,
+  firstTest: string,
+): string[] {
+  const steps = jobSteps(workflow, job);
+  const install = steps.findIndex(isInstallElectronStep);
+  if (install === -1) {
+    return [`the ${job} job does not run ${INSTALL_ELECTRON}`];
+  }
+
+  const problems: string[] = [];
+  const npmCi = steps.findIndex((step) => step.run === 'npm ci');
+  if (npmCi === -1 || install !== npmCi + 1) {
+    problems.push(
+      `the ${job} job does not run ${INSTALL_ELECTRON} directly after npm ci`,
+    );
+  }
+  const test = steps.findIndex((step) => step.run === firstTest);
+  if (test === -1 || install > test) {
+    problems.push(
+      `the ${job} job does not run ${INSTALL_ELECTRON} before ${firstTest}`,
+    );
+  }
+  return problems;
+}
+
+function withoutInstallElectron(workflow: Workflow, job: string): Workflow {
+  return withJobSteps(workflow, job, (steps) =>
+    steps.filter((step) => !isInstallElectronStep(step)),
+  );
+}
+
+// The job with its install step moved to just before (offset 0) or just
+// after (offset 1) the first step whose command is `anchor`.
+function withInstallElectronMoved(
+  anchor: (firstTest: string) => string,
+  offset: 0 | 1,
+): (workflow: Workflow, job: string, firstTest: string) => Workflow {
+  return (workflow, job, firstTest) =>
+    withJobSteps(workflow, job, (steps) => {
+      const others = steps.filter((step) => !isInstallElectronStep(step));
+      const at =
+        others.findIndex((step) => step.run === anchor(firstTest)) + offset;
+      return [
+        ...others.slice(0, at),
+        ...steps.filter(isInstallElectronStep),
+        ...others.slice(at),
+      ];
+    });
+}
+
+const withInstallElectronBeforeNpmCi = withInstallElectronMoved(
+  () => 'npm ci',
+  0,
+);
+const withInstallElectronAfterFirstTest = withInstallElectronMoved(
+  (firstTest) => firstTest,
+  1,
+);
 
 function isGitleaksStep(step: WorkflowStep): boolean {
   return (step.uses ?? '').startsWith(`${GITLEAKS_ACTION}@`);
@@ -366,6 +472,50 @@ function findPullRequestMutationProblems(workflow: Workflow): string[] {
   return [];
 }
 
+function runsVerifyFull(command: string): boolean {
+  return command.includes('npm run verify:full');
+}
+
+// What the pull-request job lacks in its Linux sandbox and display wiring,
+// one line each: the sysctl step, its place before verify:full, the
+// xvfb-run wrapping, and a --no-sandbox anywhere in the job.
+function findPullRequestSandboxProblems(workflow: Workflow): string[] {
+  const problems: string[] = [];
+  const commands = jobCommands(workflow, 'pull-request');
+  const sandboxStep = commands.indexOf(SANDBOX_STEP);
+  const verifyFull = commands.findIndex(runsVerifyFull);
+  if (sandboxStep === -1) {
+    problems.push(`the pull-request job does not run ${SANDBOX_STEP}`);
+  } else if (verifyFull !== -1 && sandboxStep > verifyFull) {
+    problems.push(
+      'the pull-request job runs the sysctl step after npm run verify:full',
+    );
+  }
+  if (!commands.includes(VERIFY_FULL_UNDER_DISPLAY)) {
+    problems.push(
+      `the pull-request job does not run npm run verify:full under ${VIRTUAL_DISPLAY}`,
+    );
+  }
+  if (
+    JSON.stringify(workflow.jobs?.['pull-request'] ?? {}).includes(NO_SANDBOX)
+  ) {
+    problems.push(`the pull-request job passes ${NO_SANDBOX}`);
+  }
+  return problems;
+}
+
+// The workflow files and jobs whose commands hold `text`, as `file: job`.
+function jobsRunning(text: string): string[] {
+  return workflowFiles().flatMap((file) => {
+    const workflow = readWorkflow(file);
+    return Object.keys(workflow.jobs ?? {})
+      .filter((job) =>
+        jobCommands(workflow, job).some((command) => command.includes(text)),
+      )
+      .map((job) => `${file}: ${job}`);
+  });
+}
+
 // The workflow with the named job's steps changed by `change`.
 function withJobSteps(
   workflow: Workflow,
@@ -434,11 +584,28 @@ function withoutFullHistory(workflow: Workflow): Workflow {
   );
 }
 
-function withoutAuditStep(workflow: Workflow): Workflow {
-  return withJobSteps(workflow, 'daily', (steps) =>
-    steps.filter((step) => !(step.run ?? '').includes('npm run check:audit')),
-  );
+// The daily job without the command, wherever a step runs it; a step left
+// with no command is dropped.
+function withoutDailyCommand(
+  command: string,
+): (workflow: Workflow) => Workflow {
+  return (workflow) =>
+    withJobSteps(workflow, 'daily', (steps) =>
+      steps.flatMap((step) => {
+        if (step.run === undefined) {
+          return [step];
+        }
+        const run = step.run
+          .split('\n')
+          .filter((line) => line.trim() !== command)
+          .join('\n');
+        return run.trim() === '' ? [] : [{ ...step, run }];
+      }),
+    );
 }
+
+const withoutAuditStep = withoutDailyCommand('npm run check:audit');
+const withoutQuarantineStep = withoutDailyCommand('npm run check:quarantine');
 
 function withMutationJob(
   workflow: Workflow,
@@ -538,6 +705,67 @@ function withPullRequestMutationBeforeCheck(workflow: Workflow): Workflow {
   });
 }
 
+function isSandboxStep(step: WorkflowStep): boolean {
+  return (step.run ?? '').includes(SANDBOX_STEP);
+}
+
+function withoutSandboxStep(workflow: Workflow): Workflow {
+  return withJobSteps(workflow, 'pull-request', (steps) =>
+    steps.filter((step) => !isSandboxStep(step)),
+  );
+}
+
+function withSandboxStepAfterVerifyFull(workflow: Workflow): Workflow {
+  return withJobSteps(workflow, 'pull-request', (steps) => {
+    const others = steps.filter((step) => !isSandboxStep(step));
+    const verifyFull = others.findIndex((step) =>
+      runsVerifyFull(step.run ?? ''),
+    );
+    return [
+      ...others.slice(0, verifyFull + 1),
+      ...steps.filter(isSandboxStep),
+      ...others.slice(verifyFull + 1),
+    ];
+  });
+}
+
+function withoutVirtualDisplay(workflow: Workflow): Workflow {
+  return withJobSteps(workflow, 'pull-request', (steps) =>
+    steps.map((step) =>
+      step.run === undefined
+        ? step
+        : { ...step, run: step.run.replace(`${VIRTUAL_DISPLAY} `, '') },
+    ),
+  );
+}
+
+function withNoSandboxOnVerifyFull(workflow: Workflow): Workflow {
+  return withJobSteps(workflow, 'pull-request', (steps) =>
+    steps.map((step) =>
+      runsVerifyFull(step.run ?? '')
+        ? {
+            ...step,
+            env: { ...step.env, ELECTRON_EXTRA_LAUNCH_ARGS: NO_SANDBOX },
+          }
+        : step,
+    ),
+  );
+}
+
+function withNoSandboxOnJob(workflow: Workflow): Workflow {
+  const job = workflow.jobs?.['pull-request'] ?? {};
+  return {
+    ...workflow,
+    jobs: {
+      ...workflow.jobs,
+      'pull-request': {
+        ...job,
+        env: { ...job.env, ELECTRON_EXTRA_LAUNCH_ARGS: NO_SANDBOX },
+      },
+    },
+  };
+}
+
 const packageJson = JSON.parse(readRootFile('package.json')) as PackageJson;
 const pushWorkflow = readWorkflow(PUSH_WORKFLOW);
 const pullRequestWorkflow = readWorkflow(PULL_REQUEST_WORKFLOW);
@@ -551,14 +779,29 @@ describe('gate wiring', () => {
     );
   });
 
+  it('runs the quarantine check as the last of the twelve gates of verify', () => {
+    const commands = chainedCommands(scripts.verify);
+
+    expect(commands).toHaveLength(12);
+    expect(commands.at(-1)).toBe('npm run check:quarantine');
+  });
+
   it('runs each gate once with its tool', () => {
     for (const [gate, command] of Object.entries(GATE_COMMANDS)) {
       expect(scripts[gate], gate).toBe(command);
     }
   });
 
-  it('runs verify from verify:full', () => {
-    expect(chainedCommands(scripts['verify:full'])).toContain('npm run verify');
+  it('runs exactly verify, the App build, then the end-to-end tests from verify:full, failing fast', () => {
+    expect(chainedCommands(scripts['verify:full'])).toEqual([
+      'npm run verify',
+      'npm run build',
+      'npm run test:e2e',
+    ]);
+  });
+
+  it('runs the end-to-end tests with Playwright from test:e2e', () => {
+    expect(scripts['test:e2e']).toBe('playwright test');
   });
 
   it('keeps every npm script free of command substitution, pipes and globs', () => {
@@ -580,6 +823,82 @@ describe('gate wiring', () => {
 
   it('runs npm run verify in the verify job', () => {
     expect(jobCommands(pushWorkflow, 'verify')).toContain('npm run verify');
+  });
+
+  it('runs exactly npm ci, node_modules/.bin/install-electron, then npm run verify in the verify job', () => {
+    expect(jobCommands(pushWorkflow, 'verify')).toEqual([
+      'npm ci',
+      INSTALL_ELECTRON,
+      'npm run verify',
+    ]);
+  });
+
+  it.each(ELECTRON_INSTALL_JOBS)(
+    'installs the Electron binary in its own step directly after npm ci and before the first test command in the %s job',
+    (job, file, firstTest) => {
+      expect(
+        findElectronInstallProblems(readWorkflow(file), job, firstTest),
+      ).toEqual([]);
+    },
+  );
+
+  it.each(
+    ELECTRON_INSTALL_JOBS.flatMap(
+      ([job, file, firstTest]) =>
+        [
+          [
+            job,
+            'its install-electron step is removed',
+            file,
+            firstTest,
+            withoutInstallElectron,
+            [`the ${job} job does not run ${INSTALL_ELECTRON}`],
+          ],
+          [
+            job,
+            'its install-electron step is moved before npm ci',
+            file,
+            firstTest,
+            withInstallElectronBeforeNpmCi,
+            [
+              `the ${job} job does not run ${INSTALL_ELECTRON} directly after npm ci`,
+            ],
+          ],
+          [
+            job,
+            'its install-electron step is moved after its first test command',
+            file,
+            firstTest,
+            withInstallElectronAfterFirstTest,
+            [
+              `the ${job} job does not run ${INSTALL_ELECTRON} directly after npm ci`,
+              `the ${job} job does not run ${INSTALL_ELECTRON} before ${firstTest}`,
+            ],
+          ],
+        ] as const,
+    ),
+  )(
+    'fails the Electron install of the %s job when %s',
+    (job, _change, file, firstTest, change, problems) => {
+      const workflow = readWorkflow(file);
+      const before = findElectronInstallProblems(workflow, job, firstTest);
+      const after = findElectronInstallProblems(
+        change(workflow, job, firstTest),
+        job,
+        firstTest,
+      );
+
+      expect(before).toEqual([]);
+      expect(after).toEqual(problems);
+    },
+  );
+
+  it('installs the Electron binary only in the verify, pull-request and mutation jobs', () => {
+    expect(jobsRunning(INSTALL_ELECTRON)).toEqual([
+      `${PUSH_WORKFLOW}: verify`,
+      `${DAILY_WORKFLOW}: mutation`,
+      `${PULL_REQUEST_WORKFLOW}: pull-request`,
+    ]);
   });
 
   it('triggers the pull-request workflow, Pull request, only by pull_request into main', () => {
@@ -615,10 +934,66 @@ describe('gate wiring', () => {
     },
   );
 
-  it('runs npm ci, npm run verify:full, npm run check:pr, then npm run test:mutation in the pull-request job', () => {
-    expect(jobCommands(pullRequestWorkflow, 'pull-request')).toEqual(
+  it('runs npm ci, node_modules/.bin/install-electron, npm run verify:full under xvfb-run, npm run check:pr, then npm run test:mutation in the pull-request job, beside the sysctl step', () => {
+    const commands = jobCommands(pullRequestWorkflow, 'pull-request');
+
+    expect(commands.filter((command) => command === SANDBOX_STEP)).toEqual([
+      SANDBOX_STEP,
+    ]);
+    expect(commands.filter((command) => command !== SANDBOX_STEP)).toEqual(
       PULL_REQUEST_COMMANDS,
     );
+  });
+
+  it('finds nothing missing from the sandbox and display wiring of the pull-request job', () => {
+    expect(findPullRequestSandboxProblems(pullRequestWorkflow)).toEqual([]);
+  });
+
+  it.each([
+    [
+      'its sysctl step is removed',
+      withoutSandboxStep,
+      `the pull-request job does not run ${SANDBOX_STEP}`,
+    ],
+    [
+      'its sysctl step is moved after npm run verify:full',
+      withSandboxStepAfterVerifyFull,
+      'the pull-request job runs the sysctl step after npm run verify:full',
+    ],
+    [
+      'its xvfb-run wrapping is removed',
+      withoutVirtualDisplay,
+      `the pull-request job does not run npm run verify:full under ${VIRTUAL_DISPLAY}`,
+    ],
+    [
+      'its verify:full step passes --no-sandbox',
+      withNoSandboxOnVerifyFull,
+      `the pull-request job passes ${NO_SANDBOX}`,
+    ],
+    [
+      'the job passes --no-sandbox',
+      withNoSandboxOnJob,
+      `the pull-request job passes ${NO_SANDBOX}`,
+    ],
+  ])(
+    'fails the sandbox wiring of the pull-request job when %s',
+    (_change, change, problem) => {
+      const before = findPullRequestSandboxProblems(pullRequestWorkflow);
+      const after = findPullRequestSandboxProblems(change(pullRequestWorkflow));
+
+      expect(before).toEqual([]);
+      expect(after).toEqual([problem]);
+    },
+  );
+
+  it('runs the sysctl step and xvfb-run only in the pull-request job, and --no-sandbox in no job', () => {
+    expect(jobsRunning(SANDBOX_STEP)).toEqual([
+      `${PULL_REQUEST_WORKFLOW}: pull-request`,
+    ]);
+    expect(jobsRunning(VIRTUAL_DISPLAY)).toEqual([
+      `${PULL_REQUEST_WORKFLOW}: pull-request`,
+    ]);
+    expect(jobsRunning(NO_SANDBOX)).toEqual([]);
   });
 
   it('finds nothing missing from the mutation run of the pull-request job', () => {
@@ -645,9 +1020,9 @@ describe('gate wiring', () => {
     expect(added).toEqual([problem]);
   });
 
-  it('runs npm run verify:full in the pull-request job', () => {
+  it('runs npm run verify:full under xvfb-run --auto-servernum in the pull-request job', () => {
     expect(jobCommands(pullRequestWorkflow, 'pull-request')).toContain(
-      'npm run verify:full',
+      VERIFY_FULL_UNDER_DISPLAY,
     );
   });
 
@@ -664,14 +1039,14 @@ describe('gate wiring', () => {
 
   it('runs a Mutation run with Stryker from test:mutation, and from neither verify nor verify:full', () => {
     expect(scripts['test:mutation']).toBe('stryker run stryker.config.js');
-    expect(chainedCommands(scripts.verify)).toHaveLength(11);
+    expect(chainedCommands(scripts.verify)).toHaveLength(12);
     expect(scripts.verify).not.toMatch(/test:mutation|stryker/);
     expect(scripts['verify:full']).not.toMatch(/test:mutation|stryker/);
   });
 
   it('runs npm run check:pr after npm run verify:full in the pull-request job', () => {
     const commands = jobCommands(pullRequestWorkflow, 'pull-request');
-    const verifyFull = commands.indexOf('npm run verify:full');
+    const verifyFull = commands.indexOf(VERIFY_FULL_UNDER_DISPLAY);
 
     expect(verifyFull).toBeGreaterThanOrEqual(0);
     expect(commands.indexOf('npm run check:pr')).toBeGreaterThan(verifyFull);
@@ -711,7 +1086,7 @@ describe('gate wiring', () => {
     expect(job?.needs).toBeUndefined();
   });
 
-  it('runs checkout, setup-node, npm ci, npm run test:mutation, then the upload of the mutation report in the mutation job', () => {
+  it('runs checkout, setup-node, npm ci, node_modules/.bin/install-electron, npm run test:mutation, then the upload of the mutation report in the mutation job', () => {
     const steps = jobSteps(dailyWorkflow, 'mutation');
     const kinds = steps.map(
       (step) => step.run ?? (step.uses ?? '').split('@')[0],
@@ -721,6 +1096,7 @@ describe('gate wiring', () => {
       'actions/checkout',
       'actions/setup-node',
       'npm ci',
+      INSTALL_ELECTRON,
       'npm run test:mutation',
       UPLOAD_ACTION,
     ]);
@@ -729,14 +1105,14 @@ describe('gate wiring', () => {
       'node-version-file': '.nvmrc',
       cache: 'npm',
     });
-    expect(steps[4]?.with).toEqual({
+    expect(steps[5]?.with).toEqual({
       name: MUTATION_REPORT_NAME,
       path: MUTATION_REPORT_PATH,
     });
-    expect(steps[4]?.if).toBe('always()');
+    expect(steps[5]?.if).toBe('always()');
   });
 
-  it('runs exactly npm ci, then npm run test:mutation in the mutation job', () => {
+  it('runs exactly npm ci, node_modules/.bin/install-electron, then npm run test:mutation in the mutation job', () => {
     expect(jobCommands(dailyWorkflow, 'mutation')).toEqual(MUTATION_COMMANDS);
   });
 
@@ -832,11 +1208,13 @@ describe('gate wiring', () => {
     expect(added).toEqual([problem]);
   });
 
-  it('runs npm ci, then npm run check:audit and no other gate of verify in the daily job', () => {
+  it('runs npm ci, then npm run check:audit and npm run check:quarantine and no other gate of verify in the daily job', () => {
     const commands = jobCommands(dailyWorkflow, 'daily');
 
     expect(commands).toEqual(DAILY_COMMANDS);
-    for (const gate of VERIFY_GATES.filter((name) => name !== 'check:audit')) {
+    for (const gate of VERIFY_GATES.filter(
+      (name) => !DAILY_GATES.includes(name),
+    )) {
       expect(commands, gate).not.toContain(`npm run ${gate}`);
     }
     expect(commands).not.toContain('npm run verify');
@@ -867,6 +1245,11 @@ describe('gate wiring', () => {
       'audit step',
       withoutAuditStep,
       'the daily job does not run npm run check:audit',
+    ],
+    [
+      'quarantine step',
+      withoutQuarantineStep,
+      'the daily job does not run npm run check:quarantine',
     ],
   ])(
     'fails the daily wiring when the %s is removed',

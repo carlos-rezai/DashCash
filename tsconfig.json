@@ -10,6 +10,7 @@
     "*.js",
     ".dependency-cruiser.js",
     "scripts",
+    "e2e",
     "gates/**/*.ts"
   ]
 }

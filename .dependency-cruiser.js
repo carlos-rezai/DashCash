@@ -94,6 +94,14 @@ export default {
       from: { pathNot: NOT_SHIPPING },
       to: { path: '(^|/)test-support/' },
     },
+    {
+      name: 'sqlite-only-in-main-db',
+      comment:
+        'Only apps/desktop/src/main/db/ imports node:sqlite, tests included.',
+      severity: 'error',
+      from: { pathNot: '^apps/desktop/src/main/db/' },
+      to: { path: '^node:sqlite$' },
+    },
     ...ladderRules,
     {
       name: 'renderer-shared-not-to-ladder',
@@ -122,7 +130,7 @@ export default {
   ],
   options: {
     doNotFollow: { path: 'node_modules' },
-    exclude: { path: '(^|/)\\.gitkeep$' },
+    exclude: { path: ['(^|/)\\.gitkeep$', '^apps/desktop/out/'] },
     tsPreCompilationDeps: true,
   },
 };

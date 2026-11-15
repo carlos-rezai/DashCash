@@ -32,8 +32,10 @@ Dispatch a fresh `reviewer` with the FEATURE or REFACTOR prompt, the range
 commits and the round-1 findings, each to be checked off as fixed or not.
 
 Post its answer on the PR as plain Markdown, headed `Review round <n>`:
-`gh pr comment <pr> --body-file <tmp>`. Write the answer into the file as
-it came, with no table, no quote markers and no other wrapping.
+write the answer into a file outside the repository with the Write tool,
+never with a heredoc or other Bash command, then
+`gh pr comment <pr> --body-file <file>`. Write the answer as it came, with
+no table, no quote markers and no other wrapping.
 
 - **APPROVE**: done. Report the PR link and that it waits for the merge.
 - **CHANGES** on round 1: go to **3**.
@@ -44,18 +46,21 @@ it came, with no table, no quote markers and no other wrapping.
 
 - **Feature PR**: group the findings by the ticket number each one names.
   Per ticket, dispatch a fresh `builder` with issue-loop's FIX prompt and
-  that ticket's findings, adding: "Where the fix changes what the ticket,
-  `prd.md` or `plan.md` says, update that text in the same commit; never
-  edit `design-log.md`." Verify `git log -1 --format=%s` reads
-  `fix: [<feature>] <nn> address review` and the tree is clean.
+  that ticket's findings, adding: "Where the fix changes what the ticket
+  says, update the ticket in the same commit. Where the code now differs
+  from `prd.md` or `plan.md`, do not rewrite them: append a deviation to
+  `design-log.md` Implementation Results that names the difference and why.
+  Never edit the design log's original sections." Verify
+  `git log -1 --format=%s` reads `fix: [<feature>] <nn> address review` and
+  the tree is clean.
 - **Refactor PR**: append each finding to `refactor-plan.md` as a new
   unticked step, numbered on from the last, description under 50
   characters, the reviewer's reason in Further Notes; commit
   `docs: [<feature>] extend refactor plan`; then run each new step as
   refactor-loop's **Per step** does, without its push.
 
-`git push`, then post on the PR one line per finding: `<n>. fixed in <sha>`.
-Back to **1** for round 2.
+`git push`, then post on the PR one line per finding: `<n>. fixed in <sha>`,
+written to a file with the Write tool as in **2**. Back to **1** for round 2.
 
 ## Verdict format
 
@@ -90,8 +95,12 @@ Both prompts ask for this format, so every comment reads the same:
 >   tickets
 > - conventions that changed during the feature: every earlier ticket
 >   follows the version in force at the end
-> - docs that drifted from the code: ticket texts, `prd.md` and `plan.md`
->   still say what was built (`design-log.md` is immutable and exempt)
+> - docs that drifted from the code: ticket texts must still say what was
+>   built. `prd.md` and `plan.md` record the plan; where they differ from
+>   the code, a deviation in `design-log.md` Implementation Results must
+>   explain it. A difference without such a deviation is a finding; one
+>   with it is not. Docs outside the feature folder (README, conventions,
+>   glossary, quality-gates) must match the code.
 > - the screens the feature touches, together: consistent with each other
 >   and with `docs/design/`
 >

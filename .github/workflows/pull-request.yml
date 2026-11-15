@@ -21,7 +21,9 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
       - run: npm ci
-      - run: npm run verify:full
+      - run: node_modules/.bin/install-electron
+      - run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+      - run: xvfb-run --auto-servernum npm run verify:full
       - run: npm run check:pr
         env:
           PR_TITLE: ${{ github.event.pull_request.title }}

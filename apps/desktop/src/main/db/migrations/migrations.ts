@@ -7,3 +7,6 @@ export type Migration = {
   name: string;
   up: (db: DatabaseSync) => void;
 };
+
+// The ordered list, empty in 04: no table exists yet.
+export const MIGRATIONS: Migration[] = [];

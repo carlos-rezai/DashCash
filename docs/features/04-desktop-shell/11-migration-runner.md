@@ -1,5 +1,5 @@
 ---
-status: in-progress
+status: done
 ---
 # Migration runner
 
@@ -51,26 +51,26 @@ rule only) and `gates/layerRules/layerRules.test.ts`.
 
 ## Acceptance criteria
 
-- [ ] Before the runner is built, a test of its own runs the pinned
+- [x] Before the runner is built, a test of its own runs the pinned
       Electron with `ELECTRON_RUN_AS_NODE=1` and shows that `node:sqlite`
       loads and opens an in-memory database without an experimental
       warning and without a flag; should it fail, the driver is switched
       to `better-sqlite3` rebuilt for Electron and the docs are updated as
       described above (D1).
-- [ ] A RED commit adds the runner's Vitest tests and the layer-rule gate
+- [x] A RED commit adds the runner's Vitest tests and the layer-rule gate
       test cases, and fails on them.
-- [ ] Against real SQLite: an empty list leaves version 0; sample
+- [x] Against real SQLite: an empty list leaves version 0; sample
       migrations run in order and set the version; an applied one does not
       run again; a failing one leaves the previous version and table set.
-- [ ] A gap or a duplicate is refused with
+- [x] A gap or a duplicate is refused with
       `The migrations are not numbered 1 to <n> without gaps or duplicates.`;
       a newer stored version is refused with
       `dashcash.db has schema version <n>, but this DashCash knows only up to <m>.`
-- [ ] The committed migration list is empty.
-- [ ] The layer-rule gate test shows `node:sqlite` forbidden from main
+- [x] The committed migration list is empty.
+- [x] The layer-rule gate test shows `node:sqlite` forbidden from main
       outside `main/db/`, from a test outside it, from the renderer, the
       preload and `e2e/`, and allowed from `main/db/` and its tests.
-- [ ] `npm run verify` is green.
+- [x] `npm run verify` is green.
 
 ## Blocked by
 

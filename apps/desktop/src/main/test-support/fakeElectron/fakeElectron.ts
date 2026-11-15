@@ -8,8 +8,8 @@ import { fileURLToPath } from 'node:url';
 // `ipcMain` and `dialog`.
 // It records what a module does with them (windows created, shown, loaded,
 // closed; quits; menu changes; the sandbox enabled; schemes and protocol
-// handlers registered; paths set; error boxes shown; the order of the
-// startup calls) so a test can assert
+// handlers registered; paths set; error boxes shown; Single-instance lock
+// requests; the order of the startup calls) so a test can assert
 // behaviour without Electron. Its `net.fetch` serves `file:` URLs from the
 // disk, as Electron's does. Its web contents and default session act as the
 // page would (navigate, redirect, open a window, attach a webview, ask for a
@@ -27,6 +27,18 @@ export type FakeElectronOptions = {
   // What `app.getPath('userData')` returns until `app.setPath` changes it;
   // an invented path unless given.
   userData?: string;
+  // The `userData` paths whose Single-instance lock another running app
+  // holds; none unless given. As in Electron, the lock belongs to the
+  // `userData` in force when `app.requestSingleInstanceLock()` is called.
+  lockedFolders?: readonly string[];
+};
+
+// One call of `app.requestSingleInstanceLock`: the `userData` it locked,
+// whether the lock was granted, and when.
+export type LockRequest = {
+  userData: string;
+  granted: boolean;
+  when: ReadyPhase;
 };
 
 // One call of `app.setPath`.
@@ -67,6 +79,7 @@ export type ProtocolHandlerCall = { scheme: string; when: ReadyPhase };
 // records them; `ready` is the moment the app became ready.
 export type StartupCall =
   | 'app.setPath'
+  | 'app.requestSingleInstanceLock'
   | 'app.enableSandbox'
   | 'protocol.registerSchemesAsPrivileged'
   | 'ready'
@@ -160,6 +173,11 @@ export type FakeBrowserWindow = EventEmitter & {
   show(): void;
   showInactive(): void;
   hide(): void;
+  isMinimized(): boolean;
+  minimize(): void;
+  restore(): void;
+  focus(): void;
+  isFocused(): boolean;
   loadFile(path: string): Promise<void>;
   loadURL(url: string): Promise<void>;
   // The page loaded last.
@@ -207,6 +225,11 @@ export type FakeElectron = {
   startupCalls: StartupCall[];
   // Every call of `ipcMain.handle`, in order.
   ipcHandlers: IpcHandlerCall[];
+  // Every call of `app.requestSingleInstanceLock`, in order.
+  lockRequests: LockRequest[];
+  // Another app starts with the same `userData`: as Electron does in the app
+  // holding the Single-instance lock, emits the app's `second-instance`.
+  secondInstance(): void;
   // The page at app://dashcash/index.html calls `ipcRenderer.invoke(channel,
   // ...args)`. As in Electron, it resolves with what the channel's handler
   // returns or resolves, rejects with "Error invoking remote method" and the
@@ -256,6 +279,7 @@ type FakeApp = EventEmitter & {
   // Electron's paths; the fake knows only `userData`.
   getPath(name: string): string;
   setPath(name: string, path: string): void;
+  requestSingleInstanceLock(): boolean;
   isReady(): boolean;
   whenReady(): Promise<void>;
   enableSandbox(): void;
@@ -314,6 +338,7 @@ export function createFakeElectron(
   const ipcListeners = new Map<string, IpcMainHandler>();
   const pathChanges: PathChange[] = [];
   const errorBoxes: ErrorBox[] = [];
+  const lockRequests: LockRequest[] = [];
   let userData = options.userData ?? DEFAULT_USER_DATA;
   let quits = 0;
   let isReady = false;
@@ -346,6 +371,12 @@ export function createFakeElectron(
       if (name === 'userData') {
         userData = path;
       }
+    },
+    requestSingleInstanceLock: () => {
+      startupCalls.push('app.requestSingleInstanceLock');
+      const granted = !(options.lockedFolders ?? []).includes(userData);
+      lockRequests.push({ userData, granted, when: readyPhase() });
+      return granted;
     },
     isReady: () => isReady,
     whenReady: () => readyPromise,
@@ -443,6 +474,8 @@ export function createFakeElectron(
     readonly options: WindowOptions;
     readonly webContents: FakeWebContents;
     private visible: boolean;
+    private minimized = false;
+    private focused = false;
     private title: string;
     private readonly pages: LoadedPage[] = [];
     private destroyed = false;
@@ -487,6 +520,28 @@ export function createFakeElectron(
 
     hide(): void {
       this.visible = false;
+    }
+
+    isMinimized(): boolean {
+      return this.minimized;
+    }
+
+    // A minimised window loses the focus.
+    minimize(): void {
+      this.minimized = true;
+      this.focused = false;
+    }
+
+    restore(): void {
+      this.minimized = false;
+    }
+
+    focus(): void {
+      this.focused = true;
+    }
+
+    isFocused(): boolean {
+      return this.focused;
     }
 
     loadFile(path: string): Promise<void> {
@@ -662,6 +717,16 @@ export function createFakeElectron(
     protocolHandlers,
     startupCalls,
     ipcHandlers,
+    lockRequests,
+    secondInstance: () => {
+      app.emit(
+        'second-instance',
+        { preventDefault: () => undefined },
+        ['dashcash'],
+        '/invented',
+        {},
+      );
+    },
     invoke,
     invokeFrom,
     request: async (url) => {

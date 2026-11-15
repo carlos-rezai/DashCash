@@ -25,6 +25,7 @@ import {
 import {
   createFakeElectron,
   type FakeElectronOptions,
+  type StartupCall,
 } from '../test-support/fakeElectron/fakeElectron.ts';
 import { startApp } from './startApp.ts';
 
@@ -343,6 +344,7 @@ describe('startApp', () => {
     const fake = start();
 
     expect(fake.startupCalls).toEqual([
+      'app.requestSingleInstanceLock',
       'app.enableSandbox',
       'protocol.registerSchemesAsPrivileged',
     ]);
@@ -352,17 +354,18 @@ describe('startApp', () => {
     // The protocol handler, then the session's permission handlers (in
     // either order), then the IPC handlers, then the window.
     const calls = fake.startupCalls;
-    expect(calls.slice(0, 4)).toEqual([
+    expect(calls.slice(0, 5)).toEqual([
+      'app.requestSingleInstanceLock',
       'app.enableSandbox',
       'protocol.registerSchemesAsPrivileged',
       'ready',
       'protocol.handle',
     ]);
-    expect([...calls.slice(4, 6)].sort()).toEqual([
+    expect([...calls.slice(5, 7)].sort()).toEqual([
       'session.setPermissionCheckHandler',
       'session.setPermissionRequestHandler',
     ]);
-    expect(calls.slice(6)).toEqual(['ipcMain.handle', 'new BrowserWindow']);
+    expect(calls.slice(7)).toEqual(['ipcMain.handle', 'new BrowserWindow']);
   });
 
   describe('session hardening', () => {
@@ -660,6 +663,7 @@ describe('startApp', () => {
       expect(fake.quitCount()).toBe(1);
       expect(fake.startupCalls).toEqual([
         'app.setPath',
+        'app.requestSingleInstanceLock',
         'app.enableSandbox',
         'protocol.registerSchemesAsPrivileged',
         'ready',
@@ -669,6 +673,101 @@ describe('startApp', () => {
       expect(fake.protocolHandlers).toEqual([]);
       expect(readFileSync(database, 'utf8')).toBe(content);
       expect(openStates()).not.toContain(true);
+    });
+  });
+
+  describe('Single-instance lock', () => {
+    it('takes the lock on the Data folder right after setting userData, before the Data folder, the Database or a window', async () => {
+      const folder = freshPath('data');
+      const fake = start({}, { DASHCASH_DATA_FOLDER: folder });
+
+      expect(fake.lockRequests).toEqual([
+        { userData: folder, granted: true, when: 'before-ready' },
+      ]);
+      expect(fake.startupCalls.slice(0, 2)).toEqual([
+        'app.setPath',
+        'app.requestSingleInstanceLock',
+      ]);
+      expect(existsSync(folder)).toBe(false);
+      expect(watch.connections()).toEqual([]);
+      expect(fake.windows).toEqual([]);
+
+      await fake.ready();
+
+      expect(fake.lockRequests).toHaveLength(1);
+      expect(fake.windows).toHaveLength(1);
+      expect(fake.quitCount()).toBe(0);
+    });
+
+    it('starts while another app holds the lock of another Data folder', async () => {
+      const userData = freshPath('user-data');
+      const folder = freshPath('data');
+      const fake = start(
+        { userData, lockedFolders: [userData] },
+        { DASHCASH_DATA_FOLDER: folder },
+      );
+
+      await fake.ready();
+
+      expect(fake.lockRequests).toEqual([
+        { userData: folder, granted: true, when: 'before-ready' },
+      ]);
+      expect(fake.quitCount()).toBe(0);
+      expect(fake.windows).toHaveLength(1);
+      expect(isFolder(folder)).toBe(true);
+    });
+
+    it.each([
+      { case: 'unset', override: false },
+      { case: 'an absolute path', override: true },
+    ])(
+      'stops a second process of the same Data folder at the lock, with DASHCASH_DATA_FOLDER $case: it quits before the Data folder, the Database or a window',
+      async ({ override }) => {
+        const userData = freshPath('user-data');
+        const folder = override ? freshPath('data') : userData;
+        const env = override ? { DASHCASH_DATA_FOLDER: folder } : {};
+        const beforeLock: StartupCall[] = override ? ['app.setPath'] : [];
+        const fake = start({ userData, lockedFolders: [folder] }, env);
+
+        expect(fake.lockRequests).toEqual([
+          { userData: folder, granted: false, when: 'before-ready' },
+        ]);
+        expect(fake.startupCalls).toEqual([
+          ...beforeLock,
+          'app.requestSingleInstanceLock',
+        ]);
+        expect(fake.quitCount()).toBe(1);
+
+        await fake.ready();
+
+        expect(fake.startupCalls).toEqual([
+          ...beforeLock,
+          'app.requestSingleInstanceLock',
+          'ready',
+        ]);
+        expect(fake.quitCount()).toBe(1);
+        expect(fake.errorBoxes).toEqual([]);
+        expect(existsSync(folder)).toBe(false);
+        expect(watch.connections()).toEqual([]);
+        expect(fake.windows).toEqual([]);
+        expect(fake.ipcHandlers).toEqual([]);
+        expect(fake.protocolHandlers).toEqual([]);
+      },
+    );
+
+    it('restores the minimised main window and focuses it when a second instance starts, without opening another', async () => {
+      const fake = start();
+      await fake.ready();
+      const [window] = fake.windows;
+      window?.emitReadyToShow();
+      window?.minimize();
+
+      fake.secondInstance();
+
+      expect(window?.isMinimized()).toBe(false);
+      expect(window?.isFocused()).toBe(true);
+      expect(fake.windows).toHaveLength(1);
+      expect(fake.quitCount()).toBe(0);
     });
   });
 });

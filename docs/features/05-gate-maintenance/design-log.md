@@ -623,3 +623,39 @@ Alternatives:
   format" in the entry tests but only cases that do not depend on the
   date; an entry with a shape problem is judged by that alone
   (`findQuarantineViolations`), so its line never depends on today.
+
+### Assumptions from prd-to-issues
+
+- **I1. The ratchet rides in the debug-port ticket.** **Assumption:** plan
+  phases 13 (the **Debug port**) and 14 (the ratchet) become one ticket,
+  `13-debug-port-and-ratchet.md`: its RED commit holds the port and
+  startup tests, and after they pass the builder measures the **Mutation
+  score** and raises `thresholds.break`, a criterion marked "the builder's
+  run, no test". This replaces P3's fallback, in which the issue-loop
+  stops at a ratchet ticket and the human raises the threshold. Reason:
+  every ticket the issue-loop builds must run unattended, and its RED step
+  needs a failing test, which the ratchet cannot have (P3, Q31); a
+  builder's run beside failing tests is how 03's tickets 04 and 06 and
+  04's ticket 16 measured the score. The debug-port ticket is the last the
+  issue-loop builds and changes only `apps/desktop/`, which Stryker does
+  not mutate, so the measurement still follows every change it counts
+  (Q30, A6). To overturn: split the ticket again and let the loop stop at
+  the ratchet as P3 says.
+- **I2. Which helpers join the shared workflow readers.** **Assumption:**
+  besides the readers Q21 lists, `scripts/readWorkflow/` exports
+  `stepIndex` (the index of the step that uses an action), which the daily,
+  mutation and secret scan finders all use. A helper that only one finder
+  uses (`runsVerifyFull`, `isGitleaksStep`, `isInstallElectronStep`) stays
+  in that finder's module, and a test that needs it imports it from there.
+  Reason: a finder must not import `test-support/` (Q21) and three finders
+  must not each carry their own copy; one finder's helper has no second
+  user to share with.
+- **I3. Where the wiring tests Q20 does not name go.** **Assumption:** the
+  `it.each` "checks out full history, then sets up Node from .nvmrc with the
+  npm cache, before npm ci in the %s job", which runs over the pull-request
+  and the daily job, moves whole into `gates/workflows/`. Every other test
+  follows Q20's "Test covers" column as `05-workflow-readers.md` to
+  `08-secret-scan-and-electron-install-finders.md` list them. Reason: it is
+  the one test that spans two workflows, and `workflows/` holds the rules
+  over more than one workflow; splitting it by job would change its
+  assertions, which Q20 forbids.

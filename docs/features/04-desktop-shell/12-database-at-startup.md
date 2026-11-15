@@ -1,5 +1,5 @@
 ---
-status: in-progress
+status: done
 ---
 # Database at startup
 
@@ -30,19 +30,19 @@ Q30–Q32, Q34, A5).
 
 ## Acceptance criteria
 
-- [ ] A RED commit extends "Start the app" and adds the Vitest tests, and
+- [x] A RED commit extends "Start the app" and adds the Vitest tests, and
       fails on them.
-- [ ] Against real SQLite in a temporary file: `openDatabase` creates
+- [x] Against real SQLite in a temporary file: `openDatabase` creates
       `dashcash.db`, `foreign_keys` is on, the journal mode is SQLite's
       default, and a file that is not SQLite fails and leaves the
       connection closed.
-- [ ] The startup tests show a failing **Database** ending in the
+- [x] The startup tests show a failing **Database** ending in the
       **Startup error** with no window created, and the **Database**
       closed on `will-quit`.
-- [ ] Only files in `main/db/` import `node:sqlite`; `npm run lint:deps`
+- [x] Only files in `main/db/` import `node:sqlite`; `npm run lint:deps`
       is green.
-- [ ] "Start the app" asserts `dashcash.db` in the **Data folder**.
-- [ ] `npm run verify:full` is green.
+- [x] "Start the app" asserts `dashcash.db` in the **Data folder**.
+- [x] `npm run verify:full` is green.
 
 ## Blocked by
 

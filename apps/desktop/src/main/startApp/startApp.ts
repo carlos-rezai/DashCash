@@ -15,6 +15,8 @@ import {
   type HardenSessionElectron,
 } from '../hardenSession/hardenSession.ts';
 import { listAppOrigins } from '../matchAppOrigin/matchAppOrigin.ts';
+import { openDatabase } from '../db/openDatabase/openDatabase.ts';
+import { MIGRATIONS } from '../db/migrations/migrations.ts';
 import { getAppInfo } from '../ipc/getAppInfo/getAppInfo.ts';
 import {
   registerIpcHandlers,
@@ -32,7 +34,7 @@ type App = HardenSessionElectron['app'] & {
   setPath(name: 'userData', path: string): void;
   whenReady(): Promise<void>;
   enableSandbox(): void;
-  on(event: 'window-all-closed', listener: () => void): unknown;
+  on(event: 'window-all-closed' | 'will-quit', listener: () => void): unknown;
   quit(): void;
 };
 
@@ -53,7 +55,8 @@ export type ElectronParts<Window extends MainWindow> = {
 
 // Resolves the Data folder first (a relative override ends in the Startup
 // error); registers the App protocol; once the app is ready, creates the Data
-// folder, hardens the session, registers the IPC handlers and opens the main
+// folder, opens and migrates the Database (closed on will-quit; a failure ends
+// in the Startup error), hardens the session, registers the IPC handlers and opens the main
 // window. Quits when the last window closes. Electron's default menu stays.
 export function startApp<Window extends MainWindow>(
   {
@@ -82,12 +85,19 @@ export function startApp<Window extends MainWindow>(
     app.setPath('userData', dataFolder.folder);
   }
   app.enableSandbox();
-  // Settles when the Data folder exists; never when it cannot be created, so
-  // nothing else starts after the Startup error.
+  // Settles when the Data folder exists and the Database is open and
+  // migrated; never after the Startup error, so nothing else starts then.
   const dataFolderReady = new Promise<void>((resolve) => {
     void app.whenReady().then(() => {
       try {
         mkdirSync(dataFolder.folder, { recursive: true });
+        const database = openDatabase(
+          join(dataFolder.folder, 'dashcash.db'),
+          MIGRATIONS,
+        );
+        app.on('will-quit', () => {
+          database.close();
+        });
       } catch (error) {
         showStartupError(
           dialog,

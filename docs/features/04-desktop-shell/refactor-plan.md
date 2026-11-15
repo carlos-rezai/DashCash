@@ -85,7 +85,7 @@ the **Mutation score** must stay at or above the **Break threshold** of 81.
 - [x] 08 rename stored version to read schema version
 - [x] 09 rename origin key to read origin key
 - [x] 10 export the one-entry quarantine reader
-- [ ] 11 use the one-entry reader in check quarantine
+- [x] 11 use the one-entry reader in check quarantine
 - [ ] 12 rename the app fixture environment builder
 
 ### What each step does

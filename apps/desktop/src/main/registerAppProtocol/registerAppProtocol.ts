@@ -4,6 +4,10 @@ import { pathToFileURL } from 'node:url';
 // The App protocol (design log Q16): the scheme `app`, origin
 // `app://dashcash`, serves the built renderer folder and nothing else.
 const SCHEME = 'app';
+const HOST = 'dashcash';
+
+// The App origin: the one place the scheme and host are joined.
+export const APP_ORIGIN = `${SCHEME}://${HOST}`;
 
 const NOT_FOUND = 404;
 

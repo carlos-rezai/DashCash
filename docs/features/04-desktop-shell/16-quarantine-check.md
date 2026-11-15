@@ -1,5 +1,5 @@
 ---
-status: in-progress
+status: done
 ---
 # Quarantine check
 
@@ -43,26 +43,30 @@ the `verify` script in `package.json`, and to change
 
 ## Acceptance criteria
 
-- [ ] A RED commit adds the core, entry and wiring tests, and fails on
+- [x] A RED commit adds the core, entry and wiring tests, and fails on
       them.
-- [ ] `findQuarantineViolations` has a table per rule of A6, the 30-day
+- [x] `findQuarantineViolations` has a table per rule of A6, the 30-day
       limit on both sides, expiry valid on its date and failing the day
       after with `expired on <date>`, and several causes reported in one
       run.
-- [ ] The entry, in a temporary sample repository, exits 0 on `[]` and on
+- [x] The entry, in a temporary sample repository, exits 0 on `[]` and on
       a valid entry, and 1 with one `quality/flaky-quarantine.json:
       <reason>` line per cause on a missing file, invalid JSON and each
       rule.
-- [ ] `verify` runs its twelve gates with `check:quarantine` last; the
+- [x] `verify` runs its twelve gates with `check:quarantine` last; the
       `daily` job runs it beside `check:audit`; the wiring test fails when
       either is missing.
-- [ ] The **Mutation score** stays at or above the **Break threshold** of
+- [x] The **Mutation score** stays at or above the **Break threshold** of
       81 (`npm run test:mutation`, run by the builder, score in the Notes).
-- [ ] `npm run verify:full` is green.
+- [x] `npm run verify:full` is green.
 
 ## Blocked by
 
 - Blocked by `15-quarantined-tests-left-out.md`
+
+## Notes
+
+- Mutation score: 82.94 (Break threshold 81), `npm run test:mutation`.
 
 ## User stories addressed
 

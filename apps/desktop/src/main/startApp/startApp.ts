@@ -8,6 +8,7 @@ import {
 } from '../createMainWindow/createMainWindow.ts';
 import {
   registerAppProtocol,
+  serveAppProtocol,
   type AppProtocolElectron,
 } from '../registerAppProtocol/registerAppProtocol.ts';
 import {
@@ -65,10 +66,12 @@ export type ElectronParts<Window extends MainWindow & FocusableWindow> = {
 
 // Resolves the Data folder first (a relative override ends in the Startup
 // error); takes the Single-instance lock on it (a second process quits here);
-// registers the App protocol; opens the Debug port in dev; once the app is ready, creates the Data
-// folder, opens and migrates the Database (closed on will-quit; a failure ends
-// in the Startup error), hardens the session, registers the IPC handlers and opens the main
-// window. Quits when the last window closes. Electron's default menu stays.
+// registers the App protocol's scheme; opens the Debug port in dev; once the
+// app is ready, creates the Data folder, opens and migrates the Database
+// (closed on will-quit; a failure ends in the Startup error); once the
+// Database is open, serves the App protocol, hardens the session, registers
+// the IPC handlers and opens the main window. Quits when the last window
+// closes. Electron's default menu stays.
 export function startApp<Window extends MainWindow & FocusableWindow>(
   {
     app,
@@ -125,15 +128,16 @@ export function startApp<Window extends MainWindow & FocusableWindow>(
       resolve();
     });
   });
-  registerAppProtocol(
-    { app: { whenReady: () => dataFolderReady }, protocol, net },
-    join(app.getAppPath(), 'out', 'renderer'),
-  );
+  registerAppProtocol(protocol);
   enableDebugPort(app, env);
   app.on('window-all-closed', () => {
     app.quit();
   });
   void dataFolderReady.then(() => {
+    serveAppProtocol(
+      { protocol, net },
+      join(app.getAppPath(), 'out', 'renderer'),
+    );
     const devServerUrl = readDevServerUrl(app, env);
     const origins = listAppOrigins(devServerUrl);
     hardenSession({ app, session }, origins);

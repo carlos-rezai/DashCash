@@ -1,5 +1,5 @@
 ---
-status: in-progress
+status: done
 ---
 # Dev debug port
 
@@ -24,14 +24,14 @@ design log Q36, I1).
 
 ## Acceptance criteria
 
-- [ ] A RED commit adds the Vitest tests and fails on them.
-- [ ] `enableDebugPort` appends the switch only when the app is unpackaged
+- [x] A RED commit adds the Vitest tests and fails on them.
+- [x] `enableDebugPort` appends the switch only when the app is unpackaged
       and `ELECTRON_RENDERER_URL` is set; packaged, or without the URL, it
       appends nothing.
-- [ ] The startup tests show the switch appended before ready.
-- [ ] `npm run dev` exposes port 9222 on loopback (checked by hand,
+- [x] The startup tests show the switch appended before ready.
+- [x] `npm run dev` exposes port 9222 on loopback (checked by hand,
       recorded in the Notes).
-- [ ] `npm run verify:full` is green.
+- [x] `npm run verify:full` is green.
 
 ## Blocked by
 
@@ -40,3 +40,19 @@ design log Q36, I1).
 ## User stories addressed
 
 - User stories 61, 62
+
+## Notes
+
+- First manual check failed: `npm run dev` started, but Chromium logged
+  `bind() returned an error ... Cannot start http server for devtools`:
+  another program (MediaMonkey) already listened on 127.0.0.1:9222, so the
+  answer to `/json/version` did not come from the app.
+- Manual check, repeated with port 9222 free: during `npm run dev`,
+  `http://127.0.0.1:9222/json/version` answered with the user agent
+  `DashCash/0.0.0 ... Electron/45.1.0`, `/json/list` listed one page titled
+  `DashCash` at `http://localhost:5173/`, and `netstat` showed the port
+  listening on `127.0.0.1:9222` only.
+- For a later ticket: Port 9222 is a common default; another app
+  (MediaMonkey) already held it on this machine. If the port is taken, the
+  debug server does not open. Consider making the port configurable through
+  an environment variable, or choosing a less common default.

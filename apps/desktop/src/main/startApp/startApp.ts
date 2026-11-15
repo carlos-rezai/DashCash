@@ -15,6 +15,7 @@ import {
   type HardenSessionElectron,
 } from '../hardenSession/hardenSession.ts';
 import { listAppOrigins } from '../matchAppOrigin/matchAppOrigin.ts';
+import { enableDebugPort } from '../enableDebugPort/enableDebugPort.ts';
 import { openDatabase } from '../db/openDatabase/openDatabase.ts';
 import { MIGRATIONS } from '../db/migrations/migrations.ts';
 import { getAppInfo } from '../ipc/getAppInfo/getAppInfo.ts';
@@ -32,6 +33,7 @@ import { showStartupError } from '../showStartupError/showStartupError.ts';
 
 type App = HardenSessionElectron['app'] & {
   readonly isPackaged: boolean;
+  readonly commandLine: { appendSwitch(name: string, value?: string): void };
   getAppPath(): string;
   getVersion(): string;
   getPath(name: 'userData'): string;
@@ -63,7 +65,7 @@ export type ElectronParts<Window extends MainWindow & FocusableWindow> = {
 
 // Resolves the Data folder first (a relative override ends in the Startup
 // error); takes the Single-instance lock on it (a second process quits here);
-// registers the App protocol; once the app is ready, creates the Data
+// registers the App protocol; opens the Debug port in dev; once the app is ready, creates the Data
 // folder, opens and migrates the Database (closed on will-quit; a failure ends
 // in the Startup error), hardens the session, registers the IPC handlers and opens the main
 // window. Quits when the last window closes. Electron's default menu stays.
@@ -127,6 +129,7 @@ export function startApp<Window extends MainWindow & FocusableWindow>(
     { app: { whenReady: () => dataFolderReady }, protocol, net },
     join(app.getAppPath(), 'out', 'renderer'),
   );
+  enableDebugPort(app, env);
   app.on('window-all-closed', () => {
     app.quit();
   });

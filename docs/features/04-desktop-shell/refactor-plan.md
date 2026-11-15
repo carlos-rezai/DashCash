@@ -80,7 +80,7 @@ the **Mutation score** must stay at or above the **Break threshold** of 81.
 - [x] 03 take the app origin from the app protocol
 - [x] 04 build the window page url from the app origin
 - [x] 05 split the app protocol handler from its scheme
-- [ ] 06 add the data folder database module
+- [x] 06 add the data folder database module
 - [ ] 07 use the data folder database in start app
 - [ ] 08 rename stored version to read schema version
 - [ ] 09 rename origin key to read origin key

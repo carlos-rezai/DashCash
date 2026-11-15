@@ -522,3 +522,64 @@ Alternatives:
   the **Break threshold** only rises, `high` and `low` (Q31), the
   reviewer's DevTools configuration (Q29), the `node:sqlite` probe's
   place.
+
+### Assumptions from write-a-prd
+
+- **A1. Where an invalid Debug port stops the start.** **Assumption:**
+  `enableDebugPort(app, env)` returns `{ cause }` for an invalid
+  `DASHCASH_DEBUG_PORT` and appends nothing, `undefined` otherwise;
+  `startApp` calls it right after resolving the **Data folder**, before the
+  **Single-instance lock**, and a cause shows the **Startup error** with the
+  resolved **Data folder** in its last line, then stops. `showStartupError`
+  is unchanged. Reason: Q28 makes an invalid port a **Startup error** like a
+  relative **Data folder**, which is caught first and touches nothing;
+  called where it is today, the error would come after the lock and the
+  scheduled **Database** open; one box format for every cause keeps
+  `showStartupError` as 04 built it.
+- **A2. The workflow readers take the root.** **Assumption:** the readers in
+  `scripts/readWorkflow/` that touch the file system (read one workflow,
+  list the workflow files) take the repository root as a parameter; the
+  rest take a parsed `Workflow`. Reason: a module in `scripts/` is tested
+  on invented trees, as the other gate entries are; the gate tests pass the
+  root they already compute.
+- **A3. How the Renovate gate learns the Node major.** **Assumption:**
+  `findRenovateViolations(config, commitConfig, nodeVersion)` gains a third
+  parameter, the text of `.nvmrc`, read by the gate test. Reason: the
+  module stays free of file reads, as today; Q15's check needs both files.
+- **A4. Lifecycle scripts must stay on.** **Assumption:** the Electron
+  install check also fails on an `ignore-scripts=true` line in `.npmrc`;
+  `findElectronInstallProblems(scripts, workflows, npmrc)` takes the
+  scripts of `package.json`, the parsed workflows by file name and the text
+  of `.npmrc` (empty when missing). Reason: with Q26 the binary arrives
+  only through `postinstall`; `.npmrc` turning scripts off would skip it
+  silently and the first test would download it again. The pinned job
+  commands already refuse `npm ci --ignore-scripts` in a workflow.
+- **A5. A score below 81 at the ratchet.** **Assumption:** should the
+  **Mutation run** of the ratchet ticket measure below 81, that ticket adds
+  tests for this feature's **Surviving mutants** until it clears 81, then
+  raises as Q30 says; it never lowers the **Break threshold**. Reason: the
+  finders become mutated in this feature, and **Verify** does not run
+  **Mutation testing**, so the ratchet ticket is the first place a drop
+  shows; "thresholds only go up" (`docs/quality-gates.md`).
+- **A6. Ticket order and the hook last.** **Assumption:** the tickets follow
+  the Implementation Plan; the structure part is cut into several thin
+  tickets (the workflow readers, the wiring split by folder, the shared date
+  rules with `checkQuarantine`, the config through
+  `loadQuarantinePatterns`); the ratchet is the last ticket the issue-loop
+  builds, and the human's hook ticket comes after it. Reason: Q30 wants the
+  ratchet after every change the score measures; the hook ticket adds only
+  a test file, which Stryker does not mutate, and the issue-loop stops at
+  it (Q33).
+- **A7. The hand-made model of Playwright's string goes.**
+  **Assumption:** the end-to-end gate test's cases that use its own model of
+  Playwright's match string (the same title in another file, a longer title,
+  regex characters) move into the `--list` sample tree as invented specs,
+  and the model goes. The test that the config's `grepInvert` equals the
+  reader's patterns for the committed file stays. Reason: Q11 and the
+  Alternatives: the model is how both bugs got through; Playwright's own
+  listing proves the same cases.
+- **A8. The ten wiring folders stay as Q20 lists them.** **Assumption:**
+  no folder of Q20's table is merged into another. Reason: each folder is
+  one part of the **Gate wiring** and gives its own ticket a clear edge;
+  the smallest (`pushWorkflow`, `workflows`) still check a part no other
+  folder checks.

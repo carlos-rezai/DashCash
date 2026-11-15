@@ -4,6 +4,7 @@ import {
   E2E_FOLDER,
   loadQuarantine,
   readQuarantine,
+  readQuarantineEntry,
   type QuarantineEntry,
 } from '../readQuarantine/readQuarantine.ts';
 import {
@@ -89,11 +90,11 @@ export function findQuarantineViolations(
   const todayTime = readCalendarDate(today) ?? Number.NaN;
   const tracked = new Set(trackedPaths);
   (quarantine as unknown[]).forEach((value, index) => {
-    const [entry] = readQuarantine([value]).entries;
-    if (entry !== undefined) {
+    const read = readQuarantineEntry(value, index);
+    if ('entry' in read) {
       violations.push(
-        ...findDateViolations(entry, index, todayTime),
-        ...findPathViolations(entry, index, tracked),
+        ...findDateViolations(read.entry, index, todayTime),
+        ...findPathViolations(read.entry, index, tracked),
       );
     }
   });

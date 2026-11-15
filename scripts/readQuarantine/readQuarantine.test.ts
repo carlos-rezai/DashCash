@@ -9,6 +9,7 @@ import {
   loadQuarantine,
   QUARANTINE_FILE,
   readQuarantine,
+  readQuarantineEntry,
   type QuarantineEntry,
 } from './readQuarantine.ts';
 
@@ -248,6 +249,20 @@ describe('readQuarantine', () => {
     expect(readQuarantine([outOfRules])).toEqual({
       entries: [outOfRules],
       violations: [],
+    });
+  });
+});
+
+describe('readQuarantineEntry', () => {
+  it('gives the entry of a well-formed value', () => {
+    expect(readQuarantineEntry(START_ENTRY, 4)).toEqual({
+      entry: START_ENTRY,
+    });
+  });
+
+  it('gives the violation of an empty field under the index it was given', () => {
+    expect(readQuarantineEntry({ ...START_ENTRY, owner: '' }, 4)).toEqual({
+      problems: [entryViolation(4, 'owner', 'must not be empty')],
     });
   });
 });

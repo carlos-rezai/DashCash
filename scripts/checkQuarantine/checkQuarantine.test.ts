@@ -464,6 +464,38 @@ describe('findQuarantineViolations', () => {
         ],
       );
     });
+
+    it('lists the shape violations of every entry first, then the date and path violations of each well-formed entry', () => {
+      expect(
+        findQuarantineViolations(
+          [
+            entry({ title: '', added: '' }),
+            entry({
+              file: 'e2e/missing-flow.spec.ts',
+              added: '2026-10-01',
+              expires: '2026-10-31',
+            }),
+            entry({ owner: '' }),
+            entry({
+              added: '2026-11-20',
+              expires: '2027-01-01',
+              ticket: 'docs/conventions.md',
+            }),
+          ],
+          TODAY,
+          TRACKED_PATHS,
+        ),
+      ).toEqual([
+        onEntry(0, 'title', 'must not be empty'),
+        onEntry(0, 'added', 'must not be empty'),
+        onEntry(2, 'owner', 'must not be empty'),
+        expired(1, '2026-10-31'),
+        onEntry(1, 'file', FILE_REASON),
+        onEntry(3, 'added', LATER_REASON),
+        onEntry(3, 'expires', LIMIT_REASON),
+        onEntry(3, 'ticket', TICKET_REASON),
+      ]);
+    });
   });
 });
 

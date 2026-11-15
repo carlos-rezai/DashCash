@@ -1,9 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  isChannel,
-  type Channel,
-  type DashCashBridge,
-} from '@dashcash/contract';
+import { CHANNELS, type DashCashBridge } from '@dashcash/contract';
 import { createBridge } from './createBridge.ts';
 
 // The Bridge the Preload exposes (design log Q21, A1): `invoke` sends a
@@ -34,7 +30,7 @@ function asPage(bridge: DashCashBridge): PageView {
 describe('createBridge', () => {
   it('forwards a listed Channel and resolves with what invoke answers', async () => {
     const { invoke, calls } = fakeInvoke();
-    const bridge = createBridge(invoke, isChannel);
+    const bridge = createBridge(invoke);
 
     await expect(bridge.invoke('app:info', undefined)).resolves.toEqual(
       INVENTED_RESPONSE,
@@ -44,7 +40,7 @@ describe('createBridge', () => {
 
   it('forwards the request unchanged, as the page sent it', async () => {
     const { invoke, calls } = fakeInvoke();
-    const page = asPage(createBridge(invoke, isChannel));
+    const page = asPage(createBridge(invoke));
 
     await page.invoke('app:info', { invented: 'request' });
 
@@ -61,7 +57,7 @@ describe('createBridge', () => {
     'rejects $case with "Unknown channel: <channel>" and never calls invoke',
     async ({ channel }) => {
       const { invoke, calls } = fakeInvoke();
-      const page = asPage(createBridge(invoke, isChannel));
+      const page = asPage(createBridge(invoke));
 
       await expect(page.invoke(channel, undefined)).rejects.toEqual(
         new Error(`Unknown channel: ${String(channel)}`),
@@ -72,7 +68,7 @@ describe('createBridge', () => {
 
   it('refuses an unknown channel with a rejected promise, not a throw', async () => {
     const { invoke } = fakeInvoke();
-    const page = asPage(createBridge(invoke, isChannel));
+    const page = asPage(createBridge(invoke));
     let result: Promise<unknown> | undefined;
 
     expect(() => {
@@ -83,15 +79,15 @@ describe('createBridge', () => {
     );
   });
 
-  it('refuses whatever the isChannel it is given refuses, even a listed Channel', async () => {
-    const { invoke, calls } = fakeInvoke();
-    const refuseAll = (value: unknown): value is Channel =>
-      value === 'never-a-channel';
-    const bridge = createBridge(invoke, refuseAll);
+  it.each([...CHANNELS])(
+    'forwards every Channel of the Contract: %s',
+    async (channel) => {
+      const { invoke, calls } = fakeInvoke();
+      const page = asPage(createBridge(invoke));
 
-    await expect(bridge.invoke('app:info', undefined)).rejects.toEqual(
-      new Error('Unknown channel: app:info'),
-    );
-    expect(calls).toEqual([]);
-  });
+      await page.invoke(channel, undefined);
+
+      expect(calls).toEqual([[channel, undefined]]);
+    },
+  );
 });

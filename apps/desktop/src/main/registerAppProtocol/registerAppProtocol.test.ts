@@ -6,6 +6,7 @@ import { createFakeElectron } from '../test-support/fakeElectron/fakeElectron.ts
 import {
   registerAppProtocol,
   resolveRendererPath,
+  serveAppProtocol,
 } from './registerAppProtocol.ts';
 
 // The App protocol (design log Q16): the scheme `app`, origin
@@ -94,7 +95,7 @@ describe('resolveRendererPath', () => {
   });
 });
 
-describe('registerAppProtocol', () => {
+describe('registerAppProtocol and serveAppProtocol', () => {
   const PAGE = '<!doctype html><title>Invented page</title>';
   const SCRIPT = 'invented script';
   const SECRET = 'invented secret';
@@ -119,7 +120,14 @@ describe('registerAppProtocol', () => {
 
   function register() {
     const fake = createFakeElectron();
-    registerAppProtocol(fake.electron, rendererFolder);
+    registerAppProtocol(fake.electron.protocol);
+    return fake;
+  }
+
+  async function serve() {
+    const fake = createFakeElectron();
+    await fake.ready();
+    serveAppProtocol(fake.electron, rendererFolder);
     return fake;
   }
 
@@ -146,16 +154,16 @@ describe('registerAppProtocol', () => {
     expect(fake.privilegedSchemes).toHaveLength(1);
   });
 
-  it('registers no handler before the app is ready', () => {
+  it('registers no handler', async () => {
     const fake = register();
+
+    await fake.ready();
 
     expect(fake.protocolHandlers).toEqual([]);
   });
 
-  it('registers the handler of the scheme app, once, when the app is ready', async () => {
-    const fake = register();
-
-    await fake.ready();
+  it('registers the handler of the scheme app, once', async () => {
+    const fake = await serve();
 
     expect(fake.protocolHandlers).toEqual([
       { scheme: 'app', when: 'after-ready' },
@@ -170,8 +178,7 @@ describe('registerAppProtocol', () => {
       body: SCRIPT,
     },
   ])('serves $case from the renderer folder', async ({ url, body }) => {
-    const fake = register();
-    await fake.ready();
+    const fake = await serve();
 
     const response = await fake.request(url);
 
@@ -180,8 +187,7 @@ describe('registerAppProtocol', () => {
   });
 
   it.each(REFUSED_URLS)('answers $case with 404', async ({ url }) => {
-    const fake = register();
-    await fake.ready();
+    const fake = await serve();
 
     const response = await fake.request(url);
 
@@ -189,8 +195,7 @@ describe('registerAppProtocol', () => {
   });
 
   it('answers the absolute path of a file outside the renderer folder with 404', async () => {
-    const fake = register();
-    await fake.ready();
+    const fake = await serve();
     const secretPath = encodeURIComponent(join(root, 'secret.txt'));
 
     const response = await fake.request(`app://dashcash/${secretPath}`);

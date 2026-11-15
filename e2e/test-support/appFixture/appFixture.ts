@@ -8,7 +8,7 @@ import {
   type Page,
 } from '@playwright/test';
 
-// The App fixture (design log Q38, P1): per test a fresh Data folder, passed
+// The App fixture (design log Q39, P1): per test a fresh Data folder, passed
 // to the App build as DASHCASH_DATA_FOLDER. The desktop member is launched
 // through _electron.launch, which drives the Electron binary already
 // installed (no browser is downloaded), with ELECTRON_RENDERER_URL removed
@@ -21,7 +21,7 @@ const DESKTOP_FOLDER = fileURLToPath(
 
 const DATA_FOLDER_PREFIX = 'dashcash-e2e-';
 
-function appEnvironment(dataFolder: string): Record<string, string> {
+function buildAppEnvironment(dataFolder: string): Record<string, string> {
   const environment: Record<string, string> = {};
   for (const [name, value] of Object.entries(process.env)) {
     if (value !== undefined && name !== 'ELECTRON_RENDERER_URL') {
@@ -40,7 +40,7 @@ export const test = base.extend<AppFixtures>({
     try {
       const app = await playwright._electron.launch({
         args: [DESKTOP_FOLDER],
-        env: appEnvironment(dataFolder),
+        env: buildAppEnvironment(dataFolder),
       });
       try {
         await use(app);

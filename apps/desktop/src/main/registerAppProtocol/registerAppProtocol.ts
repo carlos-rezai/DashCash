@@ -4,6 +4,10 @@ import { pathToFileURL } from 'node:url';
 // The App protocol (design log Q16): the scheme `app`, origin
 // `app://dashcash`, serves the built renderer folder and nothing else.
 const SCHEME = 'app';
+const HOST = 'dashcash';
+
+// The App origin: the one place the scheme and host are joined.
+export const APP_ORIGIN = `${SCHEME}://${HOST}`;
 
 const NOT_FOUND = 404;
 
@@ -15,7 +19,6 @@ type ProtocolHandler = (request: Request) => Response | Promise<Response>;
 // The parts of Electron the protocol uses, so the module takes them as
 // parameters (A1).
 export type AppProtocolElectron = {
-  app: { whenReady(): Promise<void> };
   protocol: {
     registerSchemesAsPrivileged(
       schemes: {
@@ -56,22 +59,28 @@ export function resolveRendererPath(
   return path;
 }
 
-// Registers the scheme before the app is ready, as Electron requires, and its
-// handler once it is.
+// Registers the scheme as privileged, standard and secure. Electron requires
+// this before the app is ready.
 export function registerAppProtocol(
-  { app, protocol, net }: AppProtocolElectron,
-  rendererFolder: string,
+  protocol: AppProtocolElectron['protocol'],
 ): void {
   protocol.registerSchemesAsPrivileged([
     { scheme: SCHEME, privileges: { standard: true, secure: true } },
   ]);
-  void app.whenReady().then(() => {
-    protocol.handle(SCHEME, (request) => {
-      const path = resolveRendererPath(rendererFolder, request.url);
-      if (path === undefined) {
-        return new Response(null, { status: NOT_FOUND });
-      }
-      return net.fetch(pathToFileURL(path).toString());
-    });
+}
+
+// Registers the handler that serves the renderer folder and answers 404 for
+// any path outside it. Electron requires the app to be ready first; the
+// caller decides when.
+export function serveAppProtocol(
+  { protocol, net }: AppProtocolElectron,
+  rendererFolder: string,
+): void {
+  protocol.handle(SCHEME, (request) => {
+    const path = resolveRendererPath(rendererFolder, request.url);
+    if (path === undefined) {
+      return new Response(null, { status: NOT_FOUND });
+    }
+    return net.fetch(pathToFileURL(path).toString());
   });
 }

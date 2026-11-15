@@ -1,7 +1,9 @@
+import { APP_ORIGIN } from '../registerAppProtocol/registerAppProtocol.ts';
+
 export const WINDOW_TITLE = 'DashCash';
 
 // The App build's page, served through the App protocol.
-const APP_INDEX_URL = 'app://dashcash/index.html';
+const APP_INDEX_URL = `${APP_ORIGIN}/index.html`;
 
 const WINDOW_WIDTH = 1440;
 const WINDOW_HEIGHT = 900;

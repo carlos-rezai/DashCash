@@ -75,7 +75,7 @@ green. Steps 02 to 07 and 12 change code that "Start the app" drives, so they
 also run `npm run verify:full`. After step 11, run `npm run test:mutation`:
 the **Mutation score** must stay at or above the **Break threshold** of 81.
 
-- [ ] 01 pin the quarantine check violation order
+- [x] 01 pin the quarantine check violation order
 - [ ] 02 use the contract channel guard in the bridge
 - [ ] 03 take the app origin from the app protocol
 - [ ] 04 build the window page url from the app origin

@@ -22,6 +22,10 @@ import {
   registerIpcHandlers,
   type IpcMainElectron,
 } from '../ipc/registerIpcHandlers/registerIpcHandlers.ts';
+import {
+  lockSingleInstance,
+  type FocusableWindow,
+} from '../lockSingleInstance/lockSingleInstance.ts';
 import { readDevServerUrl } from '../readDevServerUrl/readDevServerUrl.ts';
 import { resolveDataFolder } from '../resolveDataFolder/resolveDataFolder.ts';
 import { showStartupError } from '../showStartupError/showStartupError.ts';
@@ -34,7 +38,11 @@ type App = HardenSessionElectron['app'] & {
   setPath(name: 'userData', path: string): void;
   whenReady(): Promise<void>;
   enableSandbox(): void;
-  on(event: 'window-all-closed' | 'will-quit', listener: () => void): unknown;
+  requestSingleInstanceLock(): boolean;
+  on(
+    event: 'window-all-closed' | 'will-quit' | 'second-instance',
+    listener: () => void,
+  ): unknown;
   quit(): void;
 };
 
@@ -42,7 +50,7 @@ type Screen = {
   getPrimaryDisplay(): { workArea: WorkArea };
 };
 
-export type ElectronParts<Window extends MainWindow> = {
+export type ElectronParts<Window extends MainWindow & FocusableWindow> = {
   app: App;
   BrowserWindow: MainWindowConstructor<Window>;
   screen: Screen;
@@ -54,11 +62,12 @@ export type ElectronParts<Window extends MainWindow> = {
 };
 
 // Resolves the Data folder first (a relative override ends in the Startup
-// error); registers the App protocol; once the app is ready, creates the Data
+// error); takes the Single-instance lock on it (a second process quits here);
+// registers the App protocol; once the app is ready, creates the Data
 // folder, opens and migrates the Database (closed on will-quit; a failure ends
 // in the Startup error), hardens the session, registers the IPC handlers and opens the main
 // window. Quits when the last window closes. Electron's default menu stays.
-export function startApp<Window extends MainWindow>(
+export function startApp<Window extends MainWindow & FocusableWindow>(
   {
     app,
     BrowserWindow,
@@ -83,6 +92,10 @@ export function startApp<Window extends MainWindow>(
   }
   if (dataFolder.overridden) {
     app.setPath('userData', dataFolder.folder);
+  }
+  const main: { window?: Window } = {};
+  if (!lockSingleInstance(app, () => main.window)) {
+    return;
   }
   app.enableSandbox();
   // Settles when the Data folder exists and the Database is open and
@@ -126,7 +139,7 @@ export function startApp<Window extends MainWindow>(
       { 'app:info': () => getAppInfo(app) },
       origins,
     );
-    createMainWindow(BrowserWindow, {
+    main.window = createMainWindow(BrowserWindow, {
       devServerUrl,
       workArea: screen.getPrimaryDisplay().workArea,
       preloadPath: join(app.getAppPath(), 'out', 'preload', 'preload.cjs'),

@@ -1,5 +1,5 @@
 ---
-status: in-progress
+status: done
 ---
 # Single instance
 
@@ -24,14 +24,14 @@ Two copies of DashCash never share a **Database** (plan Phase 5; PRD
 
 ## Acceptance criteria
 
-- [ ] A RED commit adds the Vitest tests and fails on them.
-- [ ] `lockSingleInstance`: lock held returns true; lock refused quits;
+- [x] A RED commit adds the Vitest tests and fails on them.
+- [x] `lockSingleInstance`: lock held returns true; lock refused quits;
       `second-instance` with a minimised window restores and focuses it,
       with no window does nothing.
-- [ ] The startup tests show the lock taken after the **Data folder** is
+- [x] The startup tests show the lock taken after the **Data folder** is
       resolved and before the **Database** or any window, and the second
       process stopping there.
-- [ ] `npm run verify:full` is green.
+- [x] `npm run verify:full` is green.
 
 ## Blocked by
 

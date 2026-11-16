@@ -137,9 +137,10 @@ function escapeRegExp(text: string): string {
 }
 
 // One regular expression per entry, for Playwright's grepInvert. Playwright
-// matches it against the project name, the file relative to e2e/ and the
-// title, joined by spaces; the pattern holds the file and the title literally,
-// so a title is left out only in its own file.
+// matches it against the project name, the file relative to e2e/, the title
+// and the tags, joined by spaces; the pattern holds the file and the title
+// literally, so a title is left out only in its own file, whatever tags it
+// carries. A `/` in the file matches `/` and `\`, for either platform.
 export function buildQuarantinePatterns(
   entries: readonly QuarantineEntry[],
 ): RegExp[] {
@@ -147,8 +148,7 @@ export function buildQuarantinePatterns(
     const relative = file.startsWith(E2E_FOLDER)
       ? file.slice(E2E_FOLDER.length)
       : file;
-    return new RegExp(
-      `(?:^| )${escapeRegExp(relative)} ${escapeRegExp(title)}$`,
-    );
+    const path = escapeRegExp(relative).replaceAll('/', '[\\\\/]');
+    return new RegExp(`(?:^| )${path} ${escapeRegExp(title)}(?: @\\S+)*$`);
   });
 }

@@ -1,5 +1,5 @@
 ---
-status: in-progress
+status: done
 ---
 # Quarantined tests left out, tagged or in a subfolder
 

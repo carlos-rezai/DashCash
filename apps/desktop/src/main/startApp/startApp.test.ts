@@ -369,35 +369,91 @@ describe('startApp', () => {
   });
 
   describe('Debug port', () => {
-    it('appends remote-debugging-port=9222 once, before the app is ready, right after the sandbox and the scheme, when not packaged with ELECTRON_RENDERER_URL set', async () => {
-      const fake = start(
-        { isPackaged: false },
-        { ELECTRON_RENDERER_URL: DEV_URL },
-      );
+    // The cause an invalid DASHCASH_DEBUG_PORT ends in (design log Q28).
+    const INVALID_PORT_CAUSE =
+      'DASHCASH_DEBUG_PORT must be a whole number from 1 to 65535.';
 
-      expect(fake.commandLineSwitches).toEqual([
-        { name: 'remote-debugging-port', value: '9222', when: 'before-ready' },
-      ]);
-      expect(fake.startupCalls).toEqual([
-        'app.requestSingleInstanceLock',
-        'app.enableSandbox',
-        'protocol.registerSchemesAsPrivileged',
-        'app.commandLine.appendSwitch',
-      ]);
+    it.each([
+      { case: 'unset', env: {}, port: '9222' },
+      { case: '9333', env: { DASHCASH_DEBUG_PORT: '9333' }, port: '9333' },
+    ])(
+      'appends remote-debugging-port=$port once, before the app is ready, right before the lock, the sandbox and the scheme, in dev with DASHCASH_DEBUG_PORT $case',
+      async ({ env, port }) => {
+        const fake = start(
+          { isPackaged: false },
+          { ELECTRON_RENDERER_URL: DEV_URL, ...env },
+        );
 
-      await fake.ready();
+        expect(fake.commandLineSwitches).toEqual([
+          { name: 'remote-debugging-port', value: port, when: 'before-ready' },
+        ]);
+        expect(fake.startupCalls).toEqual([
+          'app.commandLine.appendSwitch',
+          'app.requestSingleInstanceLock',
+          'app.enableSandbox',
+          'protocol.registerSchemesAsPrivileged',
+        ]);
 
-      expect(fake.commandLineSwitches).toHaveLength(1);
-      expect(fake.startupCalls.slice(0, 6)).toEqual([
-        'app.requestSingleInstanceLock',
-        'app.enableSandbox',
-        'protocol.registerSchemesAsPrivileged',
-        'app.commandLine.appendSwitch',
-        'ready',
-        'protocol.handle',
-      ]);
-      expect(fake.windows).toHaveLength(1);
-    });
+        await fake.ready();
+
+        expect(fake.commandLineSwitches).toHaveLength(1);
+        expect(fake.startupCalls.slice(0, 6)).toEqual([
+          'app.commandLine.appendSwitch',
+          'app.requestSingleInstanceLock',
+          'app.enableSandbox',
+          'protocol.registerSchemesAsPrivileged',
+          'ready',
+          'protocol.handle',
+        ]);
+        expect(fake.errorBoxes).toEqual([]);
+        expect(fake.windows).toHaveLength(1);
+      },
+    );
+
+    it.each([
+      { case: 'unset', override: false },
+      { case: 'an absolute path', override: true },
+    ])(
+      'ends an invalid DASHCASH_DEBUG_PORT in dev in the Startup error with the resolved Data folder, with DASHCASH_DATA_FOLDER $case: no lock, no sandbox, no scheme, no Database, no window',
+      async ({ override }) => {
+        const userData = freshPath('user-data');
+        const folder = override ? freshPath('data') : userData;
+        const fake = start(
+          { isPackaged: false, userData },
+          {
+            ELECTRON_RENDERER_URL: DEV_URL,
+            DASHCASH_DEBUG_PORT: '65536',
+            ...(override ? { DASHCASH_DATA_FOLDER: folder } : {}),
+          },
+        );
+
+        expect(fake.errorBoxes).toEqual([
+          {
+            title: STARTUP_ERROR_TITLE,
+            content: `${INVALID_PORT_CAUSE}\n\nData folder: ${folder}`,
+            quitsBefore: 0,
+          },
+        ]);
+        expect(fake.quitCount()).toBe(1);
+        expect(fake.commandLineSwitches).toEqual([]);
+        expect(fake.lockRequests).toEqual([]);
+        expect(fake.sandboxCalls).toEqual([]);
+        expect(fake.privilegedSchemes).toEqual([]);
+
+        await fake.ready();
+
+        expect(fake.errorBoxes).toHaveLength(1);
+        expect(fake.quitCount()).toBe(1);
+        expect(fake.lockRequests).toEqual([]);
+        expect(fake.sandboxCalls).toEqual([]);
+        expect(fake.privilegedSchemes).toEqual([]);
+        expect(existsSync(folder)).toBe(false);
+        expect(watch.connections()).toEqual([]);
+        expect(fake.protocolHandlers).toEqual([]);
+        expect(fake.ipcHandlers).toEqual([]);
+        expect(fake.windows).toEqual([]);
+      },
+    );
   });
 
   describe('session hardening', () => {

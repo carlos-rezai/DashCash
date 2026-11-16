@@ -5,8 +5,7 @@ import {
   type WorkflowStep,
 } from '../../scripts/readWorkflow/readWorkflow.ts';
 
-const INSTALL_ELECTRON = 'node_modules/.bin/install-electron';
-const MUTATION_COMMANDS = ['npm ci', INSTALL_ELECTRON, 'npm run test:mutation'];
+const MUTATION_COMMANDS = ['npm ci', 'npm run test:mutation'];
 const MUTATION_REPORT_NAME = 'mutation-report';
 const MUTATION_REPORT_PATH = 'reports/mutation/mutation.html';
 const UPLOAD_ACTION = 'actions/upload-artifact';

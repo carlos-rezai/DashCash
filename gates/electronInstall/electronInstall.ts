@@ -1,42 +1,49 @@
-import {
-  jobSteps,
-  type Workflow,
-  type WorkflowStep,
-} from '../../scripts/readWorkflow/readWorkflow.ts';
+import type { Workflow } from '../../scripts/readWorkflow/readWorkflow.ts';
 
-// Electron 45 downloads its binary on the first require('electron'), so every
-// job that runs tests installs it in its own step right after npm ci.
-const INSTALL_ELECTRON = 'node_modules/.bin/install-electron';
+// npm ci installs the Electron binary through the root postinstall script, so
+// no workflow step installs it and nothing in .npmrc may skip the script.
+const INSTALL_ELECTRON = 'install-electron';
+const IGNORE_SCRIPTS_LINE = /^[ \t]*ignore-scripts[ \t]*=[ \t]*true[ \t]*\r?$/m;
 
-function isInstallElectronStep(step: WorkflowStep): boolean {
-  return step.run === INSTALL_ELECTRON;
-}
-
-// What a job lacks in its Electron install, one line each: the install in its
-// own step, directly after the npm ci step and before the job's first test
-// command.
+// What stands between npm ci and the Electron binary, one line each: a
+// postinstall script that is missing or not exactly install-electron, every
+// workflow step that runs install-electron, named by file and job, and an
+// ignore-scripts=true line in .npmrc.
 export function findElectronInstallProblems(
-  workflow: Workflow,
-  job: string,
-  firstTest: string,
+  scripts: Record<string, string>,
+  workflows: Record<string, Workflow>,
+  npmrc: string,
 ): string[] {
-  const steps = jobSteps(workflow, job);
-  const install = steps.findIndex(isInstallElectronStep);
-  if (install === -1) {
-    return [`the ${job} job does not run ${INSTALL_ELECTRON}`];
-  }
-
   const problems: string[] = [];
-  const npmCi = steps.findIndex((step) => step.run === 'npm ci');
-  if (npmCi === -1 || install !== npmCi + 1) {
+
+  const postinstall = scripts['postinstall'];
+  if (postinstall === undefined) {
     problems.push(
-      `the ${job} job does not run ${INSTALL_ELECTRON} directly after npm ci`,
+      `the postinstall script is missing; it must be exactly ${INSTALL_ELECTRON}`,
+    );
+  } else if (postinstall !== INSTALL_ELECTRON) {
+    problems.push(
+      `the postinstall script is ${JSON.stringify(postinstall)}; it must be exactly ${INSTALL_ELECTRON}`,
     );
   }
-  const test = steps.findIndex((step) => step.run === firstTest);
-  if (test === -1 || install > test) {
+
+  for (const [file, workflow] of Object.entries(workflows)) {
+    for (const [job, { steps = [] } = {}] of Object.entries(
+      workflow.jobs ?? {},
+    )) {
+      for (const step of steps) {
+        if ((step.run ?? '').includes(INSTALL_ELECTRON)) {
+          problems.push(
+            `${file}: the ${job} job runs ${INSTALL_ELECTRON} in a step`,
+          );
+        }
+      }
+    }
+  }
+
+  if (IGNORE_SCRIPTS_LINE.test(npmrc)) {
     problems.push(
-      `the ${job} job does not run ${INSTALL_ELECTRON} before ${firstTest}`,
+      '.npmrc sets ignore-scripts=true, so npm ci skips postinstall',
     );
   }
   return problems;

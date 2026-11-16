@@ -1,5 +1,5 @@
 ---
-status: in-progress
+status: done
 ---
 # npm ci installs the Electron binary
 
@@ -51,16 +51,16 @@ This ticket is the approval to add exactly the `postinstall` script to
 
 ## Acceptance criteria
 
-- [ ] A RED commit changes the Electron install check's tests and the
+- [x] A RED commit changes the Electron install check's tests and the
       pinned job commands, and fails on the current configuration.
-- [ ] The check names a missing or different `postinstall`, every workflow
+- [x] The check names a missing or different `postinstall`, every workflow
       step that runs `install-electron`, and an `ignore-scripts=true` line
       in `.npmrc`; it finds nothing in the committed files.
-- [ ] The `verify`, `pull-request` and `mutation` jobs run `npm ci` and
+- [x] The `verify`, `pull-request` and `mutation` jobs run `npm ci` and
       their tests with no install step between them.
-- [ ] `README.md` no longer holds the manual line; `npm ci` carries the
+- [x] `README.md` no longer holds the manual line; `npm ci` carries the
       comment that it installs the **Electron binary**.
-- [ ] `npm run verify:full` is green after `npm ci`.
+- [x] `npm run verify:full` is green after `npm ci`.
 
 ## Blocked by
 

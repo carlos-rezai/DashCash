@@ -1,7 +1,7 @@
 ---
 status: open
 ---
-# The dangerous-git hook judges the push part only
+# The dangerous-git hook blocks chained pushes
 
 ## Parent PRD
 
@@ -9,22 +9,25 @@ status: open
 
 ## What to build
 
-The **Dangerous-git hook** stops blocking a push from a feature branch
-chained with a command that names `main` (plan Phase 15; PRD
-"Dangerous-git hook"; design log Q32, Q33).
+The **Dangerous-git hook** blocks any `git push` chained with another
+command, matching `CLAUDE.md`'s rule "Run `git push` as its own command"
+(plan Phase 15; PRD "Dangerous-git hook"; design log Q32, Q33, D3).
 
-- `.claude/hooks/block-dangerous-git.sh`: the `main` rule splits the
-  command at `&&`, `||`, `;`, `|` and line breaks, and matches
-  `(:| )main( |$)` only against a part that runs `git push`. So
-  `git push -u origin feat/<x> && gh pr create --base main` passes from a
-  `feat/*` branch, while `git push origin main`, `git push origin HEAD:main`
-  and either of them inside a chain stay blocked. The branch rule (push only
-  from `feat/*` or `refactor/*`) and every other pattern stay.
+- `.claude/hooks/block-dangerous-git.sh`: a command that runs `git push`
+  and holds a shell operator (`&&`, `||`, `;`, `|`, `&`) or a line break is
+  blocked as `git push chained with another command`, before the branch
+  and `main` rules. So `git push && gh pr create --base main`,
+  `git switch main && git push`, `git add . ; git push` and
+  `git push | cat` are blocked from any branch. A lone `git push` keeps the
+  branch rule (push only from `feat/*` or `refactor/*`) and the `main` rule
+  (`git push origin main` and `git push origin HEAD:main` stay blocked).
+  `gh pr create --base main` on its own is not a push and passes. Every
+  other pattern stays.
 - `gates/dangerousGitGuard/dangerousGitGuard.test.ts`: runs the hook as
   Claude Code does (the tool call as JSON on standard input, the exit code
-  and message read back), with invented commands, in a temporary git
-  repository on a `feat/*` branch and on `main`. It pins the cases above
-  and one case per existing pattern of the hook. Prior art:
+  and message read back), with invented commands, in temporary git
+  repositories on `main`, a `feat/*` and a `refactor/*` branch. It pins the
+  cases above and one case per existing pattern of the hook. Prior art:
   `gates/claudeFolderGuard/` and `scripts/test-support/sampleRepository/`.
 
 ## Who builds it
@@ -36,11 +39,17 @@ design log Q33), so the issue-loop stops at this ticket. It must be
 
 ## Acceptance criteria
 
-- [ ] A RED commit adds the hook's gate test, and the chained
-      `git push -u origin feat/<x> && gh pr create --base main` case fails.
-- [ ] From a `feat/*` branch that chain is allowed; `git push origin main`,
-      `git push origin HEAD:main` and either inside a chain stay blocked.
-- [ ] One case per existing pattern of the hook passes as before.
+- [ ] A RED commit adds the hook's gate test, and the chained cases fail
+      at their assertion.
+- [ ] A `git push` chained with another command is blocked as
+      `git push chained with another command`:
+      `git push && gh pr create --base main`, `git switch main && git push`,
+      `git add . ; git push`, `git push | cat`.
+- [ ] A lone `git push` from `feat/*` or `refactor/*` is allowed, as are
+      `git push origin feat/x` and `git push -u origin HEAD`; a lone
+      `git push origin main` or `git push origin HEAD:main` is blocked.
+- [ ] `gh pr create --base main` on its own is allowed.
+- [ ] One case per existing pattern of the hook blocks as before.
 - [ ] `npm run verify` is green.
 
 ## Handover

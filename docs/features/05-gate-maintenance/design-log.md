@@ -688,3 +688,12 @@ answers named; those answers stay as they were written.
   would throw before its assertion. The ticket's criterion that the
   protocol module imports nothing from `matchAppOrigin/` gets a guard test
   that passes from the start, not a RED test.
+- **D3. The dangerous-git hook blocks every chained push** (deviates from
+  Q32, Q33 and the PRD's "Dangerous-git hook", which split the command and
+  judged only the part that runs `git push`; the branch rule, the `main`
+  rule for a lone push and every other pattern stand). A command that runs
+  `git push` and holds a shell operator (`&&`, `||`, `;`, `|`, `&`) or a
+  line break is blocked, matching `CLAUDE.md`'s rule "Run `git push` as its
+  own command" (`14-dangerous-git-hook.md`). Reason: the hook reads the
+  current branch when the command arrives, so `git switch main && git push`
+  passes a check that judges only the push part, and pushes from `main`.

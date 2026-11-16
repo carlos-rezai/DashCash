@@ -1,29 +1,19 @@
-import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import { readdirSync } from 'node:fs';
+import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { parse } from 'yaml';
+import {
+  jobCommands,
+  jobSteps,
+  jobsRunning,
+  readWorkflow,
+  stepIndex,
+  triggers,
+  type Workflow,
+  type WorkflowJob,
+  type WorkflowStep,
+} from '../../scripts/readWorkflow/readWorkflow.ts';
 
-type WorkflowStep = {
-  uses?: string;
-  with?: Record<string, unknown>;
-  run?: string;
-  env?: Record<string, unknown>;
-  if?: unknown;
-};
-
-type WorkflowJob = {
-  if?: unknown;
-  needs?: unknown;
-  env?: Record<string, unknown>;
-  steps?: WorkflowStep[];
-};
-
-type Workflow = {
-  name?: unknown;
-  on?: unknown;
-  jobs?: Record<string, WorkflowJob | undefined>;
-};
-
-const WORKFLOWS_FOLDER = '.github/workflows';
+const ROOT = join(import.meta.dirname, '..', '..');
 const PUSH_WORKFLOW = 'ci.yml';
 const PULL_REQUEST_WORKFLOW = 'pull-request.yml';
 const DAILY_WORKFLOW = 'daily.yml';
@@ -85,55 +75,6 @@ const VERIFY_GATES = [
   'check:audit',
   'check:quarantine',
 ];
-
-// A workflow file that does not exist reads as an empty workflow, so every
-// check on it fails at its assertion.
-function readWorkflow(file: string): Workflow {
-  const url = new URL(`../../${WORKFLOWS_FOLDER}/${file}`, import.meta.url);
-  if (!existsSync(url)) {
-    return {};
-  }
-  return (parse(readFileSync(url, 'utf8')) ?? {}) as Workflow;
-}
-
-function workflowFiles(): string[] {
-  return readdirSync(new URL(`../../${WORKFLOWS_FOLDER}/`, import.meta.url))
-    .filter((file) => /\.ya?ml$/.test(file))
-    .sort();
-}
-
-// The events a workflow runs on, as written under its `on:` key.
-function triggers(workflow: Workflow): Record<string, unknown> {
-  const { on } = workflow;
-  if (typeof on === 'string') {
-    return { [on]: null };
-  }
-  if (Array.isArray(on)) {
-    return Object.fromEntries(
-      on.map((event: unknown) => [String(event), null]),
-    );
-  }
-  return typeof on === 'object' && on !== null
-    ? (on as Record<string, unknown>)
-    : {};
-}
-
-function jobSteps(workflow: Workflow, job: string): WorkflowStep[] {
-  return workflow.jobs?.[job]?.steps ?? [];
-}
-
-function stepIndex(steps: WorkflowStep[], action: string): number {
-  return steps.findIndex((step) => (step.uses ?? '').startsWith(`${action}@`));
-}
-
-function jobCommands(workflow: Workflow, job: string): string[] {
-  return jobSteps(workflow, job).flatMap((step) =>
-    (step.run ?? '')
-      .split('\n')
-      .map((command) => command.trim())
-      .filter((command) => command !== ''),
-  );
-}
 
 // What the Daily run's workflow lacks or holds beyond its wiring, one line
 // each, so a check can show which part a workflow is missing.
@@ -467,18 +408,6 @@ function findPullRequestSandboxProblems(workflow: Workflow): string[] {
   return problems;
 }
 
-// The workflow files and jobs whose commands hold `text`, as `file: job`.
-function jobsRunning(text: string): string[] {
-  return workflowFiles().flatMap((file) => {
-    const workflow = readWorkflow(file);
-    return Object.keys(workflow.jobs ?? {})
-      .filter((job) =>
-        jobCommands(workflow, job).some((command) => command.includes(text)),
-      )
-      .map((job) => `${file}: ${job}`);
-  });
-}
-
 // The workflow with the named job's steps changed by `change`.
 function withJobSteps(
   workflow: Workflow,
@@ -729,15 +658,15 @@ function withNoSandboxOnJob(workflow: Workflow): Workflow {
   };
 }
 
-const pullRequestWorkflow = readWorkflow(PULL_REQUEST_WORKFLOW);
-const dailyWorkflow = readWorkflow(DAILY_WORKFLOW);
+const pullRequestWorkflow = readWorkflow(ROOT, PULL_REQUEST_WORKFLOW);
+const dailyWorkflow = readWorkflow(ROOT, DAILY_WORKFLOW);
 
 describe('gate wiring', () => {
   it.each(ELECTRON_INSTALL_JOBS)(
     'installs the Electron binary in its own step directly after npm ci and before the first test command in the %s job',
     (job, file, firstTest) => {
       expect(
-        findElectronInstallProblems(readWorkflow(file), job, firstTest),
+        findElectronInstallProblems(readWorkflow(ROOT, file), job, firstTest),
       ).toEqual([]);
     },
   );
@@ -780,7 +709,7 @@ describe('gate wiring', () => {
   )(
     'fails the Electron install of the %s job when %s',
     (job, _change, file, firstTest, change, problems) => {
-      const workflow = readWorkflow(file);
+      const workflow = readWorkflow(ROOT, file);
       const before = findElectronInstallProblems(workflow, job, firstTest);
       const after = findElectronInstallProblems(
         change(workflow, job, firstTest),
@@ -794,7 +723,7 @@ describe('gate wiring', () => {
   );
 
   it('installs the Electron binary only in the verify, pull-request and mutation jobs', () => {
-    expect(jobsRunning(INSTALL_ELECTRON)).toEqual([
+    expect(jobsRunning(ROOT, INSTALL_ELECTRON)).toEqual([
       `${PUSH_WORKFLOW}: verify`,
       `${DAILY_WORKFLOW}: mutation`,
       `${PULL_REQUEST_WORKFLOW}: pull-request`,
@@ -843,13 +772,13 @@ describe('gate wiring', () => {
   );
 
   it('runs the sysctl step and xvfb-run only in the pull-request job, and --no-sandbox in no job', () => {
-    expect(jobsRunning(SANDBOX_STEP)).toEqual([
+    expect(jobsRunning(ROOT, SANDBOX_STEP)).toEqual([
       `${PULL_REQUEST_WORKFLOW}: pull-request`,
     ]);
-    expect(jobsRunning(VIRTUAL_DISPLAY)).toEqual([
+    expect(jobsRunning(ROOT, VIRTUAL_DISPLAY)).toEqual([
       `${PULL_REQUEST_WORKFLOW}: pull-request`,
     ]);
-    expect(jobsRunning(NO_SANDBOX)).toEqual([]);
+    expect(jobsRunning(ROOT, NO_SANDBOX)).toEqual([]);
   });
 
   it('finds nothing missing from the mutation run of the pull-request job', () => {
@@ -1082,7 +1011,7 @@ describe('gate wiring', () => {
   it.each(SECRET_SCAN_JOBS)(
     'runs gitleaks in the %s job right after checkout and before setup-node, with comments off and the workflow GITHUB_TOKEN',
     (job, file) => {
-      expect(findSecretScanProblems(readWorkflow(file), job)).toEqual([]);
+      expect(findSecretScanProblems(readWorkflow(ROOT, file), job)).toEqual([]);
     },
   );
 
@@ -1114,7 +1043,7 @@ describe('gate wiring', () => {
         ] as const,
     ),
   )('fails the %s job when %s', (job, _change, file, change, problem) => {
-    const workflow = readWorkflow(file);
+    const workflow = readWorkflow(ROOT, file);
     const before = findSecretScanProblems(workflow, job);
     const after = findSecretScanProblems(change(workflow, job), job);
 
@@ -1126,7 +1055,7 @@ describe('gate wiring', () => {
     'runs exactly one gitleaks step in the %s job',
     (job, file) => {
       expect(
-        jobSteps(readWorkflow(file), job).filter(isGitleaksStep),
+        jobSteps(readWorkflow(ROOT, file), job).filter(isGitleaksStep),
       ).toHaveLength(1);
     },
   );
@@ -1136,7 +1065,7 @@ describe('gate wiring', () => {
       (name) => /gitleaks/i.test(name),
     );
     const configuredSteps = SECRET_SCAN_JOBS.flatMap(([job, file]) =>
-      jobSteps(readWorkflow(file), job)
+      jobSteps(readWorkflow(ROOT, file), job)
         .filter(isGitleaksStep)
         .filter(
           (step) =>
@@ -1148,7 +1077,7 @@ describe('gate wiring', () => {
         .map(() => job),
     );
     const jobsWithGitleaks = SECRET_SCAN_JOBS.filter(([job, file]) =>
-      jobSteps(readWorkflow(file), job).some(isGitleaksStep),
+      jobSteps(readWorkflow(ROOT, file), job).some(isGitleaksStep),
     ).map(([job]) => job);
 
     expect(jobsWithGitleaks).toEqual(SECRET_SCAN_JOBS.map(([job]) => job));

@@ -1,5 +1,5 @@
 ---
-status: in-progress
+status: done
 ---
 # Shared workflow readers and the wiring checks without a finder
 
@@ -70,17 +70,17 @@ change `gates/gateWiring/gateWiring.test.ts`.
 
 ## Acceptance criteria
 
-- [ ] A RED commit adds the readers' tests and the four moved test files,
+- [x] A RED commit adds the readers' tests and the four moved test files,
       which fail because the shared module does not exist yet.
-- [ ] Each reader has tests on invented workflow text, and the two that
+- [x] Each reader has tests on invented workflow text, and the two that
       read files on an invented tree.
-- [ ] The four folders hold exactly the tests listed above, word for word
+- [x] The four folders hold exactly the tests listed above, word for word
       apart from imports; the wiring test no longer holds them, and
       `npm test` runs as many tests as before the move apart from the new
       reader tests (counts in the ticket's Notes).
-- [ ] The remaining wiring test defines no reader of its own.
-- [ ] No shipping module imports `test-support/`.
-- [ ] `npm run verify` is green.
+- [x] The remaining wiring test defines no reader of its own.
+- [x] No shipping module imports `test-support/`.
+- [x] `npm run verify` is green.
 
 ## Blocked by
 

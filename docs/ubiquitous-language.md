@@ -71,7 +71,7 @@
 | Term | Definition | Aliases to avoid |
 | --- | --- | --- |
 | **Commit-msg hook** (new) | The local git hook that lints the message being committed with the commitlint config; feedback before the push, not a gate. | Pre-commit hook, local gate |
-| **Dangerous-git hook** (new) | The Claude Code hook that refuses an agent's destructive git commands, and a `git push` to `main` or from a branch other than `feat/*` or `refactor/*`, judged on the push part of a command only. | Git guard, push blocker |
+| **Dangerous-git hook** (new) | The Claude Code hook that refuses an agent's destructive git commands, and a `git push` that is chained with another command, that pushes to `main`, or that runs on a branch other than `feat/*` or `refactor/*`. | Git guard, push blocker |
 | **Claude folder guard** (new) | The Claude Code hook that refuses an agent's change under the project's `.claude/` or to the home settings. | Edit blocker, sandbox |
 | **Home settings** (new) | The user-level Claude Code settings file `~/.claude/settings.json`. | Global config, user config |
 

@@ -674,3 +674,17 @@ answers named; those answers stay as they were written.
   scheduled week showed no run inside the old window (before 6am, and
   before 4am for lockfile maintenance, the default `config:recommended`
   gives it).
+- **D2. User info is refused by the path check alone** (deviates from
+  Q5–Q7 and the PRD's "App protocol" and Testing Decisions, which put
+  `app://x@dashcash/index.html` in the refused-URL table that drives both
+  the `resolveRendererPath` and the `serveAppProtocol` test; the refusal
+  itself stands). `resolveRendererPath` still returns `undefined` for a URL
+  with user info, tested as a pure function; the handler's 404 table keeps
+  the other four host cases (`01-app-protocol-host.md`). Reason: the
+  handler never receives such a URL, because `Request` refuses to
+  construct one ("Request cannot be constructed from a URL that includes
+  credentials", checked in Node on 2026-11-16), and the fake's
+  `request(url)` builds a `Request` as Electron does, so a handler test
+  would throw before its assertion. The ticket's criterion that the
+  protocol module imports nothing from `matchAppOrigin/` gets a guard test
+  that passes from the start, not a RED test.

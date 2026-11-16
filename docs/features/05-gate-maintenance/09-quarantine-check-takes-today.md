@@ -1,5 +1,5 @@
 ---
-status: open
+status: in-progress
 ---
 # The Quarantine check takes today
 

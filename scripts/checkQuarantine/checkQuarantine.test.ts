@@ -7,10 +7,12 @@ import { runNpmScript as runScript } from '../test-support/runNpmScript/runNpmSc
 import {
   initSampleRepository,
   installGateScripts,
-  runSampleGit as git,
   writeTreeFile,
 } from '../test-support/sampleRepository/sampleRepository.ts';
-import { findQuarantineViolations } from './checkQuarantine.ts';
+import {
+  checkQuarantine,
+  findQuarantineViolations,
+} from './checkQuarantine.ts';
 
 const QUARANTINE_FILE = 'quality/flaky-quarantine.json';
 const TODAY = '2026-11-15';
@@ -499,16 +501,111 @@ describe('findQuarantineViolations', () => {
   });
 });
 
-const MS_PER_DAY = 86_400_000;
+const UNREADABLE_REASON = /^cannot be read as JSON: \S/;
 
-// A date relative to today in UTC, as the entry reads it. The entry reads the
-// real clock, so the sample entries are placed around it with room on both
-// sides: a UTC midnight between the test and the entry changes no outcome.
-function utcDate(daysFromToday: number): string {
-  return new Date(Date.now() + daysFromToday * MS_PER_DAY)
-    .toISOString()
-    .slice(0, 10);
-}
+describe('checkQuarantine', () => {
+  let root: string;
+
+  // The invented tracked tree for the root under test, and nothing for any
+  // other folder.
+  function listTrackedPaths(path: string): string[] {
+    return path === root ? TRACKED_PATHS : [];
+  }
+
+  function writeQuarantine(quarantine: unknown): void {
+    writeTreeFile(
+      root,
+      QUARANTINE_FILE,
+      `${JSON.stringify(quarantine, null, 2)}\n`,
+    );
+  }
+
+  beforeEach(() => {
+    root = mkdtempSync(join(tmpdir(), 'dashcash-quarantine-check-'));
+  });
+
+  afterEach(() => {
+    rmSync(root, { recursive: true, force: true });
+  });
+
+  it.each<[string, EntrySpec, string, Violation[]]>([
+    ['a valid entry', {}, TODAY, []],
+    [
+      'an entry added later than today',
+      { added: '2026-11-16', expires: '2026-11-20' },
+      TODAY,
+      [onEntry(0, 'added', LATER_REASON)],
+    ],
+    [
+      'an entry expiring before it was added',
+      { added: '2026-11-21', expires: '2026-11-20' },
+      TODAY,
+      [
+        onEntry(0, 'added', LATER_REASON),
+        onEntry(0, 'expires', BEFORE_ADDED_REASON),
+      ],
+    ],
+    [
+      'an entry expiring more than 30 days after it was added',
+      { added: '2026-11-01', expires: '2026-12-02' },
+      TODAY,
+      [onEntry(0, 'expires', LIMIT_REASON)],
+    ],
+    [
+      'an entry on its expiry date',
+      { added: '2026-11-01', expires: '2026-11-29' },
+      '2026-11-29',
+      [],
+    ],
+    [
+      'an entry the day after its expiry date',
+      { added: '2026-11-01', expires: '2026-11-29' },
+      '2026-11-30',
+      [expired(0, '2026-11-29')],
+    ],
+  ])(
+    'judges %s in the quarantine under the root against the given today',
+    (_, spec, today, expected) => {
+      writeQuarantine([entry(spec)]);
+
+      expect(checkQuarantine({ root, today, listTrackedPaths })).toEqual(
+        expected,
+      );
+    },
+  );
+
+  it('judges the file and the ticket against the paths listed for the root', () => {
+    writeQuarantine([entry()]);
+
+    expect(
+      checkQuarantine({
+        root,
+        today: TODAY,
+        listTrackedPaths: (path) => (path === root ? [SPEC] : TRACKED_PATHS),
+      }),
+    ).toEqual([onEntry(0, 'ticket', TICKET_REASON)]);
+  });
+
+  it('returns the load violation for a missing quarantine file', () => {
+    expect(checkQuarantine({ root, today: TODAY, listTrackedPaths })).toEqual([
+      {
+        subject: QUARANTINE_FILE,
+        reason: expect.stringMatching(UNREADABLE_REASON) as string,
+      },
+    ]);
+  });
+
+  it('returns the load violation for a quarantine file that is no JSON', () => {
+    writeTreeFile(root, QUARANTINE_FILE, '[{ "file": ');
+
+    expect(checkQuarantine({ root, today: TODAY, listTrackedPaths })).toEqual([
+      {
+        subject: QUARANTINE_FILE,
+        reason: expect.stringMatching(UNREADABLE_REASON) as string,
+      },
+    ]);
+  });
+});
 
 function lines(stderr: string): string[] {
   return stderr.split(/\r?\n/).filter((line) => line !== '');
@@ -516,12 +613,6 @@ function lines(stderr: string): string[] {
 
 describe('check:quarantine', { timeout: 30_000 }, () => {
   let tree: string;
-
-  // A valid entry for the real today, naming the sample repository's spec
-  // file and ticket.
-  function liveEntry(spec: EntrySpec = {}): EntrySpec {
-    return entry({ added: utcDate(0), expires: utcDate(7), ...spec });
-  }
 
   function writeQuarantine(content: string): void {
     writeTreeFile(tree, QUARANTINE_FILE, content);
@@ -533,9 +624,6 @@ describe('check:quarantine', { timeout: 30_000 }, () => {
     tree = mkdtempSync(join(tmpdir(), 'dashcash-quarantine-'));
     installGateScripts(tree);
     initSampleRepository(tree);
-    writeTreeFile(tree, SPEC, '// invented sample spec\n');
-    writeTreeFile(tree, TICKET, '---\nstatus: open\n---\n# Sample ticket\n');
-    git(tree, 'add', SPEC, TICKET);
   });
 
   afterEach(() => {
@@ -544,16 +632,6 @@ describe('check:quarantine', { timeout: 30_000 }, () => {
 
   it('exits 0 without output on an empty quarantine', () => {
     writeQuarantine('[]\n');
-
-    const result = runScript('check:quarantine', tree);
-
-    expect(result.status, result.stderr).toBe(0);
-    expect(result.stdout).toBe('');
-    expect(result.stderr).toBe('');
-  });
-
-  it('exits 0 without output on a valid entry', () => {
-    writeQuarantine(`${JSON.stringify([liveEntry()], null, 2)}\n`);
 
     const result = runScript('check:quarantine', tree);
 
@@ -586,60 +664,20 @@ describe('check:quarantine', { timeout: 30_000 }, () => {
     ]);
   });
 
-  it.each<[string, () => unknown, string[]]>([
-    ['a quarantine that is no array', () => ({}), [SHAPE_REASON]],
-    [
-      'an empty title',
-      () => [liveEntry({ title: '' })],
-      ['entry 0, field title: must not be empty'],
-    ],
-    [
-      'an impossible date',
-      () => [liveEntry({ added: '2026-02-30' })],
-      ['entry 0, field added: must be a real YYYY-MM-DD date'],
-    ],
-    [
-      'an entry added later than today',
-      () => [liveEntry({ added: '2999-01-01', expires: '2999-01-15' })],
-      [`entry 0, field added: ${LATER_REASON}`],
-    ],
-    [
-      'an entry expiring before it was added',
-      () => [liveEntry({ added: '2999-01-15', expires: '2999-01-10' })],
-      [
-        `entry 0, field added: ${LATER_REASON}`,
-        `entry 0, field expires: ${BEFORE_ADDED_REASON}`,
-      ],
-    ],
-    [
-      'an entry expiring more than 30 days after it was added',
-      () => [liveEntry({ expires: utcDate(31) })],
-      [`entry 0, field expires: ${LIMIT_REASON}`],
-    ],
-    [
-      'an expired entry',
-      () => [liveEntry({ added: '2020-01-01', expires: '2020-01-31' })],
-      ['entry 0, field expires: expired on 2020-01-31'],
-    ],
-    [
-      'a spec file that is not tracked',
-      () => [liveEntry({ file: 'e2e/missing-flow.spec.ts' })],
-      [`entry 0, field file: ${FILE_REASON}`],
-    ],
-    [
-      'a ticket that is not tracked',
-      () => [liveEntry({ ticket: OTHER_TICKET })],
-      [`entry 0, field ticket: ${TICKET_REASON}`],
-    ],
-  ])('fails on %s with one line per cause', (_, quarantine, reasons) => {
-    writeQuarantine(`${JSON.stringify(quarantine(), null, 2)}\n`);
+  it('fails on a malformed entry with exit code 1 and one subject: reason line per cause', () => {
+    writeQuarantine(
+      `${JSON.stringify([entry({ title: undefined, owner: undefined })], null, 2)}\n`,
+    );
 
     const result = runScript('check:quarantine', tree);
 
     expect(result.status).toBe(1);
     expect(result.stdout).toBe('');
     expect(lines(result.stderr).sort()).toEqual(
-      reasons.map((reason) => `${QUARANTINE_FILE}: ${reason}`).sort(),
+      [
+        `${QUARANTINE_FILE}: entry 0, field title: must not be empty`,
+        `${QUARANTINE_FILE}: entry 0, field owner: must not be empty`,
+      ].sort(),
     );
   });
 });

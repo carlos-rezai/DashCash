@@ -1,5 +1,5 @@
 ---
-status: in-progress
+status: done
 ---
 # Daily problem finders, mutated
 
@@ -46,14 +46,14 @@ This ticket is the approval to create `gates/dailyRun/` and
 
 ## Acceptance criteria
 
-- [ ] A RED commit adds the two folders' tests, which fail because the
+- [x] A RED commit adds the two folders' tests, which fail because the
       finder modules do not exist yet.
-- [ ] Each finder names the same lines for each sample edit as before and
+- [x] Each finder names the same lines for each sample edit as before and
       none for the committed `daily.yml`.
-- [ ] Every moved test is unchanged apart from imports; the wiring test no
+- [x] Every moved test is unchanged apart from imports; the wiring test no
       longer holds them or the two finders.
-- [ ] The finders import only the shared readers, never `test-support/`.
-- [ ] `npm run verify` is green.
+- [x] The finders import only the shared readers, never `test-support/`.
+- [x] `npm run verify` is green.
 
 ## Blocked by
 

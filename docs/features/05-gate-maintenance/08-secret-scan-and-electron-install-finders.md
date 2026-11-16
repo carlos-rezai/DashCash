@@ -1,5 +1,5 @@
 ---
-status: open
+status: in-progress
 ---
 # Secret scan and Electron install finders; the wiring test gone
 

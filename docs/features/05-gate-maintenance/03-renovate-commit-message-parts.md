@@ -67,3 +67,10 @@ None — can start immediately.
 ## User stories addressed
 
 - User stories 16, 17, 18, 19, 26, 27, 61
+
+## Notes
+
+Manual step after the merge (Q36): the human checks the titles of the first
+**Renovate PRs** of each kind (an npm group, github actions, node, lockfile
+maintenance, a vulnerability alert) and confirms each reads as the gate
+assembles it, with no package name or version in it.

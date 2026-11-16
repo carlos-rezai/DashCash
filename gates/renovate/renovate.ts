@@ -30,6 +30,13 @@ const NODE_MANAGERS = ['nvm', 'npm'];
 const NPM_MANAGER = 'npm';
 const LOCKFILE_UPDATE_TYPE = 'lockFileMaintenance';
 const NODE_RULE_KEYS = ['matchManagers', 'matchDepNames'];
+const COMMIT_MESSAGE_PARTS = [
+  'commitMessagePrefix',
+  'commitMessageAction',
+  'commitMessageTopic',
+  'commitMessageExtra',
+  'commitMessageSuffix',
+];
 
 function hasSameItems(value: unknown, expected: readonly string[]): boolean {
   if (!Array.isArray(value)) return false;
@@ -159,43 +166,91 @@ function findGroupViolations(config: Settings): Violation[] {
     if (alerts['commitMessageSuffix'] !== '') {
       fail('vulnerabilityAlerts must set commitMessageSuffix to ""');
     }
-    for (const text of [alerts['commitMessage'], alerts['prTitle']]) {
-      if (typeof text === 'string' && /\[security\]/i.test(text)) {
-        fail('a vulnerability-alert title carries no [SECURITY] suffix');
+  }
+  return violations;
+}
+
+function textOf(part: unknown): string {
+  return typeof part === 'string' ? part : '';
+}
+
+// The title Renovate's default template assembles for one PR-opening scope:
+// the root prefix, then the scope's action, its topic or groupName, extra and
+// suffix; trimmed, inner whitespace collapsed.
+function assembleTitle(prefix: unknown, scope: Settings): string {
+  return [
+    prefix,
+    scope['commitMessageAction'],
+    scope['commitMessageTopic'] ?? scope['groupName'],
+    scope['commitMessageExtra'],
+    scope['commitMessageSuffix'],
+  ]
+    .map(textOf)
+    .join(' ')
+    .trim()
+    .replace(/\s+/g, ' ');
+}
+
+// The scopes that open a PR: every group rule, lockfile maintenance and
+// vulnerability alerts. A missing scope is reported by findGroupViolations.
+function listOpeningScopes(config: Settings): Settings[] {
+  const rules = Array.isArray(config['packageRules'])
+    ? config['packageRules'].filter(isRecord)
+    : [];
+  return [
+    ...rules.filter((rule) => rule['groupName'] !== undefined),
+    config['lockFileMaintenance'],
+    config['vulnerabilityAlerts'],
+  ].filter(isRecord);
+}
+
+function findPartViolations(config: Settings): Violation[] {
+  const violations: Violation[] = [];
+  const fail = (reason: string) =>
+    violations.push({ subject: SUBJECT, reason });
+  for (const object of collectObjects(config)) {
+    if (object['commitMessage'] !== undefined) {
+      fail('no commitMessage is allowed');
+    }
+    if (object['prTitle'] !== undefined) fail('no prTitle is allowed');
+    for (const part of COMMIT_MESSAGE_PARTS) {
+      if (textOf(object[part]).includes('{{')) {
+        fail('a commit-message part holds no template');
       }
+    }
+  }
+  const rules = Array.isArray(config['packageRules'])
+    ? config['packageRules'].filter(isRecord)
+    : [];
+  for (const rule of rules) {
+    if (
+      rule['groupName'] !== undefined &&
+      rule['commitMessageTopic'] !== undefined
+    ) {
+      fail('a group rule sets no commitMessageTopic');
+    }
+  }
+  for (const scope of listOpeningScopes(config)) {
+    if (typeof scope['commitMessageAction'] !== 'string') {
+      fail('a scope that opens a PR sets commitMessageAction');
+    }
+    if (typeof scope['commitMessageExtra'] !== 'string') {
+      fail('a scope that opens a PR sets commitMessageExtra');
     }
   }
   return violations;
 }
 
-async function findMessageViolations(
-  message: unknown,
-  commitConfig: CommitConfig,
-): Promise<Violation[]> {
-  if (typeof message !== 'string') {
-    return [{ subject: describeValue(message), reason: 'must be a string' }];
-  }
-  const violations: Violation[] = [];
-  const fail = (reason: string) =>
-    violations.push({ subject: message, reason });
-  if (message.includes('{{')) fail('a commit message holds no template');
-  if (parseCommitHeader(message)?.feature !== RENOVATE_FEATURE) {
-    fail(`a commit message names the feature ${RENOVATE_FEATURE}`);
-  }
-  violations.push(...(await lintCommitMessages([message], commitConfig)));
-  return violations;
-}
-
 async function findTitleViolations(
-  title: unknown,
+  title: string,
   commitConfig: CommitConfig,
 ): Promise<Violation[]> {
-  if (typeof title !== 'string') {
-    return [{ subject: describeValue(title), reason: 'must be a string' }];
-  }
   const violations: Violation[] = [];
-  if (title.includes('{{')) {
-    violations.push({ subject: title, reason: 'a PR title holds no template' });
+  if (parseCommitHeader(title)?.feature !== RENOVATE_FEATURE) {
+    violations.push({
+      subject: title,
+      reason: `a title names the feature ${RENOVATE_FEATURE}`,
+    });
   }
   violations.push(
     ...(await checkPullRequest({
@@ -209,9 +264,11 @@ async function findTitleViolations(
   return violations;
 }
 
-// The Renovate rule: every commit message and PR title in the config, at any
-// depth, is fixed text that passes the commitlint config and the Pull-request
-// check, each title equals its commit message, and the base settings hold.
+// The Renovate rule: no commitMessage or prTitle anywhere, no template in a
+// Commit-message part, every PR-opening scope sets its own action and extra
+// (a group rule no topic), each title assembled from the parts names the
+// feature and passes the commitlint config and the Pull-request check, and the
+// base settings hold.
 export async function findRenovateViolations(
   config: unknown,
   commitConfig: CommitConfig,
@@ -223,22 +280,10 @@ export async function findRenovateViolations(
     ...findSettingViolations(config),
     ...findGroupViolations(config),
   ];
-  for (const object of collectObjects(config)) {
-    const { commitMessage, prTitle } = object;
-    if (commitMessage !== undefined) {
-      violations.push(
-        ...(await findMessageViolations(commitMessage, commitConfig)),
-      );
-    }
-    if (prTitle !== undefined) {
-      violations.push(...(await findTitleViolations(prTitle, commitConfig)));
-    }
-    if (commitMessage !== prTitle && (commitMessage ?? prTitle) !== undefined) {
-      violations.push({
-        subject: describeValue(commitMessage ?? prTitle),
-        reason: 'a PR title is the same text as its commit message',
-      });
-    }
+  violations.push(...findPartViolations(config));
+  for (const scope of listOpeningScopes(config)) {
+    const title = assembleTitle(config['commitMessagePrefix'], scope);
+    violations.push(...(await findTitleViolations(title, commitConfig)));
   }
   return violations;
 }

@@ -2,7 +2,10 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { isRecord } from '../isRecord/isRecord.ts';
 import { readCalendarDate } from '../readCalendarDate/readCalendarDate.ts';
-import type { Violation } from '../reportViolations/reportViolations.ts';
+import {
+  formatViolation,
+  type Violation,
+} from '../reportViolations/reportViolations.ts';
 
 export const QUARANTINE_FILE = 'quality/flaky-quarantine.json';
 export const E2E_FOLDER = 'e2e/';
@@ -151,4 +154,24 @@ export function buildQuarantinePatterns(
     const path = escapeRegExp(relative).replaceAll('/', '[\\\\/]');
     return new RegExp(`(?:^| )${path} ${escapeRegExp(title)}(?: @\\S+)*$`);
   });
+}
+
+function throwViolations(violations: readonly Violation[]): never {
+  throw new Error(violations.map(formatViolation).join('\n'));
+}
+
+// Loads and reads the Quarantine under `root` and returns its patterns. A
+// Quarantine that cannot be loaded or is malformed throws one error with one
+// `<subject>: <reason>` line per violation, so a run never skips tests
+// silently.
+export function loadQuarantinePatterns(root: string): RegExp[] {
+  const loaded = loadQuarantine(root);
+  if ('violation' in loaded) {
+    return throwViolations([loaded.violation]);
+  }
+  const { entries, violations } = readQuarantine(loaded.quarantine);
+  if (violations.length > 0) {
+    return throwViolations(violations);
+  }
+  return buildQuarantinePatterns(entries);
 }

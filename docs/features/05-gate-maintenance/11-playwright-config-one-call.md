@@ -1,5 +1,5 @@
 ---
-status: in-progress
+status: done
 ---
 # The Playwright config in one call
 
@@ -35,15 +35,15 @@ files the config now imports; no assertion of it changes.
 
 ## Acceptance criteria
 
-- [ ] A RED commit adds the tests of `loadQuarantinePatterns` and of the
+- [x] A RED commit adds the tests of `loadQuarantinePatterns` and of the
       shared line format, which fail because they do not exist yet.
-- [ ] An unreadable file, a non-array and a malformed entry each throw
+- [x] An unreadable file, a non-array and a malformed entry each throw
       with every line; a valid file returns the patterns.
-- [ ] `test:e2e` still fails with one line per problem on a broken
+- [x] `test:e2e` still fails with one line per problem on a broken
       **Quarantine**; the end-to-end gate test's messages and key checks
       stay unchanged and green.
-- [ ] The config defines no function of its own.
-- [ ] `npm run verify:full` is green.
+- [x] The config defines no function of its own.
+- [x] `npm run verify:full` is green.
 
 ## Blocked by
 

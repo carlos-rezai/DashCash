@@ -43,23 +43,23 @@ This ticket is the approval to change `gates/endToEnd/endToEnd.test.ts`.
 
 ## Acceptance criteria
 
-- [ ] A RED commit adds the pattern tests and the `--list` gate test, and
+- [x] A RED commit adds the pattern tests and the `--list` gate test, and
       fails on them.
-- [ ] A subfolder entry's pattern matches with `/` and with `\`; a test
+- [x] A subfolder entry's pattern matches with `/` and with `\`; a test
       with no tag, one tag and several tags matches; a title that itself
       holds a tag matches.
-- [ ] The same title in another file, a title that merely starts with the
+- [x] The same title in another file, a title that merely starts with the
       entry's title and a title with regex characters matched loosely do
       not match.
-- [ ] Playwright's `--list` in the sample tree lists the third test and
+- [x] Playwright's `--list` in the sample tree lists the third test and
       neither quarantined test, and lists the old model's non-matching
       cases; the test starts no app, no browser and no network.
-- [ ] The hand-made model of Playwright's string is gone; the check that
+- [x] The hand-made model of Playwright's string is gone; the check that
       the config's `grepInvert` equals the reader's patterns for the
       committed file stays.
-- [ ] The **Quarantine check**'s file rule is unchanged, and
+- [x] The **Quarantine check**'s file rule is unchanged, and
       `e2e/sub/<x>.spec.ts` passes it.
-- [ ] `npm run verify:full` is green.
+- [x] `npm run verify:full` is green.
 
 ## Blocked by
 

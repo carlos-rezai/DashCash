@@ -5,8 +5,8 @@ import {
   jobSteps,
   readWorkflow,
   type Workflow,
-  type WorkflowStep,
 } from '../../scripts/readWorkflow/readWorkflow.ts';
+import { isGitleaksStep } from '../dailyMutation/dailyMutation.ts';
 import { withJobSteps } from '../test-support/withJobSteps/withJobSteps.ts';
 import { findSecretScanProblems } from './secretScan.ts';
 
@@ -14,7 +14,6 @@ const ROOT = join(import.meta.dirname, '..', '..');
 const PUSH_WORKFLOW = 'ci.yml';
 const PULL_REQUEST_WORKFLOW = 'pull-request.yml';
 const DAILY_WORKFLOW = 'daily.yml';
-const GITLEAKS_ACTION = 'gitleaks/gitleaks-action';
 
 // The three jobs that run the Secret scan, each with its workflow file.
 const SECRET_SCAN_JOBS: [job: string, file: string][] = [
@@ -22,10 +21,6 @@ const SECRET_SCAN_JOBS: [job: string, file: string][] = [
   ['pull-request', PULL_REQUEST_WORKFLOW],
   ['daily', DAILY_WORKFLOW],
 ];
-
-function isGitleaksStep(step: WorkflowStep): boolean {
-  return (step.uses ?? '').startsWith(`${GITLEAKS_ACTION}@`);
-}
 
 function withoutGitleaks(workflow: Workflow, job: string): Workflow {
   return withJobSteps(workflow, job, (steps) =>

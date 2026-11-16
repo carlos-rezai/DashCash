@@ -28,9 +28,10 @@ PRD "Renovate"; design log Q15–Q18, A3).
   cap's major differs from the major in `.nvmrc`, when the TypeScript or
   the Node hold is missing, when a hold comes before the Node rule, and
   when a hold reaches lockfile maintenance. The order check becomes: the
-  Node rule comes after every other npm rule except the hold rules, and
-  every hold rule (recognised by `enabled: false` or `allowedVersions`)
-  comes after it.
+  Node rule comes after every other rule, npm or not, and exactly the
+  three hold rules, each at most once, come after it and nothing else
+  (design log D4); every hold rule (recognised by `enabled: false` or
+  `allowedVersions`) comes after the Node rule.
 - `gates/renovate/renovate.test.ts`: the committed `renovate.json` and
   `.nvmrc` pass; one failing sample per new rule.
 - `renovate.json`'s `schedule` and the `lockFileMaintenance` schedule are

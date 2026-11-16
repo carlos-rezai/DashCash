@@ -697,3 +697,14 @@ answers named; those answers stay as they were written.
   own command" (`14-dangerous-git-hook.md`). Reason: the hook reads the
   current branch when the command arrives, so `git switch main && git push`
   passes a check that judges only the push part, and pushes from `main`.
+- **D4. The Renovate order check allows exactly the three hold rules after
+  the Node rule** (deviates from Q17 and the PRD's and plan's wording "the
+  Node rule comes after every other npm rule except the hold rules"; the
+  hold rules themselves, their order and the cap stand). The check fails
+  any packageRule after the Node rule, npm or not, unless it is the
+  `@types/node` cap, the TypeScript hold or the Node hold, each at most
+  once; its message no longer says "for npm" (`04-renovate-hold-rules.md`).
+  Reason: the human's added criterion in ticket 04, "exactly the three hold
+  rules after the Node rule and nothing else", which is stricter than
+  "every other npm rule" and leaves no room for a rule of another manager
+  after the Node rule.

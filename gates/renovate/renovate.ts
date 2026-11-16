@@ -252,7 +252,9 @@ function findGroupViolations(
   }
   const lastNode = rules.findLastIndex(isNodeRule);
   if (lastNode !== -1 && hasRuleAfterNode(rules, lastNode)) {
-    fail('the Node rule must come after every other packageRule for npm');
+    fail(
+      'the Node rule must come after every other packageRule, except the three hold rules, each at most once, which come after it',
+    );
   }
   violations.push(...findHoldViolations(rules, lastNode, nodeVersion));
   if (rules.some(reachesLockfileMaintenance)) {

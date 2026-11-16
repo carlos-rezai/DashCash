@@ -72,7 +72,8 @@ const NO_GROUP_TOPIC = {
 };
 const RULE_ORDER = {
   subject: 'renovate.json',
-  reason: 'the Node rule must come after every other packageRule for npm',
+  reason:
+    'the Node rule must come after every other packageRule, except the three hold rules, each at most once, which come after it',
 };
 const LOCKFILE_RULE = {
   subject: 'renovate.json',

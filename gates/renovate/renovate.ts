@@ -20,7 +20,10 @@ const PRESETS = [
 ];
 const SEMANTIC_COMMITS = 'disabled';
 const MINIMUM_RELEASE_AGE = '14 days';
-const SCHEDULE = ['before 6am on monday'];
+const SCHEDULE = ['on monday'];
+const TYPES_NODE_DEP = '@types/node';
+const TYPESCRIPT_DEP = 'typescript';
+const MAJOR_UPDATE_TYPE = 'major';
 const TIMEZONE = 'Europe/Berlin';
 const BRANCH_PREFIX = 'renovate/';
 const RENOVATE_BRANCH = 'renovate/sample';
@@ -73,6 +76,10 @@ function findSettingViolations(config: Settings): Violation[] {
   }
   if (!hasSameItems(config['schedule'], SCHEDULE)) {
     fail(`schedule must be ${describeValue(SCHEDULE)}`);
+  }
+  const lockfile = config['lockFileMaintenance'];
+  if (isRecord(lockfile) && !hasSameItems(lockfile['schedule'], SCHEDULE)) {
+    fail(`lockFileMaintenance schedule must be ${describeValue(SCHEDULE)}`);
   }
   if (config['timezone'] !== TIMEZONE) {
     fail(`timezone must be "${TIMEZONE}"`);
@@ -132,7 +139,106 @@ function reachesLockfileMaintenance(rule: Settings): boolean {
   return !Array.isArray(types) || types.includes(LOCKFILE_UPDATE_TYPE);
 }
 
-function findGroupViolations(config: Settings): Violation[] {
+function hasExactKeys(rule: Settings, keys: readonly string[]): boolean {
+  return hasSameItems(Object.keys(rule), keys);
+}
+
+// The three Hold rules, each recognised by exactly its keys: the cap on
+// @types/node (its value is checked against .nvmrc apart), TypeScript majors
+// disabled and Node majors disabled in both managers.
+function isCapRule(rule: Settings): boolean {
+  return (
+    hasExactKeys(rule, ['matchManagers', 'matchDepNames', 'allowedVersions']) &&
+    hasSameItems(rule['matchManagers'], [NPM_MANAGER]) &&
+    hasSameItems(rule['matchDepNames'], [TYPES_NODE_DEP]) &&
+    typeof rule['allowedVersions'] === 'string'
+  );
+}
+
+function isMajorHold(
+  rule: Settings,
+  managers: readonly string[],
+  dep: string,
+): boolean {
+  return (
+    hasExactKeys(rule, [
+      'matchManagers',
+      'matchDepNames',
+      'matchUpdateTypes',
+      'enabled',
+    ]) &&
+    hasSameItems(rule['matchManagers'], managers) &&
+    hasSameItems(rule['matchDepNames'], [dep]) &&
+    hasSameItems(rule['matchUpdateTypes'], [MAJOR_UPDATE_TYPE]) &&
+    rule['enabled'] === false
+  );
+}
+
+function isTypescriptHold(rule: Settings): boolean {
+  return isMajorHold(rule, [NPM_MANAGER], TYPESCRIPT_DEP);
+}
+
+function isNodeHold(rule: Settings): boolean {
+  return isMajorHold(rule, NODE_MANAGERS, NODE_DEP);
+}
+
+// Any rule that disables updates or caps their versions, whatever it matches.
+function looksLikeHold(rule: Settings): boolean {
+  return rule['enabled'] === false || rule['allowedVersions'] !== undefined;
+}
+
+// The major of an .nvmrc text such as "24", "v24.14.0\n" or "24.0.0".
+function readMajor(nodeVersion: string): string | undefined {
+  const major = nodeVersion.trim().replace(/^v/, '').split('.')[0];
+  return major !== undefined && /^\d+$/.test(major) ? major : undefined;
+}
+
+function findHoldViolations(
+  rules: Settings[],
+  lastNode: number,
+  nodeVersion: string,
+): Violation[] {
+  const violations: Violation[] = [];
+  const fail = (reason: string) =>
+    violations.push({ subject: SUBJECT, reason });
+  const major = readMajor(nodeVersion);
+  const caps = rules.filter(isCapRule);
+  if (
+    major === undefined ||
+    caps.length === 0 ||
+    caps.some((cap) => cap['allowedVersions'] !== `${major}.x`)
+  ) {
+    fail(`the ${TYPES_NODE_DEP} cap must be the major in .nvmrc`);
+  }
+  if (!rules.some(isTypescriptHold)) {
+    fail('a hold rule must disable TypeScript majors, and only majors');
+  }
+  if (!rules.some(isNodeHold)) {
+    fail(
+      'a hold rule must disable Node majors in the nvm and the npm manager, and only majors',
+    );
+  }
+  if (lastNode !== -1 && rules.slice(0, lastNode).some(looksLikeHold)) {
+    fail('every hold rule must come after the Node rule');
+  }
+  return violations;
+}
+
+// Later rules win in Renovate: the Node rule comes after every other rule,
+// except that the three Hold rules, each at most once, come after it.
+function hasRuleAfterNode(rules: Settings[], lastNode: number): boolean {
+  const after = rules.slice(lastNode + 1);
+  const kinds = [isCapRule, isTypescriptHold, isNodeHold];
+  return (
+    after.some((rule) => !kinds.some((kind) => kind(rule))) ||
+    kinds.some((kind) => after.filter(kind).length > 1)
+  );
+}
+
+function findGroupViolations(
+  config: Settings,
+  nodeVersion: string,
+): Violation[] {
   const violations: Violation[] = [];
   const fail = (reason: string) =>
     violations.push({ subject: SUBJECT, reason });
@@ -144,12 +250,11 @@ function findGroupViolations(config: Settings): Violation[] {
       'a packageRule must cover the dependency node in both the nvm manager and the npm manager (engines.node)',
     );
   }
-  // Later rules win in Renovate: the Node rule comes after every other rule
-  // for the npm manager.
   const lastNode = rules.findLastIndex(isNodeRule);
-  if (lastNode !== -1 && rules.slice(lastNode + 1).some(matchesNpm)) {
+  if (lastNode !== -1 && hasRuleAfterNode(rules, lastNode)) {
     fail('the Node rule must come after every other packageRule for npm');
   }
+  violations.push(...findHoldViolations(rules, lastNode, nodeVersion));
   if (rules.some(reachesLockfileMaintenance)) {
     fail(
       `a packageRule for npm must set matchUpdateTypes without ${LOCKFILE_UPDATE_TYPE}`,
@@ -273,17 +378,20 @@ async function findTitleViolations(
 // Commit-message part, every PR-opening scope sets its own action and extra
 // (a group rule no topic), each title assembled from the parts names the
 // feature and passes the commitlint config and the Pull-request check, and the
-// base settings hold.
+// base settings hold, the schedules all of Monday. Three Hold rules come last,
+// after the Node rule: the @types/node cap at the major of .nvmrc (nodeVersion
+// is its text), TypeScript majors disabled and Node majors disabled.
 export async function findRenovateViolations(
   config: unknown,
   commitConfig: CommitConfig,
+  nodeVersion: string,
 ): Promise<Violation[]> {
   if (!isRecord(config)) {
     return [{ subject: SUBJECT, reason: 'the config must be an object' }];
   }
   const violations = [
     ...findSettingViolations(config),
-    ...findGroupViolations(config),
+    ...findGroupViolations(config, nodeVersion),
   ];
   violations.push(...findPartViolations(config));
   for (const scope of listOpeningScopes(config)) {

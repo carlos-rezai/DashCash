@@ -7,7 +7,7 @@
   ],
   "semanticCommits": "disabled",
   "minimumReleaseAge": "14 days",
-  "schedule": ["before 6am on monday"],
+  "schedule": ["on monday"],
   "timezone": "Europe/Berlin",
   "commitMessagePrefix": "chore: [supply-chain]",
   "packageRules": [
@@ -44,10 +44,28 @@
       "commitMessageAction": "update",
       "commitMessageExtra": "",
       "commitMessageSuffix": ""
+    },
+    {
+      "matchManagers": ["npm"],
+      "matchDepNames": ["@types/node"],
+      "allowedVersions": "24.x"
+    },
+    {
+      "matchManagers": ["npm"],
+      "matchDepNames": ["typescript"],
+      "matchUpdateTypes": ["major"],
+      "enabled": false
+    },
+    {
+      "matchManagers": ["nvm", "npm"],
+      "matchDepNames": ["node"],
+      "matchUpdateTypes": ["major"],
+      "enabled": false
     }
   ],
   "lockFileMaintenance": {
     "enabled": true,
+    "schedule": ["on monday"],
     "commitMessageAction": "refresh",
     "commitMessageTopic": "the lockfile",
     "commitMessageExtra": "",

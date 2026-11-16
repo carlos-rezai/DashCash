@@ -45,25 +45,25 @@ This ticket is the approval to change `gates/renovate/renovate.ts` and
 
 ## Acceptance criteria
 
-- [ ] A RED commit adds the hold checks and their failing samples, and the
+- [x] A RED commit adds the hold checks and their failing samples, and the
       committed `renovate.json` fails them.
-- [ ] The committed `renovate.json` and `.nvmrc` pass; the cap is `24.x`
+- [x] The committed `renovate.json` and `.nvmrc` pass; the cap is `24.x`
       while `.nvmrc` holds 24.
-- [ ] A cap one major off `.nvmrc`, a missing TypeScript hold, a missing
+- [x] A cap one major off `.nvmrc`, a missing TypeScript hold, a missing
       Node hold, a hold before the Node rule and a hold reaching lockfile
       maintenance each fail.
-- [ ] The TypeScript and Node holds match majors only; the Node group still
+- [x] The TypeScript and Node holds match majors only; the Node group still
       groups minors and patches into `update node`.
-- [ ] The relaxed rule-order check allows exactly the three hold rules after
+- [x] The relaxed rule-order check allows exactly the three hold rules after
       the Node rule and nothing else; any other rule after the Node rule
       still fails. The review checks that the gate is not looser than that.
-- [ ] `renovate.json`'s `schedule` and the `lockFileMaintenance` schedule
+- [x] `renovate.json`'s `schedule` and the `lockFileMaintenance` schedule
       are widened to all of Monday (`"on monday"`). The hosted Renovate app
       runs only every few hours or days, and Renovate's first scheduled week
       showed no run inside the old window (before 6am, and before 4am for
       lockfile maintenance). The Renovate gate test checks both schedules.
-- [ ] The title checks of `03-renovate-commit-message-parts.md` still pass.
-- [ ] `npm run verify` is green.
+- [x] The title checks of `03-renovate-commit-message-parts.md` still pass.
+- [x] `npm run verify` is green.
 
 ## Blocked by
 

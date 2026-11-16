@@ -41,24 +41,24 @@ change `gates/renovate/renovate.ts` and `gates/renovate/renovate.test.ts`.
 
 ## Acceptance criteria
 
-- [ ] A RED commit adds the new gate checks and their failing samples, and
+- [x] A RED commit adds the new gate checks and their failing samples, and
       the committed `renovate.json` fails them.
-- [ ] No object in `renovate.json` sets `commitMessage` or `prTitle`.
-- [ ] The assembled titles are exactly `chore: [supply-chain] update npm
+- [x] No object in `renovate.json` sets `commitMessage` or `prTitle`.
+- [x] The assembled titles are exactly `chore: [supply-chain] update npm
       dependencies`, `chore: [supply-chain] update github actions`,
       `chore: [supply-chain] update node`, `chore: [supply-chain] refresh
       the lockfile` and `chore: [supply-chain] fix vulnerable
       dependencies`; each passes commitlint, names the feature
       `supply-chain` and passes the **Pull-request check**; none holds a
       package name or version.
-- [ ] A failing sample for each new rule: a `commitMessage`, a `prTitle`, a
+- [x] A failing sample for each new rule: a `commitMessage`, a `prTitle`, a
       `{{` in a part, a missing action, a missing extra, a group rule with
       a topic, a title that fails commitlint.
-- [ ] The existing checks on base settings, lockfile maintenance and
+- [x] The existing checks on base settings, lockfile maintenance and
       vulnerability alerts stay and pass.
-- [ ] The ticket's Notes name the manual step after the merge: the human
+- [x] The ticket's Notes name the manual step after the merge: the human
       checks the titles of the first **Renovate PRs** of each kind (Q36).
-- [ ] `npm run verify` is green.
+- [x] `npm run verify` is green.
 
 ## Blocked by
 

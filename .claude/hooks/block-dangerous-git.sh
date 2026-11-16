@@ -47,8 +47,14 @@ if printf '%s' "$COMMAND" | grep -qE "git tag( |$)" &&
   block "git tag"
 fi
 
-# git push: only from a feature or refactor branch, never to main.
+# git push: as its own command only (CLAUDE.md), from a feature or refactor
+# branch, never to main. The branch is read when the command arrives, so a
+# push chained with another command (git switch main && git push) could run
+# on a branch this hook never saw: any shell operator or line break blocks.
 if printf '%s' "$COMMAND" | grep -qE "git push"; then
+  case "$COMMAND" in
+    *$'\n'* | *[\;\&\|]*) block "git push chained with another command" ;;
+  esac
   BRANCH=$(git -C "${CWD:-.}" branch --show-current 2>/dev/null)
   case "$BRANCH" in
     feat/*|refactor/*) ;;

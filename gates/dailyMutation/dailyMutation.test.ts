@@ -13,10 +13,10 @@ import { findMutationWiringProblems, isGitleaksStep } from './dailyMutation.ts';
 
 const ROOT = join(import.meta.dirname, '..', '..');
 const DAILY_WORKFLOW = 'daily.yml';
-// Electron 45 downloads its binary on the first require('electron'), so every
-// job that runs tests installs it in its own step right after npm ci.
+// npm ci installs the Electron binary through the root postinstall script, so
+// the mutation job runs no install step of its own.
 const INSTALL_ELECTRON = 'node_modules/.bin/install-electron';
-const MUTATION_COMMANDS = ['npm ci', INSTALL_ELECTRON, 'npm run test:mutation'];
+const MUTATION_COMMANDS = ['npm ci', 'npm run test:mutation'];
 const MUTATION_REPORT_NAME = 'mutation-report';
 const MUTATION_REPORT_PATH = 'reports/mutation/mutation.html';
 const UPLOAD_ACTION = 'actions/upload-artifact';
@@ -113,7 +113,7 @@ describe('daily mutation', () => {
     expect(job?.needs).toBeUndefined();
   });
 
-  it('runs checkout, setup-node, npm ci, node_modules/.bin/install-electron, npm run test:mutation, then the upload of the mutation report in the mutation job', () => {
+  it('runs checkout, setup-node, npm ci, npm run test:mutation, then the upload of the mutation report in the mutation job', () => {
     const steps = jobSteps(dailyWorkflow, 'mutation');
     const kinds = steps.map(
       (step) => step.run ?? (step.uses ?? '').split('@')[0],
@@ -123,7 +123,6 @@ describe('daily mutation', () => {
       'actions/checkout',
       'actions/setup-node',
       'npm ci',
-      INSTALL_ELECTRON,
       'npm run test:mutation',
       UPLOAD_ACTION,
     ]);
@@ -132,14 +131,14 @@ describe('daily mutation', () => {
       'node-version-file': '.nvmrc',
       cache: 'npm',
     });
-    expect(steps[5]?.with).toEqual({
+    expect(steps[4]?.with).toEqual({
       name: MUTATION_REPORT_NAME,
       path: MUTATION_REPORT_PATH,
     });
-    expect(steps[5]?.if).toBe('always()');
+    expect(steps[4]?.if).toBe('always()');
   });
 
-  it('runs exactly npm ci, node_modules/.bin/install-electron, then npm run test:mutation in the mutation job', () => {
+  it('runs exactly npm ci, then npm run test:mutation in the mutation job', () => {
     expect(jobCommands(dailyWorkflow, 'mutation')).toEqual(MUTATION_COMMANDS);
   });
 
@@ -205,6 +204,14 @@ describe('daily mutation', () => {
         () => ({ run: 'npm run lint' }),
       ),
       'the mutation job also runs npm run lint',
+    ],
+    [
+      'the job gains an install-electron step after npm ci',
+      withMutationStepAfter(
+        (step) => step.run === 'npm ci',
+        () => ({ run: INSTALL_ELECTRON }),
+      ),
+      `the mutation job also runs ${INSTALL_ELECTRON}`,
     ],
     [
       'the job gains a gitleaks step',

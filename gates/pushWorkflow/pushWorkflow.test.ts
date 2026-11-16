@@ -8,9 +8,6 @@ import {
 
 const ROOT = join(import.meta.dirname, '..', '..');
 const PUSH_WORKFLOW = 'ci.yml';
-// Electron 45 downloads its binary on the first require('electron'), so every
-// job that runs tests installs it in its own step right after npm ci.
-const INSTALL_ELECTRON = 'node_modules/.bin/install-electron';
 
 const pushWorkflow = readWorkflow(ROOT, PUSH_WORKFLOW);
 
@@ -30,10 +27,9 @@ describe('push workflow', () => {
     expect(jobCommands(pushWorkflow, 'verify')).toContain('npm run verify');
   });
 
-  it('runs exactly npm ci, node_modules/.bin/install-electron, then npm run verify in the verify job', () => {
+  it('runs exactly npm ci, then npm run verify in the verify job', () => {
     expect(jobCommands(pushWorkflow, 'verify')).toEqual([
       'npm ci',
-      INSTALL_ELECTRON,
       'npm run verify',
     ]);
   });

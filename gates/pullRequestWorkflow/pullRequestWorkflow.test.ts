@@ -9,9 +9,6 @@ import {
 
 const ROOT = join(import.meta.dirname, '..', '..');
 const PULL_REQUEST_WORKFLOW = 'pull-request.yml';
-// Electron 45 downloads its binary on the first require('electron'), so every
-// job that runs tests installs it in its own step right after npm ci.
-const INSTALL_ELECTRON = 'node_modules/.bin/install-electron';
 // The pull-request job allows the Linux sandbox with this step, then runs
 // Verify full under a virtual display; nothing passes --no-sandbox.
 const SANDBOX_STEP =
@@ -20,7 +17,6 @@ const VIRTUAL_DISPLAY = 'xvfb-run --auto-servernum';
 const VERIFY_FULL_UNDER_DISPLAY = `${VIRTUAL_DISPLAY} npm run verify:full`;
 const PULL_REQUEST_COMMANDS = [
   'npm ci',
-  INSTALL_ELECTRON,
   VERIFY_FULL_UNDER_DISPLAY,
   'npm run check:pr',
   'npm run test:mutation',
@@ -42,7 +38,7 @@ describe('pull-request workflow', () => {
     ]);
   });
 
-  it('runs npm ci, node_modules/.bin/install-electron, npm run verify:full under xvfb-run, npm run check:pr, then npm run test:mutation in the pull-request job, beside the sysctl step', () => {
+  it('runs npm ci, npm run verify:full under xvfb-run, npm run check:pr, then npm run test:mutation in the pull-request job, beside the sysctl step', () => {
     const commands = jobCommands(pullRequestWorkflow, 'pull-request');
 
     expect(commands.filter((command) => command === SANDBOX_STEP)).toEqual([

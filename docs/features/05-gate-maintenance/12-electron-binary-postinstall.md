@@ -1,5 +1,5 @@
 ---
-status: open
+status: in-progress
 ---
 # npm ci installs the Electron binary
 

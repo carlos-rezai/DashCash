@@ -1,5 +1,5 @@
 ---
-status: in-progress
+status: done
 ---
 # Configurable debug port, then the ratchet
 
@@ -64,22 +64,22 @@ This ticket is the approval to change exactly `thresholds.break` in
 
 ## Acceptance criteria
 
-- [ ] A RED commit adds the port and startup tests, and fails on them.
-- [ ] Outside dev, nothing is appended for any value; in dev, unset,
+- [x] A RED commit adds the port and startup tests, and fails on them.
+- [x] Outside dev, nothing is appended for any value; in dev, unset,
       empty, 1, 9222 and 65535 append the expected port.
-- [ ] 0, 65536, `09222`, `-1`, `92.5`, ` 9222` and `abc` each return the
+- [x] 0, 65536, `09222`, `-1`, `92.5`, ` 9222` and `abc` each return the
       cause and append no switch.
-- [ ] An invalid port shows the **Startup error** with the **Data folder**
+- [x] An invalid port shows the **Startup error** with the **Data folder**
       in its last line and takes no lock, registers no protocol and opens
       no **Database**; a valid one keeps the startup order.
-- [ ] `npm run dev` with another port exposes it on loopback (checked by
+- [x] `npm run dev` with another port exposes it on loopback (checked by
       hand, recorded in the ticket's Notes).
-- [ ] `README.md` names `DASHCASH_DEBUG_PORT` and 9222 in one line.
-- [ ] The builder's run, no test: `thresholds.break` is the measured
+- [x] `README.md` names `DASHCASH_DEBUG_PORT` and 9222 in one line.
+- [x] The builder's run, no test: `thresholds.break` is the measured
       score rounded down, at least 81; `high` stays 80 and `low` 60;
       `gates/mutationTesting/` is unchanged; `npm run test:mutation` exits
       0 with the new threshold; score and threshold are in the Notes.
-- [ ] `npm run verify:full` is green.
+- [x] `npm run verify:full` is green.
 
 ## Blocked by
 
@@ -102,3 +102,25 @@ The ratchet measures every other change of this feature (Q30):
 
 - User stories 47, 48, 49, 50, 51, 52
 - User stories 53, 54, 55
+
+## Notes
+
+- Startup order: `startApp` calls `enableDebugPort` right after the **Data
+  folder** resolves and before `app.setPath` and the lock, so a failed start
+  leaves nothing behind, not even the `userData` path. The RED tests leave
+  this open; the PRD says "right after resolving the Data folder".
+- Manual check, with `DASHCASH_DEBUG_PORT=9333` in `npm run dev`:
+  `http://127.0.0.1:9333/json/version` answered with the user agent
+  `DashCash/0.0.0 ... Electron/45.1.0`, `/json/list` listed one page titled
+  `DashCash` at `http://localhost:5173/`, and `netstat` showed the port
+  listening on `127.0.0.1:9333` only. Port 9222 stayed held by another
+  program (MediaMonkey), which is the case this ticket fixes. The app was
+  stopped afterwards.
+- `npm run verify:full` exited 0 (end-to-end test included) before the
+  ratchet.
+- Ratchet: measured **Mutation score** 83.95 (all files; 2124 killed, 10
+  timeout, 235 survived, 173 no coverage). **Break threshold** set to 83
+  (rounded down) in `stryker.config.js`; `high` 80 and `low` 60 unchanged;
+  `gates/mutationTesting/` unchanged.
+- Confirming `npm run test:mutation` with the threshold at 83: exit code 0,
+  score 83.95, "greater than or equal to break threshold 83".

@@ -95,6 +95,8 @@ npm run verify       # everything CI checks, except end-to-end tests
 npm run verify:full  # verify + build + end-to-end tests
 ```
 
+`npm run dev` opens a debug port for DevTools tools on `127.0.0.1`: set `DASHCASH_DEBUG_PORT` to move it from its default 9222.
+
 Tests never use real bank data. Fixtures in `fixtures/` are invented, and the app's clock is fixed in tests, so results don't depend on the day they run.
 
 ## Releases

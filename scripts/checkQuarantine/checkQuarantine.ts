@@ -101,16 +101,32 @@ export function findQuarantineViolations(
   return violations;
 }
 
+export type CheckQuarantineDependencies = {
+  root: string;
+  today: string;
+  listTrackedPaths: (root: string) => readonly string[];
+};
+
+// Loads the Quarantine under the root and judges it against today and the
+// paths git tracks there. A Quarantine that cannot be loaded is one violation.
+export function checkQuarantine({
+  root,
+  today,
+  listTrackedPaths: listPaths,
+}: CheckQuarantineDependencies): Violation[] {
+  const loaded = loadQuarantine(root);
+  if ('violation' in loaded) {
+    return [loaded.violation];
+  }
+  return findQuarantineViolations(loaded.quarantine, today, listPaths(root));
+}
+
 if (import.meta.main) {
-  await runGate(() => {
-    const loaded = loadQuarantine(process.cwd());
-    if ('violation' in loaded) {
-      return [loaded.violation];
-    }
-    return findQuarantineViolations(
-      loaded.quarantine,
-      new Date().toISOString().slice(0, 10),
-      listTrackedPaths(process.cwd()),
-    );
-  });
+  await runGate(() =>
+    checkQuarantine({
+      root: process.cwd(),
+      today: new Date().toISOString().slice(0, 10),
+      listTrackedPaths,
+    }),
+  );
 }

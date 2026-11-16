@@ -1,5 +1,5 @@
 ---
-status: in-progress
+status: done
 ---
 # The Quarantine check takes today
 
@@ -40,16 +40,16 @@ No gate file is changed.
 
 ## Acceptance criteria
 
-- [ ] A RED commit adds the tests of `checkQuarantine`, which fail because
+- [x] A RED commit adds the tests of `checkQuarantine`, which fail because
       it does not exist yet.
-- [ ] Every date case runs with a fixed `today`: added later than today,
+- [x] Every date case runs with a fixed `today`: added later than today,
       expiry before added, expiry past 30 days, expired from the day after
       its **Expiry date**, a valid entry.
-- [ ] The spawned entry tests hold an empty passing **Quarantine**, an
+- [x] The spawned entry tests hold an empty passing **Quarantine**, an
       unreadable file, and the exit code and line format shown with a
       malformed entry; no test reads the real clock.
-- [ ] The entry holds no rule; messages and output are unchanged.
-- [ ] `npm run verify` is green.
+- [x] The entry holds no rule; messages and output are unchanged.
+- [x] `npm run verify` is green.
 
 ## Blocked by
 

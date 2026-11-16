@@ -48,6 +48,9 @@ This ticket is the approval to change `gates/renovate/renovate.ts` and
       maintenance each fail.
 - [ ] The TypeScript and Node holds match majors only; the Node group still
       groups minors and patches into `update node`.
+- [ ] The relaxed rule-order check allows exactly the three hold rules after
+      the Node rule and nothing else; any other rule after the Node rule
+      still fails. The review checks that the gate is not looser than that.
 - [ ] The title checks of `03-renovate-commit-message-parts.md` still pass.
 - [ ] `npm run verify` is green.
 

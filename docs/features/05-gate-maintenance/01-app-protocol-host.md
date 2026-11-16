@@ -1,5 +1,5 @@
 ---
-status: in-progress
+status: done
 ---
 # App protocol serves only the host dashcash
 
@@ -21,7 +21,7 @@ design log Q5–Q7).
   out of the table, with a line in the ticket's Notes). The user-info case
   `app://x@dashcash/index.html` is not in that table: a separate
   `resolveRendererPath` test, a pure function call, shows it refused (see
-  Notes; design log D1). The RED commit shows each of them served.
+  Notes; design log D2). The RED commit shows each of them served.
 - `resolveRendererPath(rendererFolder, url)` returns `undefined` for any
   URL whose parsed host is not exactly `dashcash` (the host holds the port,
   so a port is refused) or that holds user info, before its path rules.
@@ -36,21 +36,21 @@ design log Q5–Q7).
 
 ## Acceptance criteria
 
-- [ ] A RED commit adds the host cases to the refused-URL table, and the
+- [x] A RED commit adds the host cases to the refused-URL table, and the
       path function's test and the handler's test fail on them; it adds
       the user-info test of `resolveRendererPath`, which fails too.
-- [ ] `app://other/index.html`, `app://dashcash:8080/index.html`, an empty
+- [x] `app://other/index.html`, `app://dashcash:8080/index.html`, an empty
       host and an upper-case host the parser keeps each return `undefined`
       from `resolveRendererPath` and 404 from `serveAppProtocol`.
-- [ ] `app://x@dashcash/index.html` returns `undefined` from
+- [x] `app://x@dashcash/index.html` returns `undefined` from
       `resolveRendererPath`, tested as a pure function; it is not in the
       handler's 404 table (see Notes).
-- [ ] Every existing served URL is still served and every existing refused
+- [x] Every existing served URL is still served and every existing refused
       URL (`..`, encoded `..`, absolute paths, another drive) still
       refused.
-- [ ] The protocol module imports nothing from `matchAppOrigin/`, checked
+- [x] The protocol module imports nothing from `matchAppOrigin/`, checked
       by a guard test that passes from the start (a guard, not a RED test).
-- [ ] `npm run verify:full` is green.
+- [x] `npm run verify:full` is green.
 
 ## Notes
 
@@ -59,7 +59,7 @@ design log Q5–Q7).
   credentials", checked in Node, 2026-11-16), and the fake's `request(url)`
   builds a `Request` the way Electron does. So the user-info case is
   tested on `resolveRendererPath` alone, not in the handler's 404 table
-  (design log D1).
+  (design log D2).
 
 ## Blocked by
 

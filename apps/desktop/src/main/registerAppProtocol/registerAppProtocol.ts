@@ -32,15 +32,25 @@ export type AppProtocolElectron = {
 };
 
 // The path of the file `url` names inside `rendererFolder`, or `undefined`
-// for any path that resolves outside it: `..`, encoded `..`, absolute paths
-// and paths on another drive or root, on every platform.
+// for any URL whose host is not exactly `dashcash` (the host holds the port,
+// so a port is refused), for any URL that holds user info, and for any path
+// that resolves outside the folder: `..`, encoded `..`, absolute paths and
+// paths on another drive or root, on every platform.
 export function resolveRendererPath(
   rendererFolder: string,
   url: string,
 ): string | undefined {
   let requested: string;
   try {
-    requested = decodeURIComponent(new URL(url).pathname).slice(1);
+    const parsed = new URL(url);
+    if (
+      parsed.host !== HOST ||
+      parsed.username !== '' ||
+      parsed.password !== ''
+    ) {
+      return undefined;
+    }
+    requested = decodeURIComponent(parsed.pathname).slice(1);
   } catch {
     return undefined;
   }
@@ -69,8 +79,8 @@ export function registerAppProtocol(
   ]);
 }
 
-// Registers the handler that serves the renderer folder and answers 404 for
-// any path outside it. Electron requires the app to be ready first; the
+// Registers the handler that serves the renderer folder to the host
+// `dashcash` and answers 404 for another host and for any path outside it. Electron requires the app to be ready first; the
 // caller decides when.
 export function serveAppProtocol(
   { protocol, net }: AppProtocolElectron,

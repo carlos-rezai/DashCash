@@ -1,5 +1,5 @@
 ---
-status: in-progress
+status: done
 ---
 # The dangerous-git hook blocks chained pushes
 
@@ -39,18 +39,26 @@ design log Q33), so the issue-loop stops at this ticket. It must be
 
 ## Acceptance criteria
 
-- [ ] A RED commit adds the hook's gate test, and the chained cases fail
+- [x] A RED commit adds the hook's gate test, and the chained cases fail
       at their assertion.
-- [ ] A `git push` chained with another command is blocked as
+- [x] A `git push` chained with another command is blocked as
       `git push chained with another command`:
       `git push && gh pr create --base main`, `git switch main && git push`,
       `git add . ; git push`, `git push | cat`.
-- [ ] A lone `git push` from `feat/*` or `refactor/*` is allowed, as are
+- [x] A lone `git push` from `feat/*` or `refactor/*` is allowed, as are
       `git push origin feat/x` and `git push -u origin HEAD`; a lone
       `git push origin main` or `git push origin HEAD:main` is blocked.
-- [ ] `gh pr create --base main` on its own is allowed.
-- [ ] One case per existing pattern of the hook blocks as before.
-- [ ] `npm run verify` is green.
+- [x] `gh pr create --base main` on its own is allowed.
+- [x] One case per existing pattern of the hook blocks as before.
+- [x] `npm run verify` is green.
+
+## Notes
+
+- For a later ticket: `git commit` has the same gap:
+  `git switch main && git commit` passes the commit check, because the
+  branch is read before the switch. A local commit on `main` cannot leave
+  the machine (the hook and the ruleset block the push), but the same
+  rule, a commit as its own command, would close it.
 
 ## Handover
 

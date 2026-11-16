@@ -1,5 +1,5 @@
 ---
-status: open
+status: in-progress
 ---
 # The dangerous-git hook blocks chained pushes
 

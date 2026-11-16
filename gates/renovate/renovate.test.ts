@@ -14,15 +14,24 @@ import { findRenovateViolations } from './renovate.ts';
 // passes the commitlint config and passes the Pull-request check on a
 // renovate/* branch; no part holds a template; every PR-opening scope sets its
 // own action and extra, and a group rule sets no topic. The base settings stay
-// as the PRD fixes them; the Node rule covers both .nvmrc (the nvm manager)
-// and engines.node (the npm manager's engines); lockfile maintenance is
-// enabled; the vulnerability-alert title carries no suffix.
+// as the PRD fixes them, the schedule all of Monday; the Node rule covers both
+// .nvmrc (the nvm manager) and engines.node (the npm manager's engines);
+// lockfile maintenance is enabled, on all of Monday; the vulnerability-alert
+// title carries no suffix. Three Hold rules come last, after the Node rule:
+// the @types/node cap at the major in .nvmrc, TypeScript majors disabled and
+// Node majors disabled; no other rule comes after the Node rule, and no hold
+// reaches lockfile maintenance.
 
 type CommitConfig = Awaited<ReturnType<typeof loadCommitConfig>>;
 type Config = Record<string, unknown>;
 
 const ROOT = fileURLToPath(new URL('../..', import.meta.url));
 const RENOVATE_JSON = join(ROOT, 'renovate.json');
+const NVMRC = join(ROOT, '.nvmrc');
+
+// The text of an invented .nvmrc, as the gate test reads it.
+const NODE_VERSION = '24.14.0\n';
+const SCHEDULE = ['on monday'];
 
 const PRESETS = [
   'config:recommended',
@@ -60,6 +69,40 @@ const SETS_EXTRA = {
 const NO_GROUP_TOPIC = {
   subject: 'renovate.json',
   reason: 'a group rule sets no commitMessageTopic',
+};
+const RULE_ORDER = {
+  subject: 'renovate.json',
+  reason: 'the Node rule must come after every other packageRule for npm',
+};
+const LOCKFILE_RULE = {
+  subject: 'renovate.json',
+  reason:
+    'a packageRule for npm must set matchUpdateTypes without lockFileMaintenance',
+};
+const CAP_MAJOR = {
+  subject: 'renovate.json',
+  reason: 'the @types/node cap must be the major in .nvmrc',
+};
+const TYPESCRIPT_HOLD = {
+  subject: 'renovate.json',
+  reason: 'a hold rule must disable TypeScript majors, and only majors',
+};
+const NODE_HOLD = {
+  subject: 'renovate.json',
+  reason:
+    'a hold rule must disable Node majors in the nvm and the npm manager, and only majors',
+};
+const HOLD_ORDER = {
+  subject: 'renovate.json',
+  reason: 'every hold rule must come after the Node rule',
+};
+const SCHEDULE_RULE = {
+  subject: 'renovate.json',
+  reason: 'schedule must be ["on monday"]',
+};
+const LOCKFILE_SCHEDULE = {
+  subject: 'renovate.json',
+  reason: 'lockFileMaintenance schedule must be ["on monday"]',
 };
 
 // The update types an npm rule may match: every one but lockFileMaintenance,
@@ -109,9 +152,53 @@ function nodeRule(changes: Config = {}): Config {
   };
 }
 
+// The Hold rules: @types/node capped at a major, TypeScript and Node majors
+// disabled. None opens a PR, so none sets Commit-message parts.
+function typesNodeCap(changes: Config = {}): Config {
+  return {
+    matchManagers: ['npm'],
+    matchDepNames: ['@types/node'],
+    allowedVersions: '24.x',
+    ...changes,
+  };
+}
+
+function typescriptHold(changes: Config = {}): Config {
+  return {
+    matchManagers: ['npm'],
+    matchDepNames: ['typescript'],
+    matchUpdateTypes: ['major'],
+    enabled: false,
+    ...changes,
+  };
+}
+
+function nodeHold(changes: Config = {}): Config {
+  return {
+    matchManagers: ['nvm', 'npm'],
+    matchDepNames: ['node'],
+    matchUpdateTypes: ['major'],
+    enabled: false,
+    ...changes,
+  };
+}
+
+// The three Hold rules, in their order after the Node rule.
+function holdRules(): Config[] {
+  return [typesNodeCap(), typescriptHold(), nodeHold()];
+}
+
+// A rule without one of its keys.
+function without(rule: Config, key: string): Config {
+  const copy = { ...rule };
+  Reflect.deleteProperty(copy, key);
+  return copy;
+}
+
 function lockfileMaintenance(changes: Config = {}): Config {
   return {
     enabled: true,
+    schedule: [...SCHEDULE],
     ...parts('refresh'),
     commitMessageTopic: 'the lockfile',
     ...changes,
@@ -157,10 +244,10 @@ function configFrom(scopes: Scopes, changes: Config = {}): Config {
     extends: [...PRESETS],
     semanticCommits: 'disabled',
     minimumReleaseAge: '14 days',
-    schedule: ['before 6am on monday'],
+    schedule: [...SCHEDULE],
     timezone: 'Europe/Berlin',
     commitMessagePrefix: PREFIX,
-    packageRules: [scopes.npmGroup, scopes.nodeGroup],
+    packageRules: [scopes.npmGroup, scopes.nodeGroup, ...holdRules()],
     lockFileMaintenance: scopes.lockFileMaintenance,
     vulnerabilityAlerts: scopes.vulnerabilityAlerts,
     ...changes,
@@ -168,8 +255,8 @@ function configFrom(scopes: Scopes, changes: Config = {}): Config {
 }
 
 // An invented config with the base settings, an npm group, the Node group,
-// lockfile maintenance and vulnerability alerts, whose parts assemble titles
-// that pass every rule.
+// the three Hold rules, lockfile maintenance and vulnerability alerts, whose
+// parts assemble titles that pass every rule.
 function sampleConfig(changes: Config = {}): Config {
   return configFrom(sampleScopes(), changes);
 }
@@ -242,8 +329,12 @@ describe('the Renovate rule on invented configs', () => {
     commitConfig = await loadCommitConfig(ROOT);
   });
 
-  async function check(config: unknown) {
-    const violations = await findRenovateViolations(config, commitConfig);
+  async function check(config: unknown, nodeVersion = NODE_VERSION) {
+    const violations = await findRenovateViolations(
+      config,
+      commitConfig,
+      nodeVersion,
+    );
     for (const violation of violations) {
       expect(violation.reason, violation.subject).not.toBe('');
     }
@@ -260,6 +351,7 @@ describe('the Renovate rule on invented configs', () => {
         group('npm dependencies'),
         group('github actions'),
         nodeRule(),
+        ...holdRules(),
       ],
     });
 
@@ -286,6 +378,7 @@ describe('the Renovate rule on invented configs', () => {
         packageRules: [
           group('npm dependencies', { automerge: false }),
           nodeRule(),
+          ...holdRules(),
         ],
       });
 
@@ -431,7 +524,12 @@ describe('the Renovate rule on invented configs', () => {
       const actions = group('github actions');
       Reflect.deleteProperty(actions, 'commitMessageAction');
       const config = sampleConfig({
-        packageRules: [group('npm dependencies'), actions, nodeRule()],
+        packageRules: [
+          group('npm dependencies'),
+          actions,
+          nodeRule(),
+          ...holdRules(),
+        ],
       });
 
       expect(await check(config)).toContainEqual(SETS_ACTION);
@@ -488,7 +586,7 @@ describe('the Renovate rule on invented configs', () => {
       [
         `chore: [supply-chain] update ${'a'.repeat(44)}`,
         sampleConfig({
-          packageRules: [group('a'.repeat(44)), nodeRule()],
+          packageRules: [group('a'.repeat(44)), nodeRule(), ...holdRules()],
         }),
       ],
       [
@@ -510,6 +608,7 @@ describe('the Renovate rule on invented configs', () => {
             group('npm dependencies'),
             group('github Actions'),
             nodeRule(),
+            ...holdRules(),
           ],
         }),
       ],
@@ -603,7 +702,11 @@ describe('the Renovate rule on invented configs', () => {
       ['only package.json, by file name', { matchFileNames: ['package.json'] }],
     ])('fails a Node rule covering %s', async (_case, narrowing) => {
       const config = sampleConfig({
-        packageRules: [group('npm dependencies'), nodeRule(narrowing)],
+        packageRules: [
+          group('npm dependencies'),
+          nodeRule(narrowing),
+          ...holdRules(),
+        ],
       });
 
       expect(await check(config)).not.toEqual([]);
@@ -612,11 +715,30 @@ describe('the Renovate rule on invented configs', () => {
     it.each([
       [
         'node, npm, actions',
-        [nodeRule(), group('npm dependencies'), group('github actions')],
+        [
+          nodeRule(),
+          group('npm dependencies'),
+          group('github actions'),
+          ...holdRules(),
+        ],
       ],
       [
         'a second npm group after the Node rule',
-        [group('npm dependencies'), nodeRule(), group('github actions')],
+        [
+          group('npm dependencies'),
+          nodeRule(),
+          group('github actions'),
+          ...holdRules(),
+        ],
+      ],
+      [
+        'a second npm group after the Hold rules',
+        [
+          group('npm dependencies'),
+          nodeRule(),
+          ...holdRules(),
+          group('github actions'),
+        ],
       ],
     ])('fails the rule order %s', async (_case, packageRules) => {
       expect(await check(sampleConfig({ packageRules }))).not.toEqual([]);
@@ -627,17 +749,12 @@ describe('the Renovate rule on invented configs', () => {
         packageRules: [
           group('npm dependencies'),
           nodeRule(),
+          ...holdRules(),
           { matchUpdateTypes: ['major'], enabled: false },
         ],
       });
 
-      expect(await check(config)).toEqual([
-        {
-          subject: 'renovate.json',
-          reason:
-            'the Node rule must come after every other packageRule for npm',
-        },
-      ]);
+      expect(await check(config)).toEqual([RULE_ORDER]);
     });
 
     it('fails a rule without matchManagers or matchUpdateTypes, which takes over lockfile maintenance', async () => {
@@ -646,16 +763,11 @@ describe('the Renovate rule on invented configs', () => {
           group('npm dependencies'),
           { matchPackageNames: ['*'], groupName: 'all', ...parts('update') },
           nodeRule(),
+          ...holdRules(),
         ],
       });
 
-      expect(await check(config)).toEqual([
-        {
-          subject: 'renovate.json',
-          reason:
-            'a packageRule for npm must set matchUpdateTypes without lockFileMaintenance',
-        },
-      ]);
+      expect(await check(config)).toEqual([LOCKFILE_RULE]);
     });
 
     it('fails a later npm rule that disables the engines dependency type', async () => {
@@ -663,6 +775,7 @@ describe('the Renovate rule on invented configs', () => {
         packageRules: [
           group('npm dependencies'),
           nodeRule(),
+          ...holdRules(),
           {
             matchManagers: ['npm'],
             matchUpdateTypes: PACKAGE_UPDATE_TYPES,
@@ -672,13 +785,15 @@ describe('the Renovate rule on invented configs', () => {
         ],
       });
 
-      expect(await check(config)).not.toEqual([]);
+      expect(await check(config)).toContainEqual(RULE_ORDER);
     });
 
     it('fails an npm rule without matchUpdateTypes, which takes over lockfile maintenance', async () => {
       const unrestricted = group('npm dependencies');
       Reflect.deleteProperty(unrestricted, 'matchUpdateTypes');
-      const config = sampleConfig({ packageRules: [unrestricted, nodeRule()] });
+      const config = sampleConfig({
+        packageRules: [unrestricted, nodeRule(), ...holdRules()],
+      });
 
       expect(await check(config)).not.toEqual([]);
     });
@@ -690,6 +805,7 @@ describe('the Renovate rule on invented configs', () => {
             matchUpdateTypes: [...PACKAGE_UPDATE_TYPES, 'lockFileMaintenance'],
           }),
           nodeRule(),
+          ...holdRules(),
         ],
       });
 
@@ -755,6 +871,184 @@ describe('the Renovate rule on invented configs', () => {
     );
   });
 
+  describe('the Hold rules', () => {
+    // The sample config with its Hold rules replaced.
+    function withHolds(holds: Config[]): Config {
+      return sampleConfig({
+        packageRules: [group('npm dependencies'), nodeRule(), ...holds],
+      });
+    }
+
+    it.each(['24', '24\n', '24.14.0', 'v24.14.0\n', '24.0.0\n'])(
+      'passes a cap of 24.x with the .nvmrc %j',
+      async (nodeVersion) => {
+        expect(await check(sampleConfig(), nodeVersion)).toEqual([]);
+      },
+    );
+
+    it.each(['23.x', '25.x', '2.x', '240.x'])(
+      'fails the cap %s with the .nvmrc 24.14.0, with one violation',
+      async (allowedVersions) => {
+        const config = withHolds([
+          typesNodeCap({ allowedVersions }),
+          typescriptHold(),
+          nodeHold(),
+        ]);
+
+        expect(await check(config, '24.14.0\n')).toEqual([CAP_MAJOR]);
+      },
+    );
+
+    it.each(['25.0.0\n', '23.11.0\n', '2.0.0\n'])(
+      'fails the cap 24.x with the .nvmrc %j, with one violation',
+      async (nodeVersion) => {
+        expect(await check(sampleConfig(), nodeVersion)).toEqual([CAP_MAJOR]);
+      },
+    );
+
+    it('fails a config without the TypeScript hold, with one violation', async () => {
+      const config = withHolds([typesNodeCap(), nodeHold()]);
+
+      expect(await check(config)).toEqual([TYPESCRIPT_HOLD]);
+    });
+
+    it('fails a config without the Node hold, with one violation', async () => {
+      const config = withHolds([typesNodeCap(), typescriptHold()]);
+
+      expect(await check(config)).toEqual([NODE_HOLD]);
+    });
+
+    it('fails a config without any Hold rule', async () => {
+      const violations = await check(withHolds([]));
+
+      expect(violations).toContainEqual(TYPESCRIPT_HOLD);
+      expect(violations).toContainEqual(NODE_HOLD);
+    });
+
+    it.each([
+      ['minors too', typescriptHold({ matchUpdateTypes: ['major', 'minor'] })],
+      [
+        'patches too',
+        typescriptHold({ matchUpdateTypes: ['major', 'minor', 'patch'] }),
+      ],
+      ['every update type', without(typescriptHold(), 'matchUpdateTypes')],
+      ['nothing, being enabled', typescriptHold({ enabled: true })],
+      ['another package', typescriptHold({ matchDepNames: ['tslib'] })],
+    ])('fails a TypeScript hold disabling %s', async (_case, typescript) => {
+      const config = withHolds([typesNodeCap(), typescript, nodeHold()]);
+
+      expect(await check(config)).toContainEqual(TYPESCRIPT_HOLD);
+    });
+
+    it.each([
+      ['minors too', nodeHold({ matchUpdateTypes: ['major', 'minor'] })],
+      [
+        'patches too',
+        nodeHold({ matchUpdateTypes: ['major', 'minor', 'patch'] }),
+      ],
+      ['every update type', without(nodeHold(), 'matchUpdateTypes')],
+      ['nothing, being enabled', nodeHold({ enabled: true })],
+      ['majors in .nvmrc only', nodeHold({ matchManagers: ['nvm'] })],
+      ['majors in engines.node only', nodeHold({ matchManagers: ['npm'] })],
+    ])('fails a Node hold disabling %s', async (_case, node) => {
+      const config = withHolds([typesNodeCap(), typescriptHold(), node]);
+
+      expect(await check(config)).toContainEqual(NODE_HOLD);
+    });
+
+    it.each([
+      ['the @types/node cap', 0],
+      ['the TypeScript hold', 1],
+      ['the Node hold', 2],
+    ])(
+      'fails %s before the Node rule, with one violation',
+      async (_case, index) => {
+        const holds = holdRules();
+        const [moved] = holds.splice(index, 1);
+        const config = sampleConfig({
+          packageRules: [
+            group('npm dependencies'),
+            ...(moved === undefined ? [] : [moved]),
+            nodeRule(),
+            ...holds,
+          ],
+        });
+
+        expect(await check(config)).toEqual([HOLD_ORDER]);
+      },
+    );
+
+    it('fails a Hold rule before the npm group', async () => {
+      const [cap, ...rest] = holdRules();
+      const config = sampleConfig({
+        packageRules: [
+          ...(cap === undefined ? [] : [cap]),
+          group('npm dependencies'),
+          nodeRule(),
+          ...rest,
+        ],
+      });
+
+      expect(await check(config)).toEqual([HOLD_ORDER]);
+    });
+
+    it.each([
+      [
+        'a fourth hold',
+        {
+          matchManagers: ['npm'],
+          matchDepNames: ['vite'],
+          matchUpdateTypes: ['major'],
+          enabled: false,
+        },
+      ],
+      [
+        'a second cap',
+        {
+          matchManagers: ['npm'],
+          matchDepNames: ['@types/react'],
+          allowedVersions: '18.x',
+        },
+      ],
+      [
+        'a rule that sets nothing',
+        { matchManagers: ['npm'], matchDepNames: ['vite'] },
+      ],
+    ])(
+      'fails %s after the Node rule, with one violation',
+      async (_case, rule) => {
+        const config = withHolds([...holdRules(), rule]);
+
+        expect(await check(config)).toEqual([RULE_ORDER]);
+      },
+    );
+
+    it.each([
+      [
+        'without a dependency or an update type',
+        { matchManagers: ['npm'], enabled: false },
+      ],
+      [
+        'whose update types include lockFileMaintenance',
+        {
+          matchManagers: ['npm'],
+          matchUpdateTypes: ['major', 'lockFileMaintenance'],
+          enabled: false,
+        },
+      ],
+    ])(
+      'fails a hold %s, which reaches lockfile maintenance',
+      async (_case, rule) => {
+        const violations = await check(withHolds([...holdRules(), rule]));
+
+        expect(violations).toHaveLength(2);
+        expect(violations).toEqual(
+          expect.arrayContaining([RULE_ORDER, LOCKFILE_RULE]),
+        );
+      },
+    );
+  });
+
   describe('the base settings', () => {
     it.each([
       ['without config:recommended', [PRESETS[1], PRESETS[2]]],
@@ -795,6 +1089,7 @@ describe('the Renovate rule on invented configs', () => {
         packageRules: [
           group('npm dependencies', { commitBody: 'sample body' }),
           nodeRule(),
+          ...holdRules(),
         ],
       });
 
@@ -810,6 +1105,7 @@ describe('the Renovate rule on invented configs', () => {
         packageRules: [
           group('npm dependencies', { automerge: true }),
           nodeRule(),
+          ...holdRules(),
         ],
       });
 
@@ -834,14 +1130,47 @@ describe('the Renovate rule on invented configs', () => {
     it.each([
       [['at any time']],
       [['before 6am on tuesday']],
-      [['before 6am on monday', 'after 10pm on friday']],
+      [['on monday', 'after 10pm on friday']],
       [[]],
     ])('fails the schedule %j', async (schedule) => {
       expect(await check(sampleConfig({ schedule }))).not.toEqual([]);
     });
 
+    it.each([[['before 6am on monday']], [['on tuesday']]])(
+      'fails the schedule %j, which is not all of Monday',
+      async (schedule) => {
+        expect(await check(sampleConfig({ schedule }))).toContainEqual(
+          SCHEDULE_RULE,
+        );
+      },
+    );
+
     it('fails a config without schedule', async () => {
-      expect(await check(sampleConfigWithout('schedule'))).not.toEqual([]);
+      expect(await check(sampleConfigWithout('schedule'))).toContainEqual(
+        SCHEDULE_RULE,
+      );
+    });
+
+    it.each([
+      [['before 4am on monday']],
+      [['before 6am on monday']],
+      [['on tuesday']],
+      [['on monday', 'on friday']],
+      [[]],
+    ])('fails the lockfile maintenance schedule %j', async (schedule) => {
+      const config = sampleConfig({
+        lockFileMaintenance: lockfileMaintenance({ schedule }),
+      });
+
+      expect(await check(config)).toContainEqual(LOCKFILE_SCHEDULE);
+    });
+
+    it('fails lockfile maintenance left at its default schedule', async () => {
+      const config = sampleConfig({
+        lockFileMaintenance: without(lockfileMaintenance(), 'schedule'),
+      });
+
+      expect(await check(config)).toEqual([LOCKFILE_SCHEDULE]);
     });
 
     it.each(['UTC', 'Europe/London'])('fails the timezone %s', async (zone) => {
@@ -881,10 +1210,70 @@ describe('renovate.json', () => {
     return isRecord(config) ? config : {};
   }
 
-  it('passes the Renovate rule', async () => {
+  function readNodeVersion(): string {
+    expect(existsSync(NVMRC), '.nvmrc is missing').toBe(true);
+    return readFileSync(NVMRC, 'utf8');
+  }
+
+  function readRules(): Config[] {
+    const rules = readConfig()['packageRules'];
+    return Array.isArray(rules) ? rules.filter(isRecord) : [];
+  }
+
+  it('passes the Renovate rule with the committed .nvmrc', async () => {
     const config = readConfig();
 
-    expect(await findRenovateViolations(config, commitConfig)).toEqual([]);
+    expect(
+      await findRenovateViolations(config, commitConfig, readNodeVersion()),
+    ).toEqual([]);
+  });
+
+  it('caps @types/node at 24.x while .nvmrc holds 24', () => {
+    expect(readNodeVersion().trim().replace(/^v/, '').split('.')[0]).toBe('24');
+    expect(readRules().at(-3)).toEqual({
+      matchManagers: ['npm'],
+      matchDepNames: ['@types/node'],
+      allowedVersions: '24.x',
+    });
+  });
+
+  it('ends its packageRules with the TypeScript hold and the Node hold, majors only', () => {
+    expect(readRules().slice(-2)).toEqual([
+      {
+        matchManagers: ['npm'],
+        matchDepNames: ['typescript'],
+        matchUpdateTypes: ['major'],
+        enabled: false,
+      },
+      {
+        matchManagers: ['nvm', 'npm'],
+        matchDepNames: ['node'],
+        matchUpdateTypes: ['major'],
+        enabled: false,
+      },
+    ]);
+  });
+
+  it('keeps the Node group, for minors and patches, right before the Hold rules', () => {
+    const node = readRules().at(-4);
+
+    expect(node).toMatchObject({
+      matchManagers: ['nvm', 'npm'],
+      matchDepNames: ['node'],
+      groupName: 'node',
+    });
+    expect(node).not.toHaveProperty('matchUpdateTypes');
+    expect(node).not.toHaveProperty('enabled', false);
+  });
+
+  it('runs on all of Monday, lockfile maintenance too', () => {
+    const config = readConfig();
+    const lockfile = config['lockFileMaintenance'];
+
+    expect(config['schedule']).toEqual(['on monday']);
+    expect(isRecord(lockfile) ? lockfile['schedule'] : undefined).toEqual([
+      'on monday',
+    ]);
   });
 
   it.each(['commitMessage', 'prTitle'])('sets no %s anywhere', (key) => {

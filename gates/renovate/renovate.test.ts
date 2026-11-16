@@ -921,8 +921,15 @@ describe('the Renovate rule on invented configs', () => {
     it('fails a config without any Hold rule', async () => {
       const violations = await check(withHolds([]));
 
+      expect(violations).toContainEqual(CAP_MAJOR);
       expect(violations).toContainEqual(TYPESCRIPT_HOLD);
       expect(violations).toContainEqual(NODE_HOLD);
+    });
+
+    it('fails a config without the @types/node cap, with one violation', async () => {
+      const config = withHolds([typescriptHold(), nodeHold()]);
+
+      expect(await check(config)).toEqual([CAP_MAJOR]);
     });
 
     it.each([
@@ -1018,6 +1025,19 @@ describe('the Renovate rule on invented configs', () => {
       'fails %s after the Node rule, with one violation',
       async (_case, rule) => {
         const config = withHolds([...holdRules(), rule]);
+
+        expect(await check(config)).toEqual([RULE_ORDER]);
+      },
+    );
+
+    it.each([
+      ['the @types/node cap', typesNodeCap()],
+      ['the TypeScript hold', typescriptHold()],
+      ['the Node hold', nodeHold()],
+    ])(
+      'fails %s twice after the Node rule, with one violation',
+      async (_case, duplicate) => {
+        const config = withHolds([...holdRules(), duplicate]);
 
         expect(await check(config)).toEqual([RULE_ORDER]);
       },

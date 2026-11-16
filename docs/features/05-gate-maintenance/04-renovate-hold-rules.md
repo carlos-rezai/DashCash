@@ -1,5 +1,5 @@
 ---
-status: in-progress
+status: done
 ---
 # Renovate hold rules
 

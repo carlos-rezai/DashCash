@@ -2,11 +2,6 @@ import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { parse } from 'yaml';
 
-type PackageJson = {
-  scripts: Record<string, string | undefined>;
-  engines: { node: string };
-};
-
 type WorkflowStep = {
   uses?: string;
   with?: Record<string, unknown>;
@@ -55,13 +50,6 @@ const SANDBOX_STEP =
 const VIRTUAL_DISPLAY = 'xvfb-run --auto-servernum';
 const VERIFY_FULL_UNDER_DISPLAY = `${VIRTUAL_DISPLAY} npm run verify:full`;
 const NO_SANDBOX = '--no-sandbox';
-const PULL_REQUEST_COMMANDS = [
-  'npm ci',
-  INSTALL_ELECTRON,
-  VERIFY_FULL_UNDER_DISPLAY,
-  'npm run check:pr',
-  'npm run test:mutation',
-];
 const GITLEAKS_ACTION = 'gitleaks/gitleaks-action';
 const WORKFLOW_TOKEN = '${{ secrets.GITHUB_TOKEN }}';
 
@@ -97,27 +85,6 @@ const VERIFY_GATES = [
   'check:audit',
   'check:quarantine',
 ];
-
-const GATE_COMMANDS: Record<string, string> = {
-  'format:check': 'prettier --check .',
-  lint: 'eslint . --max-warnings 0',
-  typecheck:
-    'tsc && tsc -p apps/desktop/tsconfig.node.json && tsc -p apps/desktop/tsconfig.web.json && tsc -p packages/contract/tsconfig.json',
-  'lint:deps':
-    'depcruise --config .dependency-cruiser.js apps packages scripts e2e',
-  test: 'vitest run',
-  'check:commits': 'node scripts/checkCommits/checkCommits.ts',
-  'check:tickets': 'node scripts/checkTickets/checkTickets.ts',
-  'check:data-files': 'node scripts/checkDataFiles/checkDataFiles.ts',
-  'check:docs-drift': 'node scripts/checkDocsDrift/checkDocsDrift.ts',
-  'check:licenses': 'node scripts/checkLicenses/checkLicenses.ts',
-  'check:audit': 'node scripts/checkAudit/checkAudit.ts',
-  'check:quarantine': 'node scripts/checkQuarantine/checkQuarantine.ts',
-};
-
-function readRootFile(path: string): string {
-  return readFileSync(new URL(`../../${path}`, import.meta.url), 'utf8');
-}
 
 // A workflow file that does not exist reads as an empty workflow, so every
 // check on it fails at its assertion.
@@ -157,10 +124,6 @@ function jobSteps(workflow: Workflow, job: string): WorkflowStep[] {
 
 function stepIndex(steps: WorkflowStep[], action: string): number {
   return steps.findIndex((step) => (step.uses ?? '').startsWith(`${action}@`));
-}
-
-function chainedCommands(script: string | undefined): string[] {
-  return (script ?? '').split('&&').map((command) => command.trim());
 }
 
 function jobCommands(workflow: Workflow, job: string): string[] {
@@ -766,73 +729,10 @@ function withNoSandboxOnJob(workflow: Workflow): Workflow {
   };
 }
 
-const packageJson = JSON.parse(readRootFile('package.json')) as PackageJson;
-const pushWorkflow = readWorkflow(PUSH_WORKFLOW);
 const pullRequestWorkflow = readWorkflow(PULL_REQUEST_WORKFLOW);
 const dailyWorkflow = readWorkflow(DAILY_WORKFLOW);
-const { scripts } = packageJson;
 
 describe('gate wiring', () => {
-  it('runs the gates of verify in order, failing fast', () => {
-    expect(chainedCommands(scripts.verify)).toEqual(
-      VERIFY_GATES.map((gate) => `npm run ${gate}`),
-    );
-  });
-
-  it('runs the quarantine check as the last of the twelve gates of verify', () => {
-    const commands = chainedCommands(scripts.verify);
-
-    expect(commands).toHaveLength(12);
-    expect(commands.at(-1)).toBe('npm run check:quarantine');
-  });
-
-  it('runs each gate once with its tool', () => {
-    for (const [gate, command] of Object.entries(GATE_COMMANDS)) {
-      expect(scripts[gate], gate).toBe(command);
-    }
-  });
-
-  it('runs exactly verify, the App build, then the end-to-end tests from verify:full, failing fast', () => {
-    expect(chainedCommands(scripts['verify:full'])).toEqual([
-      'npm run verify',
-      'npm run build',
-      'npm run test:e2e',
-    ]);
-  });
-
-  it('runs the end-to-end tests with Playwright from test:e2e', () => {
-    expect(scripts['test:e2e']).toBe('playwright test');
-  });
-
-  it('keeps every npm script free of command substitution, pipes and globs', () => {
-    for (const [name, script] of Object.entries(scripts)) {
-      expect(script, name).not.toMatch(/\$\(|\||[*?]/);
-    }
-  });
-
-  it('triggers the push workflow, CI, only by push to feat/** and refactor/**', () => {
-    expect(pushWorkflow.name).toBe('CI');
-    expect(triggers(pushWorkflow)).toEqual({
-      push: { branches: ['feat/**', 'refactor/**'] },
-    });
-  });
-
-  it('gives the push workflow the one job verify', () => {
-    expect(Object.keys(pushWorkflow.jobs ?? {})).toEqual(['verify']);
-  });
-
-  it('runs npm run verify in the verify job', () => {
-    expect(jobCommands(pushWorkflow, 'verify')).toContain('npm run verify');
-  });
-
-  it('runs exactly npm ci, node_modules/.bin/install-electron, then npm run verify in the verify job', () => {
-    expect(jobCommands(pushWorkflow, 'verify')).toEqual([
-      'npm ci',
-      INSTALL_ELECTRON,
-      'npm run verify',
-    ]);
-  });
-
   it.each(ELECTRON_INSTALL_JOBS)(
     'installs the Electron binary in its own step directly after npm ci and before the first test command in the %s job',
     (job, file, firstTest) => {
@@ -899,50 +799,6 @@ describe('gate wiring', () => {
       `${DAILY_WORKFLOW}: mutation`,
       `${PULL_REQUEST_WORKFLOW}: pull-request`,
     ]);
-  });
-
-  it('triggers the pull-request workflow, Pull request, only by pull_request into main', () => {
-    expect(pullRequestWorkflow.name).toBe('Pull request');
-    expect(triggers(pullRequestWorkflow)).toEqual({
-      pull_request: { branches: ['main'] },
-    });
-  });
-
-  it('gives the pull-request workflow the one job pull-request', () => {
-    expect(Object.keys(pullRequestWorkflow.jobs ?? {})).toEqual([
-      'pull-request',
-    ]);
-  });
-
-  it.each([
-    ['pull-request', pullRequestWorkflow],
-    ['daily', dailyWorkflow],
-  ] as const)(
-    'checks out full history, then sets up Node from .nvmrc with the npm cache, before npm ci in the %s job',
-    (job, workflow) => {
-      const steps = jobSteps(workflow, job);
-      const checkout = stepIndex(steps, 'actions/checkout');
-      const setupNode = stepIndex(steps, 'actions/setup-node');
-      const npmCi = steps.findIndex((step) => step.run === 'npm ci');
-
-      expect(checkout).toBe(0);
-      expect(steps[checkout]?.with?.['fetch-depth']).toBe(0);
-      expect(setupNode).toBeGreaterThan(checkout);
-      expect(steps[setupNode]?.with?.['node-version-file']).toBe('.nvmrc');
-      expect(steps[setupNode]?.with?.['cache']).toBe('npm');
-      expect(npmCi).toBeGreaterThan(setupNode);
-    },
-  );
-
-  it('runs npm ci, node_modules/.bin/install-electron, npm run verify:full under xvfb-run, npm run check:pr, then npm run test:mutation in the pull-request job, beside the sysctl step', () => {
-    const commands = jobCommands(pullRequestWorkflow, 'pull-request');
-
-    expect(commands.filter((command) => command === SANDBOX_STEP)).toEqual([
-      SANDBOX_STEP,
-    ]);
-    expect(commands.filter((command) => command !== SANDBOX_STEP)).toEqual(
-      PULL_REQUEST_COMMANDS,
-    );
   });
 
   it('finds nothing missing from the sandbox and display wiring of the pull-request job', () => {
@@ -1024,46 +880,6 @@ describe('gate wiring', () => {
     expect(jobCommands(pullRequestWorkflow, 'pull-request')).toContain(
       VERIFY_FULL_UNDER_DISPLAY,
     );
-  });
-
-  it('runs check:pr from neither verify, verify:full nor the verify job', () => {
-    expect(scripts['check:pr']).toBe(
-      'node scripts/checkPullRequest/checkPullRequest.ts',
-    );
-    expect(scripts.verify).not.toMatch(/check:pr|checkPullRequest/);
-    expect(scripts['verify:full']).not.toMatch(/check:pr|checkPullRequest/);
-    expect(jobCommands(pushWorkflow, 'verify')).not.toContain(
-      'npm run check:pr',
-    );
-  });
-
-  it('runs a Mutation run with Stryker from test:mutation, and from neither verify nor verify:full', () => {
-    expect(scripts['test:mutation']).toBe('stryker run stryker.config.js');
-    expect(chainedCommands(scripts.verify)).toHaveLength(12);
-    expect(scripts.verify).not.toMatch(/test:mutation|stryker/);
-    expect(scripts['verify:full']).not.toMatch(/test:mutation|stryker/);
-  });
-
-  it('runs npm run check:pr after npm run verify:full in the pull-request job', () => {
-    const commands = jobCommands(pullRequestWorkflow, 'pull-request');
-    const verifyFull = commands.indexOf(VERIFY_FULL_UNDER_DISPLAY);
-
-    expect(verifyFull).toBeGreaterThanOrEqual(0);
-    expect(commands.indexOf('npm run check:pr')).toBeGreaterThan(verifyFull);
-  });
-
-  it('hands the pull-request title to check:pr only through PR_TITLE', () => {
-    const steps = jobSteps(pullRequestWorkflow, 'pull-request');
-    const checkStep = steps.find((step) =>
-      (step.run ?? '').includes('npm run check:pr'),
-    );
-
-    expect(checkStep?.env?.['PR_TITLE']).toBe(
-      '${{ github.event.pull_request.title }}',
-    );
-    for (const step of steps) {
-      expect(step.run ?? '').not.toContain('${{');
-    }
   });
 
   it('triggers the daily workflow, Daily, only by the schedule 0 5 * * * and workflow_dispatch', () => {
@@ -1338,31 +1154,5 @@ describe('gate wiring', () => {
     expect(jobsWithGitleaks).toEqual(SECRET_SCAN_JOBS.map(([job]) => job));
     expect(configFiles).toEqual([]);
     expect(configuredSteps).toEqual([]);
-  });
-
-  it('keeps every job of every workflow free of if:', () => {
-    const conditionalJobs = workflowFiles().flatMap((file) =>
-      Object.entries(readWorkflow(file).jobs ?? {})
-        .filter(([, job]) => job?.if !== undefined)
-        .map(([id]) => `${file}: ${id}`),
-    );
-
-    expect(conditionalJobs).toEqual([]);
-  });
-
-  it('runs only the CI workflow on push, with its one job verify', () => {
-    const pushRuns = workflowFiles()
-      .map((file) => readWorkflow(file))
-      .filter((workflow) => 'push' in triggers(workflow))
-      .map((workflow) => ({
-        name: workflow.name,
-        jobs: Object.keys(workflow.jobs ?? {}),
-      }));
-
-    expect(pushRuns).toEqual([{ name: 'CI', jobs: ['verify'] }]);
-  });
-
-  it('pins the same Node version in .nvmrc and engines.node', () => {
-    expect(readRootFile('.nvmrc').trim()).toBe(packageJson.engines.node);
   });
 });

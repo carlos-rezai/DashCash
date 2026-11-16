@@ -1,5 +1,5 @@
 ---
-status: open
+status: in-progress
 ---
 # Shared workflow readers and the wiring checks without a finder
 
@@ -89,3 +89,13 @@ None — can start immediately.
 ## User stories addressed
 
 - User stories 29, 31, 32, 33
+
+## Notes
+
+Test counts, from the RED step:
+
+- Before the move: `npm test` runs 1689 tests; `gates/gateWiring/` holds 89.
+- Moved: 22 (`verifyScripts/` 9, `pushWorkflow/` 4,
+  `pullRequestWorkflow/` 5, `workflows/` 4); `gates/gateWiring/` keeps 67.
+- New reader tests in `scripts/readWorkflow/`: 30.
+- After GREEN: `npm test` runs 1719 tests (1689 + 30).

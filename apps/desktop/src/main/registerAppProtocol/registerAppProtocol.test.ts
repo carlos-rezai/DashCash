@@ -1,6 +1,13 @@
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import {
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { createFakeElectron } from '../test-support/fakeElectron/fakeElectron.ts';
 import {
@@ -10,15 +17,22 @@ import {
 } from './registerAppProtocol.ts';
 
 // The App protocol (design log Q16): the scheme `app`, origin
-// `app://dashcash`, serves only files under the built renderer folder and
-// answers 404 for any path that resolves outside it.
+// `app://dashcash`, serves only files under the built renderer folder to the
+// host `dashcash`, and answers 404 for another host and for any path that
+// resolves outside the folder (05 gate-maintenance, Q5–Q7).
 
 const RENDERER_FOLDER = resolve('/invented/dashcash-app/out/renderer');
 
-// Each URL names `secret.txt` beside the renderer folder, or a path elsewhere
-// on the machine, in a way that survives URL parsing; every one is refused on
+// The first URLs name the page on a host other than exactly `dashcash`; the
+// URL parser keeps each host as written, the upper-case one included. The
+// rest name `secret.txt` beside the renderer folder, or a path elsewhere on
+// the machine, in a way that survives URL parsing. Every one is refused on
 // every platform.
 const REFUSED_URLS = [
+  { case: 'another host', url: 'app://other/index.html' },
+  { case: 'a port', url: 'app://dashcash:8080/index.html' },
+  { case: 'an empty host', url: 'app:///index.html' },
+  { case: 'an upper-case host', url: 'app://DASHCASH/index.html' },
   { case: '..', url: 'app://dashcash/..%2Fsecret.txt' },
   {
     case: '.. out of a subfolder',
@@ -92,6 +106,35 @@ describe('resolveRendererPath', () => {
 
   it.each(REFUSED_URLS)('returns undefined for $case', ({ url }) => {
     expect(resolveRendererPath(RENDERER_FOLDER, url)).toBeUndefined();
+  });
+
+  // Not in REFUSED_URLS: `Request` refuses to construct a URL with user info,
+  // so the handler never receives one (design log D2).
+  it('returns undefined for user info', () => {
+    expect(
+      resolveRendererPath(RENDERER_FOLDER, 'app://x@dashcash/index.html'),
+    ).toBeUndefined();
+  });
+});
+
+describe('the protocol module', () => {
+  // `matchAppOrigin` imports `APP_ORIGIN` from here, so an import back would
+  // make a cycle. A guard: it passes from the start.
+  it('imports nothing from matchAppOrigin', () => {
+    const source = readFileSync(
+      fileURLToPath(new URL('./registerAppProtocol.ts', import.meta.url)),
+      'utf8',
+    );
+    const specifiers = [
+      ...source.matchAll(
+        /\bfrom\s+['"]([^'"]+)['"]|\bimport\s*\(?\s*['"]([^'"]+)['"]/g,
+      ),
+    ].map((match) => match[1] ?? match[2]);
+
+    expect(specifiers.length).toBeGreaterThan(0);
+    expect(
+      specifiers.filter((specifier) => specifier?.includes('matchAppOrigin')),
+    ).toEqual([]);
   });
 });
 

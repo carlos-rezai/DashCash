@@ -659,3 +659,18 @@ Alternatives:
   the one test that spans two workflows, and `workflows/` holds the rules
   over more than one workflow; splitting it by job would change its
   assertions, which Q20 forbids.
+
+## Implementation Results
+
+Deviations the human set before the build, 2026-11-16. They supersede the
+answers named; those answers stay as they were written.
+
+- **D1. Renovate runs all of Monday** (deviates from feature 02's Q37,
+  schedule `before 6am on monday`; its timezone `Europe/Berlin` stands).
+  `renovate.json`'s `schedule` and the `lockFileMaintenance` schedule are
+  widened to all of Monday (`"on monday"`), and the Renovate gate test
+  checks both schedules (`04-renovate-hold-rules.md`). Reason: the hosted
+  Renovate app runs only every few hours or days, and Renovate's first
+  scheduled week showed no run inside the old window (before 6am, and
+  before 4am for lockfile maintenance, the default `config:recommended`
+  gives it).

@@ -6,6 +6,7 @@ import {
   jobCommands,
   readWorkflow,
 } from '../../scripts/readWorkflow/readWorkflow.ts';
+import { VERIFY_GATES } from '../test-support/verifyGates/verifyGates.ts';
 
 type PackageJson = {
   scripts: Record<string, string | undefined>;
@@ -14,23 +15,6 @@ type PackageJson = {
 
 const ROOT = join(import.meta.dirname, '..', '..');
 const PUSH_WORKFLOW = 'ci.yml';
-
-// The gates of Verify, in their fixed order. Every ticket that adds a gate
-// inserts it here at its place.
-const VERIFY_GATES = [
-  'format:check',
-  'lint',
-  'typecheck',
-  'lint:deps',
-  'test',
-  'check:commits',
-  'check:tickets',
-  'check:data-files',
-  'check:docs-drift',
-  'check:licenses',
-  'check:audit',
-  'check:quarantine',
-];
 
 const GATE_COMMANDS: Record<string, string> = {
   'format:check': 'prettier --check .',

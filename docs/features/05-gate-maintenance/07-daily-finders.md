@@ -37,7 +37,10 @@ finders"; design log Q20–Q22, A8).
     run test:mutation in the mutation job"; "finds nothing missing from the
     mutation wiring" and its `it.each` of failing edits.
 - An edit two test files use lives in `gates/test-support/`
-  (`06-pull-request-finders.md`); one used by one test stays beside it.
+  (`06-pull-request-finders.md`); one used by one test stays beside it. The
+  list `VERIFY_GATES`, which `gates/dailyRun/dailyRun.test.ts` and
+  `gates/verifyScripts/verifyScripts.test.ts` both use, lives once in
+  `gates/test-support/verifyGates/verifyGates.ts`.
 - The GREEN step moves each finder out of the wiring test into its module.
 
 This ticket is the approval to create `gates/dailyRun/` and

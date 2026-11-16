@@ -6,6 +6,7 @@ import {
   triggers,
   type Workflow,
 } from '../../scripts/readWorkflow/readWorkflow.ts';
+import { VERIFY_GATES } from '../test-support/verifyGates/verifyGates.ts';
 import { withJobSteps } from '../test-support/withJobSteps/withJobSteps.ts';
 import { findDailyWiringProblems } from './dailyRun.ts';
 
@@ -20,23 +21,6 @@ const DAILY_COMMANDS = [
 // The gates of Verify the daily job runs too.
 const DAILY_GATES = ['check:audit', 'check:quarantine'];
 const DAILY_JOBS = ['daily', 'mutation'];
-
-// The gates of Verify, in their fixed order. Every ticket that adds a gate
-// inserts it here at its place.
-const VERIFY_GATES = [
-  'format:check',
-  'lint',
-  'typecheck',
-  'lint:deps',
-  'test',
-  'check:commits',
-  'check:tickets',
-  'check:data-files',
-  'check:docs-drift',
-  'check:licenses',
-  'check:audit',
-  'check:quarantine',
-];
 
 // The workflow without the named trigger.
 function withoutTrigger(workflow: Workflow, event: string): Workflow {

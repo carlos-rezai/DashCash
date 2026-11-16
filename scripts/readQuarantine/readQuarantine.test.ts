@@ -7,6 +7,7 @@ import {
   buildQuarantinePatterns,
   E2E_FOLDER,
   loadQuarantine,
+  loadQuarantinePatterns,
   QUARANTINE_FILE,
   readQuarantine,
   readQuarantineEntry,
@@ -145,6 +146,82 @@ describe('loadQuarantine', () => {
         ) as string,
       },
     });
+  });
+});
+
+describe('loadQuarantinePatterns', () => {
+  let root: string;
+
+  function writeQuarantine(content: string): void {
+    const path = join(root, QUARANTINE_FILE);
+    mkdirSync(dirname(path), { recursive: true });
+    writeFileSync(path, content);
+  }
+
+  beforeEach(() => {
+    root = mkdtempSync(join(tmpdir(), 'dashcash-quarantine-patterns-'));
+  });
+
+  afterEach(() => {
+    rmSync(root, { recursive: true, force: true });
+  });
+
+  it('returns the patterns of a valid Quarantine under the given root', () => {
+    writeQuarantine(`${JSON.stringify([START_ENTRY, SUB_ENTRY], null, 2)}\n`);
+
+    expect(loadQuarantinePatterns(root).map(String)).toEqual(
+      buildQuarantinePatterns([START_ENTRY, SUB_ENTRY]).map(String),
+    );
+  });
+
+  it('returns no pattern for an empty Quarantine', () => {
+    writeQuarantine('[]\n');
+
+    expect(loadQuarantinePatterns(root)).toEqual([]);
+  });
+
+  it('throws one line for a missing file', () => {
+    expect(() => loadQuarantinePatterns(root)).toThrow(
+      /^quality\/flaky-quarantine\.json: cannot be read as JSON: [^\n]+$/,
+    );
+  });
+
+  it('throws one line for a file that is no JSON', () => {
+    writeQuarantine('[{ "file": ');
+
+    expect(() => loadQuarantinePatterns(root)).toThrow(
+      /^quality\/flaky-quarantine\.json: cannot be read as JSON: [^\n]+$/,
+    );
+  });
+
+  it('throws one line for a value that is no array', () => {
+    writeQuarantine(JSON.stringify({ entries: [START_ENTRY] }));
+
+    expect(() => loadQuarantinePatterns(root)).toThrow(
+      new Error(
+        'quality/flaky-quarantine.json: must be an array of quarantine entries',
+      ),
+    );
+  });
+
+  it('throws one line per violation of every malformed entry, though another is well formed', () => {
+    writeQuarantine(
+      JSON.stringify([
+        START_ENTRY,
+        { ...IMPORT_ENTRY, owner: '', expires: 'soon' },
+        { ...START_ENTRY, file: '' },
+      ]),
+    );
+
+    expect(() => loadQuarantinePatterns(root)).toThrow(
+      new Error(
+        [
+          'quality/flaky-quarantine.json: entry 1, field owner: must not be empty',
+          'quality/flaky-quarantine.json: entry 1, field expires: must be a real YYYY-MM-DD date',
+          'quality/flaky-quarantine.json: entry 2, field file: must not be empty',
+        ].join('\n'),
+      ),
+    );
   });
 });
 

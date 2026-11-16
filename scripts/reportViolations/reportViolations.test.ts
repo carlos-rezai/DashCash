@@ -8,10 +8,33 @@ import {
   type MockInstance,
 } from 'vitest';
 import {
+  formatViolation,
   reportViolations,
   runGate,
   type Violation,
 } from './reportViolations.ts';
+
+describe('formatViolation', () => {
+  it('writes a violation as one <subject>: <reason> line', () => {
+    expect(
+      formatViolation({
+        subject: 'exports/statement.csv',
+        reason: 'data file is tracked',
+      }),
+    ).toBe('exports/statement.csv: data file is tracked');
+  });
+
+  it('keeps a subject and a reason that hold a colon as they are', () => {
+    expect(
+      formatViolation({
+        subject: 'feat: [sample] 01 add thing',
+        reason: 'ticket missing: docs/features/01-sample/01-thing.md',
+      }),
+    ).toBe(
+      'feat: [sample] 01 add thing: ticket missing: docs/features/01-sample/01-thing.md',
+    );
+  });
+});
 
 describe('reportViolations', () => {
   let errorSpy: MockInstance<typeof console.error>;

@@ -1,5 +1,5 @@
 ---
-status: open
+status: in-progress
 ---
 # Daily problem finders, mutated
 

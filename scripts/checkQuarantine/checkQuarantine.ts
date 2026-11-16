@@ -1,3 +1,4 @@
+import { findEntryDateProblems } from '../findEntryDateProblems/findEntryDateProblems.ts';
 import { readCalendarDate } from '../readCalendarDate/readCalendarDate.ts';
 import {
   buildEntryViolation,
@@ -14,7 +15,6 @@ import {
 import { listTrackedPaths } from '../runGit/runGit.ts';
 
 const MAX_QUARANTINE_DAYS = 30;
-const MS_PER_DAY = 86_400_000;
 const SPEC_SUFFIX = '.spec.ts';
 const TICKET_PATH = /^docs\/features\/\d{2}-[^/]+\/\d{2}-[^/]+\.md$/;
 
@@ -24,23 +24,13 @@ function findDateViolations(
   index: number,
   today: number,
 ): Violation[] {
-  const violations: Violation[] = [];
   const added = readCalendarDate(entry.added) ?? Number.NaN;
   const expires = readCalendarDate(entry.expires) ?? Number.NaN;
-  if (added > today) {
-    violations.push(buildEntryViolation(index, 'added', 'is later than today'));
-  }
-  if (expires < added) {
-    violations.push(buildEntryViolation(index, 'expires', 'is before added'));
-  } else if (expires - added > MAX_QUARANTINE_DAYS * MS_PER_DAY) {
-    violations.push(
-      buildEntryViolation(
-        index,
-        'expires',
-        `is more than ${String(MAX_QUARANTINE_DAYS)} days after added`,
-      ),
-    );
-  }
+  const violations = findEntryDateProblems(
+    { added, expires },
+    today,
+    MAX_QUARANTINE_DAYS,
+  ).map(({ field, why }) => buildEntryViolation(index, field, why));
   if (expires < today) {
     violations.push(
       buildEntryViolation(index, 'expires', `expired on ${entry.expires}`),

@@ -1,5 +1,5 @@
 ---
-status: in-progress
+status: done
 ---
 # Shared entry date rules
 
@@ -32,14 +32,14 @@ No gate file is changed.
 
 ## Acceptance criteria
 
-- [ ] A RED commit adds the shared module's tests, which fail because it
+- [x] A RED commit adds the shared module's tests, which fail because it
       does not exist yet.
-- [ ] A table per rule, the limit on both sides (`maxDays` and one day
+- [x] A table per rule, the limit on both sides (`maxDays` and one day
       more), and both limits, 30 and 90.
-- [ ] The **Audit**'s and the **Quarantine check**'s existing tests stay
+- [x] The **Audit**'s and the **Quarantine check**'s existing tests stay
       unchanged and green; neither check writes the three rules out any
       more.
-- [ ] `npm run verify` is green.
+- [x] `npm run verify` is green.
 
 ## Blocked by
 

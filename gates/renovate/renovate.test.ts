@@ -734,17 +734,25 @@ describe('the Renovate rule on invented configs', () => {
       expect(await check(config)).not.toEqual([]);
     });
 
-    it('fails a vulnerability-alert title with a suffix written into it', async () => {
-      const message = `${VULNERABILITY_TITLE} [security]`;
-      const config = sampleConfig({
-        vulnerabilityAlerts: vulnerabilityAlerts({
-          commitMessage: message,
-          prTitle: message,
-        }),
-      });
+    it.each([
+      ['commitMessageExtra', { commitMessageExtra: '[security]' }],
+      [
+        'commitMessageTopic',
+        { commitMessageTopic: 'vulnerable dependencies [Security]' },
+      ],
+    ])(
+      'fails a vulnerability-alert title with the tag written into %s',
+      async (_part, changes) => {
+        const config = sampleConfig({
+          vulnerabilityAlerts: vulnerabilityAlerts(changes),
+        });
 
-      expect(await check(config)).not.toEqual([]);
-    });
+        expect(await check(config)).toContainEqual({
+          subject: 'renovate.json',
+          reason: 'a vulnerability-alert title carries no [SECURITY] suffix',
+        });
+      },
+    );
   });
 
   describe('the base settings', () => {

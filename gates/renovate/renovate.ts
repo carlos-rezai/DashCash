@@ -166,6 +166,11 @@ function findGroupViolations(config: Settings): Violation[] {
     if (alerts['commitMessageSuffix'] !== '') {
       fail('vulnerabilityAlerts must set commitMessageSuffix to ""');
     }
+    if (
+      /\[security\]/i.test(assembleTitle(config['commitMessagePrefix'], alerts))
+    ) {
+      fail('a vulnerability-alert title carries no [SECURITY] suffix');
+    }
   }
   return violations;
 }

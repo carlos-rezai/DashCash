@@ -1,5 +1,5 @@
 ---
-status: in-progress
+status: done
 ---
 # Secret scan and Electron install finders; the wiring test gone
 
@@ -44,15 +44,15 @@ This ticket is the approval to create `gates/secretScan/` and
 
 ## Acceptance criteria
 
-- [ ] A RED commit adds the two folders' tests, which fail because the
+- [x] A RED commit adds the two folders' tests, which fail because the
       finder modules do not exist yet.
-- [ ] Each finder names the same lines for each sample edit as before and
+- [x] Each finder names the same lines for each sample edit as before and
       none for the committed workflows.
-- [ ] `gates/gateWiring/` no longer exists; every one of its tests is found
+- [x] `gates/gateWiring/` no longer exists; every one of its tests is found
       in one of the ten folders of Q20, and `npm test` runs as many wiring
       tests as before the split (counts in the ticket's Notes).
-- [ ] The finders import only the shared readers, never `test-support/`.
-- [ ] `npm run verify` is green.
+- [x] The finders import only the shared readers, never `test-support/`.
+- [x] `npm run verify` is green.
 
 ## Blocked by
 
@@ -61,3 +61,13 @@ This ticket is the approval to create `gates/secretScan/` and
 ## User stories addressed
 
 - User stories 29, 30, 31, 33
+
+## Notes
+
+Test counts, from the RED step and checked after GREEN:
+
+- Before the move: `gates/gateWiring/` holds 29 tests; `npm test` runs 1719.
+- Moved: 29 (`secretScan/` 16, `electronInstall/` 13); `gates/gateWiring/` is
+  gone.
+- After GREEN: `npm test` runs 1719 tests (1719 - 29 + 29), so as many
+  wiring tests run as before the split.

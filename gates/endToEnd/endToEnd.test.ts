@@ -60,14 +60,83 @@ const FLAKY_ENTRY = {
   expires: '2026-12-01',
 };
 
-// Invented tests, as file relative to e2e/ and title.
-const SAMPLE_TESTS: readonly (readonly [string, string])[] = [
-  ['start-app.spec.ts', 'Start the app'],
-  ['start-app.spec.ts', 'Start the app twice'],
-  ['start-app.spec.ts', 'Close the app'],
-  ['import-csv.spec.ts', 'Start the app'],
-  ['restart-app.spec.ts', 'Start the app'],
+// An invented Quarantine for Playwright's own listing (design log Q11, A7):
+// a tagged and an untagged test in a subfolder spec, and a test whose title
+// holds regex characters in a top-level spec. Tickets and owners exist
+// nowhere.
+const LISTED_QUARANTINE = [
+  {
+    ...FLAKY_ENTRY,
+    file: 'e2e/sub/start.spec.ts',
+    title: 'Start the app',
+  },
+  {
+    ...FLAKY_ENTRY,
+    file: 'e2e/sub/start.spec.ts',
+    title: 'Close the app',
+  },
+  {
+    ...FLAKY_ENTRY,
+    file: 'e2e/start.spec.ts',
+    title: 'Import report.csv (draft)?',
+  },
 ];
+
+// Invented specs: every body throws, so a run instead of a listing fails, and
+// none takes a fixture, so listing them starts no app, no browser and no
+// network.
+const SAMPLE_SPECS: Record<string, string> = {
+  'e2e/sub/start.spec.ts': `import { test } from '@playwright/test';
+
+test('Start the app', { tag: ['@slow', '@smoke'] }, () => {
+  throw new Error('a listing runs no test');
+});
+
+test('Close the app', () => {
+  throw new Error('a listing runs no test');
+});
+
+test('Open the settings', () => {
+  throw new Error('a listing runs no test');
+});
+`,
+  'e2e/start.spec.ts': `import { test } from '@playwright/test';
+
+test('Start the app', { tag: '@slow' }, () => {
+  throw new Error('a listing runs no test');
+});
+
+test('Import report.csv (draft)?', () => {
+  throw new Error('a listing runs no test');
+});
+
+test('Import report.csv (draft)? twice', () => {
+  throw new Error('a listing runs no test');
+});
+
+test('Import reportXcsv draft', () => {
+  throw new Error('a listing runs no test');
+});
+`,
+};
+
+// What Playwright lists from the sample specs with the invented Quarantine,
+// as file relative to e2e/ and title: the third test of the subfolder spec,
+// and every look-alike of a quarantined test (the same title in another
+// file, a longer title, a title its regex characters would match loosely).
+const LISTED_TESTS = [
+  'start.spec.ts › Import report.csv (draft)? twice',
+  'start.spec.ts › Import reportXcsv draft',
+  'start.spec.ts › Start the app',
+  'sub/start.spec.ts › Open the settings',
+];
+
+type ListedSuite = {
+  specs?: { file: string; title: string }[];
+  suites?: ListedSuite[];
+};
+
+type ListReport = { suites?: ListedSuite[]; errors?: unknown[] };
 
 // Imports the Playwright config in a fresh Node process whose working folder
 // is the sample tree, and prints its grepInvert as the regular expressions'
@@ -112,10 +181,15 @@ function rootProjectFiles(): string[] {
   return (parsed?.fileNames ?? []).map((file) => resolve(file));
 }
 
-// The title Playwright matches grepInvert against: the project's name (empty
-// here), the file relative to testDir and the test's title, joined by spaces.
-function grepTitle(file: string, title: string): string {
-  return ['', file, title].join(' ');
+// Every test of a JSON listing, as file relative to e2e/, with `/` on every
+// platform, and title.
+function collectListedTests(suites: readonly ListedSuite[]): string[] {
+  return suites.flatMap((suite) => [
+    ...(suite.specs ?? []).map(
+      ({ file, title }) => `${file.replaceAll('\\', '/')} › ${title}`,
+    ),
+    ...collectListedTests(suite.suites ?? []),
+  ]);
 }
 
 function readCommittedQuarantine(): unknown {
@@ -160,26 +234,6 @@ describe('the Playwright configuration', () => {
 describe('the flaky quarantine', () => {
   it('is committed empty', () => {
     expect(readCommittedQuarantine()).toStrictEqual([]);
-  });
-
-  it('leaves out exactly the quarantined test, read from invented entries', () => {
-    const { entries, violations } = readQuarantine(
-      JSON.parse(JSON.stringify([FLAKY_ENTRY])),
-    );
-    const patterns = buildQuarantinePatterns(entries);
-
-    const run = SAMPLE_TESTS.filter(
-      ([file, title]) =>
-        !patterns.some((pattern) => pattern.test(grepTitle(file, title))),
-    );
-
-    expect(violations).toEqual([]);
-    expect(run).toEqual(
-      SAMPLE_TESTS.filter(
-        ([file, title]) =>
-          file !== 'start-app.spec.ts' || title !== 'Start the app',
-      ),
-    );
   });
 
   it('leaves out nothing for an empty Quarantine', () => {
@@ -228,6 +282,34 @@ describe(
       expect(status).toBe(0);
       expect(JSON.parse(stdout)).toEqual(
         buildQuarantinePatterns([FLAKY_ENTRY]).map(String),
+      );
+    });
+
+    // Playwright's own listing on the platform it runs on: CI's Linux run
+    // proves the `/` separator, a Windows run `\` (design log Q11).
+    it('lists neither quarantined test in a subfolder, tagged or not, and every look-alike', () => {
+      writeTreeFile(tree, QUARANTINE_FILE, JSON.stringify(LISTED_QUARANTINE));
+      for (const [file, content] of Object.entries(SAMPLE_SPECS)) {
+        writeTreeFile(tree, file, content);
+      }
+
+      const { status, stdout, stderr } = spawnSync(
+        process.execPath,
+        [
+          join('node_modules', '@playwright', 'test', 'cli.js'),
+          'test',
+          '--list',
+          '--reporter=json',
+        ],
+        { cwd: tree, encoding: 'utf8' },
+      );
+
+      expect(stderr).toBe('');
+      expect(status).toBe(0);
+      const report = JSON.parse(stdout) as ListReport;
+      expect(report.errors ?? []).toEqual([]);
+      expect(collectListedTests(report.suites ?? []).sort()).toEqual(
+        LISTED_TESTS,
       );
     });
 

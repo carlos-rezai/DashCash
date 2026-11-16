@@ -44,11 +44,25 @@ const IMPORT_ENTRY: QuarantineEntry = {
   expires: '2026-11-30',
 };
 
-// The title Playwright matches grep and grepInvert against: the project's
-// name (empty in this repository), the file relative to testDir and the
-// test's title, joined by spaces.
-function grepTitle(file: string, title: string): string {
-  return ['', file, title].join(' ');
+// An invented entry for a spec in a subfolder of e2e/.
+const SUB_ENTRY: QuarantineEntry = {
+  ...START_ENTRY,
+  file: 'e2e/sub/start.spec.ts',
+  title: 'Start',
+};
+
+const TAGS = ['@slow', '@smoke'];
+
+// The text a quarantine pattern is matched against, as input for the unit
+// tests: the project's name (empty in this repository), the file relative to
+// testDir, the test's title and its tags, joined by spaces. Playwright's own
+// text is checked by the --list test in gates/endToEnd/.
+function grepTitle(
+  file: string,
+  title: string,
+  tags: readonly string[] = [],
+): string {
+  return ['', file, title, ...tags].join(' ');
 }
 
 function isLeftOut(patterns: readonly RegExp[], title: string): boolean {
@@ -357,5 +371,78 @@ describe('buildQuarantinePatterns', () => {
     expect(isLeftOut(patterns, grepTitle('start-app.spec.ts', loose))).toBe(
       false,
     );
+  });
+
+  it('builds the pattern of the design log for an entry in a subfolder', () => {
+    expect(buildQuarantinePatterns([SUB_ENTRY]).map(String)).toEqual([
+      String.raw`/(?:^| )sub[\\/]start\.spec\.ts Start(?: @\S+)*$/`,
+    ]);
+  });
+
+  it('matches an entry in a subfolder with either path separator', () => {
+    const patterns = buildQuarantinePatterns([SUB_ENTRY]);
+
+    expect(
+      ['sub/start.spec.ts', 'sub\\start.spec.ts'].map((file) =>
+        isLeftOut(patterns, grepTitle(file, 'Start')),
+      ),
+    ).toEqual([true, true]);
+  });
+
+  it.each([
+    ['one tag', ['@slow']],
+    ['several tags', ['@slow', '@smoke', '@issue-17']],
+  ])('matches the quarantined test with %s after its title', (_name, tags) => {
+    const patterns = buildQuarantinePatterns([START_ENTRY]);
+
+    expect(
+      isLeftOut(
+        patterns,
+        grepTitle('start-app.spec.ts', 'Start the app', tags),
+      ),
+    ).toBe(true);
+  });
+
+  it('matches a title that holds a tag, which Playwright repeats as a tag', () => {
+    const patterns = buildQuarantinePatterns([
+      { ...START_ENTRY, title: 'Start the app @slow' },
+    ]);
+
+    expect(
+      isLeftOut(
+        patterns,
+        grepTitle('start-app.spec.ts', 'Start the app @slow', ['@slow']),
+      ),
+    ).toBe(true);
+  });
+
+  // Each look-alike carries the same tags as the quarantined test, which the
+  // pattern leaves out, so its own result shows the tags loosen nothing.
+  it.each([
+    ['the same title in another file', 'import-csv.spec.ts', 'Start'],
+    ['the same title in another folder', 'other/start.spec.ts', 'Start'],
+    [
+      'the same title in a top-level file of that name',
+      'start.spec.ts',
+      'Start',
+    ],
+    [
+      'its file with any character for the separator',
+      'subXstart.spec.ts',
+      'Start',
+    ],
+    ['a longer title that starts with it', 'sub/start.spec.ts', 'Start twice'],
+    [
+      'a longer title with a tag inside',
+      'sub/start.spec.ts',
+      'Start @slow twice',
+    ],
+  ])('does not match %s, tagged alike', (_name, file, title) => {
+    const patterns = buildQuarantinePatterns([SUB_ENTRY]);
+
+    expect(isLeftOut(patterns, grepTitle(file, title, TAGS))).toBe(false);
+    expect(
+      isLeftOut(patterns, grepTitle('sub/start.spec.ts', 'Start', TAGS)),
+    ).toBe(true);
   });
 });

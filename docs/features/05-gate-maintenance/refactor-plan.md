@@ -82,7 +82,7 @@ so they also run `npm run verify:full`. No step changes `scripts/` or
 - [x] 04 rename the debug port result in start app
 - [x] 05 split the app host rule from the path rules
 - [x] 06 update the app protocol comments
-- [ ] 07 align the getting started comments
+- [x] 07 align the getting started comments
 
 ### What each step does
 

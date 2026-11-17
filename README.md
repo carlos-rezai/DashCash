@@ -88,7 +88,7 @@ Folder structure, file naming and commit rules are in [docs/conventions.md](docs
 Requirements: Node (version in `.nvmrc`), npm.
 
 ```bash
-npm ci              # installs the Electron binary too, through the postinstall script
+npm ci               # installs the Electron binary too, through the postinstall script
 npm run dev          # start the app with hot reload
 npm run storybook    # browse every component in isolation
 npm run verify       # everything CI checks, except end-to-end tests

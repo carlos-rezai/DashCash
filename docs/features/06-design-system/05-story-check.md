@@ -1,5 +1,5 @@
 ---
-status: in-progress
+status: done
 ---
 # Story check
 
@@ -31,21 +31,21 @@ and `gates/test-support/verifyGates/verifyGates.ts`.
 
 ## Acceptance criteria
 
-- [ ] A RED commit adds the core, entry and **Gate wiring** tests, which
+- [x] A RED commit adds the core, entry and **Gate wiring** tests, which
       fail.
-- [ ] `findMissingStories` reports a component without its stories file in
+- [x] `findMissingStories` reports a component without its stories file in
       each of the three places and nothing when the file is there;
       lower-case folders, nested folders, `layouts/`, `pages/`, a name that
       does not match its folder and non-component files are not
       components.
-- [ ] The entry, in a temporary sample repository, exits 0 when every
+- [x] The entry, in a temporary sample repository, exits 0 when every
       component has its stories, and 1 with one A4 line per missing file,
       an untracked component included and an ignored one left out.
-- [ ] **Verify** runs `check:stories` right after `lint:deps`, pinned by
+- [x] **Verify** runs `check:stories` right after `lint:deps`, pinned by
       the **Gate wiring** test; it passes on the repository.
-- [ ] The **Mutation score** stays at or above the **Break threshold** of
+- [x] The **Mutation score** stays at or above the **Break threshold** of
       83 (`npm run test:mutation`).
-- [ ] `npm run verify` is green.
+- [x] `npm run verify` is green.
 
 ## Notes
 

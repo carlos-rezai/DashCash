@@ -47,6 +47,15 @@ and `gates/test-support/verifyGates/verifyGates.ts`.
       83 (`npm run test:mutation`).
 - [ ] `npm run verify` is green.
 
+## Notes
+
+- The RED test contradicted itself: it listed
+  `primitives/Button/Button.stories.tsx` as "a stories file" in
+  `NOT_COMPONENTS` while `primitives/Button/Button.tsx` was a component in
+  the same mixed list, so no correct implementation could pass. The human
+  approved changing that example to `primitives/Spinner/Spinner.stories.tsx`
+  (a stories file with no component beside it) in commit `f7beceb`.
+
 ## Blocked by
 
 - Blocked by `01-icon-story-test.md`

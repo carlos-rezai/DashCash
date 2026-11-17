@@ -1,5 +1,5 @@
 ---
-status: open
+status: in-progress
 ---
 # Global style and self-hosted fonts
 

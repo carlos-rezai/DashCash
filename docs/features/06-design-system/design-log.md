@@ -684,3 +684,61 @@ Alternatives:
   PRD's ticket order names "The **Accessibility check** and its gate test"
   as one step and A5 gives the two pins one folder; no phase ships on its
   own, the feature merges as one pull request.
+
+### Assumptions from prd-to-issues
+
+- **I1. Some phases become several tickets.** **Assumption:** plan phase 1
+  becomes tickets 01 (the Icon as a story test), 02 (global style and
+  fonts) and 03 (lint rules); phase 4 becomes 06 (coverage reports), 07
+  (the changed-lines core) and 08 (the gate in **Verify**); phase 5 becomes
+  09 (money in the domain) and 10 (Amount); phase 10 becomes 15 (Segmented
+  and Chip) and 16 (Checkbox and Switch); phase 14 becomes 20 (PageHeader
+  and NavItem) and 21 (Stepper). Every other phase is one ticket, and the
+  order follows the plan. Reason: one issue-loop step has a budget of 100k
+  tokens; phase 1 alone would install twelve packages and write three
+  configs, the **Theme**, the global style, the fonts, the lint rules and
+  the Icon in one build step. Each part has its own RED and can be checked
+  on its own. Overturn by merging tickets back into their phase.
+- **I2. The tracer bullet's RED.** **Assumption:** ticket 01's failing
+  tests are the **Gate wiring** and `postinstall` pins, which fail at their
+  assertions; the Icon's stories file is committed beside them and first
+  runs in GREEN. Reason: no **Story test** can run before Storybook is
+  installed, which is the ticket's build, and the tdd skill never counts a
+  tool that refuses to run as a failure for the right reason. Overturn by
+  installing Storybook in a ticket of its own before the Icon.
+- **I3. The global style is proven by a story.** **Assumption:** ticket 02
+  adds `styles/GlobalStyle/GlobalStyle.stories.tsx`, titled
+  `Styles/GlobalStyle`, with a heading, body text, a link, a button and a
+  disabled button; its **Play functions** read what the browser computes
+  (ground, ink, fonts, link colour, focus ring, disabled cursor) and
+  `document.fonts`. Reason: the ticket needs a RED; the global style is
+  behaviour the user sees but has no prototype tile and no component;
+  stories are the UI test layer (`CLAUDE.md`, Tests); the **Story check**
+  does not require it, and `styles/` is no **Layer**, so its title is
+  `Styles/`. Overturn by dropping the story and checking the global style
+  by review.
+- **I4. The lint rules are proven by samples.** **Assumption:** ticket 03
+  adds two samples to `gates/lint/lint.test.ts`: a hook called inside a
+  condition is reported by `react-hooks/rules-of-hooks`, and a stories file
+  without a default export by a `storybook/` rule. Reason: Q27 names the
+  configs but no proof; the lint gate test already proves what lint
+  catches by samples, and a ticket needs a RED that fails at an assertion.
+  Overturn by folding the lint rules back into ticket 01 without a sample.
+- **I5. Criteria checked by review.** **Assumption:** criteria marked
+  "(review)" in the tickets (props exactly SPEC §3, the **Tokens**' keys
+  and values, styles without literals) are checked by the reviewer and
+  `npm run typecheck`, not by a test of their own. Reason: a test that
+  copied the token sheet or scanned styles for literals would pin source
+  text, which the PRD's Testing Decisions rule out; a literal scanner
+  would be a new gate no source gives this row; the renderer cannot read
+  the sheets from disk (no Node built-ins in the renderer). The Tokens
+  **Story** still fails on a **Token** missing from `theme`. Overturn by a
+  lint rule against literals in a later ticket.
+- **I6. The MCP ticket's RED.** **Assumption:** ticket 27 adds a pin of
+  `.storybook/main.ts` to `gates/storyTests/`: its addons are exactly
+  `@storybook/addon-vitest`, `@storybook/addon-a11y` and
+  `@storybook/addon-mcp`, and telemetry is off. Reason: plan phase 20 has
+  no test, and the issue-loop starts every ticket with a RED; the addon is
+  what serves the **Storybook MCP**, and telemetry off (Q21) is the
+  setting in `main.ts` that keeps the project on the machine. Overturn by
+  dropping the pin and checking the MCP by hand only.

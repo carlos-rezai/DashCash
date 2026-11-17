@@ -785,3 +785,67 @@ answers named; those answers stay as they were written.
   pick their cue when they are planned; the chart's dashed projection line
   already is one. The note stands in ticket 25 and in row 17 of
   `docs/feature-checklist.md`.
+- **D3. A `package.json` script may install headless Chromium** (deviates
+  from feature 04's end-to-end gate test "downloads no browser from a
+  script of package.json"; Q23 stands; set by the human, 2026-11-17).
+  `gates/endToEnd/endToEnd.test.ts` lets a `package.json` script run
+  exactly `playwright install --only-shell chromium`, Q23's command, and
+  nothing else: any other `playwright install` (another browser, without
+  `--only-shell`, with more arguments) still fails. Reason: Q23's
+  `postinstall` installs the headless Chromium the **Story tests** run in,
+  and the old pin rejected every `playwright install` (ticket 01).
+- **D4. `.storybook/` has a TypeScript project of its own** (A1 named
+  this way to overturn it; set by the human, 2026-11-17).
+  `.storybook/tsconfig.json` holds the Storybook files, so ESLint's
+  project service finds `.storybook/preview.tsx`, which it could not reach
+  through the root `tsconfig.json` (ticket 01).
+- **D5. Every Storybook package is on 10.5.3** (deviates from Q39 and the
+  tickets' "the newest release at least 14 days old"; set by the human,
+  2026-11-17). `@storybook/react` 10.6.0 to 10.6.7 ship a misplaced
+  `@ts-expect-error`: in `dist/chunk-ojHmM-yX.d.ts` the directive sits on
+  the same line as the error, so `npm run typecheck` fails with TS2578
+  (unused directive) and TS2344 at lines 1026 and 1072, and no compiler
+  option removes it. 10.5.3 writes the directive correctly and satisfies
+  the 14-day rule. `storybook`, `@storybook/react-vite`,
+  `@storybook/addon-vitest` and every later Storybook addon (`addon-a11y`,
+  `addon-mcp`) stay on 10.5.3, all on the same version, until a fixed
+  release is at least 14 days old (ticket 01).
+- **D6. The renderer and Storybook projects resolve modules like a
+  bundler** (set by the human, 2026-11-17). `apps/desktop/tsconfig.web.json`
+  and `.storybook/tsconfig.json` set `module: esnext` and
+  `moduleResolution: bundler`, because Vite bundles both; under `nodenext`
+  the default import of the CommonJS
+  `@joshwooding/vite-plugin-react-docgen-typescript` that
+  `@storybook/react-vite`'s types use is not callable (TS2344). Main and
+  preload stay on `nodenext`. Both projects also list `"chai"` in `types`,
+  so `@vitest/expect`'s types find the global `Chai` namespace (ticket 01).
+- **D7. One npm override lets Storybook 10.5.3 run on Vitest 5** (follows
+  from D5; set by the human, 2026-11-17). `@storybook/addon-vitest` 10.5.3
+  declares the peer `@vitest/browser-playwright@^4.0.0`, so `npm install`
+  and `npm ci` fail with ERESOLVE against the installed 5.0.5. The root
+  `package.json` gains exactly
+  `"overrides": { "@storybook/addon-vitest": { "@vitest/browser-playwright": "$@vitest/browser-playwright" } }`,
+  scoped to that one package; no `legacy-peer-deps`, so every other peer
+  check stands. The story tests prove the addon works on 5.0.5. Removal:
+  together with D5, when a fixed Storybook 10.6.x is at least 14 days old
+  and accepts Vitest 5 (ticket 01).
+- **D8. Storybook stays on 10.6.5, and the two projects that load its
+  types skip library checks** (supersedes D5 and D7, which are withdrawn;
+  set by the human, 2026-11-17). D5's 10.5.3 does not accept Vitest 5:
+  `@storybook/addon-vitest` 10.5.3 declares the peers
+  `@vitest/browser-playwright@^4.0.0` and `vitest@^3.0.0 || ^4.0.0`, so a
+  plain `npm install` fails with ERESOLVE, and D7's override did not cover
+  the second peer. Storybook returns to 10.6.5, which installs cleanly with
+  Vitest 5.0.5, and the root `package.json` has no `overrides`. Every
+  10.6.x release (10.6.0 to 10.6.7) ships a misplaced `@ts-expect-error`
+  in `@storybook/react`'s `dist/chunk-ojHmM-yX.d.ts`: the directive sits
+  on the same line as the error, so `tsc` reports TS2578 (unused
+  directive) and TS2344 at lines 1026 and 1072, and no compiler option
+  removes it. So `"skipLibCheck": true` is set in exactly
+  `apps/desktop/tsconfig.web.json` and `.storybook/tsconfig.json`, the
+  two projects that load Storybook's types; the root `tsconfig.json`
+  stays without it, and `apps/desktop/tsconfig.node.json` (main, preload)
+  is unchanged. Precedent: `tsconfig.node.json` already sets
+  `skipLibCheck` for electron-vite's types. D6 stands. Removal: drop
+  `skipLibCheck` from both projects once a Storybook release at least 14
+  days old fixes the comments (ticket 01, Notes).

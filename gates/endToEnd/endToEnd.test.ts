@@ -30,7 +30,9 @@ import {
 // test:e2e never runs or skips tests silently.
 //
 // The harness downloads no browser: the App fixture launches the Electron
-// binary already installed, so no npm script runs playwright install.
+// binary already installed, so no npm script runs playwright install, except
+// the root postinstall's headless Chromium for the Story tests, exactly
+// `playwright install --only-shell chromium` (design log D3).
 //
 // The root TypeScript project, and so npm run typecheck and ESLint's typed
 // linting, covers the Playwright config and every file under e2e/.
@@ -154,6 +156,17 @@ export function run(): void {
   load();
 }
 `;
+
+// Every `playwright install` command of a script other than the one Q23
+// allows (design log D3): the headless Chromium the Story tests run in. A
+// command runs to the next `&&`, `||`, `;` or `|`.
+const ALLOWED_BROWSER_INSTALL = 'playwright install --only-shell chromium';
+
+function findForbiddenBrowserInstalls(script: string): string[] {
+  return (script.match(/playwright\s+install[^&|;]*/g) ?? [])
+    .map((command) => command.trim().replaceAll(/\s+/g, ' '))
+    .filter((command) => command !== ALLOWED_BROWSER_INSTALL);
+}
 
 function readPackageJson(path: string): PackageJson {
   return JSON.parse(readFileSync(join(ROOT, path), 'utf8')) as PackageJson;
@@ -367,12 +380,39 @@ describe(
 );
 
 describe('the end-to-end harness', { timeout: 60_000 }, () => {
-  it.each(PACKAGE_FILES)('downloads no browser from a script of %s', (path) => {
-    for (const [name, script] of Object.entries(
-      readPackageJson(path).scripts ?? {},
-    )) {
-      expect(script, name).not.toMatch(/playwright\s+install/);
-    }
+  it.each(PACKAGE_FILES)(
+    'downloads no browser but the headless Chromium from a script of %s',
+    (path) => {
+      for (const [name, script] of Object.entries(
+        readPackageJson(path).scripts ?? {},
+      )) {
+        expect(findForbiddenBrowserInstalls(script), name).toEqual([]);
+      }
+    },
+  );
+
+  it.each([
+    'install-electron && playwright install --only-shell chromium',
+    'playwright install --only-shell chromium',
+    'vitest run',
+  ])('allows the script %j', (script) => {
+    expect(findForbiddenBrowserInstalls(script)).toEqual([]);
+  });
+
+  it.each([
+    'playwright install',
+    'playwright install chromium',
+    'playwright install --only-shell',
+    'playwright install --only-shell firefox',
+    'playwright install --only-shell webkit',
+    'playwright install chromium --only-shell',
+    'playwright install --with-deps --only-shell chromium',
+    'playwright install --only-shell chromium firefox',
+    'playwright install --only-shell chromium --force',
+    'install-electron && playwright install --only-shell chromium && playwright install',
+    'playwright install --only-shell chromium; playwright install firefox',
+  ])('rejects the script %j', (script) => {
+    expect(findForbiddenBrowserInstalls(script)).not.toEqual([]);
   });
 
   it('typechecks the Playwright config and every file under e2e/ in the root project', () => {

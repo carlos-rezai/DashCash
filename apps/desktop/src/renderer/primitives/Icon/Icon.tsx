@@ -1,0 +1,101 @@
+import {
+  ArrowDown,
+  ArrowLeft,
+  ArrowLeftRight,
+  ArrowRight,
+  ArrowUp,
+  Bell,
+  Calendar,
+  Check,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  CircleCheck,
+  CircleX,
+  Columns3,
+  Database,
+  Download,
+  FileText,
+  Flag,
+  Folder,
+  GitMerge,
+  Inbox,
+  Info,
+  Layers,
+  LayoutDashboard,
+  Link,
+  LoaderCircle,
+  PanelLeftClose,
+  Pencil,
+  Plus,
+  RefreshCw,
+  Repeat,
+  Search,
+  Settings,
+  Tags,
+  Target,
+  Trash2,
+  TriangleAlert,
+  Undo2,
+  Upload,
+  Wallet,
+  X,
+} from 'lucide-react';
+import { styleGlyph } from './Icon.styles.ts';
+
+// The 41 names of docs/design/prototype/lib/icons.js, each with its Lucide glyph.
+const GLYPHS = {
+  dashboard: styleGlyph(LayoutDashboard),
+  wallet: styleGlyph(Wallet),
+  upload: styleGlyph(Upload),
+  columns: styleGlyph(Columns3),
+  tags: styleGlyph(Tags),
+  plus: styleGlyph(Plus),
+  pencil: styleGlyph(Pencil),
+  trash: styleGlyph(Trash2),
+  chevronDown: styleGlyph(ChevronDown),
+  chevronRight: styleGlyph(ChevronRight),
+  chevronLeft: styleGlyph(ChevronLeft),
+  check: styleGlyph(Check),
+  x: styleGlyph(X),
+  arrowLeft: styleGlyph(ArrowLeft),
+  arrowRight: styleGlyph(ArrowRight),
+  arrowUp: styleGlyph(ArrowUp),
+  arrowDown: styleGlyph(ArrowDown),
+  file: styleGlyph(FileText),
+  alert: styleGlyph(TriangleAlert),
+  repeat: styleGlyph(Repeat),
+  transfer: styleGlyph(ArrowLeftRight),
+  inbox: styleGlyph(Inbox),
+  search: styleGlyph(Search),
+  merge: styleGlyph(GitMerge),
+  flag: styleGlyph(Flag),
+  info: styleGlyph(Info),
+  link: styleGlyph(Link),
+  layers: styleGlyph(Layers),
+  target: styleGlyph(Target),
+  loaderCircle: styleGlyph(LoaderCircle),
+  settings: styleGlyph(Settings),
+  download: styleGlyph(Download),
+  undo: styleGlyph(Undo2),
+  refresh: styleGlyph(RefreshCw),
+  database: styleGlyph(Database),
+  circleX: styleGlyph(CircleX),
+  circleCheck: styleGlyph(CircleCheck),
+  bell: styleGlyph(Bell),
+  panelClose: styleGlyph(PanelLeftClose),
+  folder: styleGlyph(Folder),
+  calendar: styleGlyph(Calendar),
+};
+
+export type IconName = keyof typeof GLYPHS;
+
+type IconProps = {
+  glyph: IconName;
+  size?: number;
+};
+
+export function Icon({ glyph, size = 16 }: IconProps) {
+  const Glyph = GLYPHS[glyph];
+  return <Glyph size={size} strokeWidth={1.5} aria-hidden="true" />;
+}

@@ -603,3 +603,61 @@ Alternatives:
   HeadroomMeter (18); the `Cents` lint rule (08); visual regression (21);
   the prototype tweaks and the logo and loader explorations (Q3); a
   `.mcp.json` (Q36); changes to `CLAUDE.md`.
+
+### Assumptions from write-a-prd
+
+- **A1. Which TypeScript project checks the Storybook files.**
+  **Assumption:** `.storybook/main.ts` joins the root project, beside the
+  root configs it already holds (`vitest.storybook.config.ts` is matched by
+  its `*.ts`); `.storybook/preview.tsx` and the a11y parameters module (A5)
+  join the renderer's project `tsconfig.web.json`, which gains `"jsx":
+  "react-jsx"`. Reason: Q28 left the split to the PRD; `main.ts` runs in
+  Node when Storybook starts, while the preview runs in the browser,
+  renders JSX and imports the renderer's **Theme** and `GlobalStyle`, so it
+  belongs where the DOM types are and Node's are not. ESLint's project
+  service needs every linted file in a project, and `.storybook/` is not
+  ignored. Overturn by giving `.storybook/` a project of its own.
+- **A2. The Coverage threshold file.** **Assumption:**
+  `quality/coverage-threshold.json` holds exactly `{ "changedLines": 80 }`.
+  `check:coverage` fails closed when the file is missing, is not JSON, is
+  not an object, or `changedLines` is not a number from 0 to 100. Reason:
+  Q34 puts the threshold in a file in `quality/` and fails closed without
+  naming the file or its shape; one named key leaves room for another
+  threshold later without a format change, as the other `quality/` files
+  are named after what they hold.
+- **A3. What the coverage gate cannot judge.** **Assumption:**
+  `check:coverage` fails closed when `origin/main` or the merge base cannot
+  be found, when either LCOV report is missing or unreadable, and when a
+  changed file it measures appears in neither report ("not measured; run
+  `npm test` and `npm run test:stories`"). A changed line that neither
+  report lists in its line data is not coverable (a type, a blank
+  line, a comment) and does not count; with no coverable changed lines the
+  gate passes. Reason: Q33 and Q34 say what counts but not what happens
+  with input the gate cannot read; every gate here must **Fail closed**,
+  and a new file absent from a stale report would otherwise pass without
+  ever being measured.
+- **A4. The lines the two gates print.** **Assumption:** `check:stories`
+  prints `<path of Name.tsx>: has no <Name>.stories.tsx`, one per missing
+  file. `check:coverage`, below the threshold, prints first
+  `changed lines: <covered> of <coverable> covered (<p> %), below the
+  threshold of <t> %`, then one line per file with uncovered changed lines,
+  `<path>: lines <a>, <b>–<c> not covered`, ranges joined; at or above it,
+  nothing. Both go through `reportViolations` (`<subject>: <reason>`).
+  Reason: Q31 and Q34 fix one line per missing file and naming the
+  uncovered lines by file, in the shared format, but not the words; the
+  summary line tells the reader how far off the threshold the change is.
+- **A5. What the new gate tests pin, and where.** **Assumption:** the a11y
+  parameters live in a module of their own in `.storybook/`, which the
+  preview imports and a gate test imports directly; `gates/storyTests/`
+  pins that module (`test: 'error'`, and its rule changes exactly
+  `[{ id: 'color-contrast', reviewOnFail: true }]`) and
+  `vitest.storybook.config.ts` (the Storybook plugin on `.storybook/`,
+  browser mode enabled, the Playwright provider, headless, exactly one
+  Chromium instance); `gates/coverage/` pins both Vitest configs' coverage
+  settings (on, V8, LCOV, their report folders, the measured and excluded
+  paths) and coverage off in `vitest.stryker.config.ts`. The existing
+  `gates/verifyScripts/` and `gates/electronInstall/` pin the new
+  **Verify** order and `postinstall`. Reason: Q29 and the Design table name
+  what is pinned but not how; the preview imports fonts and CSS that Node
+  cannot load, so a gate test can only read the setting from a module that
+  imports nothing; one gate folder per gate (conventions, Module filing).

@@ -23,11 +23,17 @@ carry their colour dot and alignment. Opening a year reveals it through
 `Components/YearTable`, with invented data; the **Theme** gains the values
 it uses, the column widths included (P1). Touches no gate file.
 
+A projected value is marked by a cue other than colour strength (D2):
+Amount's `muted` tone no longer fades it (D1), so future months are told
+apart by the prototype's future-row styling alone, the rows below today's
+accent-100 row with the month label in `--sb-text-muted`.
+
 ## Acceptance criteria
 
 - [ ] A RED commit adds the YearTable's **Stories**, which fail.
 - [ ] (review) Props exactly SPEC §3; the payoff row uses the milestone row
-      colour; the column widths are **Tokens**.
+      colour; the column widths are **Tokens**; future months are marked
+      by their row styling, not by a lower contrast (D2).
 - [ ] **Stories** for years closed and open by default, today's month, the
       payoff month, future months, each cell kind, and a narrow width with
       several account columns.

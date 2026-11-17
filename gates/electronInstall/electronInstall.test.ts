@@ -10,9 +10,12 @@ import {
 import { findElectronInstallProblems } from './electronInstall.ts';
 
 const ROOT = join(import.meta.dirname, '..', '..');
-// npm ci installs the Electron binary through the root postinstall script, so
-// no workflow step installs it and no test downloads it.
+// npm ci installs the Electron binary and the headless Chromium of the Story
+// tests through the root postinstall script, so no workflow step installs
+// Electron and no test downloads a browser.
 const INSTALL_ELECTRON = 'install-electron';
+const POSTINSTALL =
+  'install-electron && playwright install --only-shell chromium';
 
 type Scripts = Record<string, string>;
 type Workflows = Record<string, Workflow>;
@@ -40,7 +43,7 @@ const SCRIPTS_WITHOUT_POSTINSTALL: Scripts = {
   verify: 'npm run lint && npm run test',
 };
 const SOUND_SCRIPTS: Scripts = {
-  postinstall: INSTALL_ELECTRON,
+  postinstall: POSTINSTALL,
   ...SCRIPTS_WITHOUT_POSTINSTALL,
 };
 const SOUND_WORKFLOWS: Workflows = {
@@ -86,6 +89,10 @@ describe('electron install', () => {
     ).toEqual([]);
   });
 
+  it('installs Electron, then only the headless Chromium, from the committed postinstall', () => {
+    expect(readScripts()['postinstall']).toBe(POSTINSTALL);
+  });
+
   it('no workflow step runs install-electron', () => {
     expect(jobsRunning(ROOT, INSTALL_ELECTRON)).toEqual([]);
   });
@@ -110,17 +117,21 @@ describe('electron install', () => {
         SOUND_NPMRC,
       ),
     ).toEqual([
-      'the postinstall script is missing; it must be exactly install-electron',
+      `the postinstall script is missing; it must be exactly ${POSTINSTALL}`,
     ]);
   });
 
   it.each([
+    ['install-electron'],
     ['node_modules/.bin/install-electron'],
     ['install-electron && echo done'],
-    [' install-electron'],
+    ['install-electron && playwright install chromium'],
+    ['install-electron && playwright install --only-shell'],
+    ['playwright install --only-shell chromium && install-electron'],
+    [` ${POSTINSTALL}`],
     [''],
   ])(
-    'names the postinstall script %j as not exactly install-electron',
+    'names the postinstall script %j as not exactly the Electron and Chromium install',
     (postinstall) => {
       expect(
         findElectronInstallProblems(
@@ -129,7 +140,7 @@ describe('electron install', () => {
           SOUND_NPMRC,
         ),
       ).toEqual([
-        `the postinstall script is ${JSON.stringify(postinstall)}; it must be exactly install-electron`,
+        `the postinstall script is ${JSON.stringify(postinstall)}; it must be exactly ${POSTINSTALL}`,
       ]);
     },
   );
@@ -225,7 +236,7 @@ describe('electron install', () => {
         'ignore-scripts=true\n',
       ),
     ).toEqual([
-      'the postinstall script is missing; it must be exactly install-electron',
+      `the postinstall script is missing; it must be exactly ${POSTINSTALL}`,
       'ci.yml: the verify job runs install-electron in a step',
       '.npmrc sets ignore-scripts=true, so npm ci skips postinstall',
     ]);

@@ -6,6 +6,7 @@ export const VERIFY_GATES = [
   'typecheck',
   'lint:deps',
   'test',
+  'test:stories',
   'check:commits',
   'check:tickets',
   'check:data-files',

@@ -159,7 +159,7 @@ export const AllIcons: Story = {
 export const Sized: Story = {
   args: { glyph: 'dashboard', size: 20 },
   render: (args) => (
-    <div aria-label="Sized icon">
+    <div role="group" aria-label="Sized icon">
       <Icon {...args} />
     </div>
   ),

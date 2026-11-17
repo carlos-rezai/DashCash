@@ -99,7 +99,7 @@
 | **Story** (new) | One named state of a **Primitive**, **Component** or **Feature component** in its stories file beside it. | Example, demo, fixture |
 | **Play function** (new) | The interaction script of a **Story**: it clicks, types and asserts what the user sees. | Interaction test, script |
 | **Story test** (new) | A **Story** run as a Vitest test in headless Chromium: it renders, runs its **Play function** and the **Accessibility check**. | Component test, snapshot test |
-| **Accessibility check** (new) | axe run in every **Story test** through Storybook's a11y addon; a violation fails the test, while a colour-contrast failure is only reported for review. | a11y lint, audit |
+| **Accessibility check** (new) | axe run in every **Story test** through Storybook's a11y addon; a violation fails the test, colour contrast included, like every other rule (design log D1). | a11y lint, audit |
 | **Story check** (new) | The gate that every **Primitive**, **Component** and **Feature component** has its stories file. | Story lint |
 | **Storybook MCP** (new) | The MCP endpoint the running Storybook dev server serves, through which agents list and inspect **Stories**. | Storybook server, MCP plugin |
 
@@ -221,7 +221,7 @@
 > **Dev:** "I built a `HeadroomMeter` in the saving feature module. Is a Vitest test enough?"
 > **Domain expert:** "No. It is a **Feature component**, so the **Story check** wants its stories file. Give it one **Story** per state, neutral, warning and danger, and a **Play function** where it reacts to the user. Each **Story** runs as a **Story test** in **Verify**."
 > **Dev:** "The danger **Story** fails with 'ARIA meter nodes must have an accessible name'. The prototype shows no name."
-> **Domain expert:** "That is the **Accessibility check**. Add the accessible name without changing what anyone sees, as the Switch's `ariaLabel` does. Only a colour-contrast failure is reported for review instead of failing, until the human settles the prototype's faint and muted colours."
+> **Domain expert:** "That is the **Accessibility check**. Add the accessible name without changing what anyone sees, as the Switch's `ariaLabel` does. A colour-contrast failure fails it too, like every other rule; the human raised the faint and red colours to 4.5:1 (design log D1)."
 > **Dev:** "The meter shows `−20,00 €`. Do I format it myself?"
 > **Domain expert:** "Never. The amount is **Cents**; the Amount **Primitive** renders it in the **Money format** through the domain's formatter and colours it by **Polarity**, unless you pass a **Tone** such as `danger`. Colours come from **Tokens** of the **Theme**, never a hex in your styles."
 > **Dev:** "My pull request is red on `check:coverage`, but every test passes."

@@ -742,3 +742,46 @@ Alternatives:
   what serves the **Storybook MCP**, and telemetry off (Q21) is the
   setting in `main.ts` that keeps the project on the machine. Overturn by
   dropping the pin and checking the MCP by hand only.
+
+## Implementation Results
+
+Deviations the human set before the build, 2026-11-17. They supersede the
+answers named; those answers stay as they were written.
+
+- **D1. Colour contrast blocks, and the prototype's text and money colours
+  are raised to 4.5:1** (supersedes the assumption in Q30, A5's and the
+  tickets' `{ id: 'color-contrast', reviewOnFail: true }`, Q7's "`muted`
+  at 62 % opacity", and the prototype's values below; set by the human).
+  The **Accessibility check** blocks on every axe rule, `color-contrast`
+  included: the a11y module holds `test: 'error'` and no rule changes
+  (ticket 04). To make the prototype pass, exactly these values change,
+  each by the least that reaches 4.5:1 (WCAG AA, normal text) against every
+  ground the text sits on: the ground `#1b2a39`, sunken `#16222f`, surface
+  `#213345`, accent-100 `#22384d`, neutral-100 `#243445`, the milestone
+  row, and `--sb-hover` over the ground and over the surface. Every other
+  **Token** keeps its prototype value, the tints included.
+  - `--sb-text-faint` (`color.textFaint`): ink at 42 % → **60 %**,
+    `color-mix(in srgb, #e9f1fa 60%, transparent)`. At 42 % it measured
+    3.07 to 3.63:1; at 60 % the lowest is 4.59:1 (hover over the surface;
+    59 % gives 4.498:1).
+  - `--sb-text-muted` (`color.textMuted`) stays at 62 %: it measures at
+    least 4.79:1 on every ground above.
+  - `--sb-negative` and `--sb-danger` (the same red): `#e8877b` →
+    **`#ed8c80`**, OKLCH lightness +0.015 with chroma and hue kept. At
+    `#e8877b` it measured 4.25:1 on hover over the surface; `#ed8c80`
+    reaches 4.50:1 there. `--sb-negative-tint` and `--sb-danger-tint`
+    keep `#e8877b`, since they are grounds, not text.
+  - Amount's `muted` tone: 62 % opacity → **100 %**, so `muted` shows the
+    **Polarity** colour exactly like `auto`; the `tone` value stays. At
+    62 % green measured 3.05 to 3.91:1 and red 2.52 to 3.22:1; with red
+    only just at 4.5:1, any opacity below 100 % fails.
+- **D2. A projected value is marked by a cue other than colour strength.**
+  With D1, `muted` no longer fades an amount, so a projected value must be
+  told apart from an actual one without lowering contrast: by a cue such as
+  the table's future-row styling below the today marker, or italic. The
+  YearTable (ticket 25) keeps the prototype's future-row styling as that
+  cue: future month rows below today's accent-100 row, with the month
+  label in `--sb-text-muted`. BalanceTable and BalanceChart (feature 17)
+  pick their cue when they are planned; the chart's dashed projection line
+  already is one. The note stands in ticket 25 and in row 17 of
+  `docs/feature-checklist.md`.

@@ -10,15 +10,17 @@ status: open
 ## What to build
 
 Every **Story test** runs axe (plan Phase 2; PRD "Storybook", "Gate
-tests"; design log Q29, Q30, A1, A5, P2).
+tests"; design log Q29, Q30, A1, A5, P2, D1).
 
 - `@storybook/addon-a11y` at the root (Q39), added to `.storybook/main.ts`.
 - The a11y parameters live in a module of their own in `.storybook/` that
   imports nothing and that the preview uses: `test: 'error'`, so any
-  violation fails the **Story test** and **Verify**, and exactly one rule
-  change, `{ id: 'color-contrast', reviewOnFail: true }`, so contrast
-  failures show as "needs review" in the a11y panel instead of failing.
-  The module joins `apps/desktop/tsconfig.web.json` (A1).
+  violation fails the **Story test** and **Verify**, `color-contrast`
+  included, and no rule changes (D1, set by the human; it supersedes Q30's
+  `reviewOnFail`). The module joins `apps/desktop/tsconfig.web.json` (A1).
+- The **Theme** values D1 raises (`textFaint` at 60 %, the red `#ed8c80`,
+  Amount's `muted` at 100 %) arrive with the tickets that first use them
+  (P1); every later **Story** passes the contrast rule with them.
 - `gates/storyTests/` imports that module and pins it, and pins
   `vitest.storybook.config.ts`: the Storybook plugin on `.storybook/`,
   browser mode, the Playwright provider, headless, exactly one Chromium
@@ -41,14 +43,15 @@ an **Advisory** with no fix.
       **License allowlist** lacks stops the builder; an open **Advisory**
       gets an **Audit exception** with its reason, or the builder stops
       when a fix exists; `check:licenses` and `check:audit` pass.
-- [ ] The a11y module holds `test: 'error'` and rule changes exactly
-      `[{ id: 'color-contrast', reviewOnFail: true }]`, imports nothing,
-      and the preview uses it.
-- [ ] The gate test fails when `test` is not `'error'`, when a rule is
-      added, removed or changed, and when any pinned setting of the
-      story-test config changes.
-- [ ] A **Story** with an unnamed control fails its **Story test** (shown
-      in the ticket's Notes, never committed as a failing story).
+- [ ] The a11y module holds `test: 'error'` and no rule changes (D1),
+      imports nothing, and the preview uses it.
+- [ ] The gate test fails when `test` is not `'error'`, when any rule
+      change is added (`color-contrast` with `reviewOnFail` included), and
+      when any pinned setting of the story-test config changes.
+- [ ] A **Story** with an unnamed control fails its **Story test**, and so
+      does a **Story** with text below 4.5:1 contrast, such as ink at the
+      prototype's 42 % (both shown in the ticket's Notes, never committed
+      as a failing story).
 - [ ] The **Mutation score** stays at or above the **Break threshold** of
       83 (`npm run test:mutation`).
 - [ ] `npm run verify` is green.

@@ -22,7 +22,7 @@ Status: `planned` → `in-progress` (feature branch open) → `done` (merged int
 | 14 | uncategorised | UncategorisedPage, sidebar counter, save as exact rule | planned |
 | 15 | imported-files | Archive of original CSVs: download, edit and move, delete file only or file and transactions | planned |
 | 16 | projection | Typical spending (median), mortgage plan, credit card reset, AccountDetail with YearTable and projection assumptions, sparkline | planned |
-| 17 | dashboard | BalanceChart with ranges, toggles and payoff, BalanceTable with edit mode, both persisted | planned |
+| 17 | dashboard | BalanceChart with ranges, toggles and payoff, BalanceTable with edit mode, both persisted; projected values marked by a cue other than colour strength, since contrast blocks (06 design log, D2; the chart's dashed projection line is one) | planned |
 | 18 | saving | Streak rule, goals, StreakStrip, HeadroomMeter, SavingPanel, goal card | planned |
 | 19 | compare | CompareTable with months and years, like-for-like comparison | planned |
 | 20 | import-reminders | Last import per account, stale state, reminder snackbar, Settings page, ReminderSettings | planned |

@@ -2,7 +2,10 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { isRecord } from '../isRecord/isRecord.ts';
 import { readCalendarDate } from '../readCalendarDate/readCalendarDate.ts';
-import type { Violation } from '../reportViolations/reportViolations.ts';
+import {
+  formatViolation,
+  type Violation,
+} from '../reportViolations/reportViolations.ts';
 
 export const QUARANTINE_FILE = 'quality/flaky-quarantine.json';
 export const E2E_FOLDER = 'e2e/';
@@ -137,9 +140,10 @@ function escapeRegExp(text: string): string {
 }
 
 // One regular expression per entry, for Playwright's grepInvert. Playwright
-// matches it against the project name, the file relative to e2e/ and the
-// title, joined by spaces; the pattern holds the file and the title literally,
-// so a title is left out only in its own file.
+// matches it against the project name, the file relative to e2e/, the title
+// and the tags, joined by spaces; the pattern holds the file and the title
+// literally, so a title is left out only in its own file, whatever tags it
+// carries. A `/` in the file matches `/` and `\`, for either platform.
 export function buildQuarantinePatterns(
   entries: readonly QuarantineEntry[],
 ): RegExp[] {
@@ -147,8 +151,27 @@ export function buildQuarantinePatterns(
     const relative = file.startsWith(E2E_FOLDER)
       ? file.slice(E2E_FOLDER.length)
       : file;
-    return new RegExp(
-      `(?:^| )${escapeRegExp(relative)} ${escapeRegExp(title)}$`,
-    );
+    const path = escapeRegExp(relative).replaceAll('/', '[\\\\/]');
+    return new RegExp(`(?:^| )${path} ${escapeRegExp(title)}(?: @\\S+)*$`);
   });
+}
+
+function throwViolations(violations: readonly Violation[]): never {
+  throw new Error(violations.map(formatViolation).join('\n'));
+}
+
+// Loads and reads the Quarantine under `root` and returns its patterns. A
+// Quarantine that cannot be loaded or is malformed throws one error with one
+// `<subject>: <reason>` line per violation, so a run never skips tests
+// silently.
+export function loadQuarantinePatterns(root: string): RegExp[] {
+  const loaded = loadQuarantine(root);
+  if ('violation' in loaded) {
+    return throwViolations([loaded.violation]);
+  }
+  const { entries, violations } = readQuarantine(loaded.quarantine);
+  if (violations.length > 0) {
+    return throwViolations(violations);
+  }
+  return buildQuarantinePatterns(entries);
 }

@@ -32,7 +32,7 @@ Every change goes through the same gate, whether I wrote it or an AI agent did. 
 | Formatting | Prettier (`--check`) | CI | 01 |
 | Linting, zero warnings | ESLint (`--max-warnings 0`) | CI | 01 |
 | Strict types | TypeScript `strict`, `noUncheckedIndexedAccess` | CI | 01 |
-| Money is never a plain number | `Cents` branded type + lint rule | CI | 07 |
+| Money is never a plain number | `Cents` branded type + lint rule | CI | 08 |
 | Architecture layers | dependency-cruiser | CI | 01 |
 | Unit tests | Vitest | CI | 01 |
 | Dependency audit, all severities | `npm audit` + exceptions file with expiry | CI, daily | 02 |
@@ -42,13 +42,13 @@ Every change goes through the same gate, whether I wrote it or an AI agent did. 
 | No data files in git | script: no `*.db`, `*.sqlite`, `*.csv` outside `fixtures/` | CI | 01 |
 | Every commit follows the commit convention | commitlint | CI | 01 |
 | Commits name an existing ticket or refactor step; a PR into `main` needs all of them done | script | CI | 01 |
-| Component tests | Storybook stories as tests (interaction + accessibility) | CI | 05 |
-| Every component has a story | script | CI | 05 |
-| Coverage on changed lines | Vitest coverage | CI | 05 |
+| Component tests | Storybook stories as tests (interaction + accessibility) | CI | 06 |
+| Every component has a story | script | CI | 06 |
+| Coverage on changed lines | Vitest coverage | CI | 06 |
 | End-to-end tests | Playwright driving the Electron app | CI | 04 |
-| Visual regression | Playwright screenshots of Storybook | CI | 20 |
-| Release from CI only | tag → build once → draft release → publish | CI | 20 |
-| SBOM per release | `npm sbom` | release | 20 |
+| Visual regression | Playwright screenshots of Storybook | CI | 21 |
+| Release from CI only | tag → build once → draft release → publish | CI | 21 |
+| SBOM per release | `npm sbom` | release | 21 |
 | Flaky tests quarantined with expiry | quarantine file + expiry check | CI, daily | 04 |
 | License allowlist | script: lockfile licences against `quality/license-allowlist.json` | CI | 02 |
 | Mutation testing | StrykerJS on `packages/domain`, `scripts/` and `gates/` | pull request and nightly, ratchet | 03 |
@@ -88,13 +88,14 @@ Folder structure, file naming and commit rules are in [docs/conventions.md](docs
 Requirements: Node (version in `.nvmrc`), npm.
 
 ```bash
-npm ci
-node_modules/.bin/install-electron  # Electron 45 downloads its binary on first use, not during npm ci
+npm ci              # installs the Electron binary too, through the postinstall script
 npm run dev          # start the app with hot reload
 npm run storybook    # browse every component in isolation
 npm run verify       # everything CI checks, except end-to-end tests
 npm run verify:full  # verify + build + end-to-end tests
 ```
+
+`npm run dev` opens a debug port for DevTools tools on `127.0.0.1`: set `DASHCASH_DEBUG_PORT` to move it from its default 9222.
 
 Tests never use real bank data. Fixtures in `fixtures/` are invented, and the app's clock is fixed in tests, so results don't depend on the day they run.
 

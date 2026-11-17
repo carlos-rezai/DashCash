@@ -63,8 +63,9 @@ export type ElectronParts<Window extends MainWindow & FocusableWindow> = {
 };
 
 // Resolves the Data folder first (a relative override ends in the Startup
-// error); takes the Single-instance lock on it (a second process quits here);
-// registers the App protocol's scheme; opens the Debug port in dev; once the
+// error); opens the Debug port in dev (an invalid port ends in the Startup
+// error); takes the Single-instance lock on the Data folder (a second process
+// quits here); registers the App protocol's scheme; once the
 // app is ready, creates the Data folder, opens and migrates the Database
 // (closed on will-quit; a failure ends in the Startup error); once the
 // Database is open, serves the App protocol, hardens the session, registers
@@ -91,6 +92,11 @@ export function startApp<Window extends MainWindow & FocusableWindow>(
       dataFolder.cause,
       env['DASHCASH_DATA_FOLDER'] ?? '',
     );
+    return;
+  }
+  const debugPort = enableDebugPort(app, env);
+  if (debugPort !== undefined) {
+    showStartupError(dialog, app, debugPort.cause, dataFolder.folder);
     return;
   }
   if (dataFolder.overridden) {
@@ -123,7 +129,6 @@ export function startApp<Window extends MainWindow & FocusableWindow>(
     });
   });
   registerAppProtocol(protocol);
-  enableDebugPort(app, env);
   app.on('window-all-closed', () => {
     app.quit();
   });

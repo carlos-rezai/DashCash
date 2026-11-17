@@ -5,6 +5,7 @@ import {
   runGate,
   type Violation,
 } from '../reportViolations/reportViolations.ts';
+import { findEntryDateProblems } from '../findEntryDateProblems/findEntryDateProblems.ts';
 import { isRecord } from '../isRecord/isRecord.ts';
 import { readCalendarDate } from '../readCalendarDate/readCalendarDate.ts';
 
@@ -13,7 +14,6 @@ const NPM_AUDIT = 'npm audit';
 const RUN_AGAIN = 'run `npm run check:audit` to check the audit';
 const GHSA_ID = /^GHSA-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}$/;
 const MAX_EXCEPTION_DAYS = 90;
-const MS_PER_DAY = 86_400_000;
 
 type AuditException = { advisory: string; expires: string };
 
@@ -109,19 +109,12 @@ function findEntryProblems(
     );
   }
   if (added !== undefined && expires !== undefined) {
-    if (added > today) {
-      problems.push(buildEntryViolation(index, 'added', 'is later than today'));
-    }
-    if (expires < added) {
-      problems.push(buildEntryViolation(index, 'expires', 'is before added'));
-    } else if (expires - added > MAX_EXCEPTION_DAYS * MS_PER_DAY) {
-      problems.push(
-        buildEntryViolation(
-          index,
-          'expires',
-          `is more than ${String(MAX_EXCEPTION_DAYS)} days after added`,
-        ),
-      );
+    for (const { field, why } of findEntryDateProblems(
+      { added, expires },
+      today,
+      MAX_EXCEPTION_DAYS,
+    )) {
+      problems.push(buildEntryViolation(index, field, why));
     }
   }
   return problems;

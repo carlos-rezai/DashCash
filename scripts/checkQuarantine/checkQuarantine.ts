@@ -1,3 +1,4 @@
+import { findEntryDateProblems } from '../findEntryDateProblems/findEntryDateProblems.ts';
 import { readCalendarDate } from '../readCalendarDate/readCalendarDate.ts';
 import {
   buildEntryViolation,
@@ -14,7 +15,6 @@ import {
 import { listTrackedPaths } from '../runGit/runGit.ts';
 
 const MAX_QUARANTINE_DAYS = 30;
-const MS_PER_DAY = 86_400_000;
 const SPEC_SUFFIX = '.spec.ts';
 const TICKET_PATH = /^docs\/features\/\d{2}-[^/]+\/\d{2}-[^/]+\.md$/;
 
@@ -24,23 +24,13 @@ function findDateViolations(
   index: number,
   today: number,
 ): Violation[] {
-  const violations: Violation[] = [];
   const added = readCalendarDate(entry.added) ?? Number.NaN;
   const expires = readCalendarDate(entry.expires) ?? Number.NaN;
-  if (added > today) {
-    violations.push(buildEntryViolation(index, 'added', 'is later than today'));
-  }
-  if (expires < added) {
-    violations.push(buildEntryViolation(index, 'expires', 'is before added'));
-  } else if (expires - added > MAX_QUARANTINE_DAYS * MS_PER_DAY) {
-    violations.push(
-      buildEntryViolation(
-        index,
-        'expires',
-        `is more than ${String(MAX_QUARANTINE_DAYS)} days after added`,
-      ),
-    );
-  }
+  const violations = findEntryDateProblems(
+    { added, expires },
+    today,
+    MAX_QUARANTINE_DAYS,
+  ).map(({ field, why }) => buildEntryViolation(index, field, why));
   if (expires < today) {
     violations.push(
       buildEntryViolation(index, 'expires', `expired on ${entry.expires}`),
@@ -101,16 +91,32 @@ export function findQuarantineViolations(
   return violations;
 }
 
+export type CheckQuarantineDependencies = {
+  root: string;
+  today: string;
+  listTrackedPaths: (root: string) => readonly string[];
+};
+
+// Loads the Quarantine under the root and judges it against today and the
+// paths git tracks there. A Quarantine that cannot be loaded is one violation.
+export function checkQuarantine({
+  root,
+  today,
+  listTrackedPaths: listPaths,
+}: CheckQuarantineDependencies): Violation[] {
+  const loaded = loadQuarantine(root);
+  if ('violation' in loaded) {
+    return [loaded.violation];
+  }
+  return findQuarantineViolations(loaded.quarantine, today, listPaths(root));
+}
+
 if (import.meta.main) {
-  await runGate(() => {
-    const loaded = loadQuarantine(process.cwd());
-    if ('violation' in loaded) {
-      return [loaded.violation];
-    }
-    return findQuarantineViolations(
-      loaded.quarantine,
-      new Date().toISOString().slice(0, 10),
-      listTrackedPaths(process.cwd()),
-    );
-  });
+  await runGate(() =>
+    checkQuarantine({
+      root: process.cwd(),
+      today: new Date().toISOString().slice(0, 10),
+      listTrackedPaths,
+    }),
+  );
 }

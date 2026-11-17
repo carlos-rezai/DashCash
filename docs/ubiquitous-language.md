@@ -46,6 +46,8 @@
 | **Pinned action** (new) | A workflow `uses:` that names a full commit SHA, with its release as a trailing comment. | Locked action, tagged action |
 | **Daily run** (updated) | The scheduled workflow on `main` whose jobs run the audit, the **Quarantine check**, a full-history secret scan and the **Mutation run**. | Nightly, cron job |
 | **Renovate PR** (new) | A pull request from a `renovate/*` branch that updates dependencies, its commits naming the feature `supply-chain`. | Bot PR, dependency PR |
+| **Commit-message parts** (new) | Renovate's prefix, action, topic, extra and suffix, from which it assembles every commit message and **Renovate PR** title; `renovate.json` sets only these, never the whole message or title. | Commit template, PR title setting |
+| **Hold rule** (new) | A Renovate rule that keeps a dependency back: Node and TypeScript majors disabled, `@types/node` capped at the major in `.nvmrc`; a human lifts it in a ticket. | Pin, freeze, ignore rule |
 
 ## Mutation testing
 
@@ -60,6 +62,8 @@
 | **Mutation report** (new) | The HTML report of a **Mutation run**, listing every **Surviving mutant**; the nightly run keeps it as a CI artifact. | Stryker output, dashboard |
 | **Break threshold** (new) | The lowest **Mutation score** a **Mutation run** passes with; it is only ever raised, and lowering it needs a written decision. | Minimum score, ratchet value |
 | **Informative gate** (new) | A gate that reports its result without failing, as **Mutation testing** does before its **Break threshold** is set. | Soft gate, warning mode |
+| **Gate wiring** (new) | The npm scripts and CI workflow jobs that run the gates, each part pinned by the gate test of its own folder under `gates/`. | CI setup, pipeline config |
+| **Problem finder** (new) | A function in a gate module that names, one line each, what a configuration lacks or holds beyond its **Gate wiring**; **Shipping code**, so **Mutation testing** mutates it. | Helper, matcher, validator |
 | **Fail closed** (new) | What a gate does with input it cannot judge, such as a malformed lockfile or exceptions file: it fails instead of passing. | Strict mode, defensive check |
 
 ## Local feedback and agent guards
@@ -67,6 +71,7 @@
 | Term | Definition | Aliases to avoid |
 | --- | --- | --- |
 | **Commit-msg hook** (new) | The local git hook that lints the message being committed with the commitlint config; feedback before the push, not a gate. | Pre-commit hook, local gate |
+| **Dangerous-git hook** (new) | The Claude Code hook that refuses an agent's destructive git commands, and a `git push` that is chained with another command, that pushes to `main`, or that runs on a branch other than `feat/*` or `refactor/*`. | Git guard, push blocker |
 | **Claude folder guard** (new) | The Claude Code hook that refuses an agent's change under the project's `.claude/` or to the home settings. | Edit blocker, sandbox |
 | **Home settings** (new) | The user-level Claude Code settings file `~/.claude/settings.json`. | Global config, user config |
 
@@ -91,7 +96,7 @@
 | **Channel** (new) | One named request and response of the **Contract**, written `<area>:<action>`, such as `app:info`. | Endpoint, route, IPC event |
 | **Bridge** (new) | The object `window.dashcash` the **Preload** exposes; its `invoke` sends a request on a **Channel** the **Contract** lists and refuses any other. | ipcRenderer, preload API |
 | **Sender check** (new) | The **Main process** refusing an IPC request whose frame is not on the app's origin, before any handler runs. | Origin check, auth |
-| **App protocol** (new) | The custom scheme `app://dashcash` that serves the built **Renderer** files and nothing outside their folder. | File URL, local server |
+| **App protocol** (updated) | The custom scheme `app://dashcash` that serves the built **Renderer** files to the host `dashcash` only, and nothing outside their folder. | File URL, local server |
 | **App origins** (new) | The origins the app trusts as its own: `app://dashcash` always, plus the dev server's origin in `npm run dev`. | Allowed hosts, whitelist |
 | **CSP** (new) | The Content Security Policy meta tag in the **Renderer**'s HTML, listing every source the page may load; anything unlisted is blocked. | Security header |
 | **Secure defaults** (new) | The Electron security settings every window and session gets: sandbox and context isolation on, Node integration off, navigation, new windows, webviews and permissions refused. | Hardening flags |
@@ -101,9 +106,10 @@
 | **Schema version** (new) | The number of the last **Migration** applied to a **Database**, kept in SQLite's `user_version`. | DB version |
 | **App version** (new) | The version of the desktop **Workspace member**, which the `app:info` **Channel** returns. | Build number, release |
 | **App build** (new) | `npm run build`: the bundled main, preload and renderer in the desktop member's `out/` folder, which the **End-to-end tests** drive; not the installer. | Bundle, release build |
+| **Electron binary** (new) | The Electron executable inside the installed `electron` package, which `npm ci` installs through the root `postinstall` script, so no test downloads it. | Electron download, runtime |
 | **Single-instance lock** (new) | Electron's lock per **Data folder** that makes a second start focus the running window and quit. | Mutex, instance guard |
-| **Debug port** (new) | Chromium's remote debugging port 9222 on loopback, open only when the app runs from `npm run dev`. | Inspector, DevTools port |
-| **Startup error** (new) | The native error box "DashCash couldn't start" shown, before quitting, when the **Data folder** or the **Database** cannot be opened or migrated. | Crash dialog |
+| **Debug port** (updated) | Chromium's remote debugging port on loopback, 9222 unless `DASHCASH_DEBUG_PORT` names another, open only when the app runs from `npm run dev`. | Inspector, DevTools port |
+| **Startup error** (updated) | The native error box "DashCash couldn't start" shown, before quitting, when the **Data folder** or the **Database** cannot be opened or migrated, or when `DASHCASH_DEBUG_PORT` is no valid port in `npm run dev`. | Crash dialog |
 
 ## End-to-end tests and quarantine
 
@@ -115,6 +121,8 @@
 | **Flaky test** (new) | A test that passes and fails on the same code. | Intermittent, unstable test |
 | **Quarantine** (new) | The flaky-quarantine file in `quality/`: the **Flaky tests** left out of the end-to-end run until fixed or deleted. | Skip list, ignore list |
 | **Quarantine entry** (new) | One test in the **Quarantine**, with its file, title, ticket, owner, the date it was added and an **Expiry date** at most 30 days later. | Exception, waiver |
+| **Quarantine pattern** (new) | The regular expression built from one **Quarantine entry** that Playwright's `grepInvert` matches against a test's file, title and tags; it accepts either path separator and any tags after the title. | Grep, filter, skip pattern |
+| **Entry date rules** (new) | The rules an **Audit exception** and a **Quarantine entry** share: added no later than today, and an **Expiry date** not before the added date and at most the limit after it (90 or 30 days). | Date checks, expiry logic |
 | **Quarantine check** (new) | The gate, in **Verify** and the **Daily run**, that fails on a malformed **Quarantine**, a missing test or ticket file, or a **Quarantine entry** past its **Expiry date**. | Flaky check, expiry job |
 
 ## Relationships
@@ -137,6 +145,10 @@
 - (new) A **Database**'s **Schema version** is the number of **Migrations** applied; a **Schema version** above the newest **Migration**, or a failing **Migration**, ends in the **Startup error**.
 - (new) **Verify full** builds the **App build** once and runs every **End-to-end test** against it, each in its own **Data folder** from the **App fixture**.
 - (new) A **Quarantine entry** names exactly one **End-to-end test** and one **Ticket**; the **Quarantine check** fails **Verify** and the **Daily run** from the day after its **Expiry date**.
+- (new) Each **Quarantine entry** gives exactly one **Quarantine pattern**; the **Audit** and the **Quarantine check** apply the same **Entry date rules**, each with its own limit, and both take today as a parameter.
+- (new) Every **Renovate PR** title is assembled from the **Commit-message parts**; a **Hold rule** keeps a dependency from getting a PR for the held update.
+- (new) Each part of the **Gate wiring** has one gate folder; its **Problem finder**, if it has one, is the module beside the test.
+- (new) The **Dangerous-git hook** and the **Claude folder guard** are Claude Code hooks; neither is a **Gate**.
 
 ## Example dialogue
 
@@ -160,11 +172,17 @@
 > **Domain expert:** "No. A **Flaky test** is broken. Put it in the **Quarantine** with a **Ticket**, an owner and an **Expiry date** at most 30 days out; it leaves the run, and the day after that date the **Quarantine check** turns **Verify** and the **Daily run** red until the test is fixed or deleted."
 > **Dev:** "Could the failure come from another test's data?"
 > **Domain expert:** "Not if it uses the **App fixture**: each test gets its own **Data folder**, so its own **Database** and its own **Single-instance lock**."
+> **Dev:** "The flaky test is tagged `@slow` and lives in a subfolder of `e2e/`. Will it still run on my Windows machine?"
+> **Domain expert:** "No. Its **Quarantine pattern** accepts either path separator and any tags after the title. The **Quarantine check** judges the entry by the same **Entry date rules** as an **Audit exception**, only with 30 days instead of 90."
+> **Dev:** "Renovate opened nothing for a new TypeScript major. Is it broken?"
+> **Domain expert:** "That is a **Hold rule**: TypeScript majors wait until typescript-eslint supports them, and a human lifts the rule. Every PR Renovate does open gets its title from the **Commit-message parts**, so it still reads `chore: [supply-chain] update npm dependencies`."
+> **Dev:** "And if I break the daily job's wiring?"
+> **Domain expert:** "Its gate test fails, and the **Problem finder** beside it names the missing step. Because the finder is **Shipping code**, **Mutation testing** also checks that its tests would notice."
 
 ## Flagged ambiguities
 
 - "feature" means both a checklist **Feature** and the renderer's `features/` **Layer**. Use **Feature** for the checklist row; say "feature module" or the folder path `features/<name>/` for the layer.
-- "step" means both a **Refactor step** and a step of the import wizard (10). Always qualify it: **Refactor step** or "wizard step".
+- "step" means both a **Refactor step** and a step of the import wizard (11). Always qualify it: **Refactor step** or "wizard step".
 - "layer" means both a renderer **Layer** and a test layer (domain, story, end-to-end) in `docs/conventions.md`. Use **Layer** for the renderer; say "test layer" for the other.
 - "status" means both **Ticket status** (`open`, `in-progress`, `done`) and **Feature status** (`planned`, `in-progress`, `done`, `refactored`). Name which one.
 - "issue" appears in skill names (`prd-to-issues`, `issue-loop`) but the files are **Tickets**; GitHub issues are not used. Say **Ticket**.
@@ -172,17 +190,21 @@
 - "hook" (new) means a git hook (the **Commit-msg hook**) and a Claude Code hook (the **Claude folder guard**, the dangerous-git hook). Name which one; neither is a **Gate**, because CI decides.
 - "exception" (new) means an **Audit exception** and a thrown error. Say **Audit exception** for the file entry.
 - "allowlist" (new) is only the **License allowlist**; accepted advisories are **Audit exceptions**, not an allowlist.
-- "threshold" (new) means the **Break threshold** and Stryker's `high` and `low` thresholds, which only colour the **Mutation report**; later also the coverage threshold (05). Say **Break threshold** for the one that fails a run.
+- "threshold" (new) means the **Break threshold** and Stryker's `high` and `low` thresholds, which only colour the **Mutation report**; later also the coverage threshold (06). Say **Break threshold** for the one that fails a run.
 - "coverage" (new) means test coverage of lines and Stryker's per-test coverage of **Mutants**. A **Mutation score** is not coverage; a **Mutant** no test reaches is a **Surviving mutant**.
 - "nightly" and "daily" (new) name the same schedule: the **Mutation run** is a job of the **Daily run**, not a workflow of its own.
 - "mutation" (new) is the technique; one edit is a **Mutant**. Avoid "a mutation" for a single edit.
 - "workflow" (new) means a GitHub Actions file and the planning-and-build workflow of `docs/conventions.md`. Say "CI workflow" for the file, or name it: the push workflow, the pull-request workflow, the **Daily run**.
 - "app" (new) means the product, Electron's `app` object, the renderer's `App/` **Layer**, the `app:` area of **Channels** and the **App protocol**. Say "the app" for the product only, and name the others.
-- "data folder" (new): the settings page labels it "Database folder" (verbatim copy, 22), and Electron calls its default location `userData`. In code and docs it is the **Data folder**; `userData` is only its default.
+- "data folder" (new): the settings page labels it "Database folder" (verbatim copy, 23), and Electron calls its default location `userData`. In code and docs it is the **Data folder**; `userData` is only its default.
 - "contract", "bridge" and "API" (new) are three things: the **Contract** is the types package, the **Bridge** is the runtime object in the page, and the renderer's `api/` folder holds the calls a feature makes through the **Bridge**. Avoid "API" alone.
 - "version" (new) means the **App version**, the **Schema version** and a dependency's version. Name which.
-- "build" (new) means the **App build**, the issue-loop's build step and the installer (20). Say **App build** for `npm run build`, "installer" for 20.
+- "build" (new) means the **App build**, the issue-loop's build step and the installer (21). Say **App build** for `npm run build`, "installer" for 21.
 - "quarantine" and "exception" (new): a **Quarantine entry** takes a **Flaky test** out of the run; an **Audit exception** accepts an **Advisory**. Both expire, in different files, with different limits (30 and 90 days).
 - "harness" (new): the checklist's "Playwright harness" is the Playwright config, the **App fixture** and `npm run test:e2e` together; the **App fixture** is only the per-test part.
 - "flow" (new): a **User flow** is what one **End-to-end test** covers; a behaviour inside one component or module is never one, and gets a story or a Vitest test.
+- "feature numbers" (new): on 2026-11-15 gate-maintenance was inserted as 05, and the planned features moved up by one (design-system 06 to data-settings 23). The design logs, PRDs, plans and tickets of 01 to 04 keep the numbers of their day; read their 05 to 22 as 06 to 23.
+- "tag" (new) means a Playwright test tag (`@slow`), which a **Quarantine pattern** accepts, and a git tag, which only a release makes (21). Name which one.
+- "hold" and "disabled" (new) both name a **Hold rule**, whatever Renovate option it uses (`enabled: false` or `allowedVersions`). Say **Hold rule**.
+- "hook" (updated): the dangerous-git hook is now the **Dangerous-git hook**.
 - "debug port" (new) is only the **Debug port** of `npm run dev`; the port Playwright opens to drive the **App build** is Playwright's own and not part of the app.

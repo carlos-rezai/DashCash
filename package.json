@@ -31,6 +31,7 @@
     "check:commits": "node scripts/checkCommits/checkCommits.ts",
     "check:tickets": "node scripts/checkTickets/checkTickets.ts",
     "check:pr": "node scripts/checkPullRequest/checkPullRequest.ts",
+    "postinstall": "install-electron",
     "prepare": "git config core.hooksPath .githooks"
   },
   "devDependencies": {

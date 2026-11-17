@@ -1,10 +1,15 @@
 export type Violation = { subject: string; reason: string };
 
+// The one-line format of a violation: `<subject>: <reason>`.
+export function formatViolation({ subject, reason }: Violation): string {
+  return `${subject}: ${reason}`;
+}
+
 // Writes one `<subject>: <reason>` line per violation to standard error and
 // returns the exit code a gate entry ends with: 1 with violations, 0 without.
 export function reportViolations(violations: readonly Violation[]): number {
-  for (const { subject, reason } of violations) {
-    console.error(`${subject}: ${reason}`);
+  for (const violation of violations) {
+    console.error(formatViolation(violation));
   }
   return violations.length > 0 ? 1 : 0;
 }

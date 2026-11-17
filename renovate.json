@@ -7,8 +7,9 @@
   ],
   "semanticCommits": "disabled",
   "minimumReleaseAge": "14 days",
-  "schedule": ["before 6am on monday"],
+  "schedule": ["on monday"],
   "timezone": "Europe/Berlin",
+  "commitMessagePrefix": "chore: [supply-chain]",
   "packageRules": [
     {
       "matchManagers": ["npm"],
@@ -23,33 +24,57 @@
         "bump",
         "replacement"
       ],
-      "groupName": "npm packages",
-      "commitMessage": "chore: [supply-chain] update npm dependencies",
-      "prTitle": "chore: [supply-chain] update npm dependencies"
+      "groupName": "npm dependencies",
+      "commitMessageAction": "update",
+      "commitMessageExtra": "",
+      "commitMessageSuffix": ""
     },
     {
       "matchManagers": ["github-actions"],
       "groupName": "github actions",
-      "commitMessage": "chore: [supply-chain] update github actions",
-      "prTitle": "chore: [supply-chain] update github actions"
+      "commitMessageAction": "update",
+      "commitMessageExtra": "",
+      "commitMessageSuffix": ""
     },
     {
       "matchManagers": ["nvm", "npm"],
       "matchDepNames": ["node"],
       "enabled": true,
       "groupName": "node",
-      "commitMessage": "chore: [supply-chain] update node",
-      "prTitle": "chore: [supply-chain] update node"
+      "commitMessageAction": "update",
+      "commitMessageExtra": "",
+      "commitMessageSuffix": ""
+    },
+    {
+      "matchManagers": ["npm"],
+      "matchDepNames": ["@types/node"],
+      "allowedVersions": "24.x"
+    },
+    {
+      "matchManagers": ["npm"],
+      "matchDepNames": ["typescript"],
+      "matchUpdateTypes": ["major"],
+      "enabled": false
+    },
+    {
+      "matchManagers": ["nvm", "npm"],
+      "matchDepNames": ["node"],
+      "matchUpdateTypes": ["major"],
+      "enabled": false
     }
   ],
   "lockFileMaintenance": {
     "enabled": true,
-    "commitMessage": "chore: [supply-chain] refresh the lockfile",
-    "prTitle": "chore: [supply-chain] refresh the lockfile"
+    "schedule": ["on monday"],
+    "commitMessageAction": "refresh",
+    "commitMessageTopic": "the lockfile",
+    "commitMessageExtra": "",
+    "commitMessageSuffix": ""
   },
   "vulnerabilityAlerts": {
-    "commitMessage": "chore: [supply-chain] fix vulnerable dependencies",
-    "prTitle": "chore: [supply-chain] fix vulnerable dependencies",
+    "commitMessageAction": "fix",
+    "commitMessageTopic": "vulnerable dependencies",
+    "commitMessageExtra": "",
     "commitMessageSuffix": ""
   }
 }

@@ -77,7 +77,7 @@ so they also run `npm run verify:full`. No step changes `scripts/` or
 **Break threshold** stays 83.
 
 - [x] 01 pin user data on an invalid debug port
-- [ ] 02 name the debug port variable once
+- [x] 02 name the debug port variable once
 - [ ] 03 name the debug port failure type
 - [ ] 04 rename the debug port result in start app
 - [ ] 05 split the app host rule from the path rules

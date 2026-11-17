@@ -76,7 +76,7 @@ so they also run `npm run verify:full`. No step changes `scripts/` or
 `gates/`, which Stryker mutates, so no step needs a **Mutation run**; the
 **Break threshold** stays 83.
 
-- [ ] 01 pin user data on an invalid debug port
+- [x] 01 pin user data on an invalid debug port
 - [ ] 02 name the debug port variable once
 - [ ] 03 name the debug port failure type
 - [ ] 04 rename the debug port result in start app

@@ -1,8 +1,9 @@
 import { join, relative, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
-// The App protocol (design log Q16): the scheme `app`, origin
-// `app://dashcash`, serves the built renderer folder and nothing else.
+// The App protocol (04 design log Q16, 05 design log Q5 to Q7): the scheme
+// `app`, origin `app://dashcash`, serves the built renderer folder to the host
+// `dashcash` only, and nothing else.
 const SCHEME = 'app';
 const HOST = 'dashcash';
 
@@ -89,8 +90,8 @@ export function registerAppProtocol(
 }
 
 // Registers the handler that serves the renderer folder to the host
-// `dashcash` and answers 404 for another host and for any path outside it. Electron requires the app to be ready first; the
-// caller decides when.
+// `dashcash` and answers 404 for another host and for any path outside it.
+// Electron requires the app to be ready first; the caller decides when.
 export function serveAppProtocol(
   { protocol, net }: AppProtocolElectron,
   rendererFolder: string,

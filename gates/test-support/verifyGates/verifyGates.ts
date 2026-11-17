@@ -5,6 +5,7 @@ export const VERIFY_GATES = [
   'lint',
   'typecheck',
   'lint:deps',
+  'check:stories',
   'test',
   'test:stories',
   'check:commits',

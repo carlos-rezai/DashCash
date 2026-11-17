@@ -25,6 +25,7 @@ const GATE_COMMANDS: Record<string, string> = {
     'depcruise --config .dependency-cruiser.js apps packages scripts e2e',
   test: 'vitest run',
   'test:stories': 'vitest run --config vitest.storybook.config.ts',
+  'check:stories': 'node scripts/checkStories/checkStories.ts',
   'check:commits': 'node scripts/checkCommits/checkCommits.ts',
   'check:tickets': 'node scripts/checkTickets/checkTickets.ts',
   'check:data-files': 'node scripts/checkDataFiles/checkDataFiles.ts',
@@ -49,11 +50,19 @@ describe('verify scripts', () => {
     );
   });
 
-  it('runs the quarantine check as the last of the thirteen gates of verify', () => {
+  it('runs the quarantine check as the last of the fourteen gates of verify', () => {
     const commands = chainedCommands(scripts.verify);
 
-    expect(commands).toHaveLength(13);
+    expect(commands).toHaveLength(14);
     expect(commands.at(-1)).toBe('npm run check:quarantine');
+  });
+
+  it('runs the Story check right after the dependency lint in verify', () => {
+    const commands = chainedCommands(scripts.verify);
+
+    expect(commands[commands.indexOf('npm run lint:deps') + 1]).toBe(
+      'npm run check:stories',
+    );
   });
 
   it('runs the Story tests right after the unit tests in verify', () => {
@@ -105,7 +114,7 @@ describe('verify scripts', () => {
 
   it('runs a Mutation run with Stryker from test:mutation, and from neither verify nor verify:full', () => {
     expect(scripts['test:mutation']).toBe('stryker run stryker.config.js');
-    expect(chainedCommands(scripts.verify)).toHaveLength(13);
+    expect(chainedCommands(scripts.verify)).toHaveLength(14);
     expect(scripts.verify).not.toMatch(/test:mutation|stryker/);
     expect(scripts['verify:full']).not.toMatch(/test:mutation|stryker/);
   });

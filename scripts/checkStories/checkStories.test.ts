@@ -80,7 +80,7 @@ const NOT_COMPONENTS: [string, string][] = [
   ],
   ['a styles file', `${RENDERER}/primitives/Button/Button.styles.ts`],
   ['a test file', `${RENDERER}/primitives/Button/Button.test.tsx`],
-  ['a stories file', `${RENDERER}/primitives/Button/Button.stories.tsx`],
+  ['a stories file', `${RENDERER}/primitives/Spinner/Spinner.stories.tsx`],
   ['a TypeScript module', `${RENDERER}/primitives/Button/Button.ts`],
   ['a category barrel', `${RENDERER}/primitives/index.ts`],
   ['a feature barrel', `${RENDERER}/features/import/index.ts`],

@@ -23,7 +23,11 @@ Q26, P1, I5).
   Condensed 600 and Barlow 400 and 500 with the type scale 42 · 34 · 22 ·
   19 · 15 · 14 · 13 · 12 · 11; the 0.85× spacing scale, square corners, the
   shadows, the **Control heights**, SPEC §5's durations and the z-indices.
-  Keys per Q11, values exactly as written, `color-mix()` strings kept.
+  Keys per Q11, values exactly as written, `color-mix()` strings kept,
+  except D1's raised values, set by the human: `textFaint` is
+  `color-mix(in srgb, #e9f1fa 60%, transparent)` (not 42 %), `negative`
+  and `danger` are `#ed8c80` (not `#e8877b`); `textMuted` stays at 62 %
+  and both red tints keep `#e8877b`.
 - `tokens/theme/theme.stories.tsx`, titled `Tokens`, shows the inventory's
   colour tiles (each with its name and role), the type scale lines and the
   spacing bars (each with its name and px), verbatim, every value read from
@@ -42,7 +46,10 @@ Touches no gate file.
       **Token** missing from `theme` fails it.
 - [ ] (review) Every variable of `dashcash-dark.css` over Industry's
       `styles.css` is a **Token** with its key per Q11 and its value
-      exactly as written, `color-mix()` strings kept.
+      exactly as written, `color-mix()` strings kept, except D1's three
+      raised values.
+- [ ] The `Tokens` **Story** passes the **Accessibility check**, contrast
+      included (D1).
 - [ ] (review) No component's styles hold a literal colour, size or
       spacing; every value comes from the **Theme**.
 - [ ] `npm run verify` is green.

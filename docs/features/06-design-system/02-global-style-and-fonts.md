@@ -1,5 +1,5 @@
 ---
-status: in-progress
+status: done
 ---
 # Global style and self-hosted fonts
 
@@ -38,16 +38,16 @@ This ticket is the approval to change exactly: `apps/desktop/package.json`
 
 ## Acceptance criteria
 
-- [ ] A RED commit adds the `Styles/GlobalStyle` **Stories**, which fail at
+- [x] A RED commit adds the `Styles/GlobalStyle` **Stories**, which fail at
       their assertions.
-- [ ] Both font packages are exact dev dependencies of the desktop member,
+- [x] Both font packages are exact dev dependencies of the desktop member,
       the newest release at least 14 days old on the day of building;
       every licence the lockfile gains is listed in the ticket's Notes;
       `OFL-1.1` joins the **License allowlist**, any other new licence
       stops the builder; an open **Advisory** gets an **Audit exception**
       with its reason, or the builder stops when a fix exists;
       `check:licenses` and `check:audit` pass.
-- [ ] The **Play functions** show: the page on the ground `#1b2a39` in the
+- [x] The **Play functions** show: the page on the ground `#1b2a39` in the
       ink `#e9f1fa`; body text in Barlow, the heading in Barlow Condensed;
       the link in the accent; keyboard focus draws a 2 px accent outline at
       offset 2; the disabled button has the `not-allowed` cursor; Barlow
@@ -55,7 +55,16 @@ This ticket is the approval to change exactly: `apps/desktop/package.json`
       (`document.fonts`).
 - [ ] (review) `GlobalStyle` holds only element-level rules, every value
       from the **Theme**; no Google Fonts import and no class rule exist.
-- [ ] `npm run verify` is green.
+- [x] `npm run verify` is green.
+
+## Notes
+
+- `@fontsource/barlow` 5.3.0 (2026-07-19) and `@fontsource/barlow-condensed`
+  5.3.0 (2026-07-19), the newest releases, both older than 14 days.
+- Licences the lockfile gains: `OFL-1.1` (both packages); added to the
+  **License allowlist**. No other new licence.
+- No **Advisory** is open for either package; `quality/audit-exceptions.json`
+  is unchanged.
 
 ## Blocked by
 

@@ -35,7 +35,7 @@ function buildAppEnvironment(dataFolder: string): Record<string, string> {
 type AppFixtures = { app: ElectronApplication; window: Page };
 
 export const test = base.extend<AppFixtures>({
-  app: async ({ playwright }, use) => {
+  app: async ({ playwright }, provide) => {
     const dataFolder = await mkdtemp(join(tmpdir(), DATA_FOLDER_PREFIX));
     try {
       const app = await playwright._electron.launch({
@@ -43,7 +43,7 @@ export const test = base.extend<AppFixtures>({
         env: buildAppEnvironment(dataFolder),
       });
       try {
-        await use(app);
+        await provide(app);
       } finally {
         await app.close();
       }
@@ -51,8 +51,8 @@ export const test = base.extend<AppFixtures>({
       await rm(dataFolder, { recursive: true, force: true });
     }
   },
-  window: async ({ app }, use) => {
-    await use(await app.firstWindow());
+  window: async ({ app }, provide) => {
+    await provide(await app.firstWindow());
   },
 });
 

@@ -37,3 +37,4 @@ Status: `planned` → `in-progress` (feature branch open) → `done` (merged int
 | Feature | Contents |
 | --- | --- |
 | manual-entry | Add a transaction by hand, reconciled with the matching CSV row on the next import |
+| gate-maintenance-2 | `scripts/readWorkflow/` verb-first names; one `GITLEAKS_ACTION` and `isGitleaksStep`, in the secret-scan finder; the Renovate gate's repeated filter and fail function shared; the Electron install finder on the shared readers; a dependency-cruiser `no-circular` rule instead of the protocol test that reads its own source; `.dependency-cruiser.js` covering `gates/`; the flaky end-to-end gate test from 05 ticket 11; `git commit` as its own command in the dangerous-git hook (built by the human); "report verify's exit code" and "write files with the Write tool, never a heredoc" in the build, refactor and planner prompts (built by the human) |

@@ -154,3 +154,21 @@ export const AllIcons: Story = {
     await expect(new Set(glyphs.map((svg) => svg?.innerHTML)).size).toBe(41);
   },
 };
+
+// The prototype draws icons from 12 to 22 px; 20 is one of its sizes.
+export const Sized: Story = {
+  args: { glyph: 'dashboard', size: 20 },
+  render: (args) => (
+    <div aria-label="Sized icon">
+      <Icon {...args} />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const svgs = canvas.getByLabelText('Sized icon').querySelectorAll('svg');
+
+    await expect(svgs).toHaveLength(1);
+    await expect(svgs.item(0).getAttribute('width')).toBe('20');
+    await expect(svgs.item(0).getAttribute('height')).toBe('20');
+  },
+};

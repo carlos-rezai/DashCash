@@ -123,7 +123,7 @@ status: open   # open | in-progress | done
 - A test that proves a configuration gate lives in `gates/<gate>/`, e.g.
   `gates/formatting/formatting.test.ts`. An executable gate is a script in
   `scripts/<module>/` with its test beside it.
-- No `index.ts` per module. Category folders (`primitives/`, `components/`, `utils/`, `tokens/`) have one barrel each.
+- No `index.ts` per module. Category folders (`primitives/`, `components/`, `utils/`, `tokens/`) have one barrel each, `index.ts`.
 - Each feature has one `index.ts`; never import from inside another feature **(enforced)**.
 - `test-support/` is never imported by shipping code **(enforced)**.
 - An IPC call with one caller stays in its feature's `api/`; it moves to `renderer/api/` when a second feature needs it.

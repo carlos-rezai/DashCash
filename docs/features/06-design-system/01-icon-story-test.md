@@ -1,5 +1,5 @@
 ---
-status: in-progress
+status: done
 ---
 # The Icon as a story test
 

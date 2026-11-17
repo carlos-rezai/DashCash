@@ -1,4 +1,4 @@
-import type { Theme } from '../../tokens/tokens.ts';
+import type { Theme } from '../../tokens/index.ts';
 
 // styled-components' DefaultTheme is the Theme's own type, group by group, so
 // a style that reads a key the Theme lacks fails the typecheck.

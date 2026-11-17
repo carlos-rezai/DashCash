@@ -1,6 +1,6 @@
 import type { Preview } from '@storybook/react-vite';
 import { ThemeProvider } from 'styled-components';
-import { theme } from '../apps/desktop/src/renderer/tokens/tokens.ts';
+import { theme } from '../apps/desktop/src/renderer/tokens/index.ts';
 
 const preview: Preview = {
   decorators: [

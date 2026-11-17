@@ -31,16 +31,10 @@ export type AppProtocolElectron = {
   net: { fetch(url: string): Promise<Response> };
 };
 
-// The path of the file `url` names inside `rendererFolder`, or `undefined`
-// for any URL whose host is not exactly `dashcash` (the host holds the port,
-// so a port is refused), for any URL that holds user info, and for any path
-// that resolves outside the folder: `..`, encoded `..`, absolute paths and
-// paths on another drive or root, on every platform.
-export function resolveRendererPath(
-  rendererFolder: string,
-  url: string,
-): string | undefined {
-  let requested: string;
+// The decoded path `url` asks for, without its leading `/`, or `undefined`
+// unless the URL parses, is for exactly the host `dashcash` without user
+// info, and holds a path that decodes.
+function readRequestedPath(url: string): string | undefined {
   try {
     const parsed = new URL(url);
     if (
@@ -50,8 +44,23 @@ export function resolveRendererPath(
     ) {
       return undefined;
     }
-    requested = decodeURIComponent(parsed.pathname).slice(1);
+    return decodeURIComponent(parsed.pathname).slice(1);
   } catch {
+    return undefined;
+  }
+}
+
+// The path of the file `url` names inside `rendererFolder`, or `undefined`
+// for any URL whose host is not exactly `dashcash` (the host holds the port,
+// so a port is refused), for any URL that holds user info, and for any path
+// that resolves outside the folder: `..`, encoded `..`, absolute paths and
+// paths on another drive or root, on every platform.
+export function resolveRendererPath(
+  rendererFolder: string,
+  url: string,
+): string | undefined {
+  const requested = readRequestedPath(url);
+  if (requested === undefined) {
     return undefined;
   }
   if (

@@ -6,6 +6,8 @@ const PORT_PATTERN = /^[1-9]\d{0,4}$/;
 const PORT_VARIABLE = 'DASHCASH_DEBUG_PORT';
 const INVALID_PORT_CAUSE = `${PORT_VARIABLE} must be a whole number from 1 to ${String(MAX_PORT)}.`;
 
+export type DebugPortFailure = { cause: string };
+
 // Lets DevTools tools attach to the app, in dev only: appends Chromium's
 // remote-debugging-port switch when a dev server URL is given (unpackaged
 // with ELECTRON_RENDERER_URL set). The port is DASHCASH_DEBUG_PORT, 9222 when
@@ -19,7 +21,7 @@ export function enableDebugPort(
     };
   },
   env: Readonly<Record<string, string | undefined>>,
-): { cause: string } | undefined {
+): DebugPortFailure | undefined {
   if (readDevServerUrl(app, env) === undefined) {
     return undefined;
   }

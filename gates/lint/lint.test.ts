@@ -233,6 +233,34 @@ const NEW_DATE_FROM_VALUE = `export function parseDate(value: string): Date {
 }
 `;
 
+// A hook called only when a condition holds: React needs every hook called
+// in the same order on every render.
+const CONDITIONAL_HOOK = `import { useState } from 'react';
+
+export function useCount(enabled: boolean): number {
+  if (enabled) {
+    const [count] = useState(0);
+    return count;
+  }
+  return 0;
+}
+`;
+
+// A stories file without a default export: Storybook cannot load it, since
+// the default export is the stories' meta.
+const STORIES_WITHOUT_DEFAULT_EXPORT = `import type { StoryObj } from '@storybook/react-vite';
+import { Icon } from './Icon.tsx';
+
+export const Default: StoryObj<typeof Icon> = {
+  args: { glyph: 'dashboard' },
+};
+`;
+
+// The stories sample is linted as if it were the Icon's stories file: a
+// path the renderer's project includes and Storybook's rules match.
+const STORIES_PATH =
+  'apps/desktop/src/renderer/primitives/Icon/Icon.stories.tsx';
+
 const DOMAIN_PATH = 'packages/domain/src/money/domainSample.ts';
 const OUTSIDE_DOMAIN_PATH = 'packages/contract/src/contractSample.ts';
 
@@ -303,6 +331,24 @@ describe('project rules', { timeout: 60_000 }, () => {
 
   it('passes new Date(value) under packages/domain', async () => {
     expect(await lintUntyped(NEW_DATE_FROM_VALUE, DOMAIN_PATH)).toEqual([]);
+  });
+
+  it('reports a hook called inside a condition with react-hooks/rules-of-hooks', async () => {
+    expect(ruleIds(await lintSample(CONDITIONAL_HOOK))).toContain(
+      'react-hooks/rules-of-hooks',
+    );
+  });
+
+  it('reports a stories file without a default export with a storybook rule', async () => {
+    const reports = await lintWith(
+      new ESLint({ cwd: ROOT }),
+      STORIES_WITHOUT_DEFAULT_EXPORT,
+      join(ROOT, STORIES_PATH),
+    );
+
+    expect(ruleIds(reports)).toContainEqual(
+      expect.stringMatching(/^storybook\//),
+    );
   });
 });
 

@@ -79,7 +79,7 @@ so they also run `npm run verify:full`. No step changes `scripts/` or
 - [x] 01 pin user data on an invalid debug port
 - [x] 02 name the debug port variable once
 - [x] 03 name the debug port failure type
-- [ ] 04 rename the debug port result in start app
+- [x] 04 rename the debug port result in start app
 - [ ] 05 split the app host rule from the path rules
 - [ ] 06 update the app protocol comments
 - [ ] 07 align the getting started comments

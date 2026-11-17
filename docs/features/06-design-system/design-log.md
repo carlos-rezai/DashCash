@@ -661,3 +661,26 @@ Alternatives:
   what is pinned but not how; the preview imports fonts and CSS that Node
   cannot load, so a gate test can only read the setting from a module that
   imports nothing; one gate folder per gate (conventions, Module filing).
+
+### Assumptions from prd-to-plan
+
+- **P1. The Theme grows with the phases that use it.** **Assumption:**
+  phase 1 brings the **Theme** with its eight groups, its `DefaultTheme`
+  declaration and the **Tokens** the global style and the Icon use; each
+  later phase adds the **Tokens** its pieces use, keyed by Q11's rule and
+  valued exactly as the token sheet or the prototype gives them (Q12); the
+  Tokens phase (plan phase 19) adds every **Token** of the sheet still
+  missing and the Tokens **Story**, so the **Theme** is complete before the
+  feature merges. Reason: the PRD's ticket order puts the Tokens **Story**
+  with the components, and a whole token sheet in the tracer bullet would
+  make it the thickest phase; keys and values are fixed by Q11 and Q12, so
+  a **Token** added early cannot differ from the one the sheet names.
+  Overturn by moving the whole sheet into phase 1.
+- **P2. The story-test gate test arrives with the Accessibility check.**
+  **Assumption:** `gates/storyTests/` arrives in phase 2 and pins both the
+  a11y parameters module and `vitest.storybook.config.ts` (A5); in phase 1
+  the **Story tests** are guarded only by the gate wiring test (`test:stories`
+  in **Verify**) and `gates/electronInstall/` (`postinstall`). Reason: the
+  PRD's ticket order names "The **Accessibility check** and its gate test"
+  as one step and A5 gives the two pins one folder; no phase ships on its
+  own, the feature merges as one pull request.

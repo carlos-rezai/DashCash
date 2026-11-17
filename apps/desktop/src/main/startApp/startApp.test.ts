@@ -414,7 +414,7 @@ describe('startApp', () => {
       { case: 'unset', override: false },
       { case: 'an absolute path', override: true },
     ])(
-      'ends an invalid DASHCASH_DEBUG_PORT in dev in the Startup error with the resolved Data folder, with DASHCASH_DATA_FOLDER $case: no lock, no sandbox, no scheme, no Database, no window',
+      'ends an invalid DASHCASH_DEBUG_PORT in dev in the Startup error with the resolved Data folder, with DASHCASH_DATA_FOLDER $case: no userData change, no lock, no sandbox, no scheme, no Database, no window',
       async ({ override }) => {
         const userData = freshPath('user-data');
         const folder = override ? freshPath('data') : userData;
@@ -439,6 +439,8 @@ describe('startApp', () => {
         expect(fake.lockRequests).toEqual([]);
         expect(fake.sandboxCalls).toEqual([]);
         expect(fake.privilegedSchemes).toEqual([]);
+        expect(fake.pathChanges).toEqual([]);
+        expect(fake.app.getPath('userData')).toBe(userData);
 
         await fake.ready();
 
@@ -447,6 +449,8 @@ describe('startApp', () => {
         expect(fake.lockRequests).toEqual([]);
         expect(fake.sandboxCalls).toEqual([]);
         expect(fake.privilegedSchemes).toEqual([]);
+        expect(fake.pathChanges).toEqual([]);
+        expect(fake.app.getPath('userData')).toBe(userData);
         expect(existsSync(folder)).toBe(false);
         expect(watch.connections()).toEqual([]);
         expect(fake.protocolHandlers).toEqual([]);

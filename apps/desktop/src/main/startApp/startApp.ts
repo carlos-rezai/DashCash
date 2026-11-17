@@ -94,9 +94,9 @@ export function startApp<Window extends MainWindow & FocusableWindow>(
     );
     return;
   }
-  const debugPort = enableDebugPort(app, env);
-  if (debugPort !== undefined) {
-    showStartupError(dialog, app, debugPort.cause, dataFolder.folder);
+  const debugPortFailure = enableDebugPort(app, env);
+  if (debugPortFailure !== undefined) {
+    showStartupError(dialog, app, debugPortFailure.cause, dataFolder.folder);
     return;
   }
   if (dataFolder.overridden) {

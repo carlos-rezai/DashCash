@@ -3,8 +3,10 @@ import { readDevServerUrl } from '../readDevServerUrl/readDevServerUrl.ts';
 const DEFAULT_DEBUG_PORT = '9222';
 const MAX_PORT = 65535;
 const PORT_PATTERN = /^[1-9]\d{0,4}$/;
-const INVALID_PORT_CAUSE =
-  'DASHCASH_DEBUG_PORT must be a whole number from 1 to 65535.';
+const PORT_VARIABLE = 'DASHCASH_DEBUG_PORT';
+const INVALID_PORT_CAUSE = `${PORT_VARIABLE} must be a whole number from 1 to ${String(MAX_PORT)}.`;
+
+export type DebugPortFailure = { cause: string };
 
 // Lets DevTools tools attach to the app, in dev only: appends Chromium's
 // remote-debugging-port switch when a dev server URL is given (unpackaged
@@ -19,11 +21,11 @@ export function enableDebugPort(
     };
   },
   env: Readonly<Record<string, string | undefined>>,
-): { cause: string } | undefined {
+): DebugPortFailure | undefined {
   if (readDevServerUrl(app, env) === undefined) {
     return undefined;
   }
-  const requested = env['DASHCASH_DEBUG_PORT'];
+  const requested = env[PORT_VARIABLE];
   const port =
     requested === undefined || requested === ''
       ? DEFAULT_DEBUG_PORT

@@ -1,5 +1,5 @@
 ---
-status: open
+status: in-progress
 ---
 # Accessibility check on every story
 

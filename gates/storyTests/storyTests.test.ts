@@ -174,6 +174,134 @@ function importedStorybookTest(source: ts.SourceFile): string[] {
   });
 }
 
+type Binding = { module: string; imported: string; local: string };
+
+// Every name an import declaration binds, as its module, the name it takes
+// from that module (`default` and `*` for the other forms) and its local name.
+function readBindings(source: ts.SourceFile): Binding[] {
+  return source.statements.flatMap((statement) => {
+    if (
+      !ts.isImportDeclaration(statement) ||
+      !ts.isStringLiteral(statement.moduleSpecifier)
+    ) {
+      return [];
+    }
+    const module = statement.moduleSpecifier.text;
+    const clause = statement.importClause;
+    if (clause === undefined) {
+      return [];
+    }
+    const bindings: Binding[] = [];
+    if (clause.name !== undefined) {
+      bindings.push({ module, imported: 'default', local: clause.name.text });
+    }
+    const named = clause.namedBindings;
+    if (named !== undefined && ts.isNamespaceImport(named)) {
+      bindings.push({ module, imported: '*', local: named.name.text });
+    }
+    if (named !== undefined && ts.isNamedImports(named)) {
+      for (const element of named.elements) {
+        bindings.push({
+          module,
+          imported: (element.propertyName ?? element.name).text,
+          local: element.name.text,
+        });
+      }
+    }
+    return bindings;
+  });
+}
+
+function unwrapExpression(expression: ts.Expression): ts.Expression {
+  let current = expression;
+  while (
+    ts.isParenthesizedExpression(current) ||
+    ts.isAsExpression(current) ||
+    ts.isSatisfiesExpression(current)
+  ) {
+    current = current.expression;
+  }
+  return current;
+}
+
+// The object the preview exports as its default, whether it is written in
+// place or in a variable that is exported by name.
+function readPreviewConfig(source: ts.SourceFile): ts.ObjectLiteralExpression {
+  const exported = source.statements.find(
+    (statement): statement is ts.ExportAssignment =>
+      ts.isExportAssignment(statement) && statement.isExportEquals !== true,
+  );
+  if (exported === undefined) {
+    throw new Error(`${PREVIEW}: no default export`);
+  }
+  let value = unwrapExpression(exported.expression);
+  if (ts.isIdentifier(value)) {
+    const name = value.text;
+    const declaration = source.statements
+      .filter(ts.isVariableStatement)
+      .flatMap((statement) => [...statement.declarationList.declarations])
+      .find(
+        (candidate) =>
+          ts.isIdentifier(candidate.name) && candidate.name.text === name,
+      );
+    if (declaration?.initializer === undefined) {
+      throw new Error(`${PREVIEW}: no value for the default export ${name}`);
+    }
+    value = unwrapExpression(declaration.initializer);
+  }
+  if (!ts.isObjectLiteralExpression(value)) {
+    throw new Error(`${PREVIEW}: the default export is not an object`);
+  }
+  return value;
+}
+
+// The entries of the preview's `parameters` object as their source, `a11y`
+// for both `a11y` and `a11y: a11y`; a spread or any other entry as written.
+function describePreviewParameters(source: ts.SourceFile): string[] {
+  const properties = readPreviewConfig(source).properties.filter(
+    (property) => property.name?.getText(source) === 'parameters',
+  );
+  const parameters = properties.length === 1 ? properties[0] : undefined;
+  if (
+    parameters === undefined ||
+    !ts.isPropertyAssignment(parameters) ||
+    !ts.isObjectLiteralExpression(parameters.initializer)
+  ) {
+    return properties.map((property) => property.getText(source));
+  }
+  return parameters.initializer.properties.map((property) => {
+    if (
+      ts.isPropertyAssignment(property) &&
+      ts.isIdentifier(property.name) &&
+      ts.isIdentifier(property.initializer) &&
+      property.name.text === property.initializer.text
+    ) {
+      return property.name.text;
+    }
+    return property.getText(source);
+  });
+}
+
+// Names the preview declares itself, which could shadow the imported `a11y`.
+function declaredNames(source: ts.SourceFile): string[] {
+  const names: string[] = [];
+  const visit = (node: ts.Node): void => {
+    if (
+      (ts.isVariableDeclaration(node) ||
+        ts.isFunctionDeclaration(node) ||
+        ts.isClassDeclaration(node) ||
+        ts.isParameter(node)) &&
+      node.name !== undefined &&
+      ts.isIdentifier(node.name)
+    ) {
+      names.push(node.name.text);
+    }
+    ts.forEachChild(node, visit);
+  };
+  visit(source);
+  return names;
+}
+
 describe('the Accessibility check', { timeout: 60_000 }, () => {
   it('fails the Story test on any axe violation', async () => {
     const a11y = await loadA11y();
@@ -197,6 +325,31 @@ describe('the Accessibility check', { timeout: 60_000 }, () => {
     await loadA11y();
 
     expect(importedModules(PREVIEW)).toContain('./a11y.ts');
+  });
+
+  describe('the preview', () => {
+    const source = ts.createSourceFile(
+      PREVIEW,
+      readRootFile(PREVIEW),
+      ts.ScriptTarget.Latest,
+      true,
+    );
+
+    it('passes exactly the a11y parameters to every Story, unchanged', () => {
+      expect(describePreviewParameters(source)).toStrictEqual(['a11y']);
+      expect(
+        readPreviewConfig(source).properties.some(ts.isSpreadAssignment),
+      ).toBe(false);
+    });
+
+    it('takes a11y from .storybook/a11y.ts and from no other source', () => {
+      expect(
+        readBindings(source).filter(({ local }) => local === 'a11y'),
+      ).toStrictEqual([
+        { module: './a11y.ts', imported: 'a11y', local: 'a11y' },
+      ]);
+      expect(declaredNames(source)).not.toContain('a11y');
+    });
   });
 
   it('runs through the a11y addon that Storybook loads', () => {

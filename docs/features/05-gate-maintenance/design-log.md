@@ -698,7 +698,7 @@ answers named; those answers stay as they were written.
   current branch when the command arrives, so `git switch main && git push`
   passes a check that judges only the push part, and pushes from `main`.
 - **D4. The Renovate order check allows exactly the three hold rules after
-  the Node rule** (deviates from Q17 and the PRD's and plan's wording "the
+  the Node rule** (added during the PR review; deviates from Q18 and the PRD's and plan's wording "the
   Node rule comes after every other npm rule except the hold rules"; the
   hold rules themselves, their order and the cap stand). The check fails
   any packageRule after the Node rule, npm or not, unless it is the

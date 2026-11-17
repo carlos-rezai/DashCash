@@ -34,5 +34,11 @@
     "reason": "glob is reached only through Storybook's react-vite framework, whose docgen plugin matches the repository's own file patterns in development and pins glob ^13, so no fix exists inside its range",
     "added": "2026-11-17",
     "expires": "2027-02-15"
+  },
+  {
+    "advisory": "GHSA-fc5q-39xc-vjpf",
+    "reason": "picomatch is reached only through the build and test tooling (vite, vitest, dependency-cruiser, Storybook), where it matches glob patterns from the repository's own configuration, and no patched version exists (<= 4.0.7, the latest)",
+    "added": "2026-11-17",
+    "expires": "2027-02-15"
   }
 ]

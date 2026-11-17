@@ -66,4 +66,4 @@ Edit files with the Edit and Write tools, not with sed or shell redirection in B
 - Commit to `main`, or commit `.env`, `*.db`, real CSVs or app data.
 - Publish, release or push tags.
 - Add a `Co-Authored-By` line, or any other trailer or body, to a commit message.
-- Work around a refusal: when a hook, a permission rule or a safety check denies an action, stop and report it. Never make the same change through another tool or command.
+- Work around a refusal: when a hook, a permission rule or a safety check denies an action, stop and report it. Never make the same change through another tool or command. The one exception: when the refusal itself names the allowed form (a push as its own command, say), using that form is not a workaround.

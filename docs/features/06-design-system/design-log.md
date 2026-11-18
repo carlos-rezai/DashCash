@@ -849,3 +849,14 @@ answers named; those answers stay as they were written.
   `skipLibCheck` for electron-vite's types. D6 stands. Removal: drop
   `skipLibCheck` from both projects once a Storybook release at least 14
   days old fixes the comments (ticket 01, Notes).
+- **D9. The coverage ignores are anchored at the root** (set by the human,
+  2026-11-18). `.gitignore` and `.prettierignore` held `coverage/` and
+  `eslint.config.js` held `'**/coverage/'`, which match any folder named
+  `coverage/` anywhere, so A5's `gates/coverage/` was silently skipped by
+  git, Prettier and ESLint: its tests could be committed only with
+  `git add -f`, and the formatting and lint gates never saw them. Both
+  ignore files now hold `/coverage/` and `eslint.config.js` holds
+  `'coverage/'`, so only the root report folder is ignored.
+  `gates/formatting/formatting.test.ts` and `gates/lint/lint.test.ts`
+  each gain a case that a file under `gates/coverage/` is not ignored, so
+  the narrowing itself is tested (ticket 06).

@@ -23,11 +23,19 @@ I1).
 - `vitest.stryker.config.ts` turns coverage off, so a **Mutation run** runs
   as before.
 - `gates/coverage/` pins the coverage settings of the three configs (A5).
+- The coverage ignores are anchored at the root (D9): `coverage/` becomes
+  `/coverage/` in `.gitignore` and `.prettierignore`, and `'**/coverage/'`
+  becomes `'coverage/'` in `eslint.config.js`. `gates/formatting/` and
+  `gates/lint/` each gain one case that a file under `gates/coverage/` is
+  not ignored.
 
 This ticket is the approval to change exactly: the root `package.json`
 (the package), `package-lock.json`, `vitest.config.ts`,
 `vitest.stryker.config.ts`, `vitest.storybook.config.ts`, to create
-`gates/coverage/`, and `quality/audit-exceptions.json` only for an
+`gates/coverage/`, `.gitignore`, `.prettierignore` and `eslint.config.js`
+(the coverage ignore only), `gates/formatting/formatting.test.ts` and
+`gates/lint/lint.test.ts` (the pins to the new content exactly, plus the
+one case each), and `quality/audit-exceptions.json` only for an
 **Advisory** with no fix.
 
 ## Acceptance criteria
@@ -46,6 +54,10 @@ This ticket is the approval to change exactly: the root `package.json`
 - [ ] `gates/coverage/` fails when either config turns coverage off,
       changes the provider, the reporter, the report folder or the measured
       and excluded paths, or when the Stryker config turns it on.
+- [ ] `coverage/report.js` at the root stays ignored by git, Prettier and
+      ESLint; a file under `gates/coverage/` is tracked by git, checked by
+      `format:check` and linted, and the `gates/formatting/` and
+      `gates/lint/` cases for it fail before the anchoring.
 - [ ] A **Mutation run** runs without coverage; the **Mutation score**
       stays at or above the **Break threshold** of 83
       (`npm run test:mutation`).

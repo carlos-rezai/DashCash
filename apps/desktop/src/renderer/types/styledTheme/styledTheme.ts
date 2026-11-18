@@ -8,6 +8,8 @@ declare module 'styled-components' {
     font: Theme['font'];
     fontSize: Theme['fontSize'];
     space: Theme['space'];
+    controlHeight: Theme['controlHeight'];
+    opacity: Theme['opacity'];
     size: Theme['size'];
     shadow: Theme['shadow'];
     motion: Theme['motion'];

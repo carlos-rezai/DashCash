@@ -23,16 +23,16 @@ the **Control heights** and the values it uses (P1). Touches no gate file.
 
 ## Acceptance criteria
 
-- [ ] A RED commit adds the Button's **Stories**, which fail.
+- [x] A RED commit adds the Button's **Stories**, which fail.
 - [ ] (review) Props exactly SPEC §3 plus `loading`, `loadingLabel`,
       `loaderVariant`; the **Control heights** md 36 and sm 28 are
       **Tokens**.
-- [ ] **Stories** for each variant and size, left and right icon, icon
+- [x] **Stories** for each variant and size, left and right icon, icon
       only, `block`, disabled and loading ("Importing…").
-- [ ] **Play functions**: a click calls `onClick`; a click on a disabled
+- [x] **Play functions**: a click calls `onClick`; a click on a disabled
       or a loading button does not; the loading button reports itself
       busy; the icon-only button is named by its `title`.
-- [ ] `npm run verify` is green.
+- [x] `npm run verify` is green.
 
 ## Blocked by
 

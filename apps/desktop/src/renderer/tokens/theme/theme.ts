@@ -31,6 +31,14 @@ export const theme = {
     warning: '#e0b469',
     // --sb-danger, raised from #e8877b to pass contrast (design log D1)
     danger: '#ed8c80',
+    // --color-divider
+    divider: 'color-mix(in srgb, #e9f1fa 16%, transparent)',
+    // styles.css, .btn-secondary:hover and :active: the text colour at 7 and 14 %
+    secondaryHover: 'color-mix(in srgb, #e9f1fa 7%, transparent)',
+    secondaryPressed: 'color-mix(in srgb, #e9f1fa 14%, transparent)',
+    // styles.css, .btn-ghost:hover and :active: the accent at 10 and 18 %
+    ghostHover: 'color-mix(in srgb, #749dc4 10%, transparent)',
+    ghostPressed: 'color-mix(in srgb, #749dc4 18%, transparent)',
   },
   font: {
     // --font-heading, --font-heading-weight, --font-body
@@ -43,6 +51,8 @@ export const theme = {
     // Amount.dc.html: letter-spacing of its heading sizes, and its line-height
     headingLetterSpacing: '-0.01em',
     amountLineHeight: 1.15,
+    // Button.dc.html: letter-spacing of the label
+    buttonLetterSpacing: '0.01em',
   },
   // SPEC section 2's type scale: sm 13, md 14, lg 22, xl 34
   fontSize: {
@@ -58,6 +68,20 @@ export const theme = {
     // and from 48 px up
     loaderGap: '8px',
     loaderGapLarge: '14px',
+    // Button.dc.html: the side padding of a labelled Button, md and sm
+    buttonPaddingMd: '14px',
+    buttonPaddingSm: '10px',
+    // Control sizing: the gap between a Button's icon and its label
+    buttonGap: '6px',
+  },
+  // SPEC, Control sizing: the two Control heights
+  controlHeight: {
+    md: '36px',
+    sm: '28px',
+  },
+  // styles.css: .btn:disabled
+  opacity: {
+    disabled: 0.45,
   },
   size: {
     // styles.css: :focus-visible { outline: 2px solid ...; outline-offset: 2px }

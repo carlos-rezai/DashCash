@@ -169,6 +169,21 @@ describe('findChangedLines', () => {
     );
   });
 
+  it('does not read an added line that looks like a file header as a header', () => {
+    const text = diff(
+      ...changedFileHeader('scripts/a.ts'),
+      '@@ -2,0 +3,2 @@',
+      '+const a = 1;',
+      '+++ b/scripts/x.ts',
+      '@@ -9,0 +12 @@',
+      '+const b = 1;',
+    );
+
+    expect(findChangedLines(text)).toEqual(
+      new Map([['scripts/a.ts', [3, 4, 12]]]),
+    );
+  });
+
   it('reads every line of a new file as added', () => {
     const text = diff(
       'diff --git a/scripts/new.ts b/scripts/new.ts',

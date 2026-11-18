@@ -1,5 +1,5 @@
 ---
-status: in-progress
+status: done
 ---
 # Changed lines measured against the reports
 

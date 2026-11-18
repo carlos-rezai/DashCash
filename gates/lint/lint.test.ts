@@ -71,6 +71,7 @@ const LINTED_PATHS = [
   'scripts/scriptSample.ts',
   'apps/desktop/src/main/mainSample.ts',
   'packages/domain/src/money/moneySample.ts',
+  'gates/coverage/coverageSample.ts',
 ];
 
 async function lintWith(

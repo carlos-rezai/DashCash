@@ -1,5 +1,5 @@
 ---
-status: open
+status: in-progress
 ---
 # Coverage reports from both test runs
 

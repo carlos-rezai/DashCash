@@ -1,5 +1,5 @@
 ---
-status: in-progress
+status: done
 ---
 # Coverage reports from both test runs
 
@@ -62,6 +62,15 @@ one case each), and `quality/audit-exceptions.json` only for an
       stays at or above the **Break threshold** of 83
       (`npm run test:mutation`).
 - [ ] `npm run verify` is green.
+
+## Notes
+
+Licences the lockfile gained with `@vitest/coverage-v8` 5.0.5, all on the
+**License allowlist**: MIT (`@vitest/coverage-v8`, `@bcoe/v8-coverage`,
+`@vitest/istanbul-lib-coverage`, `@vitest/istanbul-lib-report`,
+`ast-v8-to-istanbul`, `js-tokens`, `magicast`, `@babel/helper-string-parser`,
+`@babel/parser`, `@babel/types`). `check:audit` passes with no new
+**Audit exception**.
 
 ## Blocked by
 

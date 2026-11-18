@@ -225,7 +225,9 @@ const COLLECTED_TEST_FILES = [
   'scripts/runGit/runGit.test.ts',
 ];
 
-type VitestConfig = { test?: { exclude?: string[] } };
+type VitestConfig = {
+  test?: { exclude?: string[]; coverage?: Record<string, unknown> };
+};
 
 const loadStrykerVitestConfig = async (): Promise<VitestConfig> => {
   expect(
@@ -275,6 +277,16 @@ describe('the Stryker Vitest configuration', () => {
         (pattern) => !WHOLE_REPOSITORY_TEST_FILES.includes(pattern),
       ),
     ).toEqual(exclude);
-    expect(withoutExclude(config)).toEqual(withoutExclude(vitestConfig));
+    // Coverage is the one other difference: off, so a Mutation run runs as
+    // it did before the coverage reports.
+    expect(withoutExclude(config)).toEqual(
+      withoutExclude({
+        ...vitestConfig,
+        test: {
+          ...vitestConfig.test,
+          coverage: { ...vitestConfig.test?.coverage, enabled: false },
+        },
+      }),
+    );
   });
 });

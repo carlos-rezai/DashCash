@@ -50,6 +50,7 @@
     "@stryker-mutator/vitest-runner": "10.1.1",
     "@types/node": "24.19.2",
     "@vitest/browser-playwright": "5.0.5",
+    "@vitest/coverage-v8": "5.0.5",
     "@vitest/eslint-plugin": "1.6.28",
     "dependency-cruiser": "18.7.0",
     "eslint": "10.14.0",

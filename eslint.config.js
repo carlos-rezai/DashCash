@@ -22,7 +22,7 @@ export default defineConfig(
     '**/release/',
     '**/.vite/',
     '**/storybook-static/',
-    '**/coverage/',
+    'coverage/',
     '**/playwright-report/',
     '**/test-results/',
     '**/.stryker-tmp/',

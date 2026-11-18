@@ -19,6 +19,26 @@ export default defineConfig({
   },
   test: {
     name: 'storybook',
+    // The same Shipping code as the unit run, reported to coverage/stories/.
+    coverage: {
+      enabled: true,
+      provider: 'v8',
+      reporter: ['lcov'],
+      reportsDirectory: 'coverage/stories',
+      include: [
+        'apps/**/*.{ts,tsx}',
+        'packages/**/*.{ts,tsx}',
+        'scripts/**/*.{ts,tsx}',
+        'gates/**/*.{ts,tsx}',
+      ],
+      exclude: [
+        '**/*.test.{ts,tsx}',
+        '**/*.stories.{ts,tsx}',
+        '**/test-support/**',
+        'e2e/**',
+        '**/*.d.ts',
+      ],
+    },
     browser: {
       enabled: true,
       headless: true,

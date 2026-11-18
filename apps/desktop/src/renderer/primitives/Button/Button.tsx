@@ -1,9 +1,10 @@
-import { useLayoutEffect, useRef, type MouseEvent } from 'react';
+import type { MouseEvent } from 'react';
 import { Icon, type IconName } from '../Icon/Icon.tsx';
 import { Loader } from '../Loader/Loader.tsx';
 import type { LoaderVariant } from '../Loader/Loader.styles.ts';
 import {
   Control,
+  Label,
   type ButtonSize,
   type ButtonVariant,
 } from './Button.styles.ts';
@@ -27,25 +28,6 @@ type ButtonProps = {
 
 const ICON_SIZE = { sm: 14, md: 16 };
 
-// While loading the label changes, but the button keeps the width it had.
-function useHeldWidth(loading: boolean) {
-  const ref = useRef<HTMLButtonElement>(null);
-  const width = useRef(0);
-  useLayoutEffect(() => {
-    const button = ref.current;
-    if (button === null) {
-      return;
-    }
-    if (loading) {
-      button.style.minWidth = `${String(width.current)}px`;
-    } else {
-      button.style.minWidth = '';
-      width.current = button.getBoundingClientRect().width;
-    }
-  });
-  return ref;
-}
-
 export function Button({
   label,
   variant = 'secondary',
@@ -60,14 +42,14 @@ export function Button({
   loadingLabel,
   loaderVariant = 'draw',
 }: ButtonProps) {
-  const ref = useHeldWidth(loading);
   const iconSize = ICON_SIZE[size];
   const shownLabel = loading && loadingLabel ? loadingLabel : label;
+  // The text the button shows in its other state, which it keeps room for.
+  const heldLabel = loading && loadingLabel ? label : loadingLabel;
   const iconOnly = label === undefined || label === '';
 
   return (
     <Control
-      ref={ref}
       type="button"
       $variant={variant}
       $size={size}
@@ -90,7 +72,7 @@ export function Button({
       {icon !== undefined && !loading ? (
         <Icon glyph={icon} size={iconSize} />
       ) : null}
-      {iconOnly ? null : <span>{shownLabel}</span>}
+      {iconOnly ? null : <Label data-hold={heldLabel}>{shownLabel}</Label>}
       {iconRight === undefined ? null : (
         <Icon glyph={iconRight} size={iconSize} />
       )}

@@ -55,6 +55,22 @@ const FILLS = {
   `,
 };
 
+// The label, as wide as the wider of its two texts: the other one is held in
+// data-hold and laid out unseen, so the button's width does not jump when the
+// label changes between its idle and loading text.
+export const Label = styled.span`
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+
+  &::after {
+    content: attr(data-hold);
+    height: 0;
+    overflow: hidden;
+    visibility: hidden;
+  }
+`;
+
 export const Control = styled.button<StyledProps>`
   box-sizing: border-box;
   display: inline-flex;

@@ -1,4 +1,4 @@
-import type { ComponentProps } from 'react';
+import { useState, type ComponentProps } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import styled from 'styled-components';
 import { expect, fn, userEvent, within } from 'storybook/test';
@@ -325,5 +325,46 @@ export const Loading: Story = {
 
     await userEvent.click(button, { pointerEventsCheck: 0 });
     await expect(args.onClick).not.toHaveBeenCalled();
+  },
+};
+
+// A button that is not loading yet, and a plain control that starts it.
+function StartsLoading(args: ComponentProps<typeof Button>) {
+  const [loading, setLoading] = useState(false);
+  return (
+    <>
+      <Button {...args} loading={loading} />
+      <button
+        type="button"
+        onClick={() => {
+          setLoading(true);
+        }}
+      >
+        Start loading
+      </button>
+    </>
+  );
+}
+
+// "Import CSV" becomes "Importing…" (wider) and the width does not jump.
+export const LoadingKeepsWidth: Story = {
+  args: {
+    variant: 'primary',
+    label: 'Import CSV',
+    loadingLabel: 'Importing…',
+    icon: 'upload',
+  },
+  render: (args) => <StartsLoading {...args} />,
+  play: async ({ canvasElement }) => {
+    const button = theButton(canvasElement, 'Import CSV');
+    await expect(button).toHaveAttribute('aria-busy', 'false');
+    const before = button.getBoundingClientRect().width;
+
+    await userEvent.click(
+      within(canvasElement).getByRole('button', { name: 'Start loading' }),
+    );
+    await expect(button).toHaveAttribute('aria-busy', 'true');
+    await expect(button.textContent.trim()).toBe('Importing…');
+    await expect(button.getBoundingClientRect().width).toBeCloseTo(before, 1);
   },
 };

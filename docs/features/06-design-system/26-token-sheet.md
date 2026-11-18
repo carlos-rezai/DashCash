@@ -30,9 +30,19 @@ Q26, P1, I5).
   and both red tints keep `#e8877b`.
 - `GlobalStyle` gains the element rules ticket 02 left out, values as
   Industry's `styles.css` and `dashcash-dark.css` write them, each from
-  the **Theme**: `box-sizing: border-box` on `*`, `*::before` and
-  `*::after`; `body` at 15 px with line height 1.55; `h1` to `h6` at
-  42 · 32 · 25 · 20 · 16 · 13 px; `color-scheme: dark` on `:root`.
+  the **Theme**:
+  - `box-sizing: border-box` on `*`, `*::before` and `*::after`;
+  - `color-scheme: dark` on `:root`;
+  - `html` and `body`: margin 0, height 100 %;
+  - `body`: 15 px, line height 1.55, weight 400,
+    `-webkit-font-smoothing: antialiased`;
+  - `h1` to `h6`: line height 1.12, letter spacing −0.015em, margin
+    `0 0` space-2 (6.8 px); sizes 42 · 32 · 25 · 20 · 16 · 13 px as their
+    own heading **Tokens**, separate from the type scale (headings do not
+    move onto the scale); `h6` also uppercase with letter spacing 0.08em;
+  - `p`: margin `0 0` space-3 (10.2 px);
+  - `a`: `text-underline-offset: 3px`;
+  - `img`: display block, max width 100 %; `figure`: margin 0.
 - `tokens/theme/theme.stories.tsx`, titled `Tokens`, shows the inventory's
   colour tiles (each with its name and role), the type scale lines and the
   spacing bars (each with its name and px), verbatim, every value read from
@@ -45,7 +55,7 @@ Touches no gate file.
 - [ ] A RED commit adds the `Tokens` **Story**, whose **Play function**
       fails.
 - [ ] The **Play function** finds every colour tile of the inventory with
-      its name and role and its swatch filled (not transparent), the eight
+      its name and role and its swatch filled (not transparent), the nine
       type-scale lines at their sizes, and every spacing bar with its name,
       its px and a width, as `Component Inventory.dc.html` writes them; a
       **Token** missing from `theme` fails it.
@@ -54,11 +64,17 @@ Touches no gate file.
       exactly as written, `color-mix()` strings kept, except D1's three
       raised values.
 - [ ] The `Styles/GlobalStyle` **Play functions** also show, from what the
-      browser computes: `box-sizing: border-box` on an element and its
-      `::before` and `::after`; body text at 15 px with line height
-      1.55 (23.25 px); `h1` to `h6` at 42, 32, 25, 20, 16 and 13 px;
-      `color-scheme: dark` on the root element. A RED commit adds these
-      assertions, which fail.
+      browser computes, every rule of the list above: `box-sizing:
+      border-box` on an element and its `::before` and `::after`;
+      `color-scheme: dark` on the root element; `html` and `body` with
+      margin 0 and the viewport's height; body text at 15 px, line height
+      1.55 (23.25 px), weight 400, antialiased; `h1` to `h6` at 42, 32,
+      25, 20, 16 and 13 px, each with line height 1.12 and letter spacing
+      −0.015em of its size and a 6.8 px bottom margin; `h6` uppercase at
+      0.08em; a paragraph's 10.2 px bottom margin; the link's 3 px
+      underline offset; an image as a block with max width 100 %; a
+      figure with margin 0. A RED commit adds these assertions, which
+      fail.
 - [ ] (review) The new `GlobalStyle` rules are element-level only, every
       value from the **Theme**.
 - [ ] The `Tokens` **Story** passes the **Accessibility check**, contrast

@@ -21,6 +21,8 @@ export const theme = {
     },
     // styles.css: ::selection, the accent at 30 %
     selection: 'color-mix(in srgb, #749dc4 30%, transparent)',
+    // --sb-text-muted
+    textMuted: 'color-mix(in srgb, #e9f1fa 62%, transparent)',
     // --sb-positive
     positive: '#7cc59a',
     // --sb-negative, raised from #e8877b to pass contrast (design log D1)
@@ -48,8 +50,15 @@ export const theme = {
     md: '14px',
     lg: '22px',
     xl: '34px',
+    // Loader.dc.html: the label beside a Loader of 48 px or more
+    loaderLabelLarge: '15px',
   },
-  space: {},
+  space: {
+    // Loader.dc.html: the gap between a Loader and its label, below 48 px
+    // and from 48 px up
+    loaderGap: '8px',
+    loaderGapLarge: '14px',
+  },
   size: {
     // styles.css: :focus-visible { outline: 2px solid ...; outline-offset: 2px }
     focusRingWidth: '2px',
@@ -59,7 +68,13 @@ export const theme = {
     scrollbarThumbBorder: '3px',
   },
   shadow: {},
-  motion: {},
+  // SPEC, Loaders: one loop is 1,6 s, the fade-in 200 ms (Loader.dc.html),
+  // the breathing under reduced motion 2,4 s
+  motion: {
+    loaderLoop: '1.6s',
+    loaderFadeIn: '200ms',
+    loaderBreathe: '2.4s',
+  },
   zIndex: {},
 };
 

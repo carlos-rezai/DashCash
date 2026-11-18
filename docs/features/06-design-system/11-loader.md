@@ -1,5 +1,5 @@
 ---
-status: in-progress
+status: done
 ---
 # Loader
 
@@ -24,17 +24,17 @@ gate file.
 
 ## Acceptance criteria
 
-- [ ] A RED commit adds the Loader's **Stories**, which fail.
-- [ ] (review) Props exactly SPEC, Loaders (`variant = 'draw'`,
+- [x] A RED commit adds the Loader's **Stories**, which fail.
+- [x] (review) Props exactly SPEC, Loaders (`variant = 'draw'`,
       `size = 32`, `label?`, `delay = 300`, `dashesOnly?`, `color`); every
       duration from the **Theme**.
-- [ ] **Stories** for the four variants, the small dashes-only size, the
+- [x] **Stories** for the four variants, the small dashes-only size, the
       labels "Recalculating…" and "Checking…", the current colour, and the
       delay; every story but the delay one sets `delay` 0.
-- [ ] The delay story's **Play function** shows nothing before the delay
+- [x] The delay story's **Play function** shows nothing before the delay
       and the status after it; the status is named by its label or
       "Loading".
-- [ ] `npm run verify` is green.
+- [x] `npm run verify` is green.
 
 ## Blocked by
 

@@ -28,6 +28,11 @@ Q26, P1, I5).
   `color-mix(in srgb, #e9f1fa 60%, transparent)` (not 42 %), `negative`
   and `danger` are `#ed8c80` (not `#e8877b`); `textMuted` stays at 62 %
   and both red tints keep `#e8877b`.
+- `GlobalStyle` gains the element rules ticket 02 left out, values as
+  Industry's `styles.css` and `dashcash-dark.css` write them, each from
+  the **Theme**: `box-sizing: border-box` on `*`, `*::before` and
+  `*::after`; `body` at 15 px with line height 1.55; `h1` to `h6` at
+  42 · 32 · 25 · 20 · 16 · 13 px; `color-scheme: dark` on `:root`.
 - `tokens/theme/theme.stories.tsx`, titled `Tokens`, shows the inventory's
   colour tiles (each with its name and role), the type scale lines and the
   spacing bars (each with its name and px), verbatim, every value read from
@@ -48,6 +53,14 @@ Touches no gate file.
       `styles.css` is a **Token** with its key per Q11 and its value
       exactly as written, `color-mix()` strings kept, except D1's three
       raised values.
+- [ ] The `Styles/GlobalStyle` **Play functions** also show, from what the
+      browser computes: `box-sizing: border-box` on an element and its
+      `::before` and `::after`; body text at 15 px with line height
+      1.55 (23.25 px); `h1` to `h6` at 42, 32, 25, 20, 16 and 13 px;
+      `color-scheme: dark` on the root element. A RED commit adds these
+      assertions, which fail.
+- [ ] (review) The new `GlobalStyle` rules are element-level only, every
+      value from the **Theme**.
 - [ ] The `Tokens` **Story** passes the **Accessibility check**, contrast
       included (D1).
 - [ ] (review) No component's styles hold a literal colour, size or

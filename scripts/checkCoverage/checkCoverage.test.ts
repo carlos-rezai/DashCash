@@ -1,4 +1,23 @@
-import { describe, expect, it } from 'vitest';
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+} from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { runNpmScript as runScript } from '../test-support/runNpmScript/runNpmScript.ts';
+import {
+  commitFiles,
+  initSampleRepository,
+  installGateScripts,
+  ROOT,
+  runSampleGit as git,
+  setOriginMain,
+  writeTreeFile,
+} from '../test-support/sampleRepository/sampleRepository.ts';
 import {
   findChangedLines,
   findCoverageViolations,
@@ -480,4 +499,359 @@ describe('findCoverageViolations', () => {
       { subject: 'scripts/b.ts', reason: 'lines 10–11, 20 not covered' },
     ]);
   });
+});
+
+const THRESHOLD_FILE = 'quality/coverage-threshold.json';
+const UNIT_REPORT = 'coverage/unit/lcov.info';
+const STORIES_REPORT = 'coverage/stories/lcov.info';
+
+// The measured sample file every scenario changes: two lines at the merge
+// base, then lines 3 to 6 committed and line 7 in the working tree only.
+const SUM = 'packages/sample/src/sum/sum.ts';
+
+// Per file, the coverable lines and their hits, as an LCOV report lists them.
+type LcovFiles = Record<string, Record<number, number>>;
+
+// Numbered lines of code, `from` to `to`, one per line.
+function code(from: number, to: number): string {
+  return lineRange(from, to)
+    .map((line) => `export const line${String(line)} = ${String(line)};\n`)
+    .join('');
+}
+
+// An LCOV report as the V8 provider writes it, its SF: paths joined with the
+// separator the platform uses.
+function lcov(files: LcovFiles, separator: '/' | '\\'): string {
+  return Object.entries(files)
+    .map(([path, lines]) => {
+      const hits = Object.entries(lines);
+      return [
+        'TN:',
+        `SF:${path.replaceAll('/', separator)}`,
+        ...hits.map(([line, count]) => `DA:${line},${String(count)}`),
+        `LF:${String(hits.length)}`,
+        `LH:${String(hits.filter(([, count]) => count > 0).length)}`,
+        'end_of_record\n',
+      ].join('\n');
+    })
+    .join('');
+}
+
+// The sample file's report: its two unchanged lines run, and the first
+// `covered` of its five changed lines run too.
+function sumReport(covered: number): LcovFiles {
+  return {
+    [SUM]: {
+      ...linesWithHits(1, 2, 1),
+      ...linesWithHits(3, 2 + covered, 1),
+      ...linesWithHits(3 + covered, 7, 0),
+    },
+  };
+}
+
+describe('quality/coverage-threshold.json', () => {
+  it('holds exactly the changed-lines threshold of 80', () => {
+    const path = join(ROOT, THRESHOLD_FILE);
+
+    expect(existsSync(path)).toBe(true);
+    expect(JSON.parse(readFileSync(path, 'utf8'))).toEqual({
+      changedLines: 80,
+    });
+  });
+});
+
+describe('check:coverage', { timeout: 30_000 }, () => {
+  let tree: string;
+
+  // Writes both reports, the stories report empty unless given.
+  function writeReports(
+    unit: LcovFiles,
+    stories: LcovFiles = {},
+    separator: '/' | '\\' = '/',
+  ): void {
+    writeTreeFile(tree, UNIT_REPORT, lcov(unit, separator));
+    writeTreeFile(tree, STORIES_REPORT, lcov(stories, separator));
+  }
+
+  function writeThreshold(text: string): void {
+    writeTreeFile(tree, THRESHOLD_FILE, text);
+  }
+
+  // Lines 3 to 6 of the sample file committed since the merge base, line 7
+  // only in the working tree.
+  function changeSum(): void {
+    commitFiles(tree, 'change sum', { [SUM]: code(1, 6) });
+    writeTreeFile(tree, SUM, code(1, 7));
+  }
+
+  function run(): { status: number | null; stdout: string; lines: string[] } {
+    const result = runScript('check:coverage', tree);
+    return {
+      status: result.status,
+      stdout: result.stdout,
+      lines: result.stderr.split(/\r?\n/).filter((line) => line !== ''),
+    };
+  }
+
+  beforeEach(() => {
+    // A fresh repository with this repository's gate scripts committed at the
+    // merge base, so only what a test changes counts; origin/main is HEAD.
+    tree = mkdtempSync(join(tmpdir(), 'dashcash-coverage-'));
+    installGateScripts(tree);
+    initSampleRepository(tree);
+    writeTreeFile(
+      tree,
+      '.gitignore',
+      'node_modules\ncoverage/\npackages/sample/src/draft/\n',
+    );
+    writeTreeFile(tree, 'README.md', '# Sample\n');
+    writeTreeFile(tree, SUM, code(1, 2));
+    git(tree, 'add', '--all');
+    git(tree, 'commit', '--quiet', '-m', 'base');
+    setOriginMain(tree);
+    writeThreshold('{ "changedLines": 80 }\n');
+  });
+
+  afterEach(() => {
+    rmSync(tree, { recursive: true, force: true });
+  });
+
+  it.each([
+    ['at', 4],
+    ['above', 5],
+  ])(
+    'exits 0 without output %s the threshold, committed and working-tree lines counted',
+    (_, covered) => {
+      changeSum();
+      writeReports(sumReport(covered));
+
+      const result = run();
+
+      expect(result.status, result.lines.join('\n')).toBe(0);
+      expect(result.stdout).toBe('');
+      expect(result.lines).toEqual([]);
+    },
+  );
+
+  it('exits 1 below the threshold with the summary, then the uncovered lines of each file from both reports', () => {
+    const product = 'packages/sample/src/product/product.ts';
+    changeSum();
+    commitFiles(tree, 'add product', { [product]: code(1, 3) });
+    writeReports(sumReport(3), { [product]: { 1: 1, 2: 0, 3: 1 } });
+
+    const result = run();
+
+    expect(result.status).toBe(1);
+    expect(result.stdout).toBe('');
+    expect(result.lines[0]).toBe(
+      'changed lines: 5 of 8 covered (62 %), below the threshold of 80 %',
+    );
+    expect(result.lines.slice(1).sort()).toEqual(
+      [
+        `${SUM}: lines 6–7 not covered`,
+        `${product}: lines 2 not covered`,
+      ].sort(),
+    );
+  });
+
+  it('counts every line of an untracked file, and leaves out an ignored one', () => {
+    const fresh = 'packages/sample/src/fresh/fresh.ts';
+    writeTreeFile(tree, fresh, code(1, 3));
+    writeTreeFile(tree, 'packages/sample/src/draft/draft.ts', code(1, 2));
+    writeReports({ [fresh]: linesWithHits(1, 3, 0) });
+
+    const result = run();
+
+    expect(result.status).toBe(1);
+    expect(result.stdout).toBe('');
+    expect(result.lines).toEqual([
+      'changed lines: 0 of 3 covered (0 %), below the threshold of 80 %',
+      `${fresh}: lines 1–3 not covered`,
+    ]);
+  });
+
+  it('exits 0 without output when no changed line is coverable', () => {
+    changeSum();
+    writeReports({ [SUM]: linesWithHits(1, 2, 0) });
+
+    const result = run();
+
+    expect(result.status, result.lines.join('\n')).toBe(0);
+    expect(result.stdout).toBe('');
+    expect(result.lines).toEqual([]);
+  });
+
+  it.each([
+    'apps/desktop/src/main/db/open.ts',
+    'apps/desktop/src/renderer/primitives/Icon/Icon.tsx',
+    'packages/domain/src/money/cents.ts',
+    'scripts/sample/sample.ts',
+    'gates/sample/sample.ts',
+  ])('exits 1 for a changed measured file in neither report: %s', (path) => {
+    commitFiles(tree, 'add a measured file', { [path]: code(1, 2) });
+    writeReports({});
+
+    const result = run();
+
+    expect(result.status).toBe(1);
+    expect(result.stdout).toBe('');
+    expect(result.lines).toEqual([`${path}: ${NOT_MEASURED}`]);
+  });
+
+  it('exits 0 without output for changed files the coverage does not measure, in neither report', () => {
+    commitFiles(tree, 'add files the coverage does not measure', {
+      'README.md': '# Sample\n\nChanged.\n',
+      'docs/notes.md': '# Notes\n',
+      'packages/sample/src/sum/sum.test.ts': code(1, 2),
+      'apps/desktop/src/renderer/primitives/Icon/Icon.stories.tsx': code(1, 2),
+      'apps/desktop/src/main/test-support/fakeDb/fakeDb.ts': code(1, 2),
+      'packages/sample/src/types/env.d.ts': code(1, 2),
+      'e2e/import-csv.spec.ts': code(1, 2),
+      'packages/sample/src/sum/sum.js': code(1, 2),
+      'tools/sample/sample.ts': code(1, 2),
+    });
+    writeTreeFile(tree, 'gates/sample/sample.test.ts', code(1, 2));
+    writeReports({});
+
+    const result = run();
+
+    expect(result.status, result.lines.join('\n')).toBe(0);
+    expect(result.stdout).toBe('');
+    expect(result.lines).toEqual([]);
+  });
+
+  it.each([
+    [0, 0],
+    [60, 3],
+    [100, 5],
+  ])(
+    'exits 0 at a threshold of %i with %i of 5 changed lines covered',
+    (threshold, covered) => {
+      writeThreshold(`{ "changedLines": ${String(threshold)} }\n`);
+      changeSum();
+      writeReports(sumReport(covered));
+
+      const result = run();
+
+      expect(result.status, result.lines.join('\n')).toBe(0);
+      expect(result.lines).toEqual([]);
+    },
+  );
+
+  it('exits 1 below the threshold the threshold file names', () => {
+    writeThreshold('{ "changedLines": 100 }\n');
+    changeSum();
+    writeReports(sumReport(4));
+
+    const result = run();
+
+    expect(result.status).toBe(1);
+    expect(result.lines).toEqual([
+      'changed lines: 4 of 5 covered (80 %), below the threshold of 100 %',
+      `${SUM}: lines 7 not covered`,
+    ]);
+  });
+
+  it.each([
+    ['is missing', undefined],
+    ['is not JSON', '{ "changedLines": 80\n'],
+    ['holds a number, not an object', '80\n'],
+    ['holds null', 'null\n'],
+    ['holds an array', '[80]\n'],
+    ['has no changedLines', '{}\n'],
+    ['has changedLines as a string', '{ "changedLines": "80" }\n'],
+    ['has changedLines below 0', '{ "changedLines": -1 }\n'],
+    ['has changedLines above 100', '{ "changedLines": 101 }\n'],
+  ])('exits 1, naming the file, when the threshold file %s', (_, text) => {
+    if (text === undefined) {
+      rmSync(join(tree, THRESHOLD_FILE));
+    } else {
+      writeThreshold(text);
+    }
+    changeSum();
+    writeReports(sumReport(5));
+
+    const result = run();
+
+    expect(result.status).toBe(1);
+    expect(result.lines.join('\n')).toContain(THRESHOLD_FILE);
+  });
+
+  it.each([
+    [UNIT_REPORT, 'missing'],
+    [STORIES_REPORT, 'missing'],
+    [UNIT_REPORT, 'a folder, not a file'],
+    [STORIES_REPORT, 'a folder, not a file'],
+  ])('exits 1, naming the report, when %s is %s', (report, state) => {
+    changeSum();
+    writeReports(sumReport(5));
+    rmSync(join(tree, report));
+    if (state !== 'missing') {
+      mkdirSync(join(tree, report));
+    }
+
+    const result = run();
+
+    expect(result.status).toBe(1);
+    expect(result.lines.join('\n')).toContain(report);
+  });
+
+  it('exits 1, naming origin/main, when there is no origin/main', () => {
+    changeSum();
+    writeReports(sumReport(5));
+    git(tree, 'update-ref', '-d', 'refs/remotes/origin/main');
+
+    const result = run();
+
+    expect(result.status).toBe(1);
+    expect(result.lines.join('\n')).toContain('origin/main');
+  });
+
+  it('exits 1, naming origin/main, when origin/main shares no merge base with HEAD', () => {
+    changeSum();
+    writeReports(sumReport(5));
+    const unrelated = git(
+      tree,
+      'commit-tree',
+      'HEAD^{tree}',
+      '-m',
+      'unrelated',
+    );
+    git(tree, 'update-ref', 'refs/remotes/origin/main', unrelated);
+
+    const result = run();
+
+    expect(result.status).toBe(1);
+    expect(result.lines.join('\n')).toContain('origin/main');
+  });
+
+  it('reads reports whose SF: paths use backslashes, as on Windows, and names files as git does', () => {
+    changeSum();
+    writeReports(sumReport(3), {}, '\\');
+
+    const result = run();
+
+    expect(result.status).toBe(1);
+    expect(result.lines).toEqual([
+      'changed lines: 3 of 5 covered (60 %), below the threshold of 80 %',
+      `${SUM}: lines 6–7 not covered`,
+    ]);
+  });
+
+  it.each(['diff.noprefix', 'diff.mnemonicPrefix'])(
+    'reads the diff with %s set in the git config',
+    (setting) => {
+      git(tree, 'config', setting, 'true');
+      changeSum();
+      writeReports(sumReport(3));
+
+      const result = run();
+
+      expect(result.status).toBe(1);
+      expect(result.lines).toEqual([
+        'changed lines: 3 of 5 covered (60 %), below the threshold of 80 %',
+        `${SUM}: lines 6–7 not covered`,
+      ]);
+    },
+  );
 });

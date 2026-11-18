@@ -8,6 +8,7 @@ export const VERIFY_GATES = [
   'check:stories',
   'test',
   'test:stories',
+  'check:coverage',
   'check:commits',
   'check:tickets',
   'check:data-files',

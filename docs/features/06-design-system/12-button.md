@@ -1,5 +1,5 @@
 ---
-status: in-progress
+status: done
 ---
 # Button
 
@@ -24,7 +24,7 @@ the **Control heights** and the values it uses (P1). Touches no gate file.
 ## Acceptance criteria
 
 - [x] A RED commit adds the Button's **Stories**, which fail.
-- [ ] (review) Props exactly SPEC §3 plus `loading`, `loadingLabel`,
+- [x] (review) Props exactly SPEC §3 plus `loading`, `loadingLabel`,
       `loaderVariant`; the **Control heights** md 36 and sm 28 are
       **Tokens**.
 - [x] **Stories** for each variant and size, left and right icon, icon

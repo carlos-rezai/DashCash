@@ -328,6 +328,48 @@ export const Loading: Story = {
   },
 };
 
+// A Button in a hidden container is hidden whole: its icon, its Loader and its
+// label are neither seen nor in the accessibility tree. (The shown face must
+// not set an explicit `visibility: visible`, which would override the
+// container's.)
+export const InHiddenContainer: Story = {
+  args: {},
+  render: () => (
+    <div style={{ visibility: 'hidden' }}>
+      <Button label="Import CSV" icon="upload" />
+      <Button
+        label="Export CSV"
+        loadingLabel="Exporting…"
+        icon="upload"
+        loading
+      />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const buttons = [...canvasElement.querySelectorAll('button')];
+    await expect(buttons).toHaveLength(2);
+
+    // Nothing is in the accessibility tree: no button, no Loader.
+    await expect(canvas.queryAllByRole('button')).toHaveLength(0);
+    await expect(canvas.queryAllByRole('status')).toHaveLength(0);
+
+    // Nothing is drawn: every icon, the Loader's mark and each label.
+    const marks = svgsIn(canvasElement);
+    await expect(marks).toHaveLength(2);
+    for (const mark of marks) {
+      await expect(getComputedStyle(mark).visibility).toBe('hidden');
+    }
+    for (const text of ['Import CSV', 'Exporting…']) {
+      const label = canvas.getByText(text);
+      await expect(getComputedStyle(label).visibility).toBe('hidden');
+    }
+    for (const button of buttons) {
+      await expect(getComputedStyle(button).visibility).toBe('hidden');
+    }
+  },
+};
+
 // A button with an icon and one without, neither loading yet, and a plain
 // control that starts both.
 function StartsLoading(args: ComponentProps<typeof Button>) {

@@ -65,7 +65,7 @@ export const Face = styled.span<{ $hidden: boolean }>`
   align-items: center;
   justify-content: center;
   gap: ${({ theme }) => theme.space.buttonGap};
-  visibility: ${({ $hidden }) => ($hidden ? 'hidden' : 'visible')};
+  ${({ $hidden }) => $hidden && 'visibility: hidden;'}
 `;
 
 // In a hidden face, in place of an icon or the Loader: a box of its size. The

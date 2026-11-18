@@ -19,6 +19,7 @@ import {
   writeTreeFile,
 } from '../test-support/sampleRepository/sampleRepository.ts';
 import {
+  checkCoverage,
   findChangedLines,
   findCoverageViolations,
   readLcov,
@@ -836,6 +837,59 @@ describe('check:coverage', { timeout: 30_000 }, () => {
       'changed lines: 3 of 5 covered (60 %), below the threshold of 80 %',
       `${SUM}: lines 6–7 not covered`,
     ]);
+  });
+
+  // The same checks run in this process, so the coverage reports see the entry.
+  describe('checkCoverage in this process', () => {
+    it('returns the violations below the threshold, with an untracked file counted whole', () => {
+      const fresh = 'packages/sample/src/fresh/fresh.ts';
+      changeSum();
+      writeTreeFile(tree, fresh, code(1, 3));
+      writeReports({ ...sumReport(5), [fresh]: linesWithHits(1, 3, 0) });
+
+      expect(checkCoverage(tree)).toEqual([
+        {
+          subject: 'changed lines',
+          reason: '5 of 8 covered (62 %), below the threshold of 80 %',
+        },
+        { subject: fresh, reason: 'lines 1–3 not covered' },
+      ]);
+    });
+
+    it('returns nothing at the threshold', () => {
+      changeSum();
+      writeReports(sumReport(4));
+
+      expect(checkCoverage(tree)).toEqual([]);
+    });
+
+    it('throws for a threshold file that is not valid', () => {
+      writeThreshold('{ "changedLines": 101 }\n');
+      writeReports({});
+
+      expect(() => checkCoverage(tree)).toThrow(THRESHOLD_FILE);
+    });
+
+    it('throws for a threshold file that is not JSON', () => {
+      writeThreshold('{');
+      writeReports({});
+
+      expect(() => checkCoverage(tree)).toThrow(THRESHOLD_FILE);
+    });
+
+    it('throws for a missing report', () => {
+      writeReports({});
+      rmSync(join(tree, STORIES_REPORT));
+
+      expect(() => checkCoverage(tree)).toThrow(STORIES_REPORT);
+    });
+
+    it('throws without origin/main', () => {
+      writeReports({});
+      git(tree, 'update-ref', '-d', 'refs/remotes/origin/main');
+
+      expect(() => checkCoverage(tree)).toThrow('origin/main');
+    });
   });
 
   it.each(['diff.noprefix', 'diff.mnemonicPrefix'])(

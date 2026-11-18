@@ -1,4 +1,11 @@
-import type { Violation } from '../reportViolations/reportViolations.ts';
+import { readFileSync } from 'node:fs';
+import { join, matchesGlob } from 'node:path';
+import { isRecord } from '../isRecord/isRecord.ts';
+import {
+  runGate,
+  type Violation,
+} from '../reportViolations/reportViolations.ts';
+import { runGit } from '../runGit/runGit.ts';
 
 export type ChangedLines = ReadonlyMap<string, readonly number[]>;
 export type CoverageReport = ReadonlyMap<string, ReadonlyMap<number, number>>;
@@ -51,7 +58,7 @@ export function readLcov(text: string): CoverageReport {
   for (const line of text.split('\n')) {
     if (line.startsWith('SF:')) {
       lines = new Map();
-      files.set(line.slice('SF:'.length), lines);
+      files.set(line.slice('SF:'.length).replaceAll('\\', '/'), lines);
     } else if (line.startsWith('DA:') && lines !== undefined) {
       const [number, hits] = line.slice('DA:'.length).split(',');
       lines.set(Number(number), Number(hits));
@@ -131,4 +138,118 @@ export function findCoverageViolations(
     },
     ...uncovered,
   ];
+}
+
+const BASE_REF = 'origin/main';
+const THRESHOLD_FILE = 'quality/coverage-threshold.json';
+const REPORT_FILES = ['coverage/unit/lcov.info', 'coverage/stories/lcov.info'];
+// The files the coverage measures: the include and exclude patterns of
+// vitest.config.ts and vitest.storybook.config.ts (gates/coverage/ pins them).
+const MEASURED = [
+  'apps/**/*.{ts,tsx}',
+  'packages/**/*.{ts,tsx}',
+  'scripts/**/*.{ts,tsx}',
+  'gates/**/*.{ts,tsx}',
+];
+const NOT_MEASURED_FILES = [
+  '**/*.test.{ts,tsx}',
+  '**/*.stories.{ts,tsx}',
+  '**/test-support/**',
+  'e2e/**',
+  '**/*.d.ts',
+];
+
+function isMeasured(path: string): boolean {
+  return (
+    MEASURED.some((pattern) => matchesGlob(path, pattern)) &&
+    !NOT_MEASURED_FILES.some((pattern) => matchesGlob(path, pattern))
+  );
+}
+
+// The merge base of origin/main and HEAD; throws when either is missing.
+function readMergeBase(cwd: string): string {
+  try {
+    return runGit(cwd, ['merge-base', BASE_REF, 'HEAD']).trim();
+  } catch {
+    throw new Error(
+      `${BASE_REF} is missing or shares no history with HEAD: fetch ${BASE_REF} first (git fetch origin main)`,
+    );
+  }
+}
+
+// The measured files changed since the merge base, in the working tree, and
+// the untracked, not ignored ones, every line of which counts as added.
+function readChangedLines(cwd: string): ChangedLines {
+  const base = readMergeBase(cwd);
+  const diff = runGit(cwd, [
+    'diff',
+    '-U0',
+    '--no-color',
+    '--src-prefix=a/',
+    '--dst-prefix=b/',
+    base,
+  ]);
+  const changed = new Map<string, readonly number[]>();
+  for (const [path, lines] of findChangedLines(diff)) {
+    if (isMeasured(path)) {
+      changed.set(path, lines);
+    }
+  }
+  const untracked = runGit(cwd, [
+    'ls-files',
+    '--others',
+    '--exclude-standard',
+    '-z',
+  ])
+    .split('\0')
+    .filter((path) => path !== '' && isMeasured(path));
+  for (const path of untracked) {
+    const text = readFileSync(join(cwd, path), 'utf8');
+    const count = text.split('\n').length - (text.endsWith('\n') ? 1 : 0);
+    changed.set(
+      path,
+      Array.from({ length: count }, (_, index) => index + 1),
+    );
+  }
+  return changed;
+}
+
+// The changed-lines threshold, in percent; throws on a file that is missing,
+// not JSON or without `changedLines` as a number from 0 to 100.
+function readThreshold(cwd: string): number {
+  let value: unknown;
+  try {
+    value = JSON.parse(readFileSync(join(cwd, THRESHOLD_FILE), 'utf8'));
+  } catch {
+    throw new Error(`${THRESHOLD_FILE}: cannot be read as JSON`);
+  }
+  const threshold = isRecord(value) ? value['changedLines'] : undefined;
+  if (typeof threshold !== 'number' || threshold < 0 || threshold > 100) {
+    throw new Error(
+      `${THRESHOLD_FILE}: changedLines must be a number from 0 to 100`,
+    );
+  }
+  return threshold;
+}
+
+function readReport(cwd: string, path: string): CoverageReport {
+  try {
+    return readLcov(readFileSync(join(cwd, path), 'utf8'));
+  } catch {
+    throw new Error(
+      `${path}: cannot be read; run \`npm test\` and \`npm run test:stories\``,
+    );
+  }
+}
+
+// Judges the changed lines of the working tree against both coverage reports
+// and the threshold file. Throws when any of the inputs cannot be read.
+export function checkCoverage(cwd: string): Violation[] {
+  const threshold = readThreshold(cwd);
+  const reports = REPORT_FILES.map((path) => readReport(cwd, path));
+  return findCoverageViolations(readChangedLines(cwd), reports, threshold);
+}
+
+if (import.meta.main) {
+  await runGate(() => checkCoverage(process.cwd()));
 }

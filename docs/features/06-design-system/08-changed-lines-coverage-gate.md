@@ -1,5 +1,5 @@
 ---
-status: in-progress
+status: done
 ---
 # Changed-lines coverage in Verify
 
@@ -43,19 +43,19 @@ This ticket is the approval to change exactly: the root `package.json`
 
 ## Acceptance criteria
 
-- [ ] A RED commit adds the entry and **Gate wiring** tests, which fail.
-- [ ] `quality/coverage-threshold.json` is exactly `{ "changedLines": 80 }`.
-- [ ] The entry, in a temporary sample repository, exits 0 at or above the
+- [x] A RED commit adds the entry and **Gate wiring** tests, which fail.
+- [x] `quality/coverage-threshold.json` is exactly `{ "changedLines": 80 }`.
+- [x] The entry, in a temporary sample repository, exits 0 at or above the
       threshold and with no coverable changed lines, and 1 with A4's
       summary and per-file lines below it; an untracked file's lines count.
-- [ ] It exits 1 for a missing or malformed threshold file, a missing
+- [x] It exits 1 for a missing or malformed threshold file, a missing
       report, no `origin/main`, and a changed measured file in neither
       report.
-- [ ] **Verify** runs the fifteen gates in Q35's order, pinned by the
+- [x] **Verify** runs the fifteen gates in Q35's order, pinned by the
       **Gate wiring** test; `check:coverage` passes on the repository.
-- [ ] The **Mutation score** stays at or above the **Break threshold** of
+- [x] The **Mutation score** stays at or above the **Break threshold** of
       83 (`npm run test:mutation`).
-- [ ] `npm run verify` is green.
+- [x] `npm run verify` is green.
 
 ## Blocked by
 

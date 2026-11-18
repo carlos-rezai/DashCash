@@ -4,7 +4,9 @@ import { Loader } from '../Loader/Loader.tsx';
 import type { LoaderVariant } from '../Loader/Loader.styles.ts';
 import {
   Control,
-  Label,
+  Face,
+  Ghost,
+  Mark,
   type ButtonSize,
   type ButtonVariant,
 } from './Button.styles.ts';
@@ -28,6 +30,62 @@ type ButtonProps = {
 
 const ICON_SIZE = { sm: 14, md: 16 };
 
+type FaceProps = {
+  shown: boolean;
+  iconSize: number;
+  // What stands left of the text: an icon, the Loader, or nothing.
+  lead: IconName | 'loader' | undefined;
+  text: string | undefined;
+  iconRight: IconName | undefined;
+  loaderVariant: LoaderVariant;
+};
+
+// One state of the button. Not shown, it keeps the room of its content and
+// draws none of it.
+function ButtonFace({
+  shown,
+  iconSize,
+  lead,
+  text,
+  iconRight,
+  loaderVariant,
+}: FaceProps) {
+  const mark = <Mark $size={iconSize} />;
+  let leading = null;
+  if (lead !== undefined) {
+    if (!shown) {
+      leading = mark;
+    } else if (lead === 'loader') {
+      leading = (
+        <Loader
+          variant={loaderVariant}
+          size={iconSize}
+          delay={0}
+          color="currentColor"
+        />
+      );
+    } else {
+      leading = <Icon glyph={lead} size={iconSize} />;
+    }
+  }
+  let trailing = null;
+  if (iconRight !== undefined) {
+    trailing = shown ? <Icon glyph={iconRight} size={iconSize} /> : mark;
+  }
+  let words = null;
+  if (text !== undefined && text !== '') {
+    words = shown ? text : <Ghost data-text={text} />;
+  }
+
+  return (
+    <Face $hidden={!shown} aria-hidden={shown ? undefined : true}>
+      {leading}
+      {words}
+      {trailing}
+    </Face>
+  );
+}
+
 export function Button({
   label,
   variant = 'secondary',
@@ -43,10 +101,8 @@ export function Button({
   loaderVariant = 'draw',
 }: ButtonProps) {
   const iconSize = ICON_SIZE[size];
-  const shownLabel = loading && loadingLabel ? loadingLabel : label;
-  // The text the button shows in its other state, which it keeps room for.
-  const heldLabel = loading && loadingLabel ? label : loadingLabel;
   const iconOnly = label === undefined || label === '';
+  const common = { iconSize, iconRight, loaderVariant };
 
   return (
     <Control
@@ -61,21 +117,13 @@ export function Button({
       title={title ?? label}
       onClick={onClick}
     >
-      {loading ? (
-        <Loader
-          variant={loaderVariant}
-          size={iconSize}
-          delay={0}
-          color="currentColor"
-        />
-      ) : null}
-      {icon !== undefined && !loading ? (
-        <Icon glyph={icon} size={iconSize} />
-      ) : null}
-      {iconOnly ? null : <Label data-hold={heldLabel}>{shownLabel}</Label>}
-      {iconRight === undefined ? null : (
-        <Icon glyph={iconRight} size={iconSize} />
-      )}
+      <ButtonFace {...common} shown={!loading} lead={icon} text={label} />
+      <ButtonFace
+        {...common}
+        shown={loading}
+        lead="loader"
+        text={loadingLabel ?? label}
+      />
     </Control>
   );
 }

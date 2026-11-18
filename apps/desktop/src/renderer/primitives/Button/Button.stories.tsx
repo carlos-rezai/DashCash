@@ -328,12 +328,19 @@ export const Loading: Story = {
   },
 };
 
-// A button that is not loading yet, and a plain control that starts it.
+// A button with an icon and one without, neither loading yet, and a plain
+// control that starts both.
 function StartsLoading(args: ComponentProps<typeof Button>) {
   const [loading, setLoading] = useState(false);
   return (
     <>
       <Button {...args} loading={loading} />
+      <Button
+        variant="secondary"
+        label="Export CSV"
+        loadingLabel="Exporting…"
+        loading={loading}
+      />
       <button
         type="button"
         onClick={() => {
@@ -346,7 +353,9 @@ function StartsLoading(args: ComponentProps<typeof Button>) {
   );
 }
 
-// "Import CSV" becomes "Importing…" (wider) and the width does not jump.
+// "Import CSV" becomes "Importing…" (wider) and the width does not jump, with
+// an icon or without one (the Loader takes the icon's place, or adds to the
+// width where there was no icon).
 export const LoadingKeepsWidth: Story = {
   args: {
     variant: 'primary',
@@ -356,15 +365,34 @@ export const LoadingKeepsWidth: Story = {
   },
   render: (args) => <StartsLoading {...args} />,
   play: async ({ canvasElement }) => {
-    const button = theButton(canvasElement, 'Import CSV');
-    await expect(button).toHaveAttribute('aria-busy', 'false');
-    const before = button.getBoundingClientRect().width;
+    const canvas = within(canvasElement);
+    const withIcon = canvas.getByRole('button', { name: 'Import CSV' });
+    const withoutIcon = canvas.getByRole('button', { name: 'Export CSV' });
+    await expect(withIcon).toHaveAttribute('aria-busy', 'false');
+    await expect(withoutIcon).toHaveAttribute('aria-busy', 'false');
+    const widthWithIcon = withIcon.getBoundingClientRect().width;
+    const widthWithoutIcon = withoutIcon.getBoundingClientRect().width;
 
     await userEvent.click(
-      within(canvasElement).getByRole('button', { name: 'Start loading' }),
+      canvas.getByRole('button', { name: 'Start loading' }),
     );
-    await expect(button).toHaveAttribute('aria-busy', 'true');
-    await expect(button.textContent.trim()).toBe('Importing…');
-    await expect(button.getBoundingClientRect().width).toBeCloseTo(before, 1);
+    await expect(withIcon).toHaveAttribute('aria-busy', 'true');
+    await expect(withoutIcon).toHaveAttribute('aria-busy', 'true');
+    // The hidden idle content does not name the button: the name is the
+    // Loader's own "Loading" and the -ing label, nothing more.
+    await expect(
+      canvas.getByRole('button', { name: 'Loading Importing…' }),
+    ).toBe(withIcon);
+    await expect(
+      canvas.getByRole('button', { name: 'Loading Exporting…' }),
+    ).toBe(withoutIcon);
+    await expect(withIcon.getBoundingClientRect().width).toBeCloseTo(
+      widthWithIcon,
+      1,
+    );
+    await expect(withoutIcon.getBoundingClientRect().width).toBeCloseTo(
+      widthWithoutIcon,
+      1,
+    );
   },
 };

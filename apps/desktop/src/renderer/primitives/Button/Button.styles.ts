@@ -55,34 +55,44 @@ const FILLS = {
   `,
 };
 
-// The label, as wide as the wider of its two texts: the other one is held in
-// data-hold and laid out unseen, so the button's width does not jump when the
-// label changes between its idle and loading text.
-export const Label = styled.span`
-  display: inline-flex;
-  flex-direction: column;
+// The idle and the loading content, one face each, stacked in the button's
+// one grid cell: the button is as wide as the wider face, in both states. The
+// face not shown is hidden, so it is neither seen, announced nor part of the
+// button's name.
+export const Face = styled.span<{ $hidden: boolean }>`
+  grid-area: 1 / 1;
+  display: flex;
   align-items: center;
+  justify-content: center;
+  gap: ${({ theme }) => theme.space.buttonGap};
+  visibility: ${({ $hidden }) => ($hidden ? 'hidden' : 'visible')};
+`;
 
-  &::after {
-    content: attr(data-hold);
-    height: 0;
-    overflow: hidden;
-    visibility: hidden;
+// In a hidden face, in place of an icon or the Loader: a box of its size. The
+// drawing itself is only in the shown face.
+export const Mark = styled.span<{ $size: number }>`
+  flex: none;
+  width: ${({ $size }) => $size}px;
+  height: ${({ $size }) => $size}px;
+`;
+
+// In a hidden face, in place of the text: the same text drawn by the style, so
+// it takes its width but is not part of the button's text.
+export const Ghost = styled.span`
+  &::before {
+    content: attr(data-text);
   }
 `;
 
 export const Control = styled.button<StyledProps>`
   box-sizing: border-box;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+  display: inline-grid;
   flex: none;
-  gap: ${({ theme }) => theme.space.buttonGap};
-  height: ${({ $size, theme }) => theme.controlHeight[$size]};
-  min-height: ${({ $size, theme }) => theme.controlHeight[$size]};
+  height: ${({ $size, theme }) => theme.size.controlHeight[$size]};
+  min-height: ${({ $size, theme }) => theme.size.controlHeight[$size]};
   width: ${({ $block, $iconOnly, $size, theme }) => {
     if ($iconOnly) {
-      return theme.controlHeight[$size];
+      return theme.size.controlHeight[$size];
     }
     return $block ? '100%' : 'auto';
   }};
@@ -110,7 +120,7 @@ export const Control = styled.button<StyledProps>`
 
   /* Disabled: no hover or pressed state; busy: at full strength. */
   &:disabled {
-    opacity: ${({ $busy, theme }) => ($busy ? 1 : theme.opacity.disabled)};
+    opacity: ${({ $busy, theme }) => ($busy ? 1 : theme.color.opacity.disabled)};
     cursor: ${({ $busy }) => ($busy ? 'progress' : 'not-allowed')};
   }
 `;

@@ -39,6 +39,10 @@ export const theme = {
     // styles.css, .btn-ghost:hover and :active: the accent at 10 and 18 %
     ghostHover: 'color-mix(in srgb, #749dc4 10%, transparent)',
     ghostPressed: 'color-mix(in srgb, #749dc4 18%, transparent)',
+    opacity: {
+      // styles.css: .btn:disabled
+      disabled: 0.45,
+    },
   },
   font: {
     // --font-heading, --font-heading-weight, --font-body
@@ -74,16 +78,12 @@ export const theme = {
     // Control sizing: the gap between a Button's icon and its label
     buttonGap: '6px',
   },
-  // SPEC, Control sizing: the two Control heights
-  controlHeight: {
-    md: '36px',
-    sm: '28px',
-  },
-  // styles.css: .btn:disabled
-  opacity: {
-    disabled: 0.45,
-  },
   size: {
+    // SPEC, Control sizing: the two Control heights
+    controlHeight: {
+      md: '36px',
+      sm: '28px',
+    },
     // styles.css: :focus-visible { outline: 2px solid ...; outline-offset: 2px }
     focusRingWidth: '2px',
     focusRingOffset: '2px',

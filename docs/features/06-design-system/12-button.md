@@ -34,6 +34,11 @@ the **Control heights** and the values it uses (P1). Touches no gate file.
       busy; the icon-only button is named by its `title`.
 - [x] `npm run verify` is green.
 
+## Notes
+
+- The Loader's styles (`primitives/Loader/Loader.styles.ts`) still use literal
+  opacities, against "theme tokens only"; for the refactor.
+
 ## Blocked by
 
 - Blocked by `11-loader.md`

@@ -16,7 +16,9 @@ const AMBER = 'rgb(224, 180, 105)';
 // --color-accent-600 #94bce3
 const ACCENT = 'rgb(148, 188, 227)';
 
-const BODY_FONT = '"Barlow"';
+// Chromium reports a family that is one identifier without quotes, and one
+// with a space, like Barlow Condensed, with them.
+const BODY_FONT = 'Barlow';
 const HEADING_FONT = '"Barlow Condensed"';
 
 type Look = {

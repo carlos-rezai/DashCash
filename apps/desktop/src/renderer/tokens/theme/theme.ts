@@ -21,14 +21,34 @@ export const theme = {
     },
     // styles.css: ::selection, the accent at 30 %
     selection: 'color-mix(in srgb, #749dc4 30%, transparent)',
+    // --sb-positive
+    positive: '#7cc59a',
+    // --sb-negative, raised from #e8877b to pass contrast (design log D1)
+    negative: '#ed8c80',
+    // --sb-warning
+    warning: '#e0b469',
+    // --sb-danger, raised from #e8877b to pass contrast (design log D1)
+    danger: '#ed8c80',
   },
   font: {
     // --font-heading, --font-heading-weight, --font-body
     heading: '"Barlow Condensed", system-ui, sans-serif',
     headingWeight: 600,
     body: '"Barlow", system-ui, sans-serif',
+    // SPEC section 2: Barlow 400 and 500
+    bodyWeight: 400,
+    bodyWeightStrong: 500,
+    // Amount.dc.html: letter-spacing of its heading sizes, and its line-height
+    headingLetterSpacing: '-0.01em',
+    amountLineHeight: 1.15,
   },
-  fontSize: {},
+  // SPEC section 2's type scale: sm 13, md 14, lg 22, xl 34
+  fontSize: {
+    sm: '13px',
+    md: '14px',
+    lg: '22px',
+    xl: '34px',
+  },
   space: {},
   size: {
     // styles.css: :focus-visible { outline: 2px solid ...; outline-offset: 2px }

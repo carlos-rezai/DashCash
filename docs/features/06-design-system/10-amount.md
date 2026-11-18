@@ -1,5 +1,5 @@
 ---
-status: in-progress
+status: done
 ---
 # Amount
 
@@ -24,16 +24,16 @@ file.
 
 ## Acceptance criteria
 
-- [ ] A RED commit adds the Amount's **Stories**, which fail.
-- [ ] (review) Props exactly SPEC §3 with `tone` SPEC §3's seven plus
+- [x] A RED commit adds the Amount's **Stories**, which fail.
+- [x] (review) Props exactly SPEC §3 with `tone` SPEC §3's seven plus
       `accent` (Q7); every value from the **Theme**; `muted` renders the
       same colour as `auto` at full opacity (D1).
-- [ ] Every tone's **Story** passes the **Accessibility check**, contrast
+- [x] Every tone's **Story** passes the **Accessibility check**, contrast
       included.
-- [ ] The Amount has a **Story** per tone, per size, `strong`, zero and
+- [x] The Amount has a **Story** per tone, per size, `strong`, zero and
       `null`, with invented values in German format verbatim, each showing
       the formatted text (`−86,40 €`, "-" for `null`).
-- [ ] `npm run verify` is green.
+- [x] `npm run verify` is green.
 
 ## Blocked by
 

@@ -11,6 +11,7 @@
   },
   "devDependencies": {
     "@dashcash/contract": "0.0.0",
+    "@dashcash/domain": "0.0.0",
     "@fontsource/barlow": "5.3.0",
     "@fontsource/barlow-condensed": "5.3.0",
     "@types/react": "19.3.0",

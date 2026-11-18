@@ -1,5 +1,5 @@
 ---
-status: in-progress
+status: done
 ---
 # Cents and the money format in the domain
 

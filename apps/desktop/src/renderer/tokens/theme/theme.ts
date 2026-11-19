@@ -11,6 +11,7 @@ export const theme = {
     text: '#e9f1fa',
     // The accent ramp, inverted for the dark ground; 500 is --color-accent.
     accent: {
+      100: '#22384d',
       300: '#416180',
       400: '#597ea3',
       500: '#749dc4',
@@ -52,6 +53,8 @@ export const theme = {
     ghostPressed: 'color-mix(in srgb, #749dc4 18%, transparent)',
     // styles.css, .input:hover: the text colour at 45 %
     inputHover: 'color-mix(in srgb, #e9f1fa 45%, transparent)',
+    // --sb-hover: the fill of a Segmented option under the pointer
+    hover: 'color-mix(in srgb, #e9f1fa 6%, transparent)',
     opacity: {
       // styles.css: .btn:disabled
       disabled: 0.45,
@@ -107,6 +110,11 @@ export const theme = {
     selectPaddingChevron: '30px',
     inputAdornmentInset: '10px',
     selectChevronInset: '9px',
+    // Segmented.dc.html: the side padding of an option
+    segmentedPadding: '12px',
+    // Chip.dc.html: the side padding of a Chip and the gap between its parts
+    chipPadding: '10px',
+    chipGap: '7px',
   },
   size: {
     // SPEC, Control sizing: the two Control heights
@@ -118,6 +126,11 @@ export const theme = {
     tagHeight: '22px',
     // Swatch.dc.html: the height of a line
     swatchLine: '2px',
+    // SPEC, Control sizing: the Chip's fixed height; Chip.dc.html: the width of
+    // its swatch and the height of a line swatch
+    chipHeight: '28px',
+    chipSwatch: '10px',
+    chipSwatchLine: '3px',
     // styles.css: :focus-visible { outline: 2px solid ...; outline-offset: 2px }
     focusRingWidth: '2px',
     focusRingOffset: '2px',

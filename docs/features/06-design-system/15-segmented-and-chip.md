@@ -1,5 +1,5 @@
 ---
-status: in-progress
+status: done
 ---
 # Segmented and Chip
 
@@ -22,15 +22,15 @@ file.
 
 ## Acceptance criteria
 
-- [ ] A RED commit adds both components' **Stories**, which fail.
-- [ ] (review) Props exactly SPEC §3; the Chip's 28 px is a **Token**.
-- [ ] **Stories**: the Segmented with each option selected and at both
+- [x] A RED commit adds both components' **Stories**, which fail.
+- [x] (review) Props exactly SPEC §3; the Chip's 28 px is a **Token**.
+- [x] **Stories**: the Segmented with each option selected and at both
       sizes; the Chip resting and pressed, with each swatch shape, with
       meta, and disabled.
-- [ ] **Play functions**: a click on an option selects it and reports its
+- [x] **Play functions**: a click on an option selects it and reports its
       value; a click on a chip reports the new pressed state; a click on a
       disabled chip reports nothing.
-- [ ] `npm run verify` is green.
+- [x] `npm run verify` is green.
 
 ## Blocked by
 

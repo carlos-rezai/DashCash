@@ -35,6 +35,7 @@ feature PR.
 - Aim for a handful of end-to-end tests per feature at most; everything else belongs a layer lower.
 - A test that checks the state of the repository and so fails inside Stryker's sandbox (formatting, lint, tracked files) is excluded from mutation runs by name, in the Stryker Vitest config; a file joins that list only through a ticket that names it.
 - A story that checks resting colours renders the element inside a container with pointer-events: none until those colours are read, and checks that the element does not match :hover first. Chromium on Linux can apply :hover without pointer movement.
+- A font check compares the family name without quotes: Chromium quotes only names that contain a space.
 
 ## Branches and pull requests
 

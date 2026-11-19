@@ -11,13 +11,17 @@ export const theme = {
     text: '#e9f1fa',
     // The accent ramp, inverted for the dark ground; 500 is --color-accent.
     accent: {
+      300: '#416180',
+      400: '#597ea3',
       500: '#749dc4',
       600: '#94bce3',
       700: '#b5d9fd',
+      900: '#eef6ff',
     },
     // The neutral ramp, inverted the same way.
     neutral: {
       300: '#3f5063',
+      900: '#eef2f6',
     },
     // styles.css: ::selection, the accent at 30 %
     selection: 'color-mix(in srgb, #749dc4 30%, transparent)',
@@ -31,6 +35,13 @@ export const theme = {
     warning: '#e0b469',
     // --sb-danger, raised from #e8877b to pass contrast (design log D1)
     danger: '#ed8c80',
+    // --sb-milestone (the positive green, SPEC section 2) and its 16 % tint
+    milestone: '#7cc59a',
+    milestoneTint: 'color-mix(in srgb, #7cc59a 16%, transparent)',
+    // --sb-warning-tint and --sb-danger-tint, 14 %; the danger tint keeps the
+    // base #e8877b (design log D1)
+    warningTint: 'color-mix(in srgb, #e0b469 14%, transparent)',
+    dangerTint: 'color-mix(in srgb, #e8877b 14%, transparent)',
     // --color-divider
     divider: 'color-mix(in srgb, #e9f1fa 16%, transparent)',
     // styles.css, .btn-secondary:hover and :active: the text colour at 7 and 14 %
@@ -57,6 +68,8 @@ export const theme = {
     amountLineHeight: 1.15,
     // Button.dc.html: letter-spacing of the label
     buttonLetterSpacing: '0.01em',
+    // styles.css: .tag
+    tagLetterSpacing: '0.02em',
   },
   // SPEC section 2's type scale: sm 13, md 14, lg 22, xl 34
   fontSize: {
@@ -66,6 +79,8 @@ export const theme = {
     xl: '34px',
     // Loader.dc.html: the label beside a Loader of 48 px or more
     loaderLabelLarge: '15px',
+    // styles.css: .tag
+    tag: '11px',
   },
   space: {
     // Loader.dc.html: the gap between a Loader and its label, below 48 px
@@ -77,6 +92,9 @@ export const theme = {
     buttonPaddingSm: '10px',
     // Control sizing: the gap between a Button's icon and its label
     buttonGap: '6px',
+    // Tag.dc.html: the side padding of a Tag and the gap between its parts
+    tagPadding: '8px',
+    tagGap: '5px',
   },
   size: {
     // SPEC, Control sizing: the two Control heights
@@ -84,6 +102,10 @@ export const theme = {
       md: '36px',
       sm: '28px',
     },
+    // SPEC, Control sizing: the Tag's fixed height
+    tagHeight: '22px',
+    // Swatch.dc.html: the height of a line
+    swatchLine: '2px',
     // styles.css: :focus-visible { outline: 2px solid ...; outline-offset: 2px }
     focusRingWidth: '2px',
     focusRingOffset: '2px',

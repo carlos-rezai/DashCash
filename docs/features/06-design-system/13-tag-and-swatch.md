@@ -1,5 +1,5 @@
 ---
-status: in-progress
+status: done
 ---
 # Tag and Swatch
 
@@ -21,13 +21,13 @@ accent. Stories titled `Primitives/Tag` and `Primitives/Swatch`; the
 
 ## Acceptance criteria
 
-- [ ] A RED commit adds the Tag's and the Swatch's **Stories**, which fail.
-- [ ] (review) `TagTone` is SPEC §1's five plus `milestone`; Swatch's props
+- [x] A RED commit adds the Tag's and the Swatch's **Stories**, which fail.
+- [x] (review) `TagTone` is SPEC §1's five plus `milestone`; Swatch's props
       exactly SPEC §3; the tag height 22 is a **Token**.
-- [ ] **Stories** for every tone, a tag with an icon ("New bank format"
+- [x] **Stories** for every tone, a tag with an icon ("New bank format"
       with its info icon), with a swatch, "Paid off" in the **Milestone
       tone** with its flag, and each swatch shape.
-- [ ] `npm run verify` is green.
+- [x] `npm run verify` is green.
 
 ## Blocked by
 

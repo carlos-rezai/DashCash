@@ -38,6 +38,11 @@ the **Control heights** and the values it uses (P1). Touches no gate file.
 
 - The Loader's styles (`primitives/Loader/Loader.styles.ts`) still use literal
   opacities, against "theme tokens only"; for the refactor.
+- CI first failed the colour checks of Secondary, Ghost and Danger: Chromium
+  on Linux applied :hover to the button without pointer movement (run
+  44482220335 showed it). Fixed in 80ccc2b, which reads resting colours with
+  the button out of the pointer's reach; run 44483412180 then passed three
+  times.
 
 ## Blocked by
 

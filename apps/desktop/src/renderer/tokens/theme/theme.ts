@@ -50,6 +50,8 @@ export const theme = {
     // styles.css, .btn-ghost:hover and :active: the accent at 10 and 18 %
     ghostHover: 'color-mix(in srgb, #749dc4 10%, transparent)',
     ghostPressed: 'color-mix(in srgb, #749dc4 18%, transparent)',
+    // styles.css, .input:hover: the text colour at 45 %
+    inputHover: 'color-mix(in srgb, #e9f1fa 45%, transparent)',
     opacity: {
       // styles.css: .btn:disabled
       disabled: 0.45,

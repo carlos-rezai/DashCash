@@ -39,6 +39,17 @@ export const Field = styled.input<FieldProps>`
   background: ${({ theme }) => theme.color.bg};
   border: 1px solid ${({ theme }) => theme.color.divider};
   border-radius: 0;
+  caret-color: ${({ theme }) => theme.color.accent[500]};
+
+  /* styles.css, .input: the border answers the pointer and the keyboard. */
+  &:hover {
+    border-color: ${({ theme }) => theme.color.inputHover};
+  }
+
+  &:focus-visible {
+    border-color: ${({ theme }) => theme.color.accent[500]};
+    outline-offset: 0;
+  }
 
   &::placeholder {
     color: ${({ theme }) => theme.color.textMuted};

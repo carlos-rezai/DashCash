@@ -14,6 +14,12 @@ const INPUT_GROUND = '#1b2a39';
 const INK = '#e9f1fa';
 // --color-divider: the border at rest
 const DIVIDER = 'color-mix(in srgb, #e9f1fa 16%, transparent)';
+// --sb-text-muted: the icon, the suffix and the placeholder
+const TEXT_MUTED = 'color-mix(in srgb, #e9f1fa 62%, transparent)';
+// styles.css, .input:hover: the border under the pointer, the text colour at 45 %
+const HOVER_BORDER = 'color-mix(in srgb, #e9f1fa 45%, transparent)';
+// --color-accent: the border and the caret while the field is focused
+const ACCENT = '#749dc4';
 
 // The width of the holder every story renders in: an Input fills it.
 const HOLDER_WIDTH = 320;
@@ -63,6 +69,33 @@ function computedColour(css: string): string {
   const value = getComputedStyle(probe).color;
   probe.remove();
   return value;
+}
+
+// The border colour the stylesheet gives an element under the pointer: that of
+// the :hover rules that select it. A story's synthetic pointer events do not
+// make Chromium apply :hover, so the rule is read, not the cascade.
+function hoverBorderColours(element: Element): string[] {
+  const colours: string[] = [];
+  for (const sheet of document.styleSheets) {
+    for (const rule of sheet.cssRules) {
+      if (
+        rule instanceof CSSStyleRule &&
+        rule.selectorText.includes(':hover') &&
+        element.matches(rule.selectorText.replaceAll(':hover', '')) &&
+        rule.style.borderColor !== ''
+      ) {
+        colours.push(rule.style.borderColor);
+      }
+    }
+  }
+  return colours;
+}
+
+// How Chromium serialises a CSS colour set as a border colour.
+function serialisedBorderColour(css: string): string {
+  const probe = document.createElement('span');
+  probe.style.borderColor = css;
+  return probe.style.borderColor;
 }
 
 // Holds the Input at a fixed width, and out of the pointer's reach while its
@@ -234,7 +267,6 @@ export const LeftIcon: Story = {
   play: async ({ canvasElement }) => {
     const field = theField(canvasElement, 'Search rules');
     await expect(field.placeholder).toBe('Search rules');
-    await expectField(field, { height: 36, fontSize: '14px' });
 
     const svgs = [
       ...within(canvasElement).getByTestId('control').querySelectorAll('svg'),
@@ -244,6 +276,12 @@ export const LeftIcon: Story = {
     if (svg === undefined) {
       throw new Error('no icon');
     }
+    // Muted, read while the holder keeps the pointer off.
+    await expect(field.matches(':hover'), 'hovered').toBe(false);
+    await expect(getComputedStyle(svg).color, 'icon colour').toBe(
+      computedColour(TEXT_MUTED),
+    );
+    await expectField(field, { height: 36, fontSize: '14px' });
     const reference = within(canvasElement)
       .getByTestId('reference')
       .querySelector('svg');
@@ -274,6 +312,12 @@ export const MoneyField: Story = {
   play: async ({ canvasElement }) => {
     const field = theField(canvasElement, 'Balance today');
     await expect(field.value).toBe('1.529,60');
+    // Muted, read while the holder keeps the pointer off.
+    await expect(field.matches(':hover'), 'hovered').toBe(false);
+    await expect(
+      getComputedStyle(within(canvasElement).getByText('€')).color,
+      'suffix colour',
+    ).toBe(computedColour(TEXT_MUTED));
     await expectField(field, { height: 36, fontSize: '14px' });
 
     const style = getComputedStyle(field);
@@ -293,6 +337,36 @@ export const MoneyField: Story = {
     await expect(mark.right, 'suffix inside').toBeLessThan(box.right);
     await expect(middle(mark), 'suffix centred').toBeCloseTo(middle(box), 0);
     await expect(getComputedStyle(suffix).fontSize, 'suffix size').toBe('14px');
+  },
+};
+
+// styles.css, .input: under the pointer the border turns to the text colour at
+// 45 % (the :hover rule); focused from the keyboard it turns to the accent, the ring sits on the
+// border (offset 0) and the caret is the accent.
+export const HoverAndFocus: Story = {
+  args: { value: 'Rewe', ariaLabel: 'Merchant' },
+  render: (args) => <ControlledInput {...args} />,
+  play: async ({ canvasElement }) => {
+    const field = theField(canvasElement, 'Merchant');
+    await expect(getComputedStyle(field).caretColor, 'caret').toBe(
+      computedColour(ACCENT),
+    );
+
+    await expect(hoverBorderColours(field), 'hover border').toEqual([
+      serialisedBorderColour(HOVER_BORDER),
+    ]);
+
+    await userEvent.tab();
+    await expect(field).toHaveFocus();
+    await expect(field.matches(':focus-visible'), 'focus-visible').toBe(true);
+    const style = getComputedStyle(field);
+    for (const side of ['Top', 'Right', 'Bottom', 'Left'] as const) {
+      await expect(style[`border${side}Color`], `${side} focus border`).toBe(
+        computedColour(ACCENT),
+      );
+    }
+    await expect(style.outlineOffset, 'outline offset').toBe('0px');
+    await expect(style.outlineStyle, 'outline style').toBe('solid');
   },
 };
 

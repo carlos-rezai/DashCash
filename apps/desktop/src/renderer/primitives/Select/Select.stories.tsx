@@ -19,6 +19,10 @@ const TEXT_MUTED = 'color-mix(in srgb, #e9f1fa 62%, transparent)';
 const DIVIDER = 'color-mix(in srgb, #e9f1fa 16%, transparent)';
 // --sb-warning: the warning tone's border and placeholder
 const WARNING = '#e0b469';
+// styles.css, .input:hover: the border under the pointer, the text colour at 45 %
+const HOVER_BORDER = 'color-mix(in srgb, #e9f1fa 45%, transparent)';
+// --color-accent: the border and the caret while the select is focused
+const ACCENT = '#749dc4';
 // --sb-cat-1 to --sb-cat-4: the categories of the stories
 const CATEGORY_1 = '#f08f87';
 const CATEGORY_2 = '#5cc697';
@@ -84,6 +88,33 @@ function computedColour(css: string): string {
   const value = getComputedStyle(probe).color;
   probe.remove();
   return value;
+}
+
+// The border colour the stylesheet gives an element under the pointer: that of
+// the :hover rules that select it. A story's synthetic pointer events do not
+// make Chromium apply :hover, so the rule is read, not the cascade.
+function hoverBorderColours(element: Element): string[] {
+  const colours: string[] = [];
+  for (const sheet of document.styleSheets) {
+    for (const rule of sheet.cssRules) {
+      if (
+        rule instanceof CSSStyleRule &&
+        rule.selectorText.includes(':hover') &&
+        element.matches(rule.selectorText.replaceAll(':hover', '')) &&
+        rule.style.borderColor !== ''
+      ) {
+        colours.push(rule.style.borderColor);
+      }
+    }
+  }
+  return colours;
+}
+
+// How Chromium serialises a CSS colour set as a border colour.
+function serialisedBorderColour(css: string): string {
+  const probe = document.createElement('span');
+  probe.style.borderColor = css;
+  return probe.style.borderColor;
 }
 
 // Holds the Select at a fixed width, and out of the pointer's reach while its
@@ -261,6 +292,19 @@ export const Empty: Story = {
       ['leisure', 'Leisure'],
       ['transport', 'Transport'],
     ]);
+    const svgs = [
+      ...within(canvasElement).getByTestId('control').querySelectorAll('svg'),
+    ];
+    await expect(svgs, 'icons').toHaveLength(1);
+    const [svg] = svgs;
+    if (svg === undefined) {
+      throw new Error('no chevron');
+    }
+    // The chevron is muted, read while the holder keeps the pointer off.
+    await expect(select.matches(':hover'), 'hovered').toBe(false);
+    await expect(getComputedStyle(svg).color, 'chevron colour').toBe(
+      computedColour(TEXT_MUTED),
+    );
     await expectSelect(select, {
       height: 36,
       fontSize: '14px',
@@ -275,14 +319,6 @@ export const Empty: Story = {
 
     // One chevron, the reference glyph, inside the select on its right and
     // centred on its height.
-    const svgs = [
-      ...within(canvasElement).getByTestId('control').querySelectorAll('svg'),
-    ];
-    await expect(svgs, 'icons').toHaveLength(1);
-    const [svg] = svgs;
-    if (svg === undefined) {
-      throw new Error('no chevron');
-    }
     const reference = within(canvasElement)
       .getByTestId('reference')
       .querySelector('svg');
@@ -409,6 +445,68 @@ export const Warning: Story = {
       text: WARNING,
       border: WARNING,
     });
+  },
+};
+
+// styles.css, .input: under the pointer the border turns to the text colour at
+// 45 % (the :hover rule); focused from the keyboard it turns to the accent, the ring sits on the
+// border (offset 0) and the caret is the accent.
+export const HoverAndFocus: Story = {
+  args: { value: 'groceries', ariaLabel: 'Category' },
+  render: (args) => <ControlledSelect {...args} />,
+  play: async ({ canvasElement }) => {
+    const select = theSelect(canvasElement, 'Category');
+    await expect(getComputedStyle(select).caretColor, 'caret').toBe(
+      computedColour(ACCENT),
+    );
+
+    await expect(hoverBorderColours(select), 'hover border').toEqual([
+      serialisedBorderColour(HOVER_BORDER),
+    ]);
+
+    await userEvent.tab();
+    await expect(select).toHaveFocus();
+    await expect(select.matches(':focus-visible'), 'focus-visible').toBe(true);
+    const style = getComputedStyle(select);
+    for (const side of ['Top', 'Right', 'Bottom', 'Left'] as const) {
+      await expect(style[`border${side}Color`], `${side} focus border`).toBe(
+        computedColour(ACCENT),
+      );
+    }
+    await expect(style.outlineOffset, 'outline offset').toBe('0px');
+    await expect(style.outlineStyle, 'outline style').toBe('solid');
+  },
+};
+
+// The warning border is set inline in Select.dc.html, so it survives the
+// pointer and the keyboard: amber on hover and on focus.
+export const WarningHoverAndFocus: Story = {
+  args: {
+    value: '',
+    placeholder: 'Pick a category',
+    tone: 'warning',
+    ariaLabel: 'Category',
+  },
+  render: (args) => <ControlledSelect {...args} />,
+  play: async ({ canvasElement }) => {
+    const select = theSelect(canvasElement, 'Category');
+
+    // No :hover rule recolours the border, so the resting amber stays.
+    await expect(hoverBorderColours(select), 'hover border').toEqual([]);
+    await expect(getComputedStyle(select).borderTopColor, 'border').toBe(
+      computedColour(WARNING),
+    );
+
+    await userEvent.tab();
+    await expect(select).toHaveFocus();
+    await expect(select.matches(':focus-visible'), 'focus-visible').toBe(true);
+    const style = getComputedStyle(select);
+    for (const side of ['Top', 'Right', 'Bottom', 'Left'] as const) {
+      await expect(style[`border${side}Color`], `${side} focus border`).toBe(
+        computedColour(WARNING),
+      );
+    }
+    await expect(style.outlineOffset, 'outline offset').toBe('0px');
   },
 };
 

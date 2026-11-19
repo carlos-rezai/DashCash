@@ -46,12 +46,20 @@ export const Control = styled.select<ControlProps>`
     ${({ $tone, theme }) =>
       $tone === 'warning' ? theme.color.warning : theme.color.divider};
   border-radius: 0;
+  caret-color: ${({ theme }) => theme.color.accent[500]};
   cursor: pointer;
 
-  /* The open list reads in ink, whatever tone the closed select has. */
-  option {
-    color: ${({ theme }) => theme.color.text};
-    background: ${({ theme }) => theme.color.bg};
+  /* styles.css, .input: the border answers the pointer and the keyboard. The
+     warning border is set inline in Select.dc.html, so it stays amber. */
+  &:hover {
+    ${({ $tone, theme }) =>
+      $tone === 'warning' ? '' : `border-color: ${theme.color.inputHover};`}
+  }
+
+  &:focus-visible {
+    ${({ $tone, theme }) =>
+      $tone === 'warning' ? '' : `border-color: ${theme.color.accent[500]};`}
+    outline-offset: 0;
   }
 `;
 

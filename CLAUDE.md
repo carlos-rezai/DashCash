@@ -20,6 +20,7 @@ Read when relevant: `docs/quality-gates.md` before adding or changing a gate, `d
 - Before adding `eslint-disable`, `@ts-ignore`, `@ts-expect-error`, `.skip`, `.only` or a retry.
 - Before a larger change: write a short plan and wait.
 - When the spec is unclear or contradicts itself.
+- When a failing test looks wrong rather than the implementation: the builder never edits the test; stop and report it.
 
 ## Commands
 
@@ -53,6 +54,9 @@ Edit files with the Edit and Write tools, not with sed or shell redirection in B
 - Build 1:1 from the prototype; never redesign while building.
 - Theme tokens only; no hard-coded colours, sizes or spacing.
 - Stories cover every state (empty, loading, error, warning where relevant).
+- A prototype element's class carries its states from the prototype's `styles.css` (hover, focus-visible, caret): build and test those states too.
+- Add no styling the prototype lacks, however sensible; if something beyond it seems needed, stop and report instead.
+- Reuse an existing Theme token (e.g. `size.controlHeight`) before adding a new one.
 
 ## Tests
 
@@ -60,6 +64,10 @@ Edit files with the Edit and Write tools, not with sed or shell redirection in B
 - Invented data only. Never real bank data, IBANs or names.
 - UI behaviour: story with a `play` function. Complete user flow: Playwright in `e2e/`.
 - Say so when you wrote both the code and its tests.
+- Every prop and every style rule has a story that fails when it is removed.
+- Confirm a new assertion fails without the change it covers before keeping it; an assertion that passes either way is dropped, not committed.
+- `userEvent.hover` from `storybook/test` does not make Chromium apply `:hover`: check hover styles by reading the `:hover` rule, and drive focus for real with `userEvent.tab()`.
+- A reviewer may temporarily change the code to prove a test fails without it, but restores it and confirms `git status --porcelain` is empty.
 
 ## Never
 

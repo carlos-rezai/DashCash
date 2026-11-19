@@ -23,15 +23,15 @@ no gate file.
 
 ## Acceptance criteria
 
-- [ ] A RED commit adds both components' **Stories**, which fail.
+- [x] A RED commit adds both components' **Stories**, which fail.
 - [ ] (review) Props exactly SPEC §3 plus `ariaLabel`; Select's
       `tone: 'default' | 'warning'`.
-- [ ] **Stories** for each size, the left icon, the money field
+- [x] **Stories** for each size, the left icon, the money field
       ("1.529,60 €" right aligned, suffix "€"), the empty and chosen
       Select, the swatch, and the warning "Pick a category".
-- [ ] **Play functions**: typing reports the new text; choosing an option
+- [x] **Play functions**: typing reports the new text; choosing an option
       reports its value; both controls are named by `ariaLabel`.
-- [ ] `npm run verify` is green.
+- [x] `npm run verify` is green.
 
 ## Blocked by
 
@@ -40,3 +40,9 @@ no gate file.
 ## User stories addressed
 
 - User stories 46, 47, 48, 49, 50, 102, 103
+
+## Notes
+
+- The font-family check is written three ways (Amount, Input, Select); a
+  shared `test-support/` helper would remove the duplication. For the
+  refactor.

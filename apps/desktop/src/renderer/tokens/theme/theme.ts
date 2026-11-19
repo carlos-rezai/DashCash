@@ -95,6 +95,16 @@ export const theme = {
     // Tag.dc.html: the side padding of a Tag and the gap between its parts
     tagPadding: '8px',
     tagGap: '5px',
+    // Input.dc.html and Select.dc.html: the side padding of a field, and where
+    // an adornment sits: the left icon, the suffix, the swatch and the
+    // chevron are drawn inside it, so the text starts or ends past them
+    inputPadding: '10px',
+    inputPaddingIcon: '32px',
+    inputPaddingSuffix: '28px',
+    selectPaddingSwatch: '26px',
+    selectPaddingChevron: '30px',
+    inputAdornmentInset: '10px',
+    selectChevronInset: '9px',
   },
   size: {
     // SPEC, Control sizing: the two Control heights

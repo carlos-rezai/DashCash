@@ -212,12 +212,13 @@ export const Medium: Story = {
   },
 };
 
-// sm: 30 px high (SPEC section 3, the ticket) with 13 px text.
+// sm: 28 px high, the shared small control height (SPEC Control sizing,
+// the prototype, design log D10) with 13 px text.
 export const Small: Story = {
   args: { value: 'Rewe', size: 'sm', ariaLabel: 'Merchant' },
   play: async ({ canvasElement }) => {
     const field = theField(canvasElement, 'Merchant');
-    await expectField(field, { height: 30, fontSize: '13px' });
+    await expectField(field, { height: 28, fontSize: '13px' });
   },
 };
 

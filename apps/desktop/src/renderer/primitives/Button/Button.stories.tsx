@@ -105,22 +105,38 @@ async function expectOneIcon(
   return svg;
 }
 
+// Holds a button out of the pointer's reach while its resting colours are
+// read: Chromium on Linux can apply :hover without pointer movement.
+const Resting = styled.div`
+  &[data-resting] {
+    pointer-events: none;
+  }
+`;
+
+function renderResting(args: ComponentProps<typeof Button>) {
+  return (
+    <Resting data-resting="">
+      <Button {...args} />
+    </Resting>
+  );
+}
+
+// The colours of a button at rest, read inside Resting; afterwards the pointer
+// may reach the button again.
 async function expectColours(
   button: HTMLElement,
   text: string,
   background: string,
 ): Promise<void> {
+  const holder = button.closest('[data-resting]');
+  if (holder === null) {
+    throw new Error('the button is not held in Resting');
+  }
+  await expect(button.matches(':hover'), 'hovered').toBe(false);
   const style = getComputedStyle(button);
   await expect(style.color, 'text').toBe(text);
   await expect(style.backgroundColor, 'fill').toBe(background);
-}
-
-// Diagnostic for the CI failure of ticket 12: whether the button is under the
-// pointer while its resting colours are measured. Removed with the fix.
-function reportHover(story: string, button: HTMLElement): void {
-  console.warn(
-    `[hover-diagnostic] ${story}: ${String(button.matches(':hover'))}`,
-  );
+  holder.removeAttribute('data-resting');
 }
 
 const meta = {
@@ -143,6 +159,7 @@ export const Primary: Story = {
     icon: 'upload',
     onClick: fn(),
   },
+  render: renderResting,
   play: async ({ args, canvasElement }) => {
     const button = theButton(canvasElement, 'Import CSV');
     await expect(NO_MISSING_PROP).toBe(true);
@@ -157,9 +174,9 @@ export const Primary: Story = {
 // Secondary is the default variant: transparent, in ink.
 export const Secondary: Story = {
   args: { label: 'Cancel', onClick: fn() },
+  render: renderResting,
   play: async ({ args, canvasElement }) => {
     const button = theButton(canvasElement, 'Cancel');
-    reportHover('Secondary', button);
     await expectColours(button, INK, TRANSPARENT);
 
     await userEvent.click(button);
@@ -169,9 +186,9 @@ export const Secondary: Story = {
 
 export const Ghost: Story = {
   args: { variant: 'ghost', label: 'Show all', onClick: fn() },
+  render: renderResting,
   play: async ({ args, canvasElement }) => {
     const button = theButton(canvasElement, 'Show all');
-    reportHover('Ghost', button);
     await expectColours(button, ACCENT_600, TRANSPARENT);
 
     await userEvent.click(button);
@@ -181,9 +198,9 @@ export const Ghost: Story = {
 
 export const Danger: Story = {
   args: { variant: 'danger', label: 'Delete', icon: 'trash', onClick: fn() },
+  render: renderResting,
   play: async ({ args, canvasElement }) => {
     const button = theButton(canvasElement, 'Delete');
-    reportHover('Danger', button);
     await expectColours(button, DANGER, TRANSPARENT);
 
     await userEvent.click(button);

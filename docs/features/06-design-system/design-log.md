@@ -860,3 +860,12 @@ answers named; those answers stay as they were written.
   `gates/formatting/formatting.test.ts` and `gates/lint/lint.test.ts`
   each gain a case that a file under `gates/coverage/` is not ignored, so
   the narrowing itself is tested (ticket 06).
+- **D10. The small Input is 28 px, the shared small control height**
+  (deviates from the SPEC §3 table's `'sm' 30`, which ticket 14, plan
+  Phase 9 and PRD user story 46 repeated; set by the human, 2026-11-19).
+  The SPEC contradicted itself: its §3 table gave the Input `sm` 30 px,
+  while its Control sizing section ("sm 28 px: … Input/Select
+  `size="sm"`") and `Input.dc.html` give 28 px. The shared control height
+  wins: the Input `sm` uses `size.controlHeight.sm` (28 px) with no new
+  **Token**, so it matches the Select `sm`. The SPEC §3 table now reads
+  `'sm' 28` (ticket 14).

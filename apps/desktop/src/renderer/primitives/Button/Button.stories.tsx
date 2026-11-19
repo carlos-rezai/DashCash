@@ -115,6 +115,14 @@ async function expectColours(
   await expect(style.backgroundColor, 'fill').toBe(background);
 }
 
+// Diagnostic for the CI failure of ticket 12: whether the button is under the
+// pointer while its resting colours are measured. Removed with the fix.
+function reportHover(story: string, button: HTMLElement): void {
+  console.warn(
+    `[hover-diagnostic] ${story}: ${String(button.matches(':hover'))}`,
+  );
+}
+
 const meta = {
   title: 'Primitives/Button',
   component: Button,
@@ -151,6 +159,7 @@ export const Secondary: Story = {
   args: { label: 'Cancel', onClick: fn() },
   play: async ({ args, canvasElement }) => {
     const button = theButton(canvasElement, 'Cancel');
+    reportHover('Secondary', button);
     await expectColours(button, INK, TRANSPARENT);
 
     await userEvent.click(button);
@@ -162,6 +171,7 @@ export const Ghost: Story = {
   args: { variant: 'ghost', label: 'Show all', onClick: fn() },
   play: async ({ args, canvasElement }) => {
     const button = theButton(canvasElement, 'Show all');
+    reportHover('Ghost', button);
     await expectColours(button, ACCENT_600, TRANSPARENT);
 
     await userEvent.click(button);
@@ -173,6 +183,7 @@ export const Danger: Story = {
   args: { variant: 'danger', label: 'Delete', icon: 'trash', onClick: fn() },
   play: async ({ args, canvasElement }) => {
     const button = theButton(canvasElement, 'Delete');
+    reportHover('Danger', button);
     await expectColours(button, DANGER, TRANSPARENT);
 
     await userEvent.click(button);

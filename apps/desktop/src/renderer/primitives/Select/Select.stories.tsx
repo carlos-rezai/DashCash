@@ -194,7 +194,7 @@ async function expectSelect(
   );
   await expect(style.color, 'text').toBe(computedColour(look.text));
   await expect(style.fontSize, 'font size').toBe(look.fontSize);
-  await expect(style.fontFamily.startsWith('"Barlow"'), 'Barlow').toBe(true);
+  await expect(style.fontFamily.startsWith('Barlow'), 'Barlow').toBe(true);
   for (const side of ['Top', 'Right', 'Bottom', 'Left'] as const) {
     await expect(style[`border${side}Width`], `${side} border width`).toBe(
       '1px',

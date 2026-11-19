@@ -1,5 +1,5 @@
 ---
-status: in-progress
+status: done
 ---
 # Input and Select
 
@@ -24,7 +24,7 @@ no gate file.
 ## Acceptance criteria
 
 - [x] A RED commit adds both components' **Stories**, which fail.
-- [ ] (review) Props exactly SPEC §3 plus `ariaLabel`; Select's
+- [x] (review) Props exactly SPEC §3 plus `ariaLabel`; Select's
       `tone: 'default' | 'warning'`.
 - [x] **Stories** for each size, the left icon, the money field
       ("1.529,60 €" right aligned, suffix "€"), the empty and chosen

@@ -50,11 +50,6 @@ export const Field = styled.input<FieldProps>`
     border-color: ${({ theme }) => theme.color.accent[500]};
     outline-offset: 0;
   }
-
-  &::placeholder {
-    color: ${({ theme }) => theme.color.textMuted};
-    opacity: 1;
-  }
 `;
 
 // An adornment over the field, centred on its full height, out of the way of

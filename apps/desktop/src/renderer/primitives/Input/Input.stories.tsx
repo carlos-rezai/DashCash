@@ -14,7 +14,7 @@ const INPUT_GROUND = '#1b2a39';
 const INK = '#e9f1fa';
 // --color-divider: the border at rest
 const DIVIDER = 'color-mix(in srgb, #e9f1fa 16%, transparent)';
-// --sb-text-muted: the icon, the suffix and the placeholder
+// --sb-text-muted: the icon and the suffix
 const TEXT_MUTED = 'color-mix(in srgb, #e9f1fa 62%, transparent)';
 // styles.css, .input:hover: the border under the pointer, the text colour at 45 %
 const HOVER_BORDER = 'color-mix(in srgb, #e9f1fa 45%, transparent)';
@@ -337,6 +337,19 @@ export const MoneyField: Story = {
     await expect(mark.right, 'suffix inside').toBeLessThan(box.right);
     await expect(middle(mark), 'suffix centred').toBeCloseTo(middle(box), 0);
     await expect(getComputedStyle(suffix).fontSize, 'suffix size').toBe('14px');
+  },
+};
+
+// A width of its own: 200 px, narrower than the 320 px holder the field would
+// otherwise fill.
+export const Narrow: Story = {
+  args: { value: 'Rewe', width: '200px', ariaLabel: 'Merchant' },
+  play: async ({ canvasElement }) => {
+    const field = theField(canvasElement, 'Merchant');
+    await expect(field.getBoundingClientRect().width, 'width').toBeCloseTo(
+      200,
+      1,
+    );
   },
 };
 

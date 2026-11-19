@@ -36,3 +36,10 @@ accent. Stories titled `Primitives/Tag` and `Primitives/Swatch`; the
 ## User stories addressed
 
 - User stories 6 (the **Milestone tone**), 43, 44, 45, 55, 102
+
+## Notes
+
+- No story checks the Tag's side padding (`space.tagPadding`), the gap
+  between its parts (`space.tagGap`) or its letter spacing
+  (`font.tagLetterSpacing`); they match the prototype today but are not
+  protected. For the refactor.

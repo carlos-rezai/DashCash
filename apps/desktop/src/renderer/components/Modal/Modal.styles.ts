@@ -1,9 +1,11 @@
 import { styled } from 'styled-components';
 
-// The dark backdrop over the page, the panel in the middle of it.
+// The dark backdrop over the page, the panel in the middle of it; the padding
+// keeps the panel a gap from the edges when the backdrop is smaller than it.
 export const Backdrop = styled.div`
   position: fixed;
   inset: 0;
+  padding: ${({ theme }) => theme.space.space4};
   z-index: ${({ theme }) => theme.zIndex.modal};
   display: grid;
   place-items: center;

@@ -53,6 +53,12 @@ const FRAME_HEIGHT = 420;
 // editor value.
 const CUSTOM_WIDTH = 500;
 const NARROW_WIDTH = 320;
+// A frame narrower than the default panel plus the backdrop's padding on both
+// sides (460 + 2 x 13.6 px), and shorter than the panel's height.
+const SMALL_FRAME_WIDTH = 400;
+const SMALL_FRAME_HEIGHT = 120;
+// styles.css (.dialog-backdrop): the backdrop's padding, --space-4.
+const BACKDROP_PADDING = 13.6;
 // How far inside the frame's corners the backdrop is clicked.
 const CORNER = 4;
 
@@ -128,6 +134,14 @@ const Frame = styled.div`
   &[data-resting] {
     pointer-events: none;
   }
+`;
+
+// A frame smaller than the panel plus the backdrop's padding, in both
+// directions.
+const SmallFrame = styled.div`
+  width: ${SMALL_FRAME_WIDTH}px;
+  height: ${SMALL_FRAME_HEIGHT}px;
+  transform: translate(0);
 `;
 
 // The actions row a caller writes as the last row of the content, as
@@ -435,6 +449,38 @@ export const EmptySubtitle: Story = {
       theText(dialog, BODY).getBoundingClientRect().top - title.bottom,
       'header gap',
     ).toBeCloseTo(PANEL_GAP, 1);
+  },
+};
+
+// A backdrop smaller than the panel plus its padding, as in a small window:
+// the backdrop's padding keeps the panel a --space-4 gap inside the backdrop's
+// left and top edges instead of flush against them.
+export const SmallBackdrop: Story = {
+  render: (args) => (
+    <SmallFrame data-testid="frame">
+      <Modal {...args} />
+    </SmallFrame>
+  ),
+  play: async ({ canvasElement }) => {
+    const dialog = theDialog(canvasElement, TITLE);
+    const frame = theFrame(canvasElement).getBoundingClientRect();
+    const panel = dialog.getBoundingClientRect();
+    await expect(
+      panel.width + 2 * BACKDROP_PADDING > frame.width,
+      'the frame is smaller than the panel and its padding',
+    ).toBe(true);
+    await expect(
+      panel.height + 2 * BACKDROP_PADDING > frame.height,
+      'the frame is shorter than the panel and its padding',
+    ).toBe(true);
+    await expect(panel.left - frame.left, 'panel left').toBeCloseTo(
+      BACKDROP_PADDING,
+      1,
+    );
+    await expect(panel.top - frame.top, 'panel top').toBeCloseTo(
+      BACKDROP_PADDING,
+      1,
+    );
   },
 };
 

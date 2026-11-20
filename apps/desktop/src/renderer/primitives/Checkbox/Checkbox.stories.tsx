@@ -73,19 +73,19 @@ const Outside = styled.label`
 `;
 
 // The Checkbox as a form uses it: checked follows what onChange reports.
+// Render it inside the Holder, with anything that contains it, a label
+// above all, inside the Holder too: hovering a label hovers its control.
 function ControlledCheckbox(args: ComponentProps<typeof Checkbox>) {
   const [checked, setChecked] = useState(args.checked);
   return (
-    <Holder data-resting="">
-      <Checkbox
-        {...args}
-        checked={checked}
-        onChange={(next) => {
-          setChecked(next);
-          args.onChange(next);
-        }}
-      />
-    </Holder>
+    <Checkbox
+      {...args}
+      checked={checked}
+      onChange={(next) => {
+        setChecked(next);
+        args.onChange(next);
+      }}
+    />
   );
 }
 
@@ -227,7 +227,11 @@ async function expectLabel(control: HTMLElement): Promise<void> {
 const meta = {
   title: 'Primitives/Checkbox',
   component: Checkbox,
-  render: (args) => <ControlledCheckbox {...args} />,
+  render: (args) => (
+    <Holder data-resting="">
+      <ControlledCheckbox {...args} />
+    </Holder>
+  ),
   args: { checked: false, onChange: fn() },
 } satisfies Meta<typeof Checkbox>;
 
@@ -265,10 +269,12 @@ export const Unchecked: Story = {
 export const Unlabelled: Story = {
   args: { checked: true },
   render: (args) => (
-    <Outside>
-      {OUTSIDE_NAME}
-      <ControlledCheckbox {...args} />
-    </Outside>
+    <Holder data-resting="">
+      <Outside>
+        {OUTSIDE_NAME}
+        <ControlledCheckbox {...args} />
+      </Outside>
+    </Holder>
   ),
   play: async ({ canvasElement }) => {
     const control = theCheckbox(canvasElement);
@@ -287,9 +293,11 @@ export const Unlabelled: Story = {
 export const WrappedLabel: Story = {
   args: { checked: true, label: LABEL },
   render: (args) => (
-    <Narrow>
-      <ControlledCheckbox {...args} />
-    </Narrow>
+    <Holder data-resting="">
+      <Narrow>
+        <ControlledCheckbox {...args} />
+      </Narrow>
+    </Holder>
   ),
   play: async ({ canvasElement }) => {
     const control = theCheckbox(canvasElement);

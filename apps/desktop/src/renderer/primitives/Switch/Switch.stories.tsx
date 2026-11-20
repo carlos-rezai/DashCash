@@ -76,19 +76,19 @@ const Narrow = styled.div`
 `;
 
 // The Switch as the settings use it: on follows what onChange reports.
+// Render it inside the Holder, with anything that contains it inside the
+// Holder too, so nothing around it can be hovered while it is read.
 function ControlledSwitch(args: ComponentProps<typeof Switch>) {
   const [checked, setChecked] = useState(args.checked);
   return (
-    <Holder data-resting="">
-      <Switch
-        {...args}
-        checked={checked}
-        onChange={(next) => {
-          setChecked(next);
-          args.onChange(next);
-        }}
-      />
-    </Holder>
+    <Switch
+      {...args}
+      checked={checked}
+      onChange={(next) => {
+        setChecked(next);
+        args.onChange(next);
+      }}
+    />
   );
 }
 
@@ -232,7 +232,11 @@ async function expectLabel(control: HTMLElement): Promise<void> {
 const meta = {
   title: 'Primitives/Switch',
   component: Switch,
-  render: (args) => <ControlledSwitch {...args} />,
+  render: (args) => (
+    <Holder data-resting="">
+      <ControlledSwitch {...args} />
+    </Holder>
+  ),
   args: { checked: false, onChange: fn() },
 } satisfies Meta<typeof Switch>;
 
@@ -295,9 +299,11 @@ export const LabelOverAriaLabel: Story = {
 export const WrappedLabel: Story = {
   args: { checked: true, label: LABEL },
   render: (args) => (
-    <Narrow>
-      <ControlledSwitch {...args} />
-    </Narrow>
+    <Holder data-resting="">
+      <Narrow>
+        <ControlledSwitch {...args} />
+      </Narrow>
+    </Holder>
   ),
   play: async ({ canvasElement }) => {
     const control = theSwitch(canvasElement);

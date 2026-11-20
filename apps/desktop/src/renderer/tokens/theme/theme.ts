@@ -22,6 +22,8 @@ export const theme = {
     // The neutral ramp, inverted the same way.
     neutral: {
       300: '#3f5063',
+      400: '#5b6a7a',
+      600: '#9aa5b0',
       900: '#eef2f6',
     },
     // styles.css: ::selection, the accent at 30 %
@@ -115,6 +117,14 @@ export const theme = {
     // Chip.dc.html: the side padding of a Chip and the gap between its parts
     chipPadding: '10px',
     chipGap: '7px',
+    // Checkbox.dc.html and Switch.dc.html: the gap between a toggle and its label
+    checkboxGap: '8px',
+    switchGap: '10px',
+    // Switch.dc.html: the knob's distance from the track's top, and from its
+    // left edge when off and when on
+    switchKnobTop: '2px',
+    switchKnobOff: '2px',
+    switchKnobOn: '18px',
   },
   size: {
     // SPEC, Control sizing: the two Control heights
@@ -131,6 +141,12 @@ export const theme = {
     chipHeight: '28px',
     chipSwatch: '10px',
     chipSwatchLine: '3px',
+    // SPEC, Control sizing: the Checkbox's box; Switch.dc.html: the Switch's
+    // track and its knob
+    checkbox: '16px',
+    switchWidth: '34px',
+    switchHeight: '18px',
+    switchKnob: '12px',
     // styles.css: :focus-visible { outline: 2px solid ...; outline-offset: 2px }
     focusRingWidth: '2px',
     focusRingOffset: '2px',

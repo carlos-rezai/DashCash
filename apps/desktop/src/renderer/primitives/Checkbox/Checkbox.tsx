@@ -9,8 +9,6 @@ type CheckboxProps = {
   // Reports the checked state the click asks for.
   onChange: (checked: boolean) => void;
   label?: string;
-  // The name of a checkbox no label names.
-  ariaLabel?: string;
   disabled?: boolean;
 };
 
@@ -19,7 +17,6 @@ export function Checkbox({
   checked,
   onChange,
   label,
-  ariaLabel,
   disabled = false,
 }: CheckboxProps) {
   return (
@@ -27,7 +24,6 @@ export function Checkbox({
       type="button"
       role="checkbox"
       aria-checked={checked}
-      aria-label={label === undefined ? ariaLabel : undefined}
       disabled={disabled}
       onClick={() => {
         onChange(!checked);

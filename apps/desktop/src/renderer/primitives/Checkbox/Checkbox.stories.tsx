@@ -25,14 +25,16 @@ const GAP = 8;
 const FONT_SIZE = '14px';
 const LINE_HEIGHT = '18.2px';
 
-// The prototype's label, and an invented name for a checkbox without one.
+// The prototype's label, and an invented name a wrapping label gives a
+// checkbox without a label of its own.
 const LABEL = 'Mark as recurring';
-const ARIA_LABEL = 'Recurring';
+const OUTSIDE_NAME = 'Recurring';
+// Narrower than the label's one line, wider than its longest word
+const NARROW_WIDTH = '100px';
 
-// SPEC section 3: checked, onChange and label; the ticket adds disabled, and
-// design log Q10 an ariaLabel for a checkbox no label names, as the Switch
-// has. Typecheck fails when a prop is missing or one is added.
-type ListedProp = 'checked' | 'onChange' | 'label' | 'ariaLabel' | 'disabled';
+// SPEC section 3: checked, onChange and label; the ticket adds disabled.
+// Typecheck fails when a prop is missing or one is added.
+type ListedProp = 'checked' | 'onChange' | 'label' | 'disabled';
 type CheckboxProp = keyof ComponentProps<typeof Checkbox>;
 type MissingProp = Exclude<ListedProp, CheckboxProp>;
 type UnlistedProp = Exclude<CheckboxProp, ListedProp>;
@@ -58,6 +60,16 @@ const Holder = styled.div`
   &[data-resting] {
     pointer-events: none;
   }
+`;
+
+// A column too narrow for the label on one line.
+const Narrow = styled.div`
+  width: ${NARROW_WIDTH};
+`;
+
+// A name from outside the Checkbox, as a FormField will give it.
+const Outside = styled.label`
+  display: block;
 `;
 
 // The Checkbox as a form uses it: checked follows what onChange reports.
@@ -249,18 +261,44 @@ export const Unchecked: Story = {
   },
 };
 
-// Without a label: the box alone, named by its ariaLabel.
+// Without a label: the box alone, named from outside by a wrapping label.
 export const Unlabelled: Story = {
-  args: { checked: true, ariaLabel: ARIA_LABEL },
+  args: { checked: true },
+  render: (args) => (
+    <Outside>
+      {OUTSIDE_NAME}
+      <ControlledCheckbox {...args} />
+    </Outside>
+  ),
   play: async ({ canvasElement }) => {
     const control = theCheckbox(canvasElement);
     await expectCheckbox(control, { checked: true });
-    await expect(control).toHaveAccessibleName(ARIA_LABEL);
+    await expect(control).toHaveAccessibleName(OUTSIDE_NAME);
     await expect(control.textContent, 'no text').toBe('');
     await expect(control.getBoundingClientRect().width, 'width').toBeCloseTo(
       BOX,
       1,
     );
+  },
+};
+
+// A label that wraps onto two lines: the box keeps its 16 px and stays
+// centred on the label.
+export const WrappedLabel: Story = {
+  args: { checked: true, label: LABEL },
+  render: (args) => (
+    <Narrow>
+      <ControlledCheckbox {...args} />
+    </Narrow>
+  ),
+  play: async ({ canvasElement }) => {
+    const control = theCheckbox(canvasElement);
+    await expectCheckbox(control, { checked: true });
+    await expect(
+      within(control).getByText(LABEL).getBoundingClientRect().height,
+      'label wraps',
+    ).toBeGreaterThan(parseFloat(LINE_HEIGHT) * 1.5);
+    await expectLabel(control);
   },
 };
 

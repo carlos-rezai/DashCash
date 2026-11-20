@@ -37,6 +37,8 @@ const DISABLED_OPACITY = '0.45';
 // The prototype's label, and an invented name for a switch without one.
 const LABEL = 'Check for updates automatically';
 const ARIA_LABEL = 'Automatic updates';
+// Narrower than the label's one line, wider than its longest word
+const NARROW_WIDTH = '160px';
 
 // SPEC section 3: the Switch's props and no others. Typecheck fails when a
 // prop is missing or one is added.
@@ -66,6 +68,11 @@ const Holder = styled.div`
   &[data-resting] {
     pointer-events: none;
   }
+`;
+
+// A column too narrow for the label on one line.
+const Narrow = styled.div`
+  width: ${NARROW_WIDTH};
 `;
 
 // The Switch as the settings use it: on follows what onChange reports.
@@ -272,6 +279,34 @@ export const WithAriaLabel: Story = {
       TRACK_WIDTH,
       1,
     );
+  },
+};
+
+// With both a label and an ariaLabel: the label names the switch.
+export const LabelOverAriaLabel: Story = {
+  args: { checked: true, label: LABEL, ariaLabel: ARIA_LABEL },
+  play: async ({ canvasElement }) => {
+    await expect(theSwitch(canvasElement)).toHaveAccessibleName(LABEL);
+  },
+};
+
+// A label that wraps onto several lines: the track keeps its 34 x 18 and
+// stays centred on the label.
+export const WrappedLabel: Story = {
+  args: { checked: true, label: LABEL },
+  render: (args) => (
+    <Narrow>
+      <ControlledSwitch {...args} />
+    </Narrow>
+  ),
+  play: async ({ canvasElement }) => {
+    const control = theSwitch(canvasElement);
+    await expectSwitch(control, { on: true });
+    await expect(
+      within(control).getByText(LABEL).getBoundingClientRect().height,
+      'label wraps',
+    ).toBeGreaterThan(parseFloat(LINE_HEIGHT) * 1.5);
+    await expectLabel(control);
   },
 };
 

@@ -265,7 +265,7 @@ export const Default: Story = {
     await expect(ONLY_CHILDREN_REQUIRED).toBe(true);
     await expect(NO_MISSING_PADDING).toBe(true);
     await expect(NO_UNLISTED_PADDING).toBe(true);
-    await expect(components.Card, 'exported by the barrel').toBe(Card);
+    await expect(components.Card === Card, 'exported by the barrel').toBe(true);
 
     await expectCard(theCard(canvasElement), {
       padding: PADDING.md,

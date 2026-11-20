@@ -11,8 +11,8 @@ import { FormField } from './FormField.tsx';
 // log D1, apart from the Theme.
 // --sb-text-muted: the label
 const TEXT_MUTED = 'color-mix(in srgb, #e9f1fa 62%, transparent)';
-// --sb-text-faint: the hint
-const TEXT_FAINT = 'color-mix(in srgb, #e9f1fa 42%, transparent)';
+// --sb-text-faint, raised to 60 % (D1): the hint
+const TEXT_FAINT = 'color-mix(in srgb, #e9f1fa 60%, transparent)';
 // --sb-danger, raised to #ed8c80 (D1): the error
 const DANGER = '#ed8c80';
 
@@ -204,9 +204,10 @@ export const InputWithHint: Story = {
     await expect(NO_MISSING_PROP).toBe(true);
     await expect(NO_UNLISTED_PROP).toBe(true);
     await expect(LABEL_AND_CHILDREN_REQUIRED).toBe(true);
-    await expect(components.FormField, 'exported by the barrel').toBe(
-      FormField,
-    );
+    await expect(
+      components.FormField === FormField,
+      'exported by the barrel',
+    ).toBe(true);
 
     const control = within(canvasElement).getByRole('textbox');
     await expect(control).toHaveAccessibleName(BALANCE);

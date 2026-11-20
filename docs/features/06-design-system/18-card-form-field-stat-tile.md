@@ -42,3 +42,12 @@ hint, in the default, accent, warning or danger tone. Stories titled
 ## User stories addressed
 
 - User stories 67, 68, 69, 92, 102
+
+## Notes
+
+- The Card leaves out `Card.dc.html`'s header wrapper and its three rules
+  (`align-items: flex-start`, `justify-content: space-between`, the
+  header's `gap`): with one header child they have no visible effect and
+  no story can fail without them. The wrapper and its rules come back with
+  the `actions` slot, when a header has two children and the rules can be
+  tested.

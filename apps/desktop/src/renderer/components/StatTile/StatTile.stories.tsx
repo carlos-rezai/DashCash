@@ -54,10 +54,10 @@ const ROWS_HINT = '15 Sep – 25 Oct 2026';
 const SPENDING = 'Total spending';
 const SPENDING_CENTS = toCents(-55785);
 // U+2212 and U+00A0, as formatCents writes them.
-const SPENDING_TEXT = '−557,85 €';
+const SPENDING_TEXT = '−557,85 €';
 const SPENDING_HINT = 'Across the new rows';
 const DIFFERENCE = 'Difference';
-const ZERO_TEXT = '0,00 €';
+const ZERO_TEXT = '0,00 €';
 
 // SPEC section 3: the StatTile's props and no others; label alone is
 // required. Typecheck fails when a prop is missing, one is added, or one
@@ -275,7 +275,10 @@ export const Text: Story = {
     await expect(NO_MISSING_TONE).toBe(true);
     await expect(NO_UNLISTED_TONE).toBe(true);
     await expect(CENTS_ARE_CENTS).toBe(true);
-    await expect(components.StatTile, 'exported by the barrel').toBe(StatTile);
+    await expect(
+      components.StatTile === StatTile,
+      'exported by the barrel',
+    ).toBe(true);
 
     await expectTile(canvasElement, {
       label: ROWS,

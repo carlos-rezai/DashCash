@@ -51,6 +51,8 @@ export const theme = {
     // base #e8877b (design log D1)
     warningTint: 'color-mix(in srgb, #e0b469 14%, transparent)',
     dangerTint: 'color-mix(in srgb, #e8877b 14%, transparent)',
+    // --sb-backdrop: the dark backdrop behind a Modal
+    backdrop: 'rgba(9, 15, 22, 0.66)',
     // --sb-ground-sunken: the ground of a Meter
     sunken: '#16222f',
     // --color-divider
@@ -186,8 +188,13 @@ export const theme = {
     // dashcash-dark.css: ::-webkit-scrollbar 10px, its thumb border 3px
     scrollbar: '10px',
     scrollbarThumbBorder: '3px',
+    // Modal.dc.html: the width of a Modal unless told otherwise
+    modalWidth: '460px',
   },
-  shadow: {},
+  shadow: {
+    // --shadow-lg: the Modal's panel
+    lg: '0 0 0 1px color-mix(in srgb, #e9f1fa 8%, transparent), 0 18px 48px rgba(5, 10, 16, 0.55)',
+  },
   // SPEC, Loaders: one loop is 1,6 s, the fade-in 200 ms (Loader.dc.html),
   // the breathing under reduced motion 2,4 s
   motion: {
@@ -197,7 +204,10 @@ export const theme = {
     // SPEC, Transitions and Meter.dc.html: the Meter's width, 300 ms
     meterWidth: '300ms',
   },
-  zIndex: {},
+  zIndex: {
+    // Modal.dc.html: the backdrop above the page
+    modal: 50,
+  },
 };
 
 export type Theme = typeof theme;

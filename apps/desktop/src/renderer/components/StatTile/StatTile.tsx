@@ -38,7 +38,7 @@ export function StatTile({
           tone={tone === 'default' ? 'auto' : tone}
         />
       )}
-      {hint === undefined ? null : <Hint>{hint}</Hint>}
+      {hint ? <Hint>{hint}</Hint> : null}
     </Frame>
   );
 }

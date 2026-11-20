@@ -17,13 +17,15 @@ type CardProps = {
 // The surface that holds a page's blocks: an optional kicker and title above
 // the content.
 export function Card({ kicker, title, padding = 'md', children }: CardProps) {
-  const hasHeader = kicker !== undefined || title !== undefined;
+  // An empty string is absent, as in the prototype.
+  // An empty string is absent, as in the prototype.
+  const hasHeader = Boolean(kicker) || Boolean(title);
   return (
     <Frame $padding={padding}>
       {hasHeader ? (
         <Header>
-          {kicker === undefined ? null : <Kicker>{kicker}</Kicker>}
-          {title === undefined ? null : <Title>{title}</Title>}
+          {kicker ? <Kicker>{kicker}</Kicker> : null}
+          {title ? <Title>{title}</Title> : null}
         </Header>
       ) : null}
       {children}

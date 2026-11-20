@@ -420,6 +420,18 @@ export const WithoutHint: Story = {
   },
 };
 
+// An empty hint is no hint, as in the prototype: the tile ends with the value.
+export const EmptyHint: Story = {
+  args: { label: ROWS, value: ROWS_VALUE, hint: '' },
+  play: async ({ canvasElement }) => {
+    await expectTile(canvasElement, {
+      label: ROWS,
+      value: ROWS_VALUE,
+      valueColour: INK,
+    });
+  },
+};
+
 // Neither value nor cents: the prototype still renders the text-value span
 // when there are no cents, so an empty value takes its 6 px gap slot and the
 // hint sits two gaps below the label.

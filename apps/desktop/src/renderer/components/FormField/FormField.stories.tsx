@@ -301,6 +301,7 @@ export const EmptyErrorKeepsHint: Story = {
   args: { hint: BALANCE_HINT, error: '' },
   play: async ({ canvasElement }) => {
     const control = within(canvasElement).getByRole('textbox');
+    await expect(control).toHaveAccessibleName(BALANCE);
     await expectField(canvasElement, {
       label: BALANCE,
       control,
@@ -315,6 +316,7 @@ export const EmptyHint: Story = {
   args: { hint: '' },
   play: async ({ canvasElement }) => {
     const control = within(canvasElement).getByRole('textbox');
+    await expect(control).toHaveAccessibleName(BALANCE);
     await expectField(canvasElement, { label: BALANCE, control });
   },
 };

@@ -420,8 +420,36 @@ export const ShrinksInFlexRow: Story = {
   },
 };
 
-// A title wider than the card: the header shrinks to the card's inner width,
-// so the title does not widen it.
+// An empty kicker is no kicker, as in the prototype: the title starts at the
+// padding, with no kicker gap above it.
+export const EmptyKicker: Story = {
+  args: { kicker: '', title: TITLE },
+  play: async ({ canvasElement }) => {
+    await expectCard(theCard(canvasElement), {
+      padding: PADDING.md,
+      title: theText(canvasElement, TITLE),
+      body: theText(canvasElement, BODY),
+    });
+  },
+};
+
+// An empty title is no title: the content follows the kicker after the header
+// gap alone.
+export const EmptyTitle: Story = {
+  args: { kicker: KICKER, title: '' },
+  play: async ({ canvasElement }) => {
+    await expectCard(theCard(canvasElement), {
+      padding: PADDING.md,
+      kicker: theText(canvasElement, KICKER),
+      body: theText(canvasElement, BODY),
+    });
+  },
+};
+
+// A title wider than the card, in a plain block holder: the header is a flex
+// column, so its title is a flex item that stretches to the card's inner
+// width. Catches the loss of `display: flex` on the header, where the title
+// would be inline and as wide as its text.
 export const LongTitle: Story = {
   args: { kicker: KICKER, title: LONG_TITLE },
   render: (args) => (

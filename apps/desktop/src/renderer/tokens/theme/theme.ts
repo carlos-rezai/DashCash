@@ -30,6 +30,12 @@ export const theme = {
     selection: 'color-mix(in srgb, #749dc4 30%, transparent)',
     // --sb-text-muted
     textMuted: 'color-mix(in srgb, #e9f1fa 62%, transparent)',
+    // --sb-text-faint
+    textFaint: 'color-mix(in srgb, #e9f1fa 60%, transparent)',
+    // --color-surface: the fill of a Card and a StatTile (--sb-card-bg)
+    surface: '#213345',
+    // --sb-card-border: the text colour at 8 %
+    cardBorder: 'color-mix(in srgb, #e9f1fa 8%, transparent)',
     // --sb-positive
     positive: '#7cc59a',
     // --sb-negative, raised from #e8877b to pass contrast (design log D1)
@@ -79,6 +85,12 @@ export const theme = {
     amountLineHeight: 1.15,
     // Button.dc.html: letter-spacing of the label
     buttonLetterSpacing: '0.01em',
+    // Card.dc.html: the title's line-height; StatTile.dc.html and styles.css
+    // (.card-kicker): the letter-spacing of a kicker
+    cardTitleLineHeight: 1.2,
+    kickerLetterSpacing: '0.1em',
+    // FormField.dc.html: letter-spacing of the label
+    labelLetterSpacing: '0.04em',
     // styles.css: .tag
     tagLetterSpacing: '0.02em',
   },
@@ -90,10 +102,27 @@ export const theme = {
     xl: '34px',
     // Loader.dc.html: the label beside a Loader of 48 px or more
     loaderLabelLarge: '15px',
-    // styles.css: .tag
+    // styles.css: .tag; StatTile.dc.html: its label
     tag: '11px',
+    // FormField.dc.html: the label, the hint and the error
+    caption: '12px',
+    // styles.css: .card-kicker
+    cardKicker: '10px',
+    // SPEC section 2: the card title, 19
+    cardTitle: '19px',
   },
   space: {
+    // SPEC section 2: --space-3, -4 and -6 (0.85x density), the Card's
+    // paddings sm, md and lg, the gaps inside a Card and a StatTile
+    space3: '10.2px',
+    space4: '13.6px',
+    space6: '20.4px',
+    // Card.dc.html: the gap between a kicker and a title
+    cardKickerGap: '2px',
+    // StatTile.dc.html: the gap between its label, value and hint
+    statTileGap: '6px',
+    // FormField.dc.html: the gap between its label, control and hint
+    fieldGap: '5px',
     // Loader.dc.html: the gap between a Loader and its label, below 48 px
     // and from 48 px up
     loaderGap: '8px',

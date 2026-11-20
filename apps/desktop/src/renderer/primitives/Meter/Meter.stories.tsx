@@ -84,6 +84,20 @@ const Holder = styled.div`
   }
 `;
 
+// A holder whose child is a flex item: a box with no width of its own shrinks
+// to its content there, so only the meter's own width keeps it across the
+// holder.
+const FlexHolder = styled(Holder)`
+  display: flex;
+`;
+
+// A holder that reads right to left: an absolutely positioned box with no
+// left offset sits at the right edge there, so only the meter's own left
+// offsets keep the bar and the outline at the inner left edge.
+const RightToLeftHolder = styled(Holder)`
+  direction: rtl;
+`;
+
 function theMeter(canvasElement: HTMLElement): HTMLElement {
   return within(canvasElement).getByRole('meter');
 }
@@ -125,9 +139,9 @@ type Look = {
 // inner left edge across the value's share of the inner width, the full
 // inner height, its width easing over 300 ms. With a projection: one outline
 // across the projection's share, dashed in the tone's colour on its top,
-// right and bottom, open on its left, at 0.8 opacity; without one, nothing
-// dashed shows beyond the bar. Read inside the holder; afterwards the pointer
-// may reach the meter again.
+// right and bottom, open on its left, at 0.8 opacity; without one, no dashed
+// element exists at all. Read inside the holder; afterwards the pointer may
+// reach the meter again.
 async function expectMeter(meter: HTMLElement, look: Look): Promise<void> {
   const holder = meter.closest('[data-resting]');
   if (holder === null) {
@@ -188,12 +202,7 @@ async function expectMeter(meter: HTMLElement, look: Look): Promise<void> {
 
   const outlines = theOutlines(meter);
   if (look.projected === undefined) {
-    for (const outline of outlines) {
-      await expect(
-        outline.getBoundingClientRect().right - solid.right,
-        'no outline beyond the bar',
-      ).toBeLessThanOrEqual(BORDER);
-    }
+    await expect(outlines, 'no outline element').toHaveLength(0);
   } else {
     await expect(outlines, 'outlines').toHaveLength(1);
     const [outline] = outlines;
@@ -305,6 +314,111 @@ export const Projected: Story = {
     await expect(meter).toHaveAccessibleName(GOAL);
     await expectMeter(meter, { value: 0.04, projected: 1, tone: 'neutral' });
     await expectBarOnTop(meter);
+  },
+};
+
+// The projection in the warning tone: the dashed outline takes the tone's
+// colour, not the default one.
+export const ProjectedWarning: Story = {
+  args: { value: 0.15, projected: 0.6, tone: 'warning', ariaLabel: GOAL },
+  play: async ({ canvasElement }) => {
+    const meter = theMeter(canvasElement);
+    await expect(meter).toHaveAccessibleName(GOAL);
+    await expectMeter(meter, { value: 0.15, projected: 0.6, tone: 'warning' });
+    await expectBarOnTop(meter);
+  },
+};
+
+// A projection short of the value: nothing beyond the bar, so no outline.
+export const ProjectedBelowValue: Story = {
+  args: { value: 0.6, projected: 0.3, ariaLabel: GOAL },
+  play: async ({ canvasElement }) => {
+    const meter = theMeter(canvasElement);
+    await expect(meter).toHaveAccessibleName(GOAL);
+    await expectMeter(meter, { value: 0.6, tone: 'neutral' });
+  },
+};
+
+// A projection level with the value: nothing beyond the bar, so no outline.
+export const ProjectedAtValue: Story = {
+  args: { value: 0.5, projected: 0.5, ariaLabel: GOAL },
+  play: async ({ canvasElement }) => {
+    const meter = theMeter(canvasElement);
+    await expect(meter).toHaveAccessibleName(GOAL);
+    await expectMeter(meter, { value: 0.5, tone: 'neutral' });
+  },
+};
+
+// A value above 1 is held at full.
+export const ValueAboveFull: Story = {
+  args: { value: 1.4, ariaLabel: GOAL },
+  play: async ({ canvasElement }) => {
+    const meter = theMeter(canvasElement);
+    await expect(meter).toHaveAccessibleName(GOAL);
+    await expectMeter(meter, { value: 1, tone: 'neutral' });
+  },
+};
+
+// A value below 0 is held at empty.
+export const ValueBelowEmpty: Story = {
+  args: { value: -0.3, ariaLabel: GOAL },
+  play: async ({ canvasElement }) => {
+    const meter = theMeter(canvasElement);
+    await expect(meter).toHaveAccessibleName(GOAL);
+    await expectMeter(meter, { value: 0, tone: 'neutral' });
+  },
+};
+
+// A projection above 1 is held at full.
+export const ProjectedAboveFull: Story = {
+  args: { value: 0.4, projected: 1.7, ariaLabel: GOAL },
+  play: async ({ canvasElement }) => {
+    const meter = theMeter(canvasElement);
+    await expect(meter).toHaveAccessibleName(GOAL);
+    await expectMeter(meter, { value: 0.4, projected: 1, tone: 'neutral' });
+  },
+};
+
+// A value that is not a whole per cent: the meter's value rounds to the
+// nearest whole per cent, 66.6 to 67.
+export const RoundedValue: Story = {
+  args: { value: 0.666, ariaLabel: GOAL },
+  play: async ({ canvasElement }) => {
+    const meter = theMeter(canvasElement);
+    await expect(meter).toHaveAccessibleName(GOAL);
+    await expect(meter, 'rounded value').toHaveAttribute('aria-valuenow', '67');
+    await expectMeter(meter, { value: 0.666, tone: 'neutral' });
+  },
+};
+
+// In a flex row: the meter still fills the width it is given.
+export const InFlexRow: Story = {
+  args: { value: 0.4, projected: 0.8, ariaLabel: GOAL },
+  render: (args) => (
+    <FlexHolder data-resting="">
+      <Meter {...args} />
+    </FlexHolder>
+  ),
+  play: async ({ canvasElement }) => {
+    const meter = theMeter(canvasElement);
+    await expect(meter).toHaveAccessibleName(GOAL);
+    await expectMeter(meter, { value: 0.4, projected: 0.8, tone: 'neutral' });
+  },
+};
+
+// Read right to left: the bar and the outline still start at the inner left
+// edge.
+export const RightToLeft: Story = {
+  args: { value: 0.4, projected: 0.8, ariaLabel: GOAL },
+  render: (args) => (
+    <RightToLeftHolder data-resting="">
+      <Meter {...args} />
+    </RightToLeftHolder>
+  ),
+  play: async ({ canvasElement }) => {
+    const meter = theMeter(canvasElement);
+    await expect(meter).toHaveAccessibleName(GOAL);
+    await expectMeter(meter, { value: 0.4, projected: 0.8, tone: 'neutral' });
   },
 };
 

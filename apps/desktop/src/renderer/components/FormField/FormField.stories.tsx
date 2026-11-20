@@ -295,6 +295,30 @@ export const WithoutHint: Story = {
   },
 };
 
+// An empty error is no error (the prototype shows `error || hint`): the hint
+// stays, in its own colour.
+export const EmptyErrorKeepsHint: Story = {
+  args: { hint: BALANCE_HINT, error: '' },
+  play: async ({ canvasElement }) => {
+    const control = within(canvasElement).getByRole('textbox');
+    await expectField(canvasElement, {
+      label: BALANCE,
+      control,
+      message: { text: BALANCE_HINT, colour: TEXT_FAINT },
+    });
+  },
+};
+
+// An empty hint shows nothing, as no hint does: the field ends with the
+// control.
+export const EmptyHint: Story = {
+  args: { hint: '' },
+  play: async ({ canvasElement }) => {
+    const control = within(canvasElement).getByRole('textbox');
+    await expectField(canvasElement, { label: BALANCE, control });
+  },
+};
+
 // A flex item with a control wider than its holder: the field shrinks to the
 // width it is given, so the label takes that width.
 export const ShrinksInFlexRow: Story = {

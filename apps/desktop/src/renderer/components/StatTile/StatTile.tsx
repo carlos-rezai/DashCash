@@ -30,9 +30,7 @@ export function StatTile({
     <Frame>
       <Label>{label}</Label>
       {cents === undefined ? (
-        value === undefined ? null : (
-          <Value $tone={tone}>{value}</Value>
-        )
+        <Value $tone={tone}>{value}</Value>
       ) : (
         <Amount
           cents={cents}

@@ -10,7 +10,7 @@ type FormFieldProps = {
   children: ReactNode;
 };
 
-const CONTROL = 'input, select, textarea';
+const CONTROL = 'input, select';
 
 // A label above a control, a hint below it, or an error in the hint's place.
 // The label names the control by `for`, not by wrapping it: a wrapping label

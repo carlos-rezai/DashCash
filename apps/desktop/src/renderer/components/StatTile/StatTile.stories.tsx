@@ -420,6 +420,21 @@ export const WithoutHint: Story = {
   },
 };
 
+// Neither value nor cents: the prototype still renders the text-value span
+// when there are no cents, so an empty value takes its 6 px gap slot and the
+// hint sits two gaps below the label.
+export const WithoutValue: Story = {
+  args: { label: ROWS, hint: ROWS_HINT },
+  play: async ({ canvasElement }) => {
+    const label = theText(canvasElement, ROWS);
+    const hint = theText(canvasElement, ROWS_HINT);
+    await expect(
+      hint.getBoundingClientRect().top - label.getBoundingClientRect().bottom,
+      'empty value slot',
+    ).toBeCloseTo(2 * GAP, 1);
+  },
+};
+
 // A flex item narrower than its amount: the tile shrinks to the width it is
 // given.
 export const ShrinksInFlexRow: Story = {

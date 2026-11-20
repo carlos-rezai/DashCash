@@ -17,7 +17,6 @@ function textColour(theme: DefaultTheme, tone: StatTileTone): string {
 
 // The tile: the card's fill and soft outline, shrinking in a flex row.
 export const Frame = styled.div`
-  box-sizing: border-box;
   display: flex;
   flex-direction: column;
   gap: ${({ theme }) => theme.space.statTileGap};

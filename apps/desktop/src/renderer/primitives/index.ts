@@ -5,6 +5,7 @@ export { Chip } from './Chip/Chip.tsx';
 export { Icon, type IconName } from './Icon/Icon.tsx';
 export { Input } from './Input/Input.tsx';
 export { Loader } from './Loader/Loader.tsx';
+export { Meter } from './Meter/Meter.tsx';
 export { Segmented } from './Segmented/Segmented.tsx';
 export { Select } from './Select/Select.tsx';
 export { Swatch } from './Swatch/Swatch.tsx';

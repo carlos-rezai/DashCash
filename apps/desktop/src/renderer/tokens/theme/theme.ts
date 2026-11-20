@@ -45,6 +45,8 @@ export const theme = {
     // base #e8877b (design log D1)
     warningTint: 'color-mix(in srgb, #e0b469 14%, transparent)',
     dangerTint: 'color-mix(in srgb, #e8877b 14%, transparent)',
+    // --sb-ground-sunken: the ground of a Meter
+    sunken: '#16222f',
     // --color-divider
     divider: 'color-mix(in srgb, #e9f1fa 16%, transparent)',
     // styles.css, .btn-secondary:hover and :active: the text colour at 7 and 14 %
@@ -60,6 +62,8 @@ export const theme = {
     opacity: {
       // styles.css: .btn:disabled
       disabled: 0.45,
+      // Meter.dc.html: the projection's dashed outline
+      projection: 0.8,
     },
   },
   font: {
@@ -161,6 +165,8 @@ export const theme = {
     loaderLoop: '1.6s',
     loaderFadeIn: '200ms',
     loaderBreathe: '2.4s',
+    // SPEC, Transitions and Meter.dc.html: the Meter's width, 300 ms
+    meterWidth: '300ms',
   },
   zIndex: {},
 };

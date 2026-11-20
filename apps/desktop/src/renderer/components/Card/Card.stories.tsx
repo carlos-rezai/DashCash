@@ -446,6 +446,18 @@ export const EmptyTitle: Story = {
   },
 };
 
+// An empty kicker and an empty title are no header: the content starts at
+// the padding, with no header gap above it.
+export const EmptyHeader: Story = {
+  args: { kicker: '', title: '' },
+  play: async ({ canvasElement }) => {
+    await expectCard(theCard(canvasElement), {
+      padding: PADDING.md,
+      body: theText(canvasElement, BODY),
+    });
+  },
+};
+
 // A title wider than the card, in a plain block holder: the header is a flex
 // column, so its title is a flex item that stretches to the card's inner
 // width. Catches the loss of `display: flex` on the header, where the title

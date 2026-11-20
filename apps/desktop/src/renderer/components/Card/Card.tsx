@@ -18,7 +18,6 @@ type CardProps = {
 // the content.
 export function Card({ kicker, title, padding = 'md', children }: CardProps) {
   // An empty string is absent, as in the prototype.
-  // An empty string is absent, as in the prototype.
   const hasHeader = Boolean(kicker) || Boolean(title);
   return (
     <Frame $padding={padding}>

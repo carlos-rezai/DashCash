@@ -1,5 +1,5 @@
 ---
-status: open
+status: in-progress
 ---
 # Modal
 
@@ -39,3 +39,18 @@ gate file.
 ## User stories addressed
 
 - User stories 72, 73, 74, 75, 76, 102, 103
+
+## Notes
+
+- Four rules of `Modal.dc.html` and `styles.css` have no visible effect,
+  and no story can fail without them: the panel's `max-width: 100%` and
+  the backdrop's `padding` (the backdrop is a grid whose `auto` column
+  grows to the panel, so a panel wider than the backdrop overflows it
+  either way, as in the prototype), the panel's `position: relative`
+  (nothing inside it is positioned), and the header's `align-items:
+  flex-start` (the close button has a fixed height, so stretch places it
+  the same). The Modal leaves them out, as the Card left out its inert
+  header rules (ticket 18).
+- While `Modal.tsx` is missing, Vite's unresolved import also fails the
+  story files that run beside it in the same `npm run test:stories`;
+  without the new stories file all 159 stories pass.

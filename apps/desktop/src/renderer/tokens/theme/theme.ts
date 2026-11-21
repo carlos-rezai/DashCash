@@ -12,11 +12,13 @@ export const theme = {
     // The accent ramp, inverted for the dark ground; 500 is --color-accent.
     accent: {
       100: '#22384d',
+      200: '#2c455d',
       300: '#416180',
       400: '#597ea3',
       500: '#749dc4',
       600: '#94bce3',
       700: '#b5d9fd',
+      800: '#d6ebff',
       900: '#eef6ff',
     },
     // The neutral ramp, inverted the same way.
@@ -112,10 +114,13 @@ export const theme = {
     cardKicker: '10px',
     // SPEC section 2: the card title, 19
     cardTitle: '19px',
+    // NavItem.dc.html: the text of a compact item's corner chip
+    navChip: '10px',
   },
   space: {
-    // SPEC section 2: --space-3, -4 and -6 (0.85x density), the Card's
+    // SPEC section 2: --space-2, -3, -4 and -6 (0.85x density), the Card's
     // paddings sm, md and lg, the gaps inside a Card and a StatTile
+    space2: '6.8px',
     space3: '10.2px',
     space4: '13.6px',
     space6: '20.4px',
@@ -160,6 +165,17 @@ export const theme = {
     switchKnobTop: '2px',
     switchKnobOff: '2px',
     switchKnobOn: '18px',
+    // PageHeader.dc.html: the gap between the back link, the title row and the
+    // subtitle, and between the back link's arrow and its label
+    headerGap: '4px',
+    // NavItem.dc.html: the side padding of an item, the gap between its icon,
+    // label and badge, the side padding of its badge and of its corner chip,
+    // and the chip's distance from the top right corner
+    navItemPadding: '12px',
+    navItemGap: '10px',
+    navBadgePadding: '6px',
+    navChipPadding: '3px',
+    navChipInset: '3px',
   },
   size: {
     // SPEC, Control sizing: the two Control heights
@@ -190,6 +206,13 @@ export const theme = {
     scrollbarThumbBorder: '3px',
     // Modal.dc.html: the width of a Modal unless told otherwise
     modalWidth: '460px',
+    // SPEC, Control sizing: the NavItem's height; NavItem.dc.html: the width
+    // and line of its badge and of its corner chip
+    navItem: '38px',
+    navBadgeMinWidth: '22px',
+    navBadgeLine: '20px',
+    navChipMinWidth: '16px',
+    navChipLine: '15px',
   },
   shadow: {
     // --shadow-lg: the Modal's panel

@@ -23,16 +23,16 @@ gate file.
 
 ## Acceptance criteria
 
-- [ ] A RED commit adds both components' **Stories**, which fail.
+- [x] A RED commit adds both components' **Stories**, which fail.
 - [ ] (review) Props exactly SPEC §3, NavItem plus `compact`; NavItem 38 is
       a **Token**.
-- [ ] **Stories** for the PageHeader with and without back link, tag and
+- [x] **Stories** for the PageHeader with and without back link, tag and
       actions; the NavItem resting, active, with each badge tone, at 0 and
       compact.
-- [ ] **Play functions**: the back link calls back; a NavItem click calls
+- [x] **Play functions**: the back link calls back; a NavItem click calls
       back; the compact NavItem is named by its label; a badge at 0 is not
       shown.
-- [ ] `npm run verify` is green.
+- [x] `npm run verify` is green.
 
 ## Blocked by
 

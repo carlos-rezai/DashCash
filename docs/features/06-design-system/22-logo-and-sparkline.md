@@ -59,6 +59,12 @@ Logo's light colours included (Q12, P1). Touches no gate file.
 - `MarkLarge` reads what Chromium paints at points of a 256 px mark: the C
   cut away 10° below the horizontal and drawn at 35°, the three gaps and
   the three dashes on the 45° line.
+- Left out of the Logo's mark: `display: block` from `Logo.dc.html`. The svg
+  is a flex item, so it is a block anyway; measured with and without it in a
+  wide frame, a frame narrower than the logo and a frame shorter than the
+  mark, the mark's and the frame's boxes were identical. Its `flex: none`
+  stays: without it the mark shrinks in a narrow frame (the `NarrowFrame`
+  story fails). `role="img"` is not in the prototype and is not used.
 - While `Logo.tsx` and `Sparkline.tsx` are missing, Vite's unresolved import
   also fails the story files that run beside them in the same
   `npm run test:stories`, and lint and typecheck report the unresolved

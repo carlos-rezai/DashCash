@@ -12,9 +12,9 @@ export const Frame = styled.span<{ $theme: LogoTheme; $gap: number }>`
     $theme === 'light' ? theme.color.logoInkLight : theme.color.text};
 `;
 
-// The mark: one colour, no fill, butt caps and miter joins as drawn.
+// The mark: one colour, no fill, butt caps and miter joins as drawn, and it
+// keeps its size when the frame is narrower than the logo.
 export const Mark = styled.svg<{ $theme: LogoTheme }>`
-  display: block;
   flex: none;
   fill: none;
   stroke: ${({ theme, $theme }) =>

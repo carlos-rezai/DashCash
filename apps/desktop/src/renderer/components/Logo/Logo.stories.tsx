@@ -96,6 +96,14 @@ const LightGround = styled.div`
   background: ${GROUND_LIGHT};
 `;
 
+// A frame narrower than the logo, whose own box may shrink below its content.
+const Narrow = styled.div`
+  & > span {
+    width: 20px;
+    min-width: 0;
+  }
+`;
+
 // The mark: the drawing labelled with the name.
 function theMark(canvasElement: HTMLElement): SVGSVGElement {
   const mark = within(canvasElement).getByLabelText(NAME);
@@ -209,6 +217,12 @@ async function expectLogo(
     (wordBox.top + wordBox.bottom) / 2,
     'wordmark centred on the mark',
   ).toBeCloseTo((box.top + box.bottom) / 2, 0);
+  // Its own height, not stretched to the mark's: a stretched box has the same
+  // centre but its text sits at the top.
+  await expect(wordBox.height, 'wordmark as high as its text').toBeCloseTo(
+    fontSize,
+    0,
+  );
 }
 
 const meta = {
@@ -348,6 +362,20 @@ export const MarkLarge: Story = {
         `dash at ${String(t)}u`,
       ).toBe(true);
     }
+  },
+};
+
+// A frame narrower than the logo: the mark keeps its size and does not shrink.
+export const NarrowFrame: Story = {
+  render: (args) => (
+    <Narrow>
+      <Logo {...args} />
+    </Narrow>
+  ),
+  play: async ({ canvasElement }) => {
+    const box = theMark(canvasElement).getBoundingClientRect();
+    await expect(box.width, 'mark width').toBeCloseTo(28, 1);
+    await expect(box.height, 'mark height').toBeCloseTo(28, 1);
   },
 };
 

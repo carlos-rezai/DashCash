@@ -89,4 +89,28 @@ describe('computeSparklinePoints', () => {
     expect(points.dashed).toEqual([]);
     expect(points.todayX).toBe(200);
   });
+
+  it('starts the dashed line at the left edge of a future-only series, with no solid line and the tick there', () => {
+    const points = computeSparklinePoints(
+      [],
+      cents([100_000, 300_000, 200_000]),
+      36,
+    );
+
+    expect(points.solid).toEqual([]);
+    expect(points.dashed).toEqual([
+      { x: 0, y: 34 },
+      { x: 100, y: 2 },
+      { x: 200, y: 18 },
+    ]);
+    expect(points.todayX).toBe(0);
+  });
+
+  it('puts a single value on the low line at the left edge, with no dashed line', () => {
+    const points = computeSparklinePoints(cents([75_000]), [], 36);
+
+    expect(points.solid).toEqual([{ x: 0, y: 34 }]);
+    expect(points.dashed).toEqual([]);
+    expect(points.todayX).toBe(0);
+  });
 });

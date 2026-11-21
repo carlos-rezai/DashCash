@@ -22,14 +22,14 @@ the values it uses (P1). Touches no gate file.
 
 ## Acceptance criteria
 
-- [ ] A RED commit adds the Snackbar's **Stories**, which fail.
+- [x] A RED commit adds the Snackbar's **Stories**, which fail.
 - [ ] (review) Props exactly SPEC §3 plus `loading`.
-- [ ] **Stories** for each tone, with primary and secondary actions, with
+- [x] **Stories** for each tone, with primary and secondary actions, with
       an action icon, with close, with a custom icon, and loading
       ("Installing…").
-- [ ] **Play functions**: each action and the close button call back; the
+- [x] **Play functions**: each action and the close button call back; the
       error and warning **Stories** expose an alert, the others a status.
-- [ ] `npm run verify` is green.
+- [x] `npm run verify` is green.
 
 ## Blocked by
 

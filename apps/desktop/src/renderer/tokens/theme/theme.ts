@@ -53,6 +53,10 @@ export const theme = {
     // base #e8877b (design log D1)
     warningTint: 'color-mix(in srgb, #e0b469 14%, transparent)',
     dangerTint: 'color-mix(in srgb, #e8877b 14%, transparent)',
+    // --sb-positive-tint, 14 %
+    positiveTint: 'color-mix(in srgb, #7cc59a 14%, transparent)',
+    // Snackbar.dc.html: the share of the tone's colour in its hairline
+    snackbarHairline: '55%',
     // --sb-backdrop: the dark backdrop behind a Modal
     backdrop: 'rgba(9, 15, 22, 0.66)',
     // --sb-ground-sunken: the ground of a Meter
@@ -189,6 +193,17 @@ export const theme = {
     stepperPaddingY: '10px',
     stepperPaddingX: '14px',
     stepperGap: '10px',
+    // Snackbar.dc.html: the padding above, right and below, and on the left;
+    // the gap between its icon, text and close button; the gap between its
+    // title and message; the padding above its actions; the icon's drop; and
+    // the close button's pull up and right out of the padding's corner
+    snackbarPadding: '14px',
+    snackbarPaddingLeft: '16px',
+    snackbarGap: '12px',
+    snackbarTextGap: '4px',
+    snackbarActionsPadding: '6px',
+    snackbarIconNudge: '1px',
+    snackbarClosePull: '-6px',
   },
   size: {
     // SPEC, Control sizing: the two Control heights

@@ -1,5 +1,5 @@
 ---
-status: open
+status: in-progress
 ---
 # Logo and Sparkline
 
@@ -43,3 +43,23 @@ Logo's light colours included (Q12, P1). Touches no gate file.
 ## User stories addressed
 
 - User stories 93, 94, 102
+
+## Notes
+
+- The pure functions the tests import: `computeLogoStrokeWidth(size)` and
+  `computeLogoDashEnd(strokeWidth)` (`{ x, y }` in the 32 × 32 view box)
+  from `Logo.tsx`; `computeSparklinePoints(past, future, height)` from
+  `Sparkline.tsx`, returning `{ solid, dashed, todayX }`: the points of the
+  200-wide box, `dashed` starting at today, `todayX` a number. Verb first,
+  like `computeRevealScroll`.
+- A past-only series has no dashed line (`dashed` is empty), where
+  `Sparkline.dc.html` builds a one-point path that draws nothing.
+- The light **Stories** sit on `Logo.dc.html`'s light ground `#f2f2f3`,
+  written in the stories file like the other expected colours.
+- `MarkLarge` reads what Chromium paints at points of a 256 px mark: the C
+  cut away 10° below the horizontal and drawn at 35°, the three gaps and
+  the three dashes on the 45° line.
+- While `Logo.tsx` and `Sparkline.tsx` are missing, Vite's unresolved import
+  also fails the story files that run beside them in the same
+  `npm run test:stories`, and lint and typecheck report the unresolved
+  types.

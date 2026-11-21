@@ -9,3 +9,4 @@ export { Snackbar } from './Snackbar/Snackbar.tsx';
 export { Sparkline } from './Sparkline/Sparkline.tsx';
 export { StatTile } from './StatTile/StatTile.tsx';
 export { Stepper } from './Stepper/Stepper.tsx';
+export { YearTable } from './YearTable/YearTable.tsx';

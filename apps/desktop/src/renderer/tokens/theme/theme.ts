@@ -49,6 +49,9 @@ export const theme = {
     // --sb-milestone (the positive green, SPEC section 2) and its 16 % tint
     milestone: '#7cc59a',
     milestoneTint: 'color-mix(in srgb, #7cc59a 16%, transparent)',
+    // --sb-milestone-row: the payoff month's row of a YearTable, the milestone
+    // green at 12 % over the sunken ground (design log Q7)
+    milestoneRow: 'color-mix(in srgb, #7cc59a 12%, #16222f)',
     // --sb-warning-tint and --sb-danger-tint, 14 %; the danger tint keeps the
     // base #e8877b (design log D1)
     warningTint: 'color-mix(in srgb, #e0b469 14%, transparent)',
@@ -109,6 +112,8 @@ export const theme = {
     tagLetterSpacing: '0.02em',
     // Logo.dc.html: letter-spacing of the wordmark
     logoLetterSpacing: '0.02em',
+    // styles.css: .table th
+    tableHeadLetterSpacing: '0.08em',
   },
   // SPEC section 2's type scale: sm 13, md 14, lg 22, xl 34
   fontSize: {
@@ -130,6 +135,10 @@ export const theme = {
     navChip: '10px',
     // Accordion.dc.html: the title
     accordionTitle: '20px',
+    // styles.css, .table th and dashcash-dark.css: a column header
+    tableHead: '11px',
+    // YearTable.dc.html: the year of a year row
+    yearTableYear: '19px',
   },
   space: {
     // SPEC section 2: --space-2, -3, -4 and -6 (0.85x density), the Card's
@@ -213,6 +222,16 @@ export const theme = {
     accordionPaddingX: '4px',
     accordionGap: '10px',
     accordionInset: '30px',
+    // YearTable.dc.html: how far its scrolling wrapper reaches past the card
+    // on either side (and is padded back); the gap between a year row's
+    // chevron, year and tag; the gap between a month and its tag; a month
+    // row's inset from the left; the gap between a column's colour dot and
+    // its label
+    yearTableBleed: '4px',
+    yearTableYearGap: '10px',
+    yearTableMonthGap: '8px',
+    yearTableMonthInset: '40px',
+    yearTableDotGap: '6px',
   },
   size: {
     // SPEC, Control sizing: the two Control heights
@@ -262,6 +281,10 @@ export const theme = {
     sparklineDash: '4px 3px',
     // SPEC, Auto-scroll on expand: the margin kept below an opened block
     revealMargin: '24px',
+    // SPEC section 3, YearTable equalColumns: the first column, and the least
+    // width of each data column
+    yearTableFirstColumn: '230px',
+    yearTableColumnMin: '130px',
   },
   shadow: {
     // --shadow-lg: the Modal's panel

@@ -128,6 +128,8 @@ export const theme = {
     cardTitle: '19px',
     // NavItem.dc.html: the text of a compact item's corner chip
     navChip: '10px',
+    // Accordion.dc.html: the title
+    accordionTitle: '20px',
   },
   space: {
     // SPEC section 2: --space-2, -3, -4 and -6 (0.85x density), the Card's
@@ -204,6 +206,13 @@ export const theme = {
     snackbarActionsPadding: '6px',
     snackbarIconNudge: '1px',
     snackbarClosePull: '-6px',
+    // Accordion.dc.html: the padding of its header above and below, and at the
+    // sides; the gap between the header's parts; the content's inset from the
+    // left
+    accordionPaddingY: '12px',
+    accordionPaddingX: '4px',
+    accordionGap: '10px',
+    accordionInset: '30px',
   },
   size: {
     // SPEC, Control sizing: the two Control heights
@@ -251,6 +260,8 @@ export const theme = {
     sparklineLine: '1.5px',
     sparklineTick: '1px',
     sparklineDash: '4px 3px',
+    // SPEC, Auto-scroll on expand: the margin kept below an opened block
+    revealMargin: '24px',
   },
   shadow: {
     // --shadow-lg: the Modal's panel
@@ -264,6 +275,8 @@ export const theme = {
     loaderBreathe: '2.4s',
     // SPEC, Transitions and Meter.dc.html: the Meter's width, 300 ms
     meterWidth: '300ms',
+    // SPEC, Transitions and Accordion.dc.html: the chevron's turn, 160 ms
+    accordionTurn: '160ms',
   },
   zIndex: {
     // Modal.dc.html: the backdrop above the page

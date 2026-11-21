@@ -1,3 +1,4 @@
+export { Accordion } from './Accordion/Accordion.tsx';
 export { Card } from './Card/Card.tsx';
 export { FormField } from './FormField/FormField.tsx';
 export { Logo } from './Logo/Logo.tsx';

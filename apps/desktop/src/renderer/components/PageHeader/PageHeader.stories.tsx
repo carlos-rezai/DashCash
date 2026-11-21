@@ -40,10 +40,12 @@ const TAG_GAP = 10.2;
 const ACTIONS_GAP = 6.8;
 const WRAP_GAP = 13.6;
 
-// PageHeader.dc.html's preview frame, and an invented narrow one in which the
-// title column and the actions do not fit on one line.
+// PageHeader.dc.html's preview frame, and invented narrow ones: one in which
+// the title column and the actions do not fit on one line, one narrower than
+// the title.
 const FRAME_WIDTH = 900;
 const NARROW_WIDTH = 320;
+const TIGHT_WIDTH = 80;
 
 // PageHeader.dc.html's defaults; the rest is invented.
 const TITLE = 'Dashboard';
@@ -59,10 +61,9 @@ const RANGES = [
   { value: 'all', label: 'All' },
 ];
 
-// SPEC section 3: the PageHeader's props, and no others; title alone is
-// required. The actions are optional too: SPEC's Dashboard header has none.
-// Typecheck fails when a prop is missing, one is added, or one changes
-// between required and optional.
+// SPEC section 3: the PageHeader's props, and no others; title and children
+// alone are required. Typecheck fails when a prop is missing, one is added,
+// or one changes between required and optional.
 type PageHeaderProps = ComponentProps<typeof PageHeader>;
 type ListedProp =
   | 'title'
@@ -80,10 +81,10 @@ type OptionalProp = {
     ? Key
     : never;
 }[PageHeaderProp];
-type ListedOptional = Exclude<ListedProp, 'title'>;
+type ListedOptional = Exclude<ListedProp, 'title' | 'children'>;
 const NO_MISSING_PROP: [MissingProp] extends [never] ? true : false = true;
 const NO_UNLISTED_PROP: [UnlistedProp] extends [never] ? true : false = true;
-const ONLY_TITLE_REQUIRED: [OptionalProp] extends [ListedOptional]
+const ONLY_TITLE_AND_CHILDREN_REQUIRED: [OptionalProp] extends [ListedOptional]
   ? [ListedOptional] extends [OptionalProp]
     ? true
     : false
@@ -386,10 +387,11 @@ type Story = StoryObj<typeof meta>;
 // PageHeader.dc.html's defaults: the title and the subtitle, without a back
 // link, a tag or actions.
 export const Default: Story = {
+  args: { children: null },
   play: async ({ canvasElement }) => {
     await expect(NO_MISSING_PROP).toBe(true);
     await expect(NO_UNLISTED_PROP).toBe(true);
-    await expect(ONLY_TITLE_REQUIRED).toBe(true);
+    await expect(ONLY_TITLE_AND_CHILDREN_REQUIRED).toBe(true);
     await expect(TAG_TONE_IS_A_TAG_TONE).toBe(true);
     await expect(ON_BACK_TAKES_NOTHING).toBe(true);
     await expect(
@@ -416,7 +418,7 @@ export const Default: Story = {
 // An empty subtitle and an empty tag are none, as in the prototype: the
 // header is the title alone.
 export const TitleOnly: Story = {
-  args: { subtitle: '', tag: '' },
+  args: { subtitle: '', tag: '', children: null },
   play: async ({ canvasElement }) => {
     release(canvasElement);
     const title = theTitle(canvasElement, TITLE);
@@ -484,7 +486,7 @@ export const WithBackTagAndActions: Story = {
 
 // Without a tone, the tag is an accent Tag.
 export const DefaultTagTone: Story = {
-  args: { tag: TAG },
+  args: { tag: TAG, children: null },
   play: async ({ canvasElement }) => {
     release(canvasElement);
     await expectTag(canvasElement, theTitle(canvasElement, TITLE));
@@ -493,7 +495,7 @@ export const DefaultTagTone: Story = {
 
 // A tag in the warning tone.
 export const WarningTag: Story = {
-  args: { tag: TAG, tagTone: 'warning' },
+  args: { tag: TAG, tagTone: 'warning', children: null },
   play: async ({ canvasElement }) => {
     release(canvasElement);
     await expectTag(canvasElement, theTitle(canvasElement, TITLE));
@@ -502,7 +504,7 @@ export const WarningTag: Story = {
 
 // A click on the back link calls onBack once; a click on the title does not.
 export const GoingBack: Story = {
-  args: { onBack: fn(), backLabel: BACK_LABEL },
+  args: { onBack: fn(), backLabel: BACK_LABEL, children: null },
   play: async ({ args, canvasElement }) => {
     release(canvasElement);
     await userEvent.click(theTitle(canvasElement, TITLE));
@@ -514,7 +516,7 @@ export const GoingBack: Story = {
 
 // Without a label, the back link reads Back.
 export const DefaultBackLabel: Story = {
-  args: { onBack: fn() },
+  args: { onBack: fn(), children: null },
   play: async ({ args, canvasElement }) => {
     const title = theTitle(canvasElement, TITLE);
     const back = theBack(canvasElement, DEFAULT_BACK_LABEL);
@@ -527,7 +529,7 @@ export const DefaultBackLabel: Story = {
 
 // A label without onBack shows no back link.
 export const BackLabelWithoutOnBack: Story = {
-  args: { backLabel: BACK_LABEL },
+  args: { backLabel: BACK_LABEL, children: null },
   play: async ({ canvasElement }) => {
     const frame = theFrame(canvasElement);
     await expect(
@@ -558,11 +560,32 @@ export const Wrapping: Story = {
   },
 };
 
+// In a frame narrower than the title, the title column shrinks to the frame
+// instead of keeping the title's width.
+export const Shrinking: Story = {
+  args: { title: ACCOUNT_TITLE, children: ACTIONS },
+  render: (args) => renderHeader(args, TIGHT_WIDTH),
+  play: async ({ canvasElement }) => {
+    release(canvasElement);
+    const frame = theFrame(canvasElement);
+    const title = theTitle(canvasElement, ACCOUNT_TITLE);
+    const column = frame.firstElementChild?.firstElementChild;
+    if (column === null || column === undefined) {
+      throw new Error('nothing rendered');
+    }
+    await expect(
+      title.scrollWidth > TIGHT_WIDTH,
+      'the title is wider than the frame',
+    ).toBe(true);
+    await expect(box(column).width, 'column width').toBeCloseTo(TIGHT_WIDTH, 1);
+  },
+};
+
 // PageHeader.dc.html: under the pointer the back link turns accent-700; SPEC,
 // Focus/hover: focused from the keyboard it shows the 2 px accent ring,
 // offset 2.
 export const BackHoverAndFocus: Story = {
-  args: { onBack: fn(), backLabel: BACK_LABEL },
+  args: { onBack: fn(), backLabel: BACK_LABEL, children: null },
   play: async ({ canvasElement }) => {
     release(canvasElement);
     const back = theBack(canvasElement, BACK_LABEL);

@@ -19,7 +19,7 @@ type PageHeaderProps = {
   onBack?: () => void;
   backLabel?: string;
   // The actions, at the right.
-  children?: ReactNode;
+  children: ReactNode;
 };
 
 const BACK_ICON_SIZE = 14;

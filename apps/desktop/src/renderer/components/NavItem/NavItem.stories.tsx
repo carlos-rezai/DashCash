@@ -38,7 +38,8 @@ const BORDER = 1;
 const PADDING = 12;
 const ICON_SIZE = 18;
 const GAP = 10;
-const FONT_SIZE = '14px';
+const FONT_PX = 14;
+const FONT_SIZE = `${String(FONT_PX)}px`;
 // NavItem.dc.html: the badge at least 22 px wide, 6 px side padding, 12 px
 // text on a 20 px line; compact, the corner chip 3 px inside the top right
 // corner, at least 16 px wide, 3 px side padding, 10 px text on a 15 px line.
@@ -53,9 +54,11 @@ const CHIP_FONT_SIZE = '10px';
 const CHIP_HEIGHT = 15;
 
 // SPEC section 1: the sidebar is 208 px wide; the compact frame is an
-// invented rail narrower than the expanded item's padding and icon.
+// invented rail narrower than the expanded item's padding and icon; the tight
+// frame is an invented one narrower than the label.
 const WIDTH = 208;
 const COMPACT_WIDTH = 40;
+const TIGHT_WIDTH = 100;
 
 // The copy of NavItem.dc.html's defaults.
 const ICON: IconName = 'inbox';
@@ -307,6 +310,15 @@ async function expectExpandedRow(
   );
   await expect(text.left - icon.right, 'icon to label').toBeCloseTo(GAP, 1);
   await expect(getComputedStyle(label).whiteSpace, 'one line').toBe('nowrap');
+  // A line as high as the font is large, and the text at the label's left
+  // edge, not centred in it.
+  await expect(text.height, 'label line').toBeCloseTo(FONT_PX, 1);
+  const glyphs = document.createRange();
+  glyphs.selectNodeContents(label);
+  await expect(glyphs.getBoundingClientRect().left, 'text left').toBeCloseTo(
+    text.left,
+    1,
+  );
   if (badge === null) {
     await expect(box.right - text.right, 'label right').toBeCloseTo(
       BORDER + PADDING,
@@ -426,16 +438,10 @@ async function expectFocusRing(canvasElement: HTMLElement): Promise<void> {
   await expect(style.outlineOffset, 'outline offset').toBe('2px');
 }
 
-const meta = {
-  title: 'Components/NavItem',
-  component: NavItem,
-  render: (args) => (
+function renderItem(args: NavItemProps, width: number) {
+  return (
     <>
-      <Frame
-        data-testid="frame"
-        data-resting=""
-        $width={args.compact === true ? COMPACT_WIDTH : WIDTH}
-      >
+      <Frame data-testid="frame" data-resting="" $width={width}>
         <NavItem {...args} />
       </Frame>
       {/* The icon NavItem.dc.html draws, for the comparison; never shown. */}
@@ -443,7 +449,14 @@ const meta = {
         <Icon glyph={args.icon} size={ICON_SIZE} />
       </div>
     </>
-  ),
+  );
+}
+
+const meta = {
+  title: 'Components/NavItem',
+  component: NavItem,
+  render: (args) =>
+    renderItem(args, args.compact === true ? COMPACT_WIDTH : WIDTH),
   args: { icon: ICON, label: LABEL, onClick: fn() },
 } satisfies Meta<typeof NavItem>;
 
@@ -553,6 +566,25 @@ export const BadgeAtZero: Story = {
     await expect(within(item).queryByText('0'), 'no badge').toBeNull();
     await expect(item.textContent, 'the label alone').toBe(LABEL);
     await expectExpandedRow(item, null);
+  },
+};
+
+// In a frame narrower than the label, the label shrinks and the item keeps
+// its width: the badge stays inside the padding, the label's box ends before
+// it.
+export const Shrinking: Story = {
+  args: { badge: BADGE, badgeTone: 'warning' },
+  render: (args) => renderItem(args, TIGHT_WIDTH),
+  play: async ({ canvasElement }) => {
+    const item = theItem(canvasElement);
+    const badge = within(item).getByText(String(BADGE));
+    const label = within(item).getByText(LABEL);
+    await expectBox(canvasElement);
+    await expect(
+      label.scrollWidth > label.getBoundingClientRect().width,
+      'the label is wider than its box',
+    ).toBe(true);
+    await expectExpandedRow(item, badge);
   },
 };
 

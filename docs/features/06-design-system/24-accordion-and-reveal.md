@@ -1,5 +1,5 @@
 ---
-status: open
+status: in-progress
 ---
 # Accordion and auto-scroll on expand
 
@@ -47,3 +47,25 @@ gains the values it uses, the 160 ms turn and the 24 px margin included
 ## User stories addressed
 
 - User stories 82, 83, 84, 85, 102, 103
+
+## Notes
+
+- `computeRevealScroll(head, block, container, margin)` lives in
+  `hooks/useRevealOnExpand/useRevealOnExpand.ts` beside the hook. The three
+  boxes are viewport boxes with `top` and `bottom`, as
+  `getBoundingClientRect` gives them; `block` is `null` on collapse. It
+  returns how far to scroll down, or `null` when nothing scrolls (it fits,
+  the row already sits at or inside the top margin, or collapse), after
+  `lib/reveal.js`.
+- The block is the whole accordion, header and content, as
+  `Accordion.dc.html` passes its section to `SB_reveal`; the **Stories**
+  take the header's parent element as the accordion.
+- The scroll-area **Story** leaves 48 px of room below the last accordion,
+  as a page leaves below its content: without room, the area cannot scroll
+  far enough to keep the 24 px margin below the last block.
+- The parts are compared with references rendered beside the Accordion:
+  the 16 px chevronRight Icon, and the Tag, neutral when no tone is given.
+- While `Accordion.tsx` and `useRevealOnExpand.ts` are missing, Vite's
+  unresolved import also fails the story files that run beside it in the
+  same `npm run test:stories`, and lint (with the lint tree gate test) and
+  typecheck report the unresolved types.

@@ -69,11 +69,17 @@ export const theme = {
     inputHover: 'color-mix(in srgb, #e9f1fa 45%, transparent)',
     // --sb-hover: the fill of a Segmented option under the pointer
     hover: 'color-mix(in srgb, #e9f1fa 6%, transparent)',
+    // Logo.dc.html: the mark and the wordmark of the light logo, drawn for a
+    // light ground
+    logoMarkLight: '#416180',
+    logoInkLight: '#1d1f20',
     opacity: {
       // styles.css: .btn:disabled
       disabled: 0.45,
       // Meter.dc.html: the projection's dashed outline
       projection: 0.8,
+      // Sparkline.dc.html: the dashed future line
+      future: 0.85,
     },
   },
   font: {
@@ -97,6 +103,8 @@ export const theme = {
     labelLetterSpacing: '0.04em',
     // styles.css: .tag
     tagLetterSpacing: '0.02em',
+    // Logo.dc.html: letter-spacing of the wordmark
+    logoLetterSpacing: '0.02em',
   },
   // SPEC section 2's type scale: sm 13, md 14, lg 22, xl 34
   fontSize: {
@@ -223,6 +231,11 @@ export const theme = {
     stepperStep: '44px',
     stepperSquare: '24px',
     stepperBar: '2px',
+    // Sparkline.dc.html: the width of its two lines, of the tick at today, and
+    // the dashes of the future line
+    sparklineLine: '1.5px',
+    sparklineTick: '1px',
+    sparklineDash: '4px 3px',
   },
   shadow: {
     // --shadow-lg: the Modal's panel

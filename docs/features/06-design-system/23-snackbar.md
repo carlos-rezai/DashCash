@@ -1,5 +1,5 @@
 ---
-status: open
+status: in-progress
 ---
 # Snackbar
 
@@ -38,3 +38,22 @@ the values it uses (P1). Touches no gate file.
 ## User stories addressed
 
 - User stories 95, 96, 97, 98, 99, 102, 103
+
+## Notes
+
+- The tone **Stories** are `SuccessTone`, `ErrorTone`, `InfoTone` and
+  `WarningTone`: an export named `Error` would shadow the global `Error`
+  the stories file throws.
+- The error tone's icon and hairline use `--sb-danger` as design log D1
+  raises it, `#ed8c80`; its tint keeps the base `#e8877b` (D1). The success
+  tint is `--sb-positive-tint`, the info tint `--color-accent-100`.
+- The **Stories** take `aria-live` from `Snackbar.dc.html`: `assertive` for
+  error, `polite` for the others.
+- The parts are compared with references rendered beside the Snackbar: the
+  Icon at 18 px, the Loader at 18 px with `delay` 0 and `currentColor`, the
+  actions as sm Buttons and the close button as `Snackbar.dc.html`'s ghost
+  sm Button with the x icon, titled "Dismiss".
+- While `Snackbar.tsx` is missing, Vite's unresolved import also fails the
+  story files that run beside it in the same `npm run test:stories`, and
+  lint (with the lint tree gate test) and typecheck report the unresolved
+  types.

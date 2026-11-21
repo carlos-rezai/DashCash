@@ -1,5 +1,5 @@
 ---
-status: in-progress
+status: done
 ---
 # PageHeader and NavItem
 
@@ -24,7 +24,7 @@ gate file.
 ## Acceptance criteria
 
 - [x] A RED commit adds both components' **Stories**, which fail.
-- [ ] (review) Props exactly SPEC §3, NavItem plus `compact`; NavItem 38 is
+- [x] (review) Props exactly SPEC §3, NavItem plus `compact`; NavItem 38 is
       a **Token**.
 - [x] **Stories** for the PageHeader with and without back link, tag and
       actions; the NavItem resting, active, with each badge tone, at 0 and

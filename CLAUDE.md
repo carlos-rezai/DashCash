@@ -57,6 +57,7 @@ Edit files with the Edit and Write tools, not with sed or shell redirection in B
 - A prototype element's class carries its states from the prototype's `styles.css` (hover, focus-visible, caret): build and test those states too.
 - Add no styling the prototype lacks, however sensible; if something beyond it seems needed, stop and report instead.
 - A prototype rule may be left out as having no visible effect only after checking every state the app can reach, including a narrow or short window.
+- An empty string is absent, as in the prototype: every optional text prop treats "" like undefined, including its fallback. A default parameter alone is not enough.
 - Reuse an existing Theme token (e.g. `size.controlHeight`) before adding a new one.
 
 ## Tests

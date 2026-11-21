@@ -527,6 +527,19 @@ export const DefaultBackLabel: Story = {
   },
 };
 
+// An empty back label is absent: the link falls back to "Back".
+export const EmptyBackLabel: Story = {
+  args: { onBack: fn(), backLabel: '', children: null },
+  play: async ({ args, canvasElement }) => {
+    const title = theTitle(canvasElement, TITLE);
+    const back = theBack(canvasElement, DEFAULT_BACK_LABEL);
+    await expectBack(canvasElement, back, DEFAULT_BACK_LABEL, title);
+    release(canvasElement);
+    await userEvent.click(back);
+    await expect(args.onBack).toHaveBeenCalledTimes(1);
+  },
+};
+
 // A label without onBack shows no back link.
 export const BackLabelWithoutOnBack: Story = {
   args: { backLabel: BACK_LABEL, children: null },

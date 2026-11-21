@@ -27,7 +27,7 @@ function stateOf(index: number, current: number): StepState {
 // click; the current step reports nothing, a future step is disabled.
 export function Stepper({ steps, current, onStep }: StepperProps) {
   return (
-    <List $count={steps.length || 1}>
+    <List $count={steps.length}>
       {steps.map((label, index) => {
         const state = stateOf(index, current);
         return (

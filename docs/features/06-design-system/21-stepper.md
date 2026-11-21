@@ -1,5 +1,5 @@
 ---
-status: open
+status: in-progress
 ---
 # Stepper
 
@@ -33,3 +33,12 @@ height 44 included (P1). Touches no gate file.
 ## User stories addressed
 
 - User stories 80, 81, 102, 103
+
+## Notes
+
+- Stepper.dc.html sets the cursor inline: pointer on a done step, default
+  on the current and on a future step, so a future step keeps the default
+  cursor over `GlobalStyle`'s `button:disabled` rule; and only a done step
+  calls `onStep`, the current step does not.
+- While `Stepper.tsx` is missing, Vite's unresolved import also fails the
+  story files that run beside it in the same `npm run test:stories`.

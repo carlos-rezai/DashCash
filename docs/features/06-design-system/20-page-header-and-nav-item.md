@@ -1,5 +1,5 @@
 ---
-status: open
+status: in-progress
 ---
 # PageHeader and NavItem
 
@@ -42,3 +42,12 @@ gate file.
 ## User stories addressed
 
 - User stories 70, 71, 77, 78, 79, 102, 103
+
+## Notes
+
+- The PageHeader's `children` (its actions) is optional like the other
+  props but `title`: SPEC's Dashboard header has no actions, and the
+  stories render the header without them.
+- While `PageHeader.tsx` and `NavItem.tsx` are missing, Vite's unresolved
+  imports also fail the story files that run beside them in the same
+  `npm run test:stories`.

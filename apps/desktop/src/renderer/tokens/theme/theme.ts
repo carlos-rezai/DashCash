@@ -176,6 +176,11 @@ export const theme = {
     navBadgePadding: '6px',
     navChipPadding: '3px',
     navChipInset: '3px',
+    // Stepper.dc.html: the padding of a step, and the gap between its square
+    // and its label
+    stepperPaddingY: '10px',
+    stepperPaddingX: '14px',
+    stepperGap: '10px',
   },
   size: {
     // SPEC, Control sizing: the two Control heights
@@ -213,6 +218,11 @@ export const theme = {
     navBadgeLine: '20px',
     navChipMinWidth: '16px',
     navChipLine: '15px',
+    // SPEC, Control sizing: the Stepper's step; Stepper.dc.html: the square of
+    // a step and the bar under the current one
+    stepperStep: '44px',
+    stepperSquare: '24px',
+    stepperBar: '2px',
   },
   shadow: {
     // --shadow-lg: the Modal's panel

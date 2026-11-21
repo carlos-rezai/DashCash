@@ -1,5 +1,5 @@
 ---
-status: in-progress
+status: done
 ---
 # Accordion and auto-scroll on expand
 
@@ -26,19 +26,19 @@ gains the values it uses, the 160 ms turn and the 24 px margin included
 
 ## Acceptance criteria
 
-- [ ] A RED commit adds the hook's unit tests and the Accordion's
+- [x] A RED commit adds the hook's unit tests and the Accordion's
       **Stories**, which fail.
-- [ ] (review) Props exactly SPEC §3; the 160 ms turn and the 24 px margin
+- [x] (review) Props exactly SPEC §3; the 160 ms turn and the 24 px margin
       are **Tokens**.
-- [ ] `computeRevealScroll`: a block that fits, one running past the
+- [x] `computeRevealScroll`: a block that fits, one running past the
       bottom, one longer than the area, a clicked row near the top, and
       collapse.
-- [ ] **Stories** for closed, open, with meta and tag, and several
+- [x] **Stories** for closed, open, with meta and tag, and several
       accordions in a scroll area.
-- [ ] **Play functions**: a click toggles and reports `onToggle`; opening
+- [x] **Play functions**: a click toggles and reports `onToggle`; opening
       the last accordion in a scroll area brings its block into view
       without moving the clicked row out of it.
-- [ ] `npm run verify` is green.
+- [x] `npm run verify` is green.
 
 ## Blocked by
 

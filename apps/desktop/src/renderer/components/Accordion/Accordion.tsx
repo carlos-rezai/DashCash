@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { useRef, type ReactNode } from 'react';
 import { useRevealOnExpand } from '../../hooks/useRevealOnExpand/useRevealOnExpand.ts';
 import { Icon } from '../../primitives/Icon/Icon.tsx';
 import { Tag, type TagTone } from '../../primitives/Tag/Tag.tsx';
@@ -34,11 +34,18 @@ export function Accordion({
   tagTone = 'neutral',
   children,
 }: AccordionProps) {
-  const section = useRevealOnExpand(open);
+  const header = useRef<HTMLButtonElement>(null);
+  const section = useRef<HTMLElement>(null);
+  useRevealOnExpand(header, section, open);
 
   return (
     <Section ref={section}>
-      <Header type="button" aria-expanded={open} onClick={onToggle}>
+      <Header
+        ref={header}
+        type="button"
+        aria-expanded={open}
+        onClick={onToggle}
+      >
         <Chevron $open={open}>
           <Icon glyph="chevronRight" size={ICON_SIZE} />
         </Chevron>

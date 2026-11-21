@@ -44,19 +44,15 @@ function scrollerOf(element: HTMLElement): Element {
   return document.scrollingElement ?? document.documentElement;
 }
 
-function reveal(section: HTMLElement, margin: number): void {
-  const header = section.firstElementChild;
-  if (header === null) {
-    return;
-  }
-  const scroller = scrollerOf(section);
+function reveal(head: HTMLElement, block: HTMLElement, margin: number): void {
+  const scroller = scrollerOf(block);
   const container =
     scroller === document.scrollingElement
       ? { top: 0, bottom: window.innerHeight }
       : scroller.getBoundingClientRect();
   const distance = computeRevealScroll(
-    header.getBoundingClientRect(),
-    section.getBoundingClientRect(),
+    head.getBoundingClientRect(),
+    block.getBoundingClientRect(),
     container,
     margin,
   );
@@ -67,36 +63,38 @@ function reveal(section: HTMLElement, margin: number): void {
   scroller.scrollBy({ top: distance, behavior: reduced ? 'auto' : 'smooth' });
 }
 
-// After the block this ref is put on opens, scrolls its nearest scroll
-// container just far enough to show it, with the Theme's reveal margin below
-// it. The block's first child is the clicked row. Nothing happens on mount or
-// on collapse.
+// After open turns true, scrolls the nearest scroll container just far enough
+// to show the block, with the Theme's reveal margin below it, never so far
+// that the head (the clicked row) passes the margin below the container's top.
+// The head and the block are separate elements: a year row and the tbody it
+// shares with the other years, or an accordion's header and its section.
+// Nothing happens on mount or on collapse.
 export function useRevealOnExpand(
+  headRef: RefObject<HTMLElement | null>,
+  blockRef: RefObject<HTMLElement | null>,
   open: boolean,
-): RefObject<HTMLElement | null> {
-  const section = useRef<HTMLElement | null>(null);
+): void {
   const wasOpen = useRef(open);
   const margin = parseFloat(useTheme().size.revealMargin);
 
   useEffect(() => {
     const opened = open && !wasOpen.current;
     wasOpen.current = open;
-    const element = section.current;
-    if (!opened || element === null) {
+    const head = headRef.current;
+    const block = blockRef.current;
+    if (!opened || head === null || block === null) {
       return undefined;
     }
     // Two frames, so the content has been laid out.
     let second = 0;
     const first = requestAnimationFrame(() => {
       second = requestAnimationFrame(() => {
-        reveal(element, margin);
+        reveal(head, block, margin);
       });
     });
     return () => {
       cancelAnimationFrame(first);
       cancelAnimationFrame(second);
     };
-  }, [open, margin]);
-
-  return section;
+  }, [open, margin, headRef, blockRef]);
 }

@@ -401,6 +401,9 @@ async function expectChevron(
   );
 
   const style = getComputedStyle(turner);
+  // The holder is a flex box around its one icon, not a block that lays the icon
+  // on a text line.
+  await expect(style.display, 'chevron display').toBe('flex');
   const turn = turnOf(style.transform);
   if (open) {
     await expect(

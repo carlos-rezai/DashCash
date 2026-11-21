@@ -212,6 +212,13 @@ const Frame = styled.div<{ $width: number }>`
   }
 `;
 
+// A frame that lays its children out in a row, where a Snackbar left to its
+// content would shrink to it instead of filling the frame.
+const RowFrame = styled.div<{ $width: number }>`
+  display: flex;
+  width: ${({ $width }) => String($width)}px;
+`;
+
 // The parts the Snackbar is built from, rendered alone for the comparison;
 // never shown.
 function References({ args }: { args: SnackbarProps }) {
@@ -824,6 +831,35 @@ export const WithoutMessage: Story = {
   },
 };
 
+// An empty action label and an empty secondary label are absent, as in the
+// prototype: no buttons and no actions row, so the text ends before the bottom
+// padding as without actions.
+export const EmptyActionLabels: Story = {
+  args: {
+    title: UPDATED_TITLE,
+    message: UPDATED_MESSAGE,
+    actionLabel: '',
+    onAction: undefined,
+    secondaryLabel: '',
+    onSecondary: undefined,
+    onClose: undefined,
+  },
+  play: async ({ canvasElement }) => {
+    const snackbar = theSnackbar(canvasElement, UPDATED_TITLE);
+    release(canvasElement);
+    await expect(
+      within(snackbar).queryAllByRole('button').length,
+      'no buttons',
+    ).toBe(0);
+    await expectText(snackbar, UPDATED_TITLE, UPDATED_MESSAGE, false);
+    await expect(
+      box(snackbar).bottom -
+        box(within(snackbar).getByText(UPDATED_MESSAGE)).bottom,
+      'bottom padding',
+    ).toBeCloseTo(BORDER + PADDING_BOTTOM, 1);
+  },
+};
+
 // A secondary action without a primary one stands alone at the start of the
 // actions row.
 export const SecondaryOnly: Story = {
@@ -912,6 +948,30 @@ export const NarrowActions: Story = {
       ACTIONS_GAP,
       1,
     );
+  },
+};
+
+// A short Snackbar in a frame that lays its children out in a row still spans
+// the whole frame, rather than shrinking to its content.
+export const FillsARowFrame: Story = {
+  args: {
+    title: BACKUP_TITLE,
+    message: undefined,
+    actionLabel: undefined,
+    onAction: undefined,
+    onClose: undefined,
+  },
+  render: (args) => (
+    <>
+      <RowFrame $width={FRAME_WIDTH} data-testid="frame">
+        <Snackbar {...args} />
+      </RowFrame>
+      <References args={args} />
+    </>
+  ),
+  play: async ({ canvasElement }) => {
+    const snackbar = theSnackbar(canvasElement, BACKUP_TITLE);
+    await expectWidth(canvasElement, snackbar);
   },
 };
 

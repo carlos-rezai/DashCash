@@ -1,5 +1,5 @@
 ---
-status: in-progress
+status: done
 ---
 # Snackbar
 
@@ -23,7 +23,7 @@ the values it uses (P1). Touches no gate file.
 ## Acceptance criteria
 
 - [x] A RED commit adds the Snackbar's **Stories**, which fail.
-- [ ] (review) Props exactly SPEC §3 plus `loading`.
+- [x] (review) Props exactly SPEC §3 plus `loading`.
 - [x] **Stories** for each tone, with primary and secondary actions, with
       an action icon, with close, with a custom icon, and loading
       ("Installing…").

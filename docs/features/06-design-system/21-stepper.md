@@ -1,5 +1,5 @@
 ---
-status: in-progress
+status: done
 ---
 # Stepper
 
@@ -19,12 +19,12 @@ height 44 included (P1). Touches no gate file.
 
 ## Acceptance criteria
 
-- [ ] A RED commit adds the Stepper's **Stories**, which fail.
-- [ ] (review) Props exactly SPEC §3; the Stepper step 44 is a **Token**.
-- [ ] **Stories** for the Stepper at the first, a middle and the last step.
-- [ ] **Play functions**: a done step reports its index; a future step is
+- [x] A RED commit adds the Stepper's **Stories**, which fail.
+- [x] (review) Props exactly SPEC §3; the Stepper step 44 is a **Token**.
+- [x] **Stories** for the Stepper at the first, a middle and the last step.
+- [x] **Play functions**: a done step reports its index; a future step is
       disabled and reports nothing.
-- [ ] `npm run verify` is green.
+- [x] `npm run verify` is green.
 
 ## Blocked by
 

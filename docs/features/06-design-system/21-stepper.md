@@ -40,5 +40,16 @@ height 44 included (P1). Touches no gate file.
   on the current and on a future step, so a future step keeps the default
   cursor over `GlobalStyle`'s `button:disabled` rule; and only a done step
   calls `onStep`, the current step does not.
+- Prototype rules left out, because removing them changes no box, in a
+  1000 px, a 300 px and a 20 px high frame (also as a flex row, flex column
+  and grid child), with five steps and with two:
+  - `gap: 0` on the list: `gap` starts at `normal`, which is 0 in a grid.
+  - `min-width: 0` on the list item: its grid track is `minmax(0, 1fr)`, so
+    the item has no automatic minimum size.
+  - `min-width: 0` on the step: the step has `overflow: hidden`, which makes
+    its automatic minimum size 0 as a flex item.
+  - `min-width: 0` on the label: the label has `overflow: hidden`, with the
+    same effect.
+  The step's `overflow: hidden` stays: without it the `Narrow` story fails.
 - While `Stepper.tsx` is missing, Vite's unresolved import also fails the
   story files that run beside it in the same `npm run test:stories`.

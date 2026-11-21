@@ -443,6 +443,15 @@ async function expectStep(
     text.right <= box.right - PADDING_X + 0.05,
     `${at}: label inside the padding`,
   ).toBe(true);
+  // The label's text sits in the middle of the step: the label's own box
+  // would sit there even if it were stretched, so the glyphs are measured.
+  const letters = document.createRange();
+  letters.selectNodeContents(name);
+  const lettering = letters.getBoundingClientRect();
+  await expect(
+    (lettering.top + lettering.bottom) / 2,
+    `${at}: label middle`,
+  ).toBeCloseTo((box.top + box.bottom) / 2, 0);
   const nameStyle = getComputedStyle(name);
   await expect(nameStyle.whiteSpace, `${at}: one line`).toBe('nowrap');
   await expect(nameStyle.overflowX, `${at}: label clipped`).toBe('hidden');

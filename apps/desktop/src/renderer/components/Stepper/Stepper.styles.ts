@@ -41,7 +41,6 @@ function look(state: StepState, theme: DefaultTheme): Look {
 export const List = styled.ol<{ $count: number }>`
   display: grid;
   grid-template-columns: repeat(${({ $count }) => $count}, minmax(0, 1fr));
-  gap: 0;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -50,7 +49,6 @@ export const List = styled.ol<{ $count: number }>`
 
 export const Item = styled.li`
   display: flex;
-  min-width: 0;
 `;
 
 type StepProps = { $state: StepState; $first: boolean };
@@ -61,7 +59,6 @@ type StepProps = { $state: StepState; $first: boolean };
 export const Step = styled.button<StepProps>`
   box-sizing: border-box;
   flex: 1;
-  min-width: 0;
   height: ${({ theme }) => theme.size.stepperStep};
   overflow: hidden;
   display: flex;
@@ -106,7 +103,6 @@ export const Square = styled.span<{ $state: StepState }>`
 `;
 
 export const Label = styled.span`
-  min-width: 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;

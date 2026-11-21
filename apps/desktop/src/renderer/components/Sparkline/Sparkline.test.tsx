@@ -113,4 +113,12 @@ describe('computeSparklinePoints', () => {
     expect(points.dashed).toEqual([]);
     expect(points.todayX).toBe(0);
   });
+
+  it('draws nothing for an empty series: no points and no tick', () => {
+    const points = computeSparklinePoints([], [], 36);
+
+    expect(points.solid).toEqual([]);
+    expect(points.dashed).toEqual([]);
+    expect(points.todayX).toBeNull();
+  });
 });

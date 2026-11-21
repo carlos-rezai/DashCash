@@ -869,3 +869,8 @@ answers named; those answers stay as they were written.
   wins: the Input `sm` uses `size.controlHeight.sm` (28 px) with no new
   **Token**, so it matches the Select `sm`. The SPEC §3 table now reads
   `'sm' 28` (ticket 14).
+- **D11. An empty Sparkline draws nothing** (deviates from
+  `Sparkline.dc.html`; set by the human, 2026-11-21). The prototype draws a
+  tick at x = -10, outside the box, for an empty series, which its own
+  constant name says was meant to be hidden; DashCash draws nothing: no
+  lines and no tick (ticket 22).

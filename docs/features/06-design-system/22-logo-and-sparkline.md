@@ -1,5 +1,5 @@
 ---
-status: in-progress
+status: done
 ---
 # Logo and Sparkline
 
@@ -24,16 +24,16 @@ Logo's light colours included (Q12, P1). Touches no gate file.
 
 ## Acceptance criteria
 
-- [ ] A RED commit adds the unit tests and both components' **Stories**,
+- [x] A RED commit adds the unit tests and both components' **Stories**,
       which fail.
-- [ ] (review) Props exactly SPEC §3 and SPEC, Name and logo; the Logo's
+- [x] (review) Props exactly SPEC §3 and SPEC, Name and logo; the Logo's
       light colours are **Tokens**.
-- [ ] Unit tests: the stroke width at and either side of 20 and 32 px; the
+- [x] Unit tests: the stroke width at and either side of 20 and 32 px; the
       dash end point; the Sparkline's points for a rising, a falling, a
       flat and a past-only series.
-- [ ] **Stories** for mark and full, dark and light, at several sizes; the
+- [x] **Stories** for mark and full, dark and light, at several sizes; the
       Sparkline with past and future, past only, and in an account colour.
-- [ ] `npm run verify` is green.
+- [x] `npm run verify` is green.
 
 ## Blocked by
 
@@ -50,10 +50,14 @@ Logo's light colours included (Q12, P1). Touches no gate file.
   `computeLogoDashEnd(strokeWidth)` (`{ x, y }` in the 32 × 32 view box)
   from `Logo.tsx`; `computeSparklinePoints(past, future, height)` from
   `Sparkline.tsx`, returning `{ solid, dashed, todayX }`: the points of the
-  200-wide box, `dashed` starting at today, `todayX` a number. Verb first,
+  200-wide box, `dashed` starting at today, `todayX` a number, or `null`
+  for an empty series. Verb first,
   like `computeRevealScroll`.
 - A past-only series has no dashed line (`dashed` is empty), where
   `Sparkline.dc.html` builds a one-point path that draws nothing.
+- An empty series (`past` and `future` both empty) draws nothing: `todayX`
+  is `null` and no tick is rendered, where `Sparkline.dc.html` draws a tick
+  at x = -10. A deviation set by the human (design log D11).
 - The light **Stories** sit on `Logo.dc.html`'s light ground `#f2f2f3`,
   written in the stories file like the other expected colours.
 - `MarkLarge` reads what Chromium paints at points of a 256 px mark: the C

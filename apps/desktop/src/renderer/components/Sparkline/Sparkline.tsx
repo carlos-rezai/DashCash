@@ -13,7 +13,8 @@ type Point = { x: number; y: number };
 type SparklinePoints = {
   solid: Point[];
   dashed: Point[];
-  todayX: number;
+  // Null when there is nothing to draw: no tick either.
+  todayX: number | null;
 };
 
 // Sparkline.dc.html: the box is 200 wide; the lowest value sits 2 above the
@@ -21,8 +22,6 @@ type SparklinePoints = {
 const WIDTH = 200;
 const MARGIN = 2;
 const DEFAULT_HEIGHT = 36;
-// Where the tick goes when there is nothing to draw: out of the box.
-const HIDDEN_TICK_X = -10;
 
 // One decimal, like the prototype's toFixed(1).
 function round(value: number): number {
@@ -40,7 +39,7 @@ export function computeSparklinePoints(
 ): SparklinePoints {
   const all = [...past, ...future];
   if (all.length === 0) {
-    return { solid: [], dashed: [], todayX: HIDDEN_TICK_X };
+    return { solid: [], dashed: [], todayX: null };
   }
   const min = Math.min(...all);
   const span = Math.max(...all) - min || 1;
@@ -90,7 +89,9 @@ export function Sparkline({
       {points.dashed.length === 0 ? null : (
         <Line d={toPath(points.dashed)} $color={color} $future />
       )}
-      <Tick x1={points.todayX} x2={points.todayX} y1={0} y2={height} />
+      {points.todayX === null ? null : (
+        <Tick x1={points.todayX} x2={points.todayX} y1={0} y2={height} />
+      )}
     </Box>
   );
 }

@@ -222,7 +222,7 @@ async function expectSparkline(
   }
 
   const tick = svg.querySelector('line');
-  if (tick === null) {
+  if (tick === null || points.todayX === null) {
     throw new Error('no tick');
   }
   const tickStyle = getComputedStyle(tick);
@@ -301,6 +301,28 @@ export const AccountColour: Story = {
       colour: INCOME,
       height: DEFAULT_HEIGHT,
     });
+  },
+};
+
+// Nothing to draw: the box keeps its size, but no solid line, no dashed line
+// and no tick (D11; Sparkline.dc.html puts a tick at x = -10 here).
+export const Empty: Story = {
+  args: { past: [], future: [] },
+  play: async ({ canvasElement }) => {
+    const frame = within(canvasElement).getByTestId('frame');
+    const svg = frame.querySelector('svg');
+    if (svg === null) {
+      throw new Error('no svg');
+    }
+    await expect(svg.getBoundingClientRect().height, 'height').toBeCloseTo(
+      DEFAULT_HEIGHT,
+      1,
+    );
+    const drawn = [...svg.querySelectorAll('path')].filter(
+      (path) => path.getTotalLength() > 0,
+    );
+    await expect(drawn.length, 'no line drawn').toBe(0);
+    await expect(svg.querySelectorAll('line').length, 'no tick').toBe(0);
   },
 };
 

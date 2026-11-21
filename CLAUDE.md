@@ -56,7 +56,7 @@ Edit files with the Edit and Write tools, not with sed or shell redirection in B
 - Stories cover every state (empty, loading, error, warning where relevant).
 - A prototype element's class carries its states from the prototype's `styles.css` (hover, focus-visible, caret): build and test those states too.
 - Add no styling the prototype lacks, however sensible; if something beyond it seems needed, stop and report instead.
-- A prototype rule may be left out as having no visible effect only after checking every state the app can reach, including a narrow or short window.
+- "1:1" means the visible result. A prototype rule that changes nothing in any state the app can reach, wide, narrow and short, is left out and listed in the ticket's Notes. Every rule that stays has a story that fails without it. A rule the ticket names explicitly stays even if no story can fail without it.
 - An empty string is absent, as in the prototype: every optional text prop treats "" like undefined, including its fallback. A default parameter alone is not enough.
 - Reuse an existing Theme token (e.g. `size.controlHeight`) before adding a new one.
 

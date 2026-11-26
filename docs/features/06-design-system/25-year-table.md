@@ -1,5 +1,5 @@
 ---
-status: in-progress
+status: done
 ---
 # YearTable
 
@@ -30,16 +30,16 @@ accent-100 row with the month label in `--sb-text-muted`.
 
 ## Acceptance criteria
 
-- [ ] A RED commit adds the YearTable's **Stories**, which fail.
-- [ ] (review) Props exactly SPEC §3; the payoff row uses the milestone row
+- [x] A RED commit adds the YearTable's **Stories**, which fail.
+- [x] (review) Props exactly SPEC §3; the payoff row uses the milestone row
       colour; the column widths are **Tokens**; future months are marked
       by their row styling, not by a lower contrast (D2).
-- [ ] **Stories** for years closed and open by default, today's month, the
+- [x] **Stories** for years closed and open by default, today's month, the
       payoff month, future months, each cell kind, and a narrow width with
       several account columns.
-- [ ] **Play functions**: a year row click toggles its months and reports
+- [x] **Play functions**: a year row click toggles its months and reports
       `onToggle`.
-- [ ] `npm run verify` is green.
+- [x] `npm run verify` is green.
 
 ## Blocked by
 
@@ -49,3 +49,8 @@ accent-100 row with the month label in `--sb-text-muted`.
 ## User stories addressed
 
 - User stories 86, 87, 88, 89, 90, 91, 102, 103
+
+## Notes
+
+- One `npm run verify` run failed during the build without a captured
+  cause; three later runs passed. If it recurs, capture the log.

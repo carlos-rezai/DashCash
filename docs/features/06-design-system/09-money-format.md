@@ -35,21 +35,21 @@ command.
 
 ## Acceptance criteria
 
-- [ ] A RED commit adds the domain tests and the changed `typecheck` pin,
+- [x] A RED commit adds the domain tests and the changed `typecheck` pin,
       which fail.
-- [ ] `@dashcash/domain` is private, `"type": "module"`, version `0.0.0`,
+- [x] `@dashcash/domain` is private, `"type": "module"`, version `0.0.0`,
       exports each module by its path; `npm run typecheck` covers it, pinned
       by the **Gate wiring** test; it imports nothing outside itself.
-- [ ] `toCents` returns safe integers, 0, negatives and the safe limits
+- [x] `toCents` returns safe integers, 0, negatives and the safe limits
       unchanged, and throws a `RangeError` naming the value for fractions,
       `NaN`, infinities and unsafe integers.
-- [ ] `formatCents` has a table per rule of Q18: `1.234,56 €` grouping and
+- [x] `formatCents` has a table per rule of Q18: `1.234,56 €` grouping and
       two decimals, `whole` (`30.000 €`), U+00A0 before `€`, U+2212 for
       negatives (`−86,40 €`), `always` and `none`, zero without sign, −40
       cents whole as `−0 €`.
-- [ ] The **Mutation score** stays at or above the **Break threshold** of
+- [x] The **Mutation score** stays at or above the **Break threshold** of
       83 (`npm run test:mutation`).
-- [ ] `npm run verify` is green.
+- [x] `npm run verify` is green.
 
 ## Blocked by
 

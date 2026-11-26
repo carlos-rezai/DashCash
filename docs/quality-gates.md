@@ -32,8 +32,8 @@ Gates are features in [feature-checklist.md](feature-checklist.md), built in the
 - **02 supply-chain:** audit with an exceptions file and expiry, license allowlist, gitleaks, Renovate, pinned actions, a daily run on `main`.
 - **03 mutation-testing:** StrykerJS on `packages/domain`, `scripts/` and `gates/`, right after the first two features, because their reviews kept finding untested branches by hand. From here on, every feature with real logic, and every gate script, is checked by a tool rather than by review rounds.
 - **04 desktop-shell:** the first end-to-end test and flaky quarantine, before any test can turn flaky.
-- **06 design-system:** stories as tests, the accessibility check, a story for every component, coverage on changed lines.
-- **08 accounts:** the `Cents` type and its lint rule, with the first money.
+- **06 design-system:** stories as tests, the accessibility check, a story for every component, coverage on changed lines, the `Cents` type.
+- **08 accounts:** the `Cents` lint rule, with the first money.
 - **21 release-pipeline:** release from a tag, SBOM, installer smoke test, visual regression.
 
 Each new gate starts informative where it could block existing work, then blocks. Thresholds only go up: a monthly ten-minute review (lead time, failed runs, open exceptions, flaky tests, coverage and mutation score) raises them, and lowering one needs a written decision.

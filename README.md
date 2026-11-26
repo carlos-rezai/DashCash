@@ -32,7 +32,7 @@ Every change goes through the same gate, whether I wrote it or an AI agent did. 
 | Formatting | Prettier (`--check`) | CI | 01 |
 | Linting, zero warnings | ESLint (`--max-warnings 0`) | CI | 01 |
 | Strict types | TypeScript `strict`, `noUncheckedIndexedAccess` | CI | 01 |
-| Money is never a plain number | `Cents` branded type + lint rule | CI | 08 |
+| Money is never a plain number | `Cents` branded type + lint rule | CI | 06 (type), 08 (lint rule) |
 | Architecture layers | dependency-cruiser | CI | 01 |
 | Unit tests | Vitest | CI | 01 |
 | Dependency audit, all severities | `npm audit` + exceptions file with expiry | CI, daily | 02 |

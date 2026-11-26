@@ -34,17 +34,17 @@ file.
 
 ## Acceptance criteria
 
-- [ ] A RED commit adds the core's tests, which fail.
-- [ ] `findChangedLines` covers added, changed and deleted lines, several
+- [x] A RED commit adds the core's tests, which fail.
+- [x] `findChangedLines` covers added, changed and deleted lines, several
       hunks and several files, and a new file.
-- [ ] `readLcov` covers lines with and without hits and several files.
-- [ ] `findCoverageViolations` covers a hit in one report only, lines no
+- [x] `readLcov` covers lines with and without hits and several files.
+- [x] `findCoverageViolations` covers a hit in one report only, lines no
       report lists, a changed file in neither report, no coverable changed
       lines, and the threshold exactly met, just missed and above, with
       A4's lines and ranges.
-- [ ] The **Mutation score** stays at or above the **Break threshold** of
+- [x] The **Mutation score** stays at or above the **Break threshold** of
       83 (`npm run test:mutation`).
-- [ ] `npm run verify` is green.
+- [x] `npm run verify` is green.
 
 ## Blocked by
 

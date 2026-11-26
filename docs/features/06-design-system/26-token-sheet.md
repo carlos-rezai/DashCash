@@ -1,5 +1,5 @@
 ---
-status: open
+status: in-progress
 ---
 # The complete token sheet and the Tokens story
 

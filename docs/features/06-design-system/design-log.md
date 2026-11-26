@@ -896,3 +896,13 @@ answers named; those answers stay as they were written.
   taken over: DashCash has square corners (SPEC §2, radius 0), and unused
   **Tokens** invite their use. The **Theme** holds one radius, 0
   (ticket 26).
+- **D14. The Storybook MCP returns no a11y results** (deviates from
+  ticket 27's criterion "the MCP endpoint … returns a **Story**'s a11y
+  results"; set by the human, 2026-11-26). The endpoint lists the
+  components and **Stories**; a11y results stay with `npm run
+  test:stories`, which runs in `npm run verify` and CI. The addon's
+  `test-run` tool, the only one that returns a11y results, reads only
+  `vitest.config.*`, `vite.config.*` or `vitest.workspace.*`, so it does
+  not find the Storybook project in `vitest.storybook.config.ts`, and
+  merging that project into the root config would undo Q22's separate
+  story config (ticket 27).

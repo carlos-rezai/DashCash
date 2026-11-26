@@ -43,7 +43,7 @@ export function Chip({
         />
       )}
       <span>{label}</span>
-      {meta === undefined ? null : <Meta>{meta}</Meta>}
+      {meta === undefined || meta === '' ? null : <Meta>{meta}</Meta>}
     </Frame>
   );
 }

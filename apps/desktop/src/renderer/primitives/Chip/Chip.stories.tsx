@@ -385,6 +385,18 @@ export const WithMeta: Story = {
   },
 };
 
+// An empty meta is absent, as in Chip.dc.html (sc-if): no meta element, only
+// the label in the chip.
+export const EmptyMeta: Story = {
+  args: { active: true, meta: '' },
+  play: async ({ canvasElement }) => {
+    const chip = theChip(canvasElement);
+    await expectChip(chip, { pressed: true });
+    await expect(chip.children, 'children of the chip').toHaveLength(1);
+    await expect(chip.textContent, 'text').toBe(LABEL);
+  },
+};
+
 // A click reports the new pressed state, and the chip shows it; a second
 // click releases it.
 export const Toggling: Story = {

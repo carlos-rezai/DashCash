@@ -41,9 +41,10 @@ P1, I1, I2).
   `postinstall` = `install-electron && playwright install --only-shell
   chromium`; **Verify** runs `test:stories` right after `test`. `npm test`
   stays the Node run.
-- `apps/desktop/tsconfig.web.json` gains `"jsx": "react-jsx"` and
-  `.storybook/preview.tsx`; the root `tsconfig.json` gains
-  `.storybook/main.ts` (A1).
+- `apps/desktop/tsconfig.web.json` gains `"jsx": "react-jsx"`. The two
+  Storybook files, `.storybook/main.ts` and `.storybook/preview.tsx`, are
+  checked by `.storybook/tsconfig.json`, a project of its own (design log
+  D4, which overturns A1's split between the web and root projects).
 
 The RED (I2): no **Story test** can run before Storybook is installed, and
 installing it is this ticket's build. So the RED commit's failing tests are
@@ -74,7 +75,7 @@ to pin the new values, and `quality/audit-exceptions.json` only for an
       **Advisory** gets an **Audit exception** with its reason, or the
       builder stops when a fix exists; `check:licenses` and `check:audit`
       pass.
-- [ ] (review) `theme` has the eight groups, its keys follow Q11 and its
+- [x] (review) `theme` has the eight groups, its keys follow Q11 and its
       values the token sheet exactly; `DefaultTheme` is derived from its
       type, so an unknown key fails `npm run typecheck`.
 - [x] `IconName` is exactly the 41 names of `lib/icons.js`; each renders its

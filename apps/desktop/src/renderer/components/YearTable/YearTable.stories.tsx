@@ -1386,10 +1386,8 @@ export const AutoColumns: Story = {
       await expect(style.minWidth, 'no min width').toBe('0px');
       await expect(box(element).width, 'across the card').toBeCloseTo(width, 1);
       const goal = columnWidths(element)[DETAIL_COLUMNS.length];
-      await expect(goal, 'the goal column').toBeCloseTo(
-        GOAL_WIDTH + 2 * CELL_PADDING,
-        1,
-      );
+      // Border-box, as the prototype's global rule: the padding is inside.
+      await expect(goal, 'the goal column').toBeCloseTo(GOAL_WIDTH, 1);
     }
     await expect(
       columnWidths(table)[0],
@@ -1420,7 +1418,8 @@ export const EqualColumns: Story = {
       1,
     );
     const [first, ...data] = columnWidths(table);
-    const firstBox = FIRST_WIDTH + 2 * CELL_PADDING;
+    // Border-box, as the prototype's global rule: the padding is inside.
+    const firstBox = FIRST_WIDTH;
     await expect(first, 'first column').toBeCloseTo(firstBox, 1);
     for (const width of data) {
       await expect(
@@ -1448,7 +1447,8 @@ export const FirstWidth: Story = {
   play: async ({ canvasElement }) => {
     const table = theTable(theFrame(canvasElement));
     const [first, ...data] = columnWidths(table);
-    const firstBox = OTHER_FIRST_WIDTH + 2 * CELL_PADDING;
+    // Border-box, as the prototype's global rule: the padding is inside.
+    const firstBox = OTHER_FIRST_WIDTH;
     await expect(first, 'first column').toBeCloseTo(firstBox, 1);
     for (const width of data) {
       await expect(
@@ -1480,7 +1480,8 @@ export const NarrowWithSeveralAccounts: Story = {
     );
     await expect(box(table).width, 'kept wide').toBeCloseTo(minWidth, 1);
     const [first, ...data] = columnWidths(table);
-    const firstBox = FIRST_WIDTH + 2 * CELL_PADDING;
+    // Border-box, as the prototype's global rule: the padding is inside.
+    const firstBox = FIRST_WIDTH;
     await expect(first, 'first column').toBeCloseTo(firstBox, 1);
     for (const width of data) {
       await expect(

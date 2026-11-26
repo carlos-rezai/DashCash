@@ -294,6 +294,23 @@ export const LabelOverAriaLabel: Story = {
   },
 };
 
+// An empty label is absent, as in Switch.dc.html (sc-if, and
+// `p.label ? undefined : p.ariaLabel`): no label element, no gap, and the
+// ariaLabel still names the switch.
+export const EmptyLabel: Story = {
+  args: { checked: true, label: '', ariaLabel: ARIA_LABEL },
+  play: async ({ canvasElement }) => {
+    const control = theSwitch(canvasElement);
+    await expectSwitch(control, { on: true });
+    await expect(control).toHaveAccessibleName(ARIA_LABEL);
+    await expect(control.children, 'children of the control').toHaveLength(1);
+    await expect(control.getBoundingClientRect().width, 'width').toBeCloseTo(
+      TRACK_WIDTH,
+      1,
+    );
+  },
+};
+
 // A label that wraps onto several lines: the track keeps its 34 x 18 and
 // stays centred on the label.
 export const WrappedLabel: Story = {

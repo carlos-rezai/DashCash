@@ -32,7 +32,7 @@ export function Checkbox({
       <Box $checked={checked}>
         {checked ? <Icon glyph="check" size={CHECK_SIZE} /> : null}
       </Box>
-      {label === undefined ? null : <Label>{label}</Label>}
+      {label === undefined || label === '' ? null : <Label>{label}</Label>}
     </Frame>
   );
 }

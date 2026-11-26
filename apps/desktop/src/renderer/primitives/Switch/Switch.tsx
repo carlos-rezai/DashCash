@@ -18,12 +18,13 @@ export function Switch({
   ariaLabel,
   disabled = false,
 }: SwitchProps) {
+  const hasLabel = label !== undefined && label !== '';
   return (
     <Frame
       type="button"
       role="switch"
       aria-checked={checked}
-      aria-label={label === undefined ? ariaLabel : undefined}
+      aria-label={hasLabel ? undefined : ariaLabel}
       disabled={disabled}
       onClick={() => {
         onChange(!checked);
@@ -32,7 +33,7 @@ export function Switch({
       <Track $on={checked}>
         <Knob $on={checked} />
       </Track>
-      {label === undefined ? null : <Label>{label}</Label>}
+      {hasLabel ? <Label>{label}</Label> : null}
     </Frame>
   );
 }

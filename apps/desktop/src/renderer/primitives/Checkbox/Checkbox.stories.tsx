@@ -288,6 +288,30 @@ export const Unlabelled: Story = {
   },
 };
 
+// An empty label is absent, as in Checkbox.dc.html (sc-if): no label element
+// and no gap, only the box in the control.
+export const EmptyLabel: Story = {
+  args: { checked: true, label: '' },
+  render: (args) => (
+    <Holder data-resting="">
+      <Outside>
+        {OUTSIDE_NAME}
+        <ControlledCheckbox {...args} />
+      </Outside>
+    </Holder>
+  ),
+  play: async ({ canvasElement }) => {
+    const control = theCheckbox(canvasElement);
+    await expectCheckbox(control, { checked: true });
+    await expect(control).toHaveAccessibleName(OUTSIDE_NAME);
+    await expect(control.children, 'children of the control').toHaveLength(1);
+    await expect(control.getBoundingClientRect().width, 'width').toBeCloseTo(
+      BOX,
+      1,
+    );
+  },
+};
+
 // A label that wraps onto two lines: the box keeps its 16 px and stays
 // centred on the label.
 export const WrappedLabel: Story = {

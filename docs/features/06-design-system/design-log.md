@@ -930,3 +930,10 @@ answers named; those answers stay as they were written.
   on the domain directly, as the design log's own diagram shows
   (`prim --> fmt`), and the README diagram had no such edge. It now has
   `renderer --> domain` (ticket 10).
+- **D18. `useRevealOnExpand` takes the open state as a third argument**
+  (deviates from the PRD's `useRevealOnExpand(headRef, blockRef)`; ticket
+  24). The hook is `useRevealOnExpand(headRef, blockRef, open)`. Reason: the
+  hook must scroll only when `open` turns true, and do nothing on mount or
+  on collapse; with the two refs alone it cannot tell an opening from a
+  collapse or a first render, so the caller passes `open` and the hook keeps
+  the previous value itself.

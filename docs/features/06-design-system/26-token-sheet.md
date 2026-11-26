@@ -1,5 +1,5 @@
 ---
-status: in-progress
+status: done
 ---
 # The complete token sheet and the Tokens story
 
@@ -52,18 +52,18 @@ Touches no gate file.
 
 ## Acceptance criteria
 
-- [ ] A RED commit adds the `Tokens` **Story**, whose **Play function**
+- [x] A RED commit adds the `Tokens` **Story**, whose **Play function**
       fails.
-- [ ] The **Play function** finds every colour tile of the inventory with
+- [x] The **Play function** finds every colour tile of the inventory with
       its name and role and its swatch filled (not transparent), the nine
       type-scale lines at their sizes, and every spacing bar with its name,
       its px and a width, as `Component Inventory.dc.html` writes them; a
       **Token** missing from `theme` fails it.
-- [ ] (review) Every variable of `dashcash-dark.css` over Industry's
+- [x] (review) Every variable of `dashcash-dark.css` over Industry's
       `styles.css` is a **Token** with its key per Q11 and its value
       exactly as written, `color-mix()` strings kept, except D1's three
       raised values.
-- [ ] The `Styles/GlobalStyle` **Play functions** also show, from what the
+- [x] The `Styles/GlobalStyle` **Play functions** also show, from what the
       browser computes, every rule of the list above: `box-sizing:
       border-box` on an element and its `::before` and `::after`;
       `color-scheme: dark` on the root element; `html` and `body` with
@@ -75,13 +75,13 @@ Touches no gate file.
       underline offset; an image as a block with max width 100 %; a
       figure with margin 0. A RED commit adds these assertions, which
       fail.
-- [ ] (review) The new `GlobalStyle` rules are element-level only, every
+- [x] (review) The new `GlobalStyle` rules are element-level only, every
       value from the **Theme**.
-- [ ] The `Tokens` **Story** passes the **Accessibility check**, contrast
+- [x] The `Tokens` **Story** passes the **Accessibility check**, contrast
       included (D1).
-- [ ] (review) No component's styles hold a literal colour, size or
+- [x] (review) No component's styles hold a literal colour, size or
       spacing; every value comes from the **Theme**.
-- [ ] `npm run verify` is green.
+- [x] `npm run verify` is green.
 
 ## Blocked by
 
@@ -105,3 +105,8 @@ Touches no gate file.
 ## User stories addressed
 
 - User stories 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 102
+
+## Notes
+
+- Industry's `--radius-sm/md/lg` are not Tokens; the Theme keeps one radius
+  of 0 for square corners (design log D13).

@@ -888,3 +888,11 @@ answers named; those answers stay as they were written.
   keyboard support. Reason: the first review
   of ticket 25 asked to remove `tabIndex={0}` from the year row, which
   left the years unreachable by keyboard (ticket 25).
+- **D13. Industry's radius variables are not Tokens** (deviates from
+  ticket 26's criterion "every variable of `dashcash-dark.css` over
+  Industry's `styles.css` is a **Token**"; set by the human, 2026-11-26).
+  The criterion covers the variables DashCash uses. Industry's
+  `--radius-sm`, `--radius-md` and `--radius-lg` (2, 4 and 7 px) are not
+  taken over: DashCash has square corners (SPEC §2, radius 0), and unused
+  **Tokens** invite their use. The **Theme** holds one radius, 0
+  (ticket 26).

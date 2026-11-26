@@ -2,7 +2,8 @@
 // docs/design/prototype/tokens/dashcash-dark.css over Industry's styles.css.
 // Keys follow SPEC section 2's bracketed names, else the CSS variable's name
 // in camelCase without its --color- or --sb- prefix. The sheet is complete:
-// every variable of both files is a Token here.
+// every variable DashCash uses is a Token here. Industry's radius variables
+// are left out (design log D13).
 export const theme = {
   color: {
     // --color-bg
@@ -51,6 +52,8 @@ export const theme = {
     inputBg: '#1b2a39',
     // --sb-raised-bg: the fill of a Modal and a Snackbar, the surface
     raisedBg: '#213345',
+    // --sb-card-bg: the fill of a Card and a StatTile
+    cardBg: '#213345',
     // --sb-negative-tint, 14 %; the base stays #e8877b (design log D1)
     negativeTint: 'color-mix(in srgb, #e8877b 14%, transparent)',
     // The data palette, accounts: --sb-acc-income ... --sb-acc-mortgage
@@ -111,7 +114,7 @@ export const theme = {
     textMuted: 'color-mix(in srgb, #e9f1fa 62%, transparent)',
     // --sb-text-faint
     textFaint: 'color-mix(in srgb, #e9f1fa 60%, transparent)',
-    // --color-surface: the fill of a Card and a StatTile (--sb-card-bg)
+    // --color-surface
     surface: '#213345',
     // --sb-card-border: the text colour at 8 %
     cardBorder: 'color-mix(in srgb, #e9f1fa 8%, transparent)',
@@ -409,10 +412,8 @@ export const theme = {
     meterWidth: '300ms',
     // SPEC, Transitions and Accordion.dc.html: the chevron's turn, 160 ms
     accordionTurn: '160ms',
-    // SPEC section 5: the streak's fill, 400 ms; SPEC, AppShell: the sidebar's
-    // width, 180 ms
+    // SPEC section 5: the streak's fill, 400 ms
     streakFill: '400ms',
-    sidebarWidth: '180ms',
   },
   zIndex: {
     // AppShell.dc.html: the sidebar over the content

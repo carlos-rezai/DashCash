@@ -1,8 +1,8 @@
 // The Theme: every Token a style may use, in the dark values of
 // docs/design/prototype/tokens/dashcash-dark.css over Industry's styles.css.
 // Keys follow SPEC section 2's bracketed names, else the CSS variable's name
-// in camelCase without its --color- or --sb- prefix. A phase adds the Tokens
-// its pieces use; none is invented here.
+// in camelCase without its --color- or --sb- prefix. The sheet is complete:
+// every variable of both files is a Token here.
 export const theme = {
   color: {
     // --color-bg
@@ -21,12 +21,89 @@ export const theme = {
       800: '#d6ebff',
       900: '#eef6ff',
     },
+    // The second accent: --color-accent-2 is the base, the ramp keeps its
+    // steps 100 and 800 from dashcash-dark.css, the others from Industry's
+    accent2: {
+      base: '#749dc4',
+      100: '#22384d',
+      200: '#d6ebff',
+      300: '#bdd8f2',
+      400: '#9ebbd8',
+      500: '#7e9cb8',
+      600: '#627d98',
+      700: '#486077',
+      800: '#d6ebff',
+      900: '#1f2d3a',
+    },
     // The neutral ramp, inverted the same way.
     neutral: {
+      100: '#243445',
+      200: '#2d3e50',
       300: '#3f5063',
       400: '#5b6a7a',
+      500: '#7a8794',
       600: '#9aa5b0',
+      700: '#b9c1c9',
+      800: '#d6dce2',
       900: '#eef2f6',
+    },
+    // --sb-input-bg: the ground of an Input and a Select, the page ground
+    inputBg: '#1b2a39',
+    // --sb-raised-bg: the fill of a Modal and a Snackbar, the surface
+    raisedBg: '#213345',
+    // --sb-negative-tint, 14 %; the base stays #e8877b (design log D1)
+    negativeTint: 'color-mix(in srgb, #e8877b 14%, transparent)',
+    // The data palette, accounts: --sb-acc-income ... --sb-acc-mortgage
+    account: {
+      income: '#cdbb8b',
+      spending: '#d69c8e',
+      savings: '#94bce3',
+      card: '#b3a3d1',
+      mortgage: '#e9f1fa',
+    },
+    // The data palette, categories: --sb-cat-1 ... --sb-cat-40, 40 hues at one
+    // lightness in golden-angle order
+    category: {
+      1: '#f08f87',
+      2: '#5cc697',
+      3: '#ba9cef',
+      4: '#d8a44e',
+      5: '#36c1dd',
+      6: '#e88db5',
+      7: '#95bd6a',
+      8: '#8dabfa',
+      9: '#ed946c',
+      10: '#39c6b4',
+      11: '#d094dd',
+      12: '#c3ae4c',
+      13: '#57baef',
+      14: '#ef8d99',
+      15: '#72c385',
+      16: '#aaa1f6',
+      17: '#e29d56',
+      18: '#2bc4cf',
+      19: '#e18fc6',
+      20: '#a8b85b',
+      21: '#79b1f9',
+      22: '#f0907c',
+      23: '#4ec6a3',
+      24: '#c399e9',
+      25: '#d1a84b',
+      26: '#42bee5',
+      27: '#ec8daa',
+      28: '#88c074',
+      29: '#98a7fa',
+      30: '#e99863',
+      31: '#2fc6bf',
+      32: '#d792d5',
+      33: '#b9b250',
+      34: '#64b6f4',
+      35: '#f08e8e',
+      36: '#65c590',
+      37: '#b49ef2',
+      38: '#dca150',
+      39: '#30c2d8',
+      40: '#e68ebc',
     },
     // styles.css: ::selection, the accent at 30 %
     selection: 'color-mix(in srgb, #749dc4 30%, transparent)',
@@ -114,13 +191,31 @@ export const theme = {
     logoLetterSpacing: '0.02em',
     // styles.css: .table th
     tableHeadLetterSpacing: '0.08em',
+    // styles.css: body { line-height: 1.55 }
+    bodyLineHeight: 1.55,
+    // styles.css: h1 to h6 { line-height: 1.12; letter-spacing: -0.015em },
+    // h6 { letter-spacing: 0.08em }
+    headingLineHeight: 1.12,
+    headingElementLetterSpacing: '-0.015em',
+    headingSmallLetterSpacing: '0.08em',
   },
-  // SPEC section 2's type scale: sm 13, md 14, lg 22, xl 34
+  // SPEC section 2's type scale: display 42, xl 34, lg 22, card title 19,
+  // body 15, md 14, sm 13, caption 12, kicker 11
   fontSize: {
-    sm: '13px',
-    md: '14px',
-    lg: '22px',
+    display: '42px',
     xl: '34px',
+    lg: '22px',
+    body: '15px',
+    md: '14px',
+    sm: '13px',
+    kicker: '11px',
+    // styles.css: h1 to h6, their own sizes, apart from the scale
+    heading1: '42px',
+    heading2: '32px',
+    heading3: '25px',
+    heading4: '20px',
+    heading5: '16px',
+    heading6: '13px',
     // Loader.dc.html: the label beside a Loader of 48 px or more
     loaderLabelLarge: '15px',
     // styles.css: .tag; StatTile.dc.html: its label
@@ -141,12 +236,16 @@ export const theme = {
     yearTableYear: '19px',
   },
   space: {
-    // SPEC section 2: --space-2, -3, -4 and -6 (0.85x density), the Card's
-    // paddings sm, md and lg, the gaps inside a Card and a StatTile
+    // SPEC section 2: --space-1, -2, -3, -4, -6 and -8 (0.85x density), the
+    // Card's paddings sm, md and lg, the gaps inside a Card and a StatTile
+    space1: '3.4px',
     space2: '6.8px',
     space3: '10.2px',
     space4: '13.6px',
     space6: '20.4px',
+    space8: '27.2px',
+    // --sb-page-pad
+    pagePad: '24px',
     // Card.dc.html: the gap between a kicker and a title
     cardKickerGap: '2px',
     // StatTile.dc.html: the gap between its label, value and hint
@@ -234,6 +333,13 @@ export const theme = {
     yearTableDotGap: '6px',
   },
   size: {
+    // SPEC section 2, Shape: square corners, radius 0 on every framed element
+    radius: '0',
+    // styles.css: a { text-underline-offset: 3px }
+    underlineOffset: '3px',
+    // --sb-sidebar-width and --sb-sidebar-width-compact
+    sidebarWidth: '208px',
+    sidebarWidthCompact: '64px',
     // SPEC, Control sizing: the two Control heights
     controlHeight: {
       md: '36px',
@@ -287,6 +393,9 @@ export const theme = {
     yearTableColumnMin: '130px',
   },
   shadow: {
+    // --shadow-sm and --shadow-md (the graph tooltip)
+    sm: '0 0 0 1px color-mix(in srgb, #e9f1fa 5%, transparent), 0 1px 2px rgba(5, 10, 16, 0.4)',
+    md: '0 0 0 1px color-mix(in srgb, #e9f1fa 6%, transparent), 0 6px 18px rgba(5, 10, 16, 0.45)',
     // --shadow-lg: the Modal's panel
     lg: '0 0 0 1px color-mix(in srgb, #e9f1fa 8%, transparent), 0 18px 48px rgba(5, 10, 16, 0.55)',
   },
@@ -300,10 +409,21 @@ export const theme = {
     meterWidth: '300ms',
     // SPEC, Transitions and Accordion.dc.html: the chevron's turn, 160 ms
     accordionTurn: '160ms',
+    // SPEC section 5: the streak's fill, 400 ms; SPEC, AppShell: the sidebar's
+    // width, 180 ms
+    streakFill: '400ms',
+    sidebarWidth: '180ms',
   },
   zIndex: {
+    // AppShell.dc.html: the sidebar over the content
+    sidebar: 20,
     // Modal.dc.html: the backdrop above the page
     modal: 50,
+    // SnackbarHost.dc.html: the stack of snackbars
+    snackbar: 60,
+    // LoadingOverlay.dc.html: the overlay, and the splash above it
+    loadingOverlay: 70,
+    splash: 80,
   },
 };
 

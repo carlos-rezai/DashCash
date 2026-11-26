@@ -147,15 +147,9 @@ function YearBody({
 
   return (
     <tbody ref={body}>
-      <YearRow
-        ref={row}
-        role="button"
-        tabIndex={0}
-        aria-expanded={open}
-        onClick={onToggle}
-      >
+      <YearRow ref={row} onClick={onToggle}>
         <DataCell $align="left">
-          <YearHead>
+          <YearHead type="button" aria-expanded={open}>
             <Chevron $open={open}>
               <Icon glyph="chevronRight" size={CHEVRON_SIZE} />
             </Chevron>

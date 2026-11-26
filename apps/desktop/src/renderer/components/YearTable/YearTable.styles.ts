@@ -86,9 +86,18 @@ export const DataCell = styled.td<{ $align: Align; $inset?: boolean }>`
   text-align: ${({ $align }) => $align};
 `;
 
-// A year row's first cell: the chevron, the year and the tag in a row.
-export const YearHead = styled.div`
+// A year row's first cell: the real button that opens the year (design log
+// D12), holding the chevron, the year and the tag in a row. It shows no button
+// chrome: the cell's colour and font, the pointer.
+export const YearHead = styled.button`
   display: flex;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font-family: inherit;
+  font-size: inherit;
+  cursor: pointer;
   align-items: center;
   gap: ${({ theme }) => theme.space.yearTableYearGap};
   white-space: nowrap;

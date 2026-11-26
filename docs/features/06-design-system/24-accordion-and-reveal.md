@@ -69,3 +69,7 @@ gains the values it uses, the 160 ms turn and the 24 px margin included
   unresolved import also fails the story files that run beside it in the
   same `npm run test:stories`, and lint (with the lint tree gate test) and
   typecheck report the unresolved types.
+- For the refactor: two rules have no **Story** that fails without them.
+  The Header's `display: flex` (`Accordion.styles.ts`; the Chevron's
+  `display: flex` is checked) and the jump under `prefers-reduced-motion`
+  in `useRevealOnExpand.ts` (`behavior: 'auto'` instead of `'smooth'`).

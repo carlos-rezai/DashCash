@@ -882,6 +882,9 @@ answers named; those answers stay as they were written.
   `role="button"`, no `tabIndex`, and a click anywhere on it still toggles
   the year once. Enter and Space work through the button itself, with no
   key handler. The table's scroll container then holds focusable content,
-  so axe's `scrollable-region-focusable` passes. Reason: the first review
+  so axe's `scrollable-region-focusable` passes. On keyboard focus the
+  button shows the app's global `:focus-visible` ring; the prototype has
+  none because it is mouse-only, and visible focus belongs to this
+  keyboard support. Reason: the first review
   of ticket 25 asked to remove `tabIndex={0}` from the year row, which
   left the years unreachable by keyboard (ticket 25).

@@ -19,13 +19,13 @@ values it uses (P1). Touches no gate file.
 
 ## Acceptance criteria
 
-- [ ] A RED commit adds the Meter's **Stories**, which fail.
-- [ ] (review) Props exactly SPEC §3 plus `ariaLabel`; the 300 ms width
+- [x] A RED commit adds the Meter's **Stories**, which fail.
+- [x] (review) Props exactly SPEC §3 plus `ariaLabel`; the 300 ms width
       transition from the **Theme**.
-- [ ] **Stories** for each tone, value only, value with projection, and
+- [x] **Stories** for each tone, value only, value with projection, and
       full.
-- [ ] Each **Story**'s meter is named and carries its value.
-- [ ] `npm run verify` is green.
+- [x] Each **Story**'s meter is named and carries its value.
+- [x] `npm run verify` is green.
 
 ## Blocked by
 

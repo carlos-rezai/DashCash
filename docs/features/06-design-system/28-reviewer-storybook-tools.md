@@ -54,6 +54,16 @@ stops here.
   `test-run` tool is left out of the reviewer's tools, since it returns no
   a11y results here (D14); a11y results stay with `npm run test:stories`.
 
+### For the refactor
+
+- Seven copies of the `:hover` probe helper across the stories; one shared
+  helper in `renderer/test-support/` would replace them.
+- Three copies of the story-config reader.
+- `checkStories.ts` and `checkCoverage.ts` each have their own reader for
+  untracked files, beside the shared one in `scripts/runGit/`.
+- About 20 literal `1px` borders and the icon size constants.
+- The code checks for an empty string in three different ways.
+
 ## User stories addressed
 
 - User story 120

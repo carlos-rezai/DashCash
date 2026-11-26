@@ -40,28 +40,28 @@ one case each), and `quality/audit-exceptions.json` only for an
 
 ## Acceptance criteria
 
-- [ ] A RED commit adds the `gates/coverage/` tests, which fail at their
+- [x] A RED commit adds the `gates/coverage/` tests, which fail at their
       assertions.
-- [ ] `@vitest/coverage-v8` is an exact root dev dependency at the installed
+- [x] `@vitest/coverage-v8` is an exact root dev dependency at the installed
       Vitest's version; every licence the lockfile gains is listed in the
       ticket's Notes; a licence the **License allowlist** lacks stops the
       builder; an open **Advisory** gets an **Audit exception** with its
       reason, or the builder stops when a fix exists; `check:licenses` and
       `check:audit` pass.
-- [ ] `npm test` writes `coverage/unit/lcov.info` and `npm run
+- [x] `npm test` writes `coverage/unit/lcov.info` and `npm run
       test:stories` writes `coverage/stories/lcov.info`, each listing
       **Shipping code** only.
-- [ ] `gates/coverage/` fails when either config turns coverage off,
+- [x] `gates/coverage/` fails when either config turns coverage off,
       changes the provider, the reporter, the report folder or the measured
       and excluded paths, or when the Stryker config turns it on.
-- [ ] `coverage/report.js` at the root stays ignored by git, Prettier and
+- [x] `coverage/report.js` at the root stays ignored by git, Prettier and
       ESLint; a file under `gates/coverage/` is tracked by git, checked by
       `format:check` and linted, and the `gates/formatting/` and
       `gates/lint/` cases for it fail before the anchoring.
-- [ ] A **Mutation run** runs without coverage; the **Mutation score**
+- [x] A **Mutation run** runs without coverage; the **Mutation score**
       stays at or above the **Break threshold** of 83
       (`npm run test:mutation`).
-- [ ] `npm run verify` is green.
+- [x] `npm run verify` is green.
 
 ## Notes
 

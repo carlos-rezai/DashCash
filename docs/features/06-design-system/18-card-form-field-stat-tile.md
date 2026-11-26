@@ -24,15 +24,15 @@ hint, in the default, accent, warning or danger tone. Stories titled
 
 ## Acceptance criteria
 
-- [ ] A RED commit adds the three components' **Stories**, which fail.
-- [ ] (review) Props exactly SPEC §3; the card fill and border per SPEC's
+- [x] A RED commit adds the three components' **Stories**, which fail.
+- [x] (review) Props exactly SPEC §3; the card fill and border per SPEC's
       Card fill.
-- [ ] **Stories** for each Card padding, with and without kicker and
+- [x] **Stories** for each Card padding, with and without kicker and
       title; the FormField with hint, with error, around an Input and a
       Select; the StatTile with text ("Rows in file", "24"), with money
       ("Total spending", `−557,85 €`), in each tone.
-- [ ] The FormField's control is named by its label in every **Story**.
-- [ ] `npm run verify` is green.
+- [x] The FormField's control is named by its label in every **Story**.
+- [x] `npm run verify` is green.
 
 ## Blocked by
 

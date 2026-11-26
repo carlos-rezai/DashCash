@@ -22,15 +22,15 @@ gate file.
 
 ## Acceptance criteria
 
-- [ ] A RED commit adds the Modal's **Stories**, which fail.
-- [ ] (review) Props exactly SPEC §3, no `actions` prop.
-- [ ] The open Modal is a `role="dialog"` with `aria-modal`, named by its
+- [x] A RED commit adds the Modal's **Stories**, which fail.
+- [x] (review) Props exactly SPEC §3, no `actions` prop.
+- [x] The open Modal is a `role="dialog"` with `aria-modal`, named by its
       title.
-- [ ] **Stories** for open with actions ("Cancel", "Confirm"), a custom
+- [x] **Stories** for open with actions ("Cancel", "Confirm"), a custom
       width, and closed.
-- [ ] **Play functions**: Esc and a backdrop click call `onClose`, a click
+- [x] **Play functions**: Esc and a backdrop click call `onClose`, a click
       inside the panel does not; the closed **Story** renders no dialog.
-- [ ] `npm run verify` is green.
+- [x] `npm run verify` is green.
 
 ## Blocked by
 

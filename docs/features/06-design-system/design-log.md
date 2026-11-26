@@ -874,3 +874,14 @@ answers named; those answers stay as they were written.
   tick at x = -10, outside the box, for an empty series, which its own
   constant name says was meant to be hidden; DashCash draws nothing: no
   lines and no tick (ticket 22).
+- **D12. A real button opens a YearTable year** (goes beyond
+  `YearTable.dc.html`, which is mouse-only; set by the human, 2026-11-26).
+  Each year row's first cell holds a real `<button>` that carries
+  `aria-expanded` and the year label; it shows no button chrome, so the
+  row looks as in the prototype. The row stays a plain table row: no
+  `role="button"`, no `tabIndex`, and a click anywhere on it still toggles
+  the year once. Enter and Space work through the button itself, with no
+  key handler. The table's scroll container then holds focusable content,
+  so axe's `scrollable-region-focusable` passes. Reason: the first review
+  of ticket 25 asked to remove `tabIndex={0}` from the year row, which
+  left the years unreachable by keyboard (ticket 25).

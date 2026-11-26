@@ -727,6 +727,16 @@ function monthRow(
   return row;
 }
 
+// The button in a year row's first cell that opens and closes the year
+// (design log D12).
+function yearButton(year: HTMLTableRowElement): HTMLButtonElement {
+  const button = within(cell(year, 0)).getByRole('button');
+  if (!(button instanceof HTMLButtonElement)) {
+    throw new Error('no year button');
+  }
+  return button;
+}
+
 function cell(row: HTMLTableRowElement, index: number): HTMLTableCellElement {
   const found = row.cells.item(index);
   if (found === null) {
@@ -872,12 +882,16 @@ async function expectHeaders(
   }
 }
 
-// A year row at rest: open or closed to assistive technology, the pointer
-// cursor, no fill; in its first cell the chevron (the 16 px chevronRight in
-// the muted colour, in a flex holder turned by 90 degrees when open and not
-// at all when closed, over 160 ms with ease), then the year in the heading
-// font at 19 px, weight 600, then its Tag, each 10 px apart, centred on each
-// other, in a row that never wraps.
+// A year row at rest: a plain table row, neither a button nor focusable
+// itself, with the pointer cursor and no fill. Its first cell holds a real
+// button, open or closed to assistive technology and holding the year, that
+// looks like no button: no fill, no border, no padding, no margin, the
+// cell's colour and font, the pointer cursor (design log D12). In the button
+// the chevron (the 16 px chevronRight in the muted colour, in a flex holder
+// turned by 90 degrees when open and not at all when closed, over 160 ms
+// with ease), then the year in the heading font at 19 px, weight 600, then
+// its Tag, each 10 px apart, centred on each other, in a row that never
+// wraps.
 async function expectYearRow(
   canvasElement: HTMLElement,
   year: Year,
@@ -887,9 +901,10 @@ async function expectYearRow(
   await expect(frame.hasAttribute('data-resting'), 'resting').toBe(true);
   const row = yearRow(theTable(frame), year.label);
   await expect(row.matches(':hover'), 'hovered').toBe(false);
-  await expect(row, `${year.label} expanded`).toHaveAttribute(
+  await expect(row, 'a plain row').not.toHaveAttribute('role');
+  await expect(row, 'the row not focusable').not.toHaveAttribute('tabindex');
+  await expect(row, 'expanded on the button').not.toHaveAttribute(
     'aria-expanded',
-    String(open),
   );
   const rowStyle = getComputedStyle(row);
   await expect(rowStyle.cursor, 'cursor').toBe('pointer');
@@ -898,10 +913,49 @@ async function expectYearRow(
   );
 
   const first = cell(row, 0);
+  const button = yearButton(row);
+  await expect(button, `${year.label} expanded`).toHaveAttribute(
+    'aria-expanded',
+    String(open),
+  );
+  await expect(button, 'the button holds the year').toHaveTextContent(
+    year.label,
+  );
+  const firstStyle = getComputedStyle(first);
+  const buttonStyle = getComputedStyle(button);
+  await expect(buttonStyle.backgroundColor, 'button no fill').toBe(
+    computedColour(TRANSPARENT),
+  );
+  for (const side of ['Top', 'Right', 'Bottom', 'Left'] as const) {
+    await expect(
+      buttonStyle[`border${side}Width`],
+      `button ${side} border`,
+    ).toBe('0px');
+    await expect(buttonStyle[`padding${side}`], `button ${side} padding`).toBe(
+      '0px',
+    );
+    await expect(buttonStyle[`margin${side}`], `button ${side} margin`).toBe(
+      '0px',
+    );
+  }
+  await expect(buttonStyle.color, 'button colour').toBe(firstStyle.color);
+  await expect(buttonStyle.fontFamily, 'button font').toBe(
+    firstStyle.fontFamily,
+  );
+  await expect(buttonStyle.fontSize, 'button size').toBe(firstStyle.fontSize);
+  await expect(buttonStyle.fontWeight, 'button weight').toBe(
+    firstStyle.fontWeight,
+  );
+  await expect(buttonStyle.lineHeight, 'button line height').toBe(
+    firstStyle.lineHeight,
+  );
+  await expect(buttonStyle.cursor, 'button cursor').toBe('pointer');
+
   const holder = first.firstElementChild;
   if (!(holder instanceof HTMLElement)) {
     throw new Error('no holder in the first cell');
   }
+  await expect(holder === button, 'the button holds the year parts').toBe(true);
   const holderStyle = getComputedStyle(holder);
   await expect(holderStyle.display, 'year parts in a row').toBe('flex');
   await expect(holderStyle.alignItems, 'year parts centred').toBe('center');
@@ -1469,7 +1523,7 @@ export const YearRowHover: Story = {
 
 // A click on a closed year row opens its months and reports the year open; a
 // second click closes them and reports it closed. A click on a year open by
-// default closes it.
+// default closes it. A click on the year's button itself toggles it once.
 export const Toggles: Story = {
   render: renderIn(FRAME_WIDTH, false),
   args: { defaultOpen: [TODAY_YEAR] },
@@ -1477,12 +1531,13 @@ export const Toggles: Story = {
     const table = theTable(theFrame(canvasElement));
     const closed = theYear(args.years, 2027);
     const row = yearRow(table, closed.label);
+    const button = yearButton(row);
     await expect(monthRows(row).length, 'closed').toBe(0);
 
     await userEvent.click(row);
     await expect(args.onToggle).toHaveBeenCalledTimes(1);
     await expect(args.onToggle).toHaveBeenLastCalledWith(2027, true);
-    await expect(row, 'opened').toHaveAttribute('aria-expanded', 'true');
+    await expect(button, 'opened').toHaveAttribute('aria-expanded', 'true');
     await expect(
       monthRows(row).map((month) => cell(month, 0).textContent),
       'months shown',
@@ -1491,16 +1546,80 @@ export const Toggles: Story = {
     await userEvent.click(row);
     await expect(args.onToggle).toHaveBeenCalledTimes(2);
     await expect(args.onToggle).toHaveBeenLastCalledWith(2027, false);
-    await expect(row, 'closed again').toHaveAttribute('aria-expanded', 'false');
+    await expect(button, 'closed again').toHaveAttribute(
+      'aria-expanded',
+      'false',
+    );
     await expect(monthRows(row).length, 'months gone').toBe(0);
 
     const open = yearRow(table, String(TODAY_YEAR));
+    const openButton = yearButton(open);
     await expect(monthRows(open).length, 'open by default').toBe(12);
     await userEvent.click(open);
     await expect(args.onToggle).toHaveBeenCalledTimes(3);
     await expect(args.onToggle).toHaveBeenLastCalledWith(TODAY_YEAR, false);
-    await expect(open, 'closed').toHaveAttribute('aria-expanded', 'false');
+    await expect(openButton, 'closed').toHaveAttribute(
+      'aria-expanded',
+      'false',
+    );
     await expect(monthRows(open).length, 'its months gone').toBe(0);
+
+    await userEvent.click(button);
+    await expect(args.onToggle, 'one toggle per click').toHaveBeenCalledTimes(
+      4,
+    );
+    await expect(args.onToggle).toHaveBeenLastCalledWith(2027, true);
+    await expect(button, 'opened by its button').toHaveAttribute(
+      'aria-expanded',
+      'true',
+    );
+    await expect(monthRows(row).length, 'months shown again').toBe(
+      closed.rows.length,
+    );
+  },
+};
+
+// Tab reaches a year's button. Enter opens the year and Enter closes it,
+// then Space opens it and Space closes it, each toggle reported once and
+// shown on the button, while the focus stays on the button (design log D12).
+export const OpensWithTheKeyboard: Story = {
+  render: renderIn(FRAME_WIDTH, false),
+  play: async ({ args, canvasElement }) => {
+    const table = theTable(theFrame(canvasElement));
+    const year = theYear(args.years, 2027);
+    const row = yearRow(table, year.label);
+    const button = yearButton(row);
+    for (
+      let step = 0;
+      step < args.years.length && document.activeElement !== button;
+      step += 1
+    ) {
+      await userEvent.tab();
+    }
+    await expect(button, 'reached by Tab').toHaveFocus();
+
+    const presses = [
+      ['{Enter}', true],
+      ['{Enter}', false],
+      [' ', true],
+      [' ', false],
+    ] as const;
+    for (const [index, [key, open]] of presses.entries()) {
+      const name = `${key === ' ' ? 'Space' : 'Enter'} ${String(index + 1)}`;
+      await userEvent.keyboard(key);
+      await expect(args.onToggle, `${name} reported`).toHaveBeenCalledTimes(
+        index + 1,
+      );
+      await expect(args.onToggle).toHaveBeenLastCalledWith(2027, open);
+      await expect(button, `${name} shown`).toHaveAttribute(
+        'aria-expanded',
+        String(open),
+      );
+      await expect(monthRows(row).length, `${name} months`).toBe(
+        open ? year.rows.length : 0,
+      );
+      await expect(button, `${name} keeps the focus`).toHaveFocus();
+    }
   },
 };
 

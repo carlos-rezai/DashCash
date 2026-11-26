@@ -40,6 +40,8 @@ export function Input({
   width = '100%',
   ariaLabel,
 }: InputProps) {
+  // An empty string is absent, as in the prototype.
+  const hasSuffix = suffix !== undefined && suffix !== '';
   return (
     <Frame $width={width}>
       {icon === undefined ? null : (
@@ -56,14 +58,12 @@ export function Input({
         $size={size}
         $align={align}
         $icon={icon !== undefined}
-        $suffix={suffix !== undefined}
+        $suffix={hasSuffix}
         onChange={(event) => {
           onChange(event.target.value);
         }}
       />
-      {suffix === undefined ? null : (
-        <SuffixSlot $size={size}>{suffix}</SuffixSlot>
-      )}
+      {hasSuffix ? <SuffixSlot $size={size}>{suffix}</SuffixSlot> : null}
     </Frame>
   );
 }

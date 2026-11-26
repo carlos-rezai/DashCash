@@ -340,6 +340,21 @@ export const MoneyField: Story = {
   },
 };
 
+// An empty suffix is absent, as in Input.dc.html (p.suffix ?): no slot, and
+// the right padding is the left one, not the wider padding a suffix needs.
+export const EmptySuffix: Story = {
+  args: { value: 'Rewe', suffix: '', ariaLabel: 'Merchant' },
+  play: async ({ canvasElement }) => {
+    const field = theField(canvasElement, 'Merchant');
+    await expect(
+      field.parentElement?.children,
+      'children of the frame',
+    ).toHaveLength(1);
+    const style = getComputedStyle(field);
+    await expect(style.paddingRight, 'right padding').toBe(style.paddingLeft);
+  },
+};
+
 // A width of its own: 200 px, narrower than the 320 px holder the field would
 // otherwise fill.
 export const Narrow: Story = {

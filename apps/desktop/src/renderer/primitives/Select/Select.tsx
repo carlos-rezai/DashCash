@@ -63,7 +63,7 @@ export function Select({
           onChange(event.target.value);
         }}
       >
-        {placeholder === undefined ? null : (
+        {placeholder === undefined || placeholder === '' ? null : (
           <option value="">{placeholder}</option>
         )}
         {options.map((option) => (

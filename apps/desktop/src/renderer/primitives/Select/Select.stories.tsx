@@ -336,6 +336,24 @@ export const Empty: Story = {
   },
 };
 
+// An empty placeholder is absent, as in Select.dc.html (sc-if): no empty
+// option, only the categories.
+export const EmptyPlaceholder: Story = {
+  args: { value: 'groceries', placeholder: '', ariaLabel: 'Category' },
+  play: async ({ canvasElement }) => {
+    const select = theSelect(canvasElement, 'Category');
+    await expect(
+      [...select.options].map((option) => [option.value, option.text]),
+      'options',
+    ).toEqual([
+      ['dining', 'Dining out'],
+      ['groceries', 'Groceries'],
+      ['leisure', 'Leisure'],
+      ['transport', 'Transport'],
+    ]);
+  },
+};
+
 // Chosen: the option's label in ink, at the given width, without a swatch.
 export const Chosen: Story = {
   args: {

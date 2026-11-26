@@ -11,10 +11,12 @@ status: done
 
 The text and choice fields (plan Phase 9; PRD "Primitives"; SPEC §3, Card
 fill; `Input.dc.html`, `Select.dc.html`; design log Q7, Q10, Q15, Q24, P1).
-The Input is 36 px (md) or 30 px (sm) on the input ground, with an
-optional left icon, a suffix such as "€", right alignment and numeric
-mode, reporting each change of its text. The Select, sm or md and with a
-width, has its placeholder as the empty option, options with an optional
+The Input is 36 px (md) or 28 px (sm, the shared small control height,
+design log D10) on the input ground, with an optional left icon, a suffix
+such as "€", right alignment and numeric mode, reporting each change of
+its text. An empty suffix is absent. The Select, sm or md and with a
+width, has its placeholder as the empty option (an empty placeholder is
+absent: no empty option), options with an optional
 swatch of the chosen option's colour, and the warning tone (warning border
 and placeholder colour). Both take an optional `ariaLabel` for when no
 FormField labels them (Q10). Stories titled `Primitives/Input` and

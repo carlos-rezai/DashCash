@@ -53,7 +53,7 @@ This ticket is the approval to change exactly: `apps/desktop/package.json`
       offset 2; the disabled button has the `not-allowed` cursor; Barlow
       400, 500, 600 and Barlow Condensed 500, 600 are loaded
       (`document.fonts`).
-- [ ] (review) `GlobalStyle` holds only element-level rules, every value
+- [x] (review) `GlobalStyle` holds only element-level rules, every value
       from the **Theme**; no Google Fonts import and no class rule exist.
 - [x] `npm run verify` is green.
 

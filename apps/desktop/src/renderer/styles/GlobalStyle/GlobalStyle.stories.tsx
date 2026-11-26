@@ -14,6 +14,8 @@ const GROUND = 'rgb(27, 42, 57)';
 const INK = 'rgb(233, 241, 250)';
 // dashcash-dark.css: a { color: var(--color-accent-600) }, #94bce3
 const LINK_ACCENT = 'rgb(148, 188, 227)';
+// dashcash-dark.css: a:hover { color: var(--color-accent-700) }, #b5d9fd
+const LINK_HOVER = 'rgb(181, 217, 253)';
 // styles.css: :focus-visible { outline: 2px solid var(--color-accent) },
 // dashcash-dark.css --color-accent #749dc4
 const FOCUS_ACCENT = 'rgb(116, 157, 196)';
@@ -143,12 +145,71 @@ export const FontFamilies: Story = {
   },
 };
 
+// The link while its resting colour is read: the container holds it out of the
+// pointer's reach, because Chromium on Linux can apply :hover without pointer
+// movement.
+const RestingFrame = styled.div`
+  pointer-events: none;
+`;
+
+// The marker that stands in for :hover while a hovered style is read.
+const HOVER_MARK = 'data-hover-probe';
+
+// What the element looks like under the pointer. A story's synthetic pointer
+// events do not make Chromium apply :hover, so every :hover rule is copied
+// right after itself with the marker in its place, and the marker is set on
+// the element while the style is read. The marker weighs as much as :hover and
+// each copy follows its rule, so the cascade is that of a real hover.
+function hoveredColour(element: Element): string {
+  const copies: CSSRule[] = [];
+  for (const sheet of document.styleSheets) {
+    const rules = [...sheet.cssRules];
+    for (let index = rules.length - 1; index >= 0; index -= 1) {
+      const rule = rules[index];
+      if (
+        rule instanceof CSSStyleRule &&
+        rule.selectorText.includes(':hover')
+      ) {
+        sheet.insertRule(
+          rule.cssText.replaceAll(':hover', `[${HOVER_MARK}]`),
+          index + 1,
+        );
+        const copy = sheet.cssRules.item(index + 1);
+        if (copy !== null) {
+          copies.push(copy);
+        }
+      }
+    }
+  }
+  element.setAttribute(HOVER_MARK, '');
+  try {
+    return getComputedStyle(element).color;
+  } finally {
+    element.removeAttribute(HOVER_MARK);
+    for (const sheet of document.styleSheets) {
+      for (let index = sheet.cssRules.length - 1; index >= 0; index -= 1) {
+        const rule = sheet.cssRules.item(index);
+        if (rule !== null && copies.includes(rule)) {
+          sheet.deleteRule(index);
+        }
+      }
+    }
+  }
+}
+
 export const LinkInAccent: Story = {
+  render: () => (
+    <RestingFrame>
+      <Sample />
+    </RestingFrame>
+  ),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const link = canvas.getByRole('link', { name: 'Import a statement' });
 
-    await expect(getComputedStyle(link).color).toBe(LINK_ACCENT);
+    await expect(link.matches(':hover'), 'hovered').toBe(false);
+    await expect(getComputedStyle(link).color, 'resting').toBe(LINK_ACCENT);
+    await expect(hoveredColour(link), 'hovered colour').toBe(LINK_HOVER);
   },
 };
 

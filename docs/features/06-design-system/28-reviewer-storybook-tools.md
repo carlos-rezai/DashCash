@@ -13,11 +13,16 @@ The reviewer sees components, not only their code (plan Phase 21; PRD
 "Reviewer"; design log Q36, Q37).
 
 - `.claude/agents/reviewer.md` gains the tools of the `storybook` MCP
-  server.
-- The issue-loop's and pr-review's review prompts tell the reviewer to
-  start `npm run storybook` in the background when the diff touches a
-  story or a component, and to check the changed **Stories** and their
-  a11y results through those tools. The human decides the wording.
+  server, except `test-run` (design log D14, D15). Its text says that the
+  human starts Storybook before a run and the reviewer never starts or
+  stops it, that a missing Storybook never blocks a review, and that
+  accessibility results come from `npm run test:stories`, not from these
+  tools.
+- The issue-loop's and pr-review's review prompts tell the reviewer, when
+  the storybook tools are available and the diff touches a story or a
+  component (issue-loop) or the feature touches **Stories** (pr-review),
+  to check the changed **Stories** as Storybook shows them, and otherwise
+  to say so in one line. The human decides the wording.
 
 ## Who builds it
 
@@ -38,6 +43,16 @@ design log Q37), so the issue-loop stops at this ticket. It must be
 
 Numbered last so that the issue-loop builds every other ticket before it
 stops here.
+
+## Notes
+
+- The ticket's first text had the reviewer start `npm run storybook` in
+  the background and check the a11y results through the tools. Design log
+  D15 replaced that, set by the human on 2026-11-26: an MCP server connects
+  only when a session starts, so a Storybook the reviewer starts mid-run
+  cannot be reached, and the human starts Storybook before a run. The
+  `test-run` tool is left out of the reviewer's tools, since it returns no
+  a11y results here (D14); a11y results stay with `npm run test:stories`.
 
 ## User stories addressed
 

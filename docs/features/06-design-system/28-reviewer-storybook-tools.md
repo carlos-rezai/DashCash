@@ -1,5 +1,5 @@
 ---
-status: open
+status: done
 ---
 # The reviewer's Storybook tools
 
@@ -28,9 +28,9 @@ design log Q37), so the issue-loop stops at this ticket. It must be
 
 ## Acceptance criteria
 
-- [ ] `reviewer.md` lists the `storybook` MCP tools.
-- [ ] Both review prompts carry the instruction, in the human's wording.
-- [ ] `npm run verify` is green.
+- [x] `reviewer.md` lists the `storybook` MCP tools.
+- [x] Both review prompts carry the instruction, in the human's wording.
+- [x] `npm run verify` is green.
 
 ## Blocked by
 

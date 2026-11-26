@@ -906,3 +906,13 @@ answers named; those answers stay as they were written.
   not find the Storybook project in `vitest.storybook.config.ts`, and
   merging that project into the root config would undo Q22's separate
   story config (ticket 27).
+- **D15. The reviewer does not start Storybook** (deviates from ticket
+  28's What to build, "start `npm run storybook` in the background … and
+  check … their a11y results"; set by the human, 2026-11-26). An MCP
+  server connects only when a session starts, so a Storybook the reviewer
+  started mid-run would give it no tools. The human starts Storybook
+  before a run; the reviewer uses the `storybook` tools when they are
+  available and says so in one line when they are not, and a missing
+  Storybook never blocks a review. `test-run` is left out of the
+  reviewer's tools, since it returns no a11y results here (D14); a11y
+  results stay with `npm run test:stories` (ticket 28).

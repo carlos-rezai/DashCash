@@ -103,6 +103,9 @@ Both prompts ask for this format, so every comment reads the same:
 >   glossary, quality-gates) must match the code.
 > - the screens the feature touches, together: consistent with each other
 >   and with `docs/design/`
+> - when the feature touches Stories and the storybook tools are available,
+>   the changed Stories as Storybook shows them; otherwise say so in one
+>   line
 >
 > Name the ticket each finding belongs to (`<nn>`). Change no files.
 > Answer in the verdict format of `.claude/skills/pr-review/SKILL.md`.

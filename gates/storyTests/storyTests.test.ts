@@ -15,6 +15,10 @@ import { describe, expect, it } from 'vitest';
 // vitest.storybook.config.ts runs the Storybook plugin on .storybook/ in
 // browser mode, with the Playwright provider, headless, in exactly one
 // Chromium instance. Any of these settings changed fails this test.
+//
+// .storybook/main.ts loads exactly the Vitest, a11y and MCP addons, the last
+// serving the Storybook MCP, and keeps telemetry off (design log I6). An
+// addon added or removed, or telemetry on, fails this test.
 
 type PackageJson = { devDependencies?: Record<string, string> };
 
@@ -26,6 +30,7 @@ type StoryConfigs = {
     instances?: unknown;
   } | null;
   addons: unknown;
+  disableTelemetry: unknown;
 };
 
 const ROOT = fileURLToPath(new URL('../..', import.meta.url));
@@ -35,11 +40,16 @@ const PREVIEW = '.storybook/preview.tsx';
 const STORY_TEST_CONFIG = 'vitest.storybook.config.ts';
 const STORYBOOK_PLUGIN_MODULE = '@storybook/addon-vitest/vitest-plugin';
 const A11Y_ADDON = '@storybook/addon-a11y';
+const STORYBOOK_ADDONS = [
+  '@storybook/addon-vitest',
+  A11Y_ADDON,
+  '@storybook/addon-mcp',
+];
 
 // Imports the story-test config and Storybook's main config in a fresh Node
 // process without Vitest's environment, so the Storybook plugin loads no
 // Storybook, and prints the browser settings (the provider by its name) and
-// the addons.
+// the addons and the telemetry setting.
 const READ_CONFIGS = `const { default: storyTests } = await import('./${STORY_TEST_CONFIG}');
 const { default: storybook } = await import('./.storybook/main.ts');
 const browser = storyTests.test?.browser;
@@ -53,6 +63,7 @@ console.log(JSON.stringify({
       }
     : null,
   addons: storybook.addons ?? null,
+  disableTelemetry: storybook.core?.disableTelemetry ?? null,
 }));`;
 
 function readRootFile(path: string): string {
@@ -399,5 +410,16 @@ describe('the story-test config', { timeout: 60_000 }, () => {
     expect(readStoryConfigs().browser?.instances).toStrictEqual([
       { browser: 'chromium' },
     ]);
+  });
+});
+
+describe('the Storybook config', { timeout: 60_000 }, () => {
+  it('loads exactly the Vitest, a11y and MCP addons, with telemetry off', () => {
+    const { addons, disableTelemetry } = readStoryConfigs();
+
+    expect({ addons, disableTelemetry }).toStrictEqual({
+      addons: STORYBOOK_ADDONS,
+      disableTelemetry: true,
+    });
   });
 });

@@ -1,5 +1,5 @@
 ---
-status: open
+status: in-progress
 ---
 # Storybook MCP and the README
 

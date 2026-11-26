@@ -916,3 +916,10 @@ answers named; those answers stay as they were written.
   Storybook never blocks a review. `test-run` is left out of the
   reviewer's tools, since it returns no a11y results here (D14); a11y
   results stay with `npm run test:stories` (ticket 28).
+- **D16. The a11y module does not join `tsconfig.web.json`** (deviates from
+  A1, the PRD's Gate configuration list and plan Phase 2, which say the
+  a11y parameters module joins `apps/desktop/tsconfig.web.json`; follows
+  from D4; ticket 04). `.storybook/a11y.ts` belongs to the `.storybook/`
+  TypeScript project, which reaches it through the preview's import, so
+  `apps/desktop/tsconfig.web.json` is unchanged and `npm run typecheck`
+  passes.

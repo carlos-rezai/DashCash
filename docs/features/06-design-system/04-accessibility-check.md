@@ -17,7 +17,9 @@ tests"; design log Q29, Q30, A1, A5, P2, D1).
   imports nothing and that the preview uses: `test: 'error'`, so any
   violation fails the **Story test** and **Verify**, `color-contrast`
   included, and no rule changes (D1, set by the human; it supersedes Q30's
-  `reviewOnFail`). The module joins `apps/desktop/tsconfig.web.json` (A1).
+  `reviewOnFail`). The module belongs to the `.storybook/` TypeScript
+  project (D4), which reaches it through the preview's import;
+  `apps/desktop/tsconfig.web.json` stays unchanged (D16, overriding A1).
 - The **Theme** values D1 raises (`textFaint` at 60 %, the red `#ed8c80`,
   Amount's `muted` at 100 %) arrive with the tickets that first use them
   (P1); every later **Story** passes the contrast rule with them.

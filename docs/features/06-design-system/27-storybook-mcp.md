@@ -15,7 +15,8 @@ Agents can look the components up (plan Phase 20; PRD "Storybook",
 - `@storybook/addon-mcp` at the root (Q39), added to `.storybook/main.ts`,
   so the running dev server serves the **Storybook MCP** at
   `http://localhost:6006/mcp`, listing components and **Stories** with
-  their documentation and a11y results. No `.mcp.json` is committed (Q36).
+  their documentation. The MCP returns no a11y results (design log D14):
+  they stay with `npm run test:stories`. No `.mcp.json` is committed (Q36).
 - `gates/storyTests/` gains a pin of `.storybook/main.ts` (I6): its addons
   are exactly `@storybook/addon-vitest`, `@storybook/addon-a11y` and
   `@storybook/addon-mcp`, and telemetry is off.
@@ -39,9 +40,9 @@ fix.
       when a fix exists; `check:licenses` and `check:audit` pass.
 - [x] The pin fails when an addon is added or removed or telemetry is on.
 - [x] With `npm run storybook` running, the MCP endpoint lists the
-      components and **Stories** and returns a **Story**'s a11y results
-      (the builder checks it against the running server, recorded in the
-      ticket's Notes).
+      components and **Stories**; it returns no a11y results, which stay
+      with `npm run test:stories` (design log D14; the builder checks it
+      against the running server, recorded in the ticket's Notes).
 - [x] README's Getting started names Chromium beside Electron in `npm ci`;
       `check:docs-drift` passes.
 - [x] `npm run verify` is green.

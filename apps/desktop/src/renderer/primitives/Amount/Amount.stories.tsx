@@ -16,10 +16,8 @@ const AMBER = 'rgb(224, 180, 105)';
 // --color-accent-600 #94bce3
 const ACCENT = 'rgb(148, 188, 227)';
 
-// Chromium reports a family that is one identifier without quotes, and one
-// with a space, like Barlow Condensed, with them.
 const BODY_FONT = 'Barlow';
-const HEADING_FONT = '"Barlow Condensed"';
+const HEADING_FONT = 'Barlow Condensed';
 
 type Look = {
   // The formatted text, U+2212 and U+00A0 included.
@@ -49,7 +47,9 @@ async function expectAmount(
 
   await expect(style.color).toBe(look.color);
   await expect(style.fontSize).toBe(look.fontSize);
-  await expect(style.fontFamily.split(',')[0]?.trim()).toBe(look.font);
+  // The family name without quotes: Chromium quotes only a name with a space.
+  const family = style.fontFamily.split(',')[0]?.trim().replaceAll('"', '');
+  await expect(family).toBe(look.font);
   await expect(style.fontWeight).toBe(look.fontWeight);
   await expect(style.fontVariantNumeric).toBe('tabular-nums');
 

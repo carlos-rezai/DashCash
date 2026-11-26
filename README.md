@@ -68,6 +68,7 @@ flowchart LR
   main --> contract
   contract --> domain
   renderer --> contract
+  renderer --> domain
 ```
 
 - **domain** is pure TypeScript: no React, no Electron, no I/O. All money math lives here, which is why unit and mutation tests focus here.

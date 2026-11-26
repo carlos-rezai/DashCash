@@ -923,3 +923,10 @@ answers named; those answers stay as they were written.
   TypeScript project, which reaches it through the preview's import, so
   `apps/desktop/tsconfig.web.json` is unchanged and `npm run typecheck`
   passes.
+- **D17. README's architecture diagram gains the renderer to domain edge**
+  (deviates from Q40 and the Design table, which name only README's
+  Getting started as a README change; review of ticket 10). The Amount
+  imports `formatCents` from `@dashcash/domain`, so the renderer depends
+  on the domain directly, as the design log's own diagram shows
+  (`prim --> fmt`), and the README diagram had no such edge. It now has
+  `renderer --> domain` (ticket 10).

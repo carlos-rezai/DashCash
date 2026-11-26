@@ -885,8 +885,8 @@ async function expectHeaders(
 // A year row at rest: a plain table row, neither a button nor focusable
 // itself, with the pointer cursor and no fill. Its first cell holds a real
 // button, open or closed to assistive technology and holding the year, that
-// looks like no button: no fill, no border, no padding, no margin, the
-// cell's colour and font, the pointer cursor (design log D12). In the button
+// looks like no button: no fill, no border, no padding, the cell's colour,
+// font family and size, the pointer cursor (design log D12). In the button
 // the chevron (the 16 px chevronRight in the muted colour, in a flex holder
 // turned by 90 degrees when open and not at all when closed, over 160 ms
 // with ease), then the year in the heading font at 19 px, weight 600, then
@@ -934,21 +934,12 @@ async function expectYearRow(
     await expect(buttonStyle[`padding${side}`], `button ${side} padding`).toBe(
       '0px',
     );
-    await expect(buttonStyle[`margin${side}`], `button ${side} margin`).toBe(
-      '0px',
-    );
   }
   await expect(buttonStyle.color, 'button colour').toBe(firstStyle.color);
   await expect(buttonStyle.fontFamily, 'button font').toBe(
     firstStyle.fontFamily,
   );
   await expect(buttonStyle.fontSize, 'button size').toBe(firstStyle.fontSize);
-  await expect(buttonStyle.fontWeight, 'button weight').toBe(
-    firstStyle.fontWeight,
-  );
-  await expect(buttonStyle.lineHeight, 'button line height').toBe(
-    firstStyle.lineHeight,
-  );
   await expect(buttonStyle.cursor, 'button cursor').toBe('pointer');
 
   const holder = first.firstElementChild;

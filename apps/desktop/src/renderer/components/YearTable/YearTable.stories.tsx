@@ -1349,6 +1349,82 @@ export const CellKinds: Story = {
   },
 };
 
+// An empty first label is no first label, as in the prototype: the header
+// shows the default first label.
+export const EmptyFirstLabel: Story = {
+  args: { firstLabel: '' },
+  play: async ({ args, canvasElement }) => {
+    await expectHeaders(canvasElement, args.columns, FIRST_LABEL);
+  },
+};
+
+// An empty tag is no tag, as in the prototype: neither a year row nor a month
+// row draws a Tag for it, so each holds only its chevron and year, or its
+// label.
+export const EmptyTags: Story = {
+  args: {
+    columns: SCROLL_COLUMNS,
+    years: [
+      {
+        key: 'untagged',
+        label: '2026',
+        tag: '',
+        cells: [amount(1000000), amount(180000, { sign: 'always' })],
+        rows: [
+          {
+            label: 'Jul',
+            tag: '',
+            cells: [amount(900000), amount(15000, { sign: 'always' })],
+          },
+        ],
+      },
+    ],
+    defaultOpen: ['untagged'],
+  },
+  play: async ({ args, canvasElement }) => {
+    const year = theYear(args.years, 'untagged');
+    const row = yearRow(theTable(theFrame(canvasElement)), year.label);
+    await expect(yearButton(row).children.length, 'no year tag').toBe(2);
+    const month = monthRow(row, 'Jul');
+    const holder = cell(month, 0).firstElementChild;
+    await expect(holder?.children.length, 'no month tag').toBe(1);
+  },
+};
+
+// An empty tooltip is no tooltip, as in the prototype's absent one: the icon
+// holder carries no title and is no named image, on a year row and a month
+// row.
+export const EmptyIconTitle: Story = {
+  args: {
+    columns: [{ label: 'Goal' }],
+    years: [
+      {
+        key: 'untitled',
+        label: '2026',
+        cells: [{ type: 'icon', glyph: 'check', color: MET, title: '' }],
+        rows: [
+          {
+            label: 'Jan',
+            cells: [{ type: 'icon', glyph: 'x', title: '' }],
+          },
+        ],
+      },
+    ],
+    defaultOpen: ['untitled'],
+  },
+  play: async ({ args, canvasElement }) => {
+    const year = theYear(args.years, 'untitled');
+    const row = yearRow(theTable(theFrame(canvasElement)), year.label);
+    for (const element of [row, monthRow(row, 'Jan')]) {
+      const holder = cell(element, 1).firstElementChild;
+      await expect(holder, 'an icon holder').not.toBeNull();
+      await expect(holder, 'no role').not.toHaveAttribute('role');
+      await expect(holder, 'no tooltip').not.toHaveAttribute('title');
+      await expect(holder, 'no name').not.toHaveAttribute('aria-label');
+    }
+  },
+};
+
 // The auto layout: the first column only as wide as its content however wide
 // the card, a column with a width exactly that wide, the rest sharing the
 // space; nothing scrolls.

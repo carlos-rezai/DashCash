@@ -82,6 +82,11 @@ const CELL_ICON_SIZE = 14;
 const DEFAULT_FIRST_LABEL = 'Year · month';
 const EMPTY: Cell = { type: 'empty' };
 
+// An empty string is absent, as in the prototype.
+function present(text: string | undefined): text is string {
+  return text !== undefined && text !== '';
+}
+
 function CellContent({ cell, strong }: { cell: Cell; strong: boolean }) {
   switch (cell.type) {
     case 'amount':
@@ -98,9 +103,9 @@ function CellContent({ cell, strong }: { cell: Cell; strong: boolean }) {
       return (
         <IconHolder
           $color={cell.color}
-          {...(cell.title === undefined
-            ? {}
-            : { role: 'img', title: cell.title, 'aria-label': cell.title })}
+          {...(present(cell.title)
+            ? { role: 'img', title: cell.title, 'aria-label': cell.title }
+            : {})}
         >
           <Icon glyph={cell.glyph} size={CELL_ICON_SIZE} />
         </IconHolder>
@@ -154,13 +159,13 @@ function YearBody({
               <Icon glyph="chevronRight" size={CHEVRON_SIZE} />
             </Chevron>
             <YearLabel>{year.label}</YearLabel>
-            {year.tag === undefined ? null : (
+            {present(year.tag) ? (
               <Tag
                 label={year.tag}
                 tone={year.tagTone ?? 'neutral'}
                 icon={year.tagIcon}
               />
-            )}
+            ) : null}
           </YearHead>
         </DataCell>
         <DataCells columns={columns} cells={year.cells} strong />
@@ -171,13 +176,13 @@ function YearBody({
               <DataCell $align="left" $inset>
                 <MonthHead>
                   <Month $muted={month.muted === true}>{month.label}</Month>
-                  {month.tag === undefined ? null : (
+                  {present(month.tag) ? (
                     <Tag
                       label={month.tag}
                       tone={month.tagTone ?? 'outline'}
                       icon={month.tagIcon}
                     />
-                  )}
+                  ) : null}
                 </MonthHead>
               </DataCell>
               <DataCells columns={columns} cells={month.cells} strong={false} />
@@ -197,7 +202,7 @@ export function YearTable({
   columns,
   years,
   defaultOpen = [],
-  firstLabel = DEFAULT_FIRST_LABEL,
+  firstLabel,
   onToggle,
 }: YearTableProps) {
   const [openKeys, setOpenKeys] = useState<ReadonlySet<Year['key']>>(
@@ -222,7 +227,7 @@ export function YearTable({
         <thead>
           <tr>
             <Head $align="left" $width={equalColumns ? firstWidth : '1%'}>
-              {firstLabel}
+              {present(firstLabel) ? firstLabel : DEFAULT_FIRST_LABEL}
             </Head>
             {columns.map((column, index) => {
               const align = column.align ?? 'right';

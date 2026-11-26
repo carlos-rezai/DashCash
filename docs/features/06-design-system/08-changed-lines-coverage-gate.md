@@ -23,7 +23,10 @@ log Q33–Q35, A2, A3, A4, I1).
   core of `07-changed-lines-core.md`, and reports through `runGate`. It
   fails closed (A2, A3) on a missing or malformed threshold file (not JSON,
   not an object, `changedLines` not a number from 0 to 100), on a missing
-  `origin/main` or merge base, and on a missing or unreadable report.
+  `origin/main` or merge base, and on a missing or unreadable report. The
+  entry holds its own copy of the include and exclude patterns of
+  `vitest.config.ts` and `vitest.storybook.config.ts`; its suite pins that
+  copy against both configs.
 - `check:coverage` = `node scripts/checkCoverage/checkCoverage.ts`;
   **Verify** runs it right after `test:stories`, and now has its final
   fifteen gates in Q35's order: `format:check`, `lint`, `typecheck`,

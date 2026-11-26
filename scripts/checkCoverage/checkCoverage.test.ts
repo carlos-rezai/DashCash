@@ -1,3 +1,4 @@
+import { spawnSync } from 'node:child_process';
 import {
   existsSync,
   mkdirSync,
@@ -8,6 +9,7 @@ import {
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import unitConfig from '../../vitest.config.ts';
 import { runNpmScript as runScript } from '../test-support/runNpmScript/runNpmScript.ts';
 import {
   commitFiles,
@@ -22,6 +24,8 @@ import {
   checkCoverage,
   findChangedLines,
   findCoverageViolations,
+  MEASURED,
+  NOT_MEASURED_FILES,
   readLcov,
 } from './checkCoverage.ts';
 
@@ -499,6 +503,41 @@ describe('findCoverageViolations', () => {
       { subject: 'scripts/a.ts', reason: 'lines 3, 5–7 not covered' },
       { subject: 'scripts/b.ts', reason: 'lines 10–11, 20 not covered' },
     ]);
+  });
+});
+
+// The include and exclude patterns of a coverage config.
+type CoveragePatterns = { include?: unknown; exclude?: unknown };
+
+// Imports the story-test config in a fresh Node process without Vitest's
+// environment, so the Storybook plugin loads no Storybook, and prints its
+// coverage settings.
+const READ_STORY_COVERAGE = `const { default: storyTests } = await import('./vitest.storybook.config.ts');
+console.log(JSON.stringify(storyTests.test?.coverage ?? null));`;
+
+function readStoryCoverage(): CoveragePatterns {
+  const env = { ...process.env };
+  delete env.VITEST;
+  const { status, stdout, stderr } = spawnSync(
+    process.execPath,
+    ['--input-type=module', '--eval', READ_STORY_COVERAGE],
+    { cwd: ROOT, encoding: 'utf8', env },
+  );
+  if (status !== 0) {
+    throw new Error(`reading vitest.storybook.config.ts failed: ${stderr}`);
+  }
+  return JSON.parse(stdout) as CoveragePatterns;
+}
+
+describe('the measured files', { timeout: 60_000 }, () => {
+  it.each([
+    ['vitest.config.ts', () => unitConfig.test?.coverage ?? {}],
+    ['vitest.storybook.config.ts', readStoryCoverage],
+  ])('are the include and exclude patterns of %s', (_name, readCoverage) => {
+    const coverage: CoveragePatterns = readCoverage();
+
+    expect(MEASURED).toStrictEqual(coverage.include);
+    expect(NOT_MEASURED_FILES).toStrictEqual(coverage.exclude);
   });
 });
 

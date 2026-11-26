@@ -144,14 +144,15 @@ const BASE_REF = 'origin/main';
 const THRESHOLD_FILE = 'quality/coverage-threshold.json';
 const REPORT_FILES = ['coverage/unit/lcov.info', 'coverage/stories/lcov.info'];
 // The files the coverage measures: the include and exclude patterns of
-// vitest.config.ts and vitest.storybook.config.ts (gates/coverage/ pins them).
-const MEASURED = [
+// vitest.config.ts and vitest.storybook.config.ts. gates/coverage/ pins the
+// configs, and checkCoverage.test.ts pins these copies against the configs.
+export const MEASURED = [
   'apps/**/*.{ts,tsx}',
   'packages/**/*.{ts,tsx}',
   'scripts/**/*.{ts,tsx}',
   'gates/**/*.{ts,tsx}',
 ];
-const NOT_MEASURED_FILES = [
+export const NOT_MEASURED_FILES = [
   '**/*.test.{ts,tsx}',
   '**/*.stories.{ts,tsx}',
   '**/test-support/**',

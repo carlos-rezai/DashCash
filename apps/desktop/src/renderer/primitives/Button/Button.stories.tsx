@@ -221,7 +221,8 @@ export const Medium: Story = {
     const style = getComputedStyle(button);
     await expect(style.fontSize).toBe('14px');
     await expect(style.fontWeight).toBe('600');
-    await expect(style.fontFamily.startsWith('"Barlow Condensed"')).toBe(true);
+    const family = style.fontFamily.split(',')[0]?.trim().replaceAll('"', '');
+    await expect(family).toBe('Barlow Condensed');
   },
 };
 

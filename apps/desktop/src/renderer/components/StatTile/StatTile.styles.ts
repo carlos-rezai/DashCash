@@ -22,7 +22,7 @@ export const Frame = styled.div`
   gap: ${({ theme }) => theme.space.statTileGap};
   min-width: 0;
   padding: ${({ theme }) => theme.space.space4};
-  background: ${({ theme }) => theme.color.surface};
+  background: ${({ theme }) => theme.color.cardBg};
   border: 1px solid ${({ theme }) => theme.color.cardBorder};
 `;
 

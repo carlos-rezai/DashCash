@@ -51,5 +51,5 @@ export const Frame = styled.span<{ $tone: TagTone }>`
   background: ${({ $tone, theme }) => look($tone, theme).fill};
   color: ${({ $tone, theme }) => look($tone, theme).text};
   border: 1px solid ${({ $tone, theme }) => look($tone, theme).border};
-  border-radius: 0;
+  border-radius: ${({ theme }) => theme.size.radius};
 `;

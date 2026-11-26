@@ -10,7 +10,7 @@ export const Group = styled.div<{ $size: SegmentedSize }>`
   flex: none;
   height: ${({ $size, theme }) => theme.size.controlHeight[$size]};
   border: 1px solid ${({ theme }) => theme.color.divider};
-  border-radius: 0;
+  border-radius: ${({ theme }) => theme.size.radius};
 `;
 
 type OptionProps = { $selected: boolean; $size: SegmentedSize };

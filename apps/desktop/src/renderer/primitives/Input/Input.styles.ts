@@ -36,9 +36,9 @@ export const Field = styled.input<FieldProps>`
   line-height: 1.2;
   text-align: ${({ $align }) => $align};
   color: ${({ theme }) => theme.color.text};
-  background: ${({ theme }) => theme.color.bg};
+  background: ${({ theme }) => theme.color.inputBg};
   border: 1px solid ${({ theme }) => theme.color.divider};
-  border-radius: 0;
+  border-radius: ${({ theme }) => theme.size.radius};
   caret-color: ${({ theme }) => theme.color.accent[500]};
 
   /* styles.css, .input: the border answers the pointer and the keyboard. */

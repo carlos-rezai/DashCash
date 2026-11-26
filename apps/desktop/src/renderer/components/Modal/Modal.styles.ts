@@ -22,7 +22,7 @@ export const Panel = styled.div<{ $width: number | undefined }>`
   flex-direction: column;
   gap: ${({ theme }) => theme.space.space4};
   padding: ${({ theme }) => theme.space.space6};
-  background: ${({ theme }) => theme.color.surface};
+  background: ${({ theme }) => theme.color.raisedBg};
   border: 1px solid ${({ theme }) => theme.color.cardBorder};
   box-shadow: ${({ theme }) => theme.shadow.lg};
 `;

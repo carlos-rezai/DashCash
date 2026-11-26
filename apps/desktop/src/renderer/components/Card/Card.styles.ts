@@ -20,7 +20,7 @@ export const Frame = styled.div<{ $padding: CardPadding }>`
   min-width: 0;
   padding: ${({ theme, $padding }) =>
     $padding === 'none' ? '0' : theme.space[PADDING[$padding]]};
-  background: ${({ theme }) => theme.color.surface};
+  background: ${({ theme }) => theme.color.cardBg};
   border: 1px solid ${({ theme }) => theme.color.cardBorder};
 `;
 

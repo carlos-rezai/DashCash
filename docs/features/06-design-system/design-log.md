@@ -937,3 +937,11 @@ answers named; those answers stay as they were written.
   on collapse; with the two refs alone it cannot tell an opening from a
   collapse or a first render, so the caller passes `open` and the hook keeps
   the previous value itself.
+- **D19. SPEC.md follows the values the code uses** (review of ticket 26).
+  SPEC.md still gave the prototype values that D1 replaced and a Button md
+  height the build did not use, so it contradicted the code and itself. It
+  now reads: `--sb-text-faint` at 60 % (was 42 %); `--sb-negative` and
+  `--sb-danger` `#ed8c80` (was `#e8877b`; the tints keep `#e8877b`); Amount's
+  `muted` as the same colour as `auto` at full opacity (was 62 %); Button md
+  36 px (was 34 px, as its Control sizing section and `Button.dc.html` say).
+  Like D10, this corrects SPEC.md only; the prototype files stay as they are.

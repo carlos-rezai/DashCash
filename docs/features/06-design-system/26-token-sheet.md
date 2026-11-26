@@ -109,4 +109,6 @@ Touches no gate file.
 ## Notes
 
 - Industry's `--radius-sm/md/lg` are not Tokens; the Theme keeps one radius
-  of 0 for square corners (design log D13).
+  of 0 for square corners (design log D13); every square-cornered style
+  reads it as `size.radius`, and every framed fill reads its role token
+  (`inputBg`, `raisedBg`, `cardBg`).

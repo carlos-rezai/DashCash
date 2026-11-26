@@ -114,7 +114,7 @@ export const Control = styled.button<StyledProps>`
   color: ${({ $variant, theme }) => textColour($variant, theme)};
   background: transparent;
   border: 1px solid transparent;
-  border-radius: 0;
+  border-radius: ${({ theme }) => theme.size.radius};
   cursor: pointer;
   ${({ $variant }) => FILLS[$variant === 'danger' ? 'secondary' : $variant]}
 

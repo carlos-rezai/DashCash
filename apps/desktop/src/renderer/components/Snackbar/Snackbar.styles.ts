@@ -42,7 +42,7 @@ export const Frame = styled.div<{ $tone: SnackbarTone }>`
     ${({ theme }) => theme.space.snackbarPadding}
     ${({ theme }) => theme.space.snackbarPadding}
     ${({ theme }) => theme.space.snackbarPaddingLeft};
-  background: ${({ theme }) => theme.color.surface};
+  background: ${({ theme }) => theme.color.raisedBg};
   background-image: linear-gradient(
     ${({ theme, $tone }) => toneTint($tone, theme)},
     ${({ theme, $tone }) => toneTint($tone, theme)}

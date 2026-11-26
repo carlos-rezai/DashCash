@@ -16,5 +16,6 @@ export const Mark = styled.span<StyledProps>`
   height: ${({ $shape, $size, theme }) =>
     $shape === 'line' ? theme.size.swatchLine : `${String($size)}px`};
   background: ${({ $color }) => $color};
-  border-radius: ${({ $shape }) => ($shape === 'circle' ? '50%' : '0')};
+  border-radius: ${({ $shape, theme }) =>
+    $shape === 'circle' ? '50%' : theme.size.radius};
 `;

@@ -24,7 +24,7 @@ export const Frame = styled.button<{ $active: boolean }>`
   border: 1px solid
     ${({ $active, theme }) =>
       $active ? theme.color.accent[400] : theme.color.divider};
-  border-radius: 0;
+  border-radius: ${({ theme }) => theme.size.radius};
 
   &:hover:enabled {
     background: ${({ theme }) => theme.color.accent[100]};
@@ -46,7 +46,8 @@ export const Mark = styled.span<MarkProps>`
     $shape === 'line' ? theme.size.chipSwatchLine : theme.size.chipSwatch};
   background: ${({ $color, $filled }) => ($filled ? $color : 'transparent')};
   border: 1px solid ${({ $color }) => $color};
-  border-radius: ${({ $shape }) => ($shape === 'circle' ? '50%' : '0')};
+  border-radius: ${({ $shape, theme }) =>
+    $shape === 'circle' ? '50%' : theme.size.radius};
 `;
 
 // The meta value, muted, with tabular figures.

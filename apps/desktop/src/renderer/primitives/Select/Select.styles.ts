@@ -41,11 +41,11 @@ export const Control = styled.select<ControlProps>`
   font-size: ${({ $size, theme }) => theme.fontSize[$size]};
   line-height: 1.2;
   color: ${(props) => textColour(props, props.theme)};
-  background: ${({ theme }) => theme.color.bg};
+  background: ${({ theme }) => theme.color.inputBg};
   border: 1px solid
     ${({ $tone, theme }) =>
       $tone === 'warning' ? theme.color.warning : theme.color.divider};
-  border-radius: 0;
+  border-radius: ${({ theme }) => theme.size.radius};
   caret-color: ${({ theme }) => theme.color.accent[500]};
   cursor: pointer;
 

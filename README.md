@@ -32,7 +32,7 @@ Every change goes through the same gate, whether I wrote it or an AI agent did. 
 | Formatting | Prettier (`--check`) | CI | 01 |
 | Linting, zero warnings | ESLint (`--max-warnings 0`) | CI | 01 |
 | Strict types | TypeScript `strict`, `noUncheckedIndexedAccess` | CI | 01 |
-| Money is never a plain number | `Cents` branded type + lint rule | CI | 08 |
+| Money is never a plain number | `Cents` branded type + lint rule | CI | 06 (type), 08 (lint rule) |
 | Architecture layers | dependency-cruiser | CI | 01 |
 | Unit tests | Vitest | CI | 01 |
 | Dependency audit, all severities | `npm audit` + exceptions file with expiry | CI, daily | 02 |
@@ -68,6 +68,7 @@ flowchart LR
   main --> contract
   contract --> domain
   renderer --> contract
+  renderer --> domain
 ```
 
 - **domain** is pure TypeScript: no React, no Electron, no I/O. All money math lives here, which is why unit and mutation tests focus here.
@@ -88,7 +89,7 @@ Folder structure, file naming and commit rules are in [docs/conventions.md](docs
 Requirements: Node (version in `.nvmrc`), npm.
 
 ```bash
-npm ci               # installs the Electron binary too, through the postinstall script
+npm ci               # installs the Electron binary and Chromium for the Story tests, through the postinstall script
 npm run dev          # start the app with hot reload
 npm run storybook    # browse every component in isolation
 npm run verify       # everything CI checks, except end-to-end tests

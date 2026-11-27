@@ -13,7 +13,7 @@ release/
 storybook-static/
 
 # Test and quality output
-coverage/
+/coverage/
 playwright-report/
 test-results/
 .stryker-tmp/

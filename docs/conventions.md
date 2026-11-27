@@ -34,6 +34,8 @@ feature PR.
 - **End-to-end** (Playwright, `e2e/`): one test per main user flow, written RED in the ticket that completes the flow. A main user flow is a goal the user reaches across pages, IPC and the database, such as importing a CSV or creating an account. A behaviour inside one component is never an end-to-end test.
 - Aim for a handful of end-to-end tests per feature at most; everything else belongs a layer lower.
 - A test that checks the state of the repository and so fails inside Stryker's sandbox (formatting, lint, tracked files) is excluded from mutation runs by name, in the Stryker Vitest config; a file joins that list only through a ticket that names it.
+- A story that checks resting colours renders the element, and everything that contains it, inside a container with pointer-events: none until those colours are read, and checks that the element does not match :hover first. Chromium on Linux can apply :hover without pointer movement, and hovering a label also hovers the control it labels, so a wrapper outside the container can still hover the element.
+- A font check compares the family name without quotes: Chromium quotes only names that contain a space.
 
 ## Branches and pull requests
 
@@ -123,7 +125,7 @@ status: open   # open | in-progress | done
 - A test that proves a configuration gate lives in `gates/<gate>/`, e.g.
   `gates/formatting/formatting.test.ts`. An executable gate is a script in
   `scripts/<module>/` with its test beside it.
-- No `index.ts` per module. Category folders (`primitives/`, `components/`, `utils/`, `tokens/`) have one barrel each.
+- No `index.ts` per module. Category folders (`primitives/`, `components/`, `utils/`, `tokens/`) have one barrel each, `index.ts`.
 - Each feature has one `index.ts`; never import from inside another feature **(enforced)**.
 - `test-support/` is never imported by shipping code **(enforced)**.
 - An IPC call with one caller stays in its feature's `api/`; it moves to `renderer/api/` when a second feature needs it.

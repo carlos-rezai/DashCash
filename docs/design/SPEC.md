@@ -54,7 +54,7 @@ Industry's `styles.css` is loaded first; `tokens/dashcash-dark.css` overrides it
 | `--sb-card-border` | text @ 8% | Card, stat tile and modal outline (softer than `--color-divider`, which stays for rules and controls) |
 | `--color-text` [color.text] | `#e9f1fa` | Ink (Industry accent-100 "paper") |
 | `--sb-text-muted` | text @ 62% | Secondary text |
-| `--sb-text-faint` | text @ 42% | Captions, axis labels |
+| `--sb-text-faint` | text @ 60% | Captions, axis labels |
 | `--color-divider` | text @ 16% | All 1px hairlines |
 | `--sb-hover` | text @ 6% | Row / tile hover |
 | `--sb-backdrop` | `rgba(9,15,22,.66)` | Modal backdrop |
@@ -66,9 +66,9 @@ Industry's `styles.css` is loaded first; `tokens/dashcash-dark.css` overrides it
 - **Milestone (mortgage payoff) = positive green**, never the warning amber: `--sb-milestone` (#7cc59a), `--sb-milestone-tint` (16 %), `--sb-milestone-row` (12 % over sunken). Used for the graph's payoff band, dashed payoff line, payoff dot and flag label; Tag `tone="milestone"` (year tag "Payoff Mar 2031", month tag "Paid off" / "Mortgage paid off"); the payoff month row in both year tables; the "Paid off" value on the mortgage AccountCard.
 - Neutral ramp follows the same inversion (`--color-neutral-100 … 900`).
 
-**Money polarity**, `--sb-positive #7cc59a` (green) for positive amounts, `--sb-negative #e8877b` (red) for negative ones, plain ink for 0. Applied by Amount's default `tone="auto"`. The mortgage Restschuld is debt, so it shows red although stored positive. Compare change is signed as the effect on your money (previous − last month): more spending = negative/red, less = positive/green. Compare month cells are spending magnitudes and stay plain ink.
+**Money polarity**, `--sb-positive #7cc59a` (green) for positive amounts, `--sb-negative #ed8c80` (red) for negative ones, plain ink for 0. Applied by Amount's default `tone="auto"`. The mortgage Restschuld is debt, so it shows red although stored positive. Compare change is signed as the effect on your money (previous − last month): more spending = negative/red, less = positive/green. Compare month cells are spending magnitudes and stay plain ink.
 
-**Status**, `--sb-warning #e0b469` (+ `--sb-warning-tint` 14%), `--sb-danger #e8877b` (+ tint). Only used for headroom, balance-check, delete.
+**Status**, `--sb-warning #e0b469` (+ `--sb-warning-tint` 14%), `--sb-danger #ed8c80` (+ tint, which keeps `#e8877b`). Only used for headroom, balance-check, delete.
 
 **Data palette** (equal OKLCH lightness, low chroma)
 - Accounts: income `#cdbb8b`, spending `#d69c8e`, savings `#94bce3`, card `#b3a3d1`, mortgage `#e9f1fa`.
@@ -94,10 +94,10 @@ Industry's `styles.css` is loaded first; `tokens/dashcash-dark.css` overrides it
 | Component | Props |
 | --- | --- |
 | **Icon** | `glyph: IconName`, `size?: number = 16` |
-| **Button** | `label?: string` (omit → square icon button), `variant?: 'primary'\|'secondary'\|'ghost'\|'danger' = 'secondary'`, `size?: 'sm'\|'md' = 'md'` (28 / 34 px high), `icon?`, `iconRight?: IconName`, `block?: boolean`, `disabled?: boolean`, `title?: string`, `onClick?: (e) => void`. Primary = solid accent (the one solid object). Disabled = 45% opacity. |
-| **Amount** | `cents: Cents \| null` (null → "-"), `sign?: 'auto'\|'always'\|'none'`, `size?: 'sm' 13\|'md' 14\|'lg' 22\|'xl' 34` (lg/xl in Barlow Condensed), `tone?: 'auto'\|'muted'\|'neutral'\|'positive'\|'negative'\|'warning'\|'danger' = 'auto'` (`auto`: > 0 green, < 0 red, 0 ink; `muted` = auto at 62% opacity for projected values; `neutral` opts out), `whole?: boolean`, `strong?: boolean` |
+| **Button** | `label?: string` (omit → square icon button), `variant?: 'primary'\|'secondary'\|'ghost'\|'danger' = 'secondary'`, `size?: 'sm'\|'md' = 'md'` (28 / 36 px high), `icon?`, `iconRight?: IconName`, `block?: boolean`, `disabled?: boolean`, `title?: string`, `onClick?: (e) => void`. Primary = solid accent (the one solid object). Disabled = 45% opacity. |
+| **Amount** | `cents: Cents \| null` (null → "-"), `sign?: 'auto'\|'always'\|'none'`, `size?: 'sm' 13\|'md' 14\|'lg' 22\|'xl' 34` (lg/xl in Barlow Condensed), `tone?: 'auto'\|'muted'\|'neutral'\|'positive'\|'negative'\|'warning'\|'danger' = 'auto'` (`auto`: > 0 green, < 0 red, 0 ink; `muted` = the same colour as `auto` (full opacity, for contrast; the projected value is marked by another cue); `neutral` opts out), `whole?: boolean`, `strong?: boolean` |
 | **Tag** | `label: string`, `tone?: TagTone = 'neutral'`, `icon?: IconName`, `swatch?: string` (8px square). Fills (bg / text): accent = accent-300 / accent-900, neutral = neutral-300 / neutral-900 (one step above the 100-level card surface so tags read on filled cards; ≥ 6:1), outline = transparent / accent-600 + accent-400 border, warning / danger / milestone = their 14 % tint / base colour |
-| **Input** | `value: string`, `onChange(value: string)`, `placeholder?`, `icon?` (left), `suffix?` (e.g. "€"), `align?: 'left'\|'right'`, `size?: 'sm' 30\|'md' 36`, `numeric?`, `width?` |
+| **Input** | `value: string`, `onChange(value: string)`, `placeholder?`, `icon?` (left), `suffix?` (e.g. "€"), `align?: 'left'\|'right'`, `size?: 'sm' 28\|'md' 36`, `numeric?`, `width?` |
 | **Select** | `value: string`, `options: {value,label,color?}[]`, `onChange(value)`, `placeholder?` (empty option), `showSwatch?` (shows selected option colour), `size?`, `width?`, `tone?: 'default' | 'warning'` (warning border + placeholder colour, for fields that need attention) |
 | **Segmented** | `value: string`, `options: {value,label}[]`, `onChange(value)`, selected = accent fill |
 | **Swatch** | `color: string`, `size?: number = 10`, `shape?: 'square'\|'circle'\|'line'` (circle = account marker; square = category) |

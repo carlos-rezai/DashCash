@@ -1,14 +1,17 @@
 import type { Workflow } from '../../scripts/readWorkflow/readWorkflow.ts';
 
-// npm ci installs the Electron binary through the root postinstall script, so
-// no workflow step installs it and nothing in .npmrc may skip the script.
+// npm ci installs the Electron binary and the headless Chromium of the Story
+// tests through the root postinstall script, so no workflow step installs
+// Electron and nothing in .npmrc may skip the script.
 const INSTALL_ELECTRON = 'install-electron';
+const POSTINSTALL =
+  'install-electron && playwright install --only-shell chromium';
 const IGNORE_SCRIPTS_LINE = /^[ \t]*ignore-scripts[ \t]*=[ \t]*true[ \t]*\r?$/m;
 
 // What stands between npm ci and the Electron binary, one line each: a
-// postinstall script that is missing or not exactly install-electron, every
-// workflow step that runs install-electron, named by file and job, and an
-// ignore-scripts=true line in .npmrc.
+// postinstall script that is missing or not exactly the Electron and Chromium
+// install, every workflow step that runs install-electron, named by file and
+// job, and an ignore-scripts=true line in .npmrc.
 export function findElectronInstallProblems(
   scripts: Record<string, string>,
   workflows: Record<string, Workflow>,
@@ -19,11 +22,11 @@ export function findElectronInstallProblems(
   const postinstall = scripts['postinstall'];
   if (postinstall === undefined) {
     problems.push(
-      `the postinstall script is missing; it must be exactly ${INSTALL_ELECTRON}`,
+      `the postinstall script is missing; it must be exactly ${POSTINSTALL}`,
     );
-  } else if (postinstall !== INSTALL_ELECTRON) {
+  } else if (postinstall !== POSTINSTALL) {
     problems.push(
-      `the postinstall script is ${JSON.stringify(postinstall)}; it must be exactly ${INSTALL_ELECTRON}`,
+      `the postinstall script is ${JSON.stringify(postinstall)}; it must be exactly ${POSTINSTALL}`,
     );
   }
 

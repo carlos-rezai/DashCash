@@ -20,6 +20,7 @@ Read when relevant: `docs/quality-gates.md` before adding or changing a gate, `d
 - Before adding `eslint-disable`, `@ts-ignore`, `@ts-expect-error`, `.skip`, `.only` or a retry.
 - Before a larger change: write a short plan and wait.
 - When the spec is unclear or contradicts itself.
+- When a failing test looks wrong rather than the implementation: the builder never edits the test; stop and report it.
 
 ## Commands
 
@@ -53,6 +54,11 @@ Edit files with the Edit and Write tools, not with sed or shell redirection in B
 - Build 1:1 from the prototype; never redesign while building.
 - Theme tokens only; no hard-coded colours, sizes or spacing.
 - Stories cover every state (empty, loading, error, warning where relevant).
+- A prototype element's class carries its states from the prototype's `styles.css` (hover, focus-visible, caret): build and test those states too.
+- Add no styling the prototype lacks, however sensible; if something beyond it seems needed, stop and report instead.
+- "1:1" means the visible result. A prototype rule that changes nothing in any state the app can reach, wide, narrow and short, is left out and listed in the ticket's Notes. Every rule that stays has a story that fails without it. A rule the ticket names explicitly stays even if no story can fail without it.
+- An empty string is absent, as in the prototype: every optional text prop treats "" like undefined, including its fallback. A default parameter alone is not enough.
+- Reuse an existing Theme token (e.g. `size.controlHeight`) before adding a new one.
 
 ## Tests
 
@@ -60,10 +66,14 @@ Edit files with the Edit and Write tools, not with sed or shell redirection in B
 - Invented data only. Never real bank data, IBANs or names.
 - UI behaviour: story with a `play` function. Complete user flow: Playwright in `e2e/`.
 - Say so when you wrote both the code and its tests.
+- Every prop and every style rule has a story that fails when it is removed.
+- Confirm a new assertion fails without the change it covers before keeping it; an assertion that passes either way is dropped, not committed.
+- `userEvent.hover` from `storybook/test` does not make Chromium apply `:hover`: check hover styles by reading the `:hover` rule, and drive focus for real with `userEvent.tab()`.
+- A reviewer may temporarily change the code to prove a test fails without it, but restores it and confirms `git status --porcelain` is empty.
 
 ## Never
 
 - Commit to `main`, or commit `.env`, `*.db`, real CSVs or app data.
 - Publish, release or push tags.
 - Add a `Co-Authored-By` line, or any other trailer or body, to a commit message.
-- Work around a refusal: when a hook, a permission rule or a safety check denies an action, stop and report it. Never make the same change through another tool or command.
+- Work around a refusal: when a hook, a permission rule or a safety check denies an action, stop and report it. Never make the same change through another tool or command. The one exception: when the refusal itself names the allowed form (a push as its own command, say), using that form is not a workaround.

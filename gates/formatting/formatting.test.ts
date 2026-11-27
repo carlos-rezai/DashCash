@@ -47,6 +47,7 @@ const CHECKED_FILES = [
   'packages/domain/src/money/moneySample.ts',
   'scripts/scriptSample.ts',
   'docs/features/01-sample/docsSample.ts',
+  'gates/coverage/coverageSample.ts',
 ];
 
 // Unformatted content for each ignored file, by extension.

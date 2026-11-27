@@ -85,6 +85,41 @@
 | **Layer rule** (updated) | A dependency-cruiser rule that forbids an import across the architecture: upwards between layers, into another feature, out of domain, into `test-support/` from shipping code, or of SQLite from outside `main/db/`. | Guard test, import rule |
 | **Shipping code** (new) | Every source file that is not a test, a story, `test-support/` or `e2e/`. | Production code, src |
 
+## Design system
+
+| Term | Definition | Aliases to avoid |
+| --- | --- | --- |
+| **Theme** (new) | The one object holding every **Token** value the renderer's styles read, typed as styled-components' `DefaultTheme`. | Stylesheet, CSS variables, palette |
+| **Token** (new) | One named value of the **Theme**: a colour, font, size, spacing, shadow or duration. | Variable, magic number |
+| **Primitive** (new) | A React component of the primitives **Layer** built from **Tokens** only, such as Button, Amount or Loader. | Atom, base component |
+| **Component** (new) | A React component of the components **Layer** built from **Primitives**, such as Card, Modal or YearTable. | Widget, molecule |
+| **Feature component** (new) | A React component inside a feature module under `features/<name>/` that reads data, such as BalanceChart. | Container, smart component |
+| **Tone** (new) | The named colour role a **Primitive** or **Component** takes, such as Amount's `auto`, Tag's `milestone` or Snackbar's `warning`, mapped to **Tokens**. | Colour, status, kind |
+| **Control height** (new) | One of the two heights every interactive control has: md 36 px (forms, modals, page headers) or sm 28 px (toolbars, tables, card headers, snackbars). | Size, density |
+| **Story** (new) | One named state of a **Primitive**, **Component** or **Feature component** in its stories file beside it. | Example, demo, fixture |
+| **Play function** (new) | The interaction script of a **Story**: it clicks, types and asserts what the user sees. | Interaction test, script |
+| **Story test** (new) | A **Story** run as a Vitest test in headless Chromium: it renders, runs its **Play function** and the **Accessibility check**. | Component test, snapshot test |
+| **Accessibility check** (new) | axe run in every **Story test** through Storybook's a11y addon; a violation fails the test, colour contrast included, like every other rule (design log D1). | a11y lint, audit |
+| **Story check** (new) | The gate that every **Primitive**, **Component** and **Feature component** has its stories file. | Story lint |
+| **Storybook MCP** (new) | The MCP endpoint the running Storybook dev server serves, through which agents list and inspect **Stories**. | Storybook server, MCP plugin |
+
+## Money
+
+| Term | Definition | Aliases to avoid |
+| --- | --- | --- |
+| **Cents** (new) | Money as a whole number of euro cents: the branded type every money value carries. | Amount, euros, float, value |
+| **Money format** (new) | How **Cents** read on screen: German grouping and decimals, a no-break space before `€`, U+2212 for minus, such as `−86,40 €`. | Currency string, locale format |
+| **Polarity** (new) | The colour of money by its sign: green above 0, red below 0, ink at 0. | Sign colour, red/green |
+| **Milestone tone** (new) | The colour role of the mortgage payoff: the positive green, never the warning amber. | Payoff highlight, success colour |
+
+## Coverage
+
+| Term | Definition | Aliases to avoid |
+| --- | --- | --- |
+| **Changed lines** (new) | The lines of **Shipping code** added or changed between the merge base with `origin/main` and the working tree, plus every line of an untracked file. | Diff, patch, branch range |
+| **Changed-lines coverage** (new) | The share of coverable **Changed lines** that the unit tests or the **Story tests** run. | Patch coverage, diff coverage |
+| **Coverage threshold** (new) | The lowest **Changed-lines coverage** that **Verify** passes with, kept in a file in `quality/`; it is only ever raised. | Minimum coverage, coverage target |
+
 ## Desktop app
 
 | Term | Definition | Aliases to avoid |
@@ -149,6 +184,11 @@
 - (new) Every **Renovate PR** title is assembled from the **Commit-message parts**; a **Hold rule** keeps a dependency from getting a PR for the held update.
 - (new) Each part of the **Gate wiring** has one gate folder; its **Problem finder**, if it has one, is the module beside the test.
 - (new) The **Dangerous-git hook** and the **Claude folder guard** are Claude Code hooks; neither is a **Gate**.
+- (new) The **Theme** holds every **Token**; a **Primitive** reads only **Tokens**, a **Component** combines **Primitives**, and a **Feature component** combines both and reads data.
+- (new) Every **Primitive**, **Component** and **Feature component** has exactly one stories file with one or more **Stories**; the **Story check** fails **Verify** when the file is missing.
+- (new) Each **Story** is one **Story test**; its **Play function** and the **Accessibility check** run inside it, and **Verify** runs every **Story test**.
+- (new) **Changed-lines coverage** counts the unit tests and the **Story tests** together; below the **Coverage threshold** it fails **Verify**.
+- (new) The Amount **Primitive** shows **Cents** in the **Money format**, coloured by **Polarity** unless its **Tone** says otherwise; the payoff uses the **Milestone tone**.
 
 ## Example dialogue
 
@@ -178,6 +218,14 @@
 > **Domain expert:** "That is a **Hold rule**: TypeScript majors wait until typescript-eslint supports them, and a human lifts the rule. Every PR Renovate does open gets its title from the **Commit-message parts**, so it still reads `chore: [supply-chain] update npm dependencies`."
 > **Dev:** "And if I break the daily job's wiring?"
 > **Domain expert:** "Its gate test fails, and the **Problem finder** beside it names the missing step. Because the finder is **Shipping code**, **Mutation testing** also checks that its tests would notice."
+> **Dev:** "I built a `HeadroomMeter` in the saving feature module. Is a Vitest test enough?"
+> **Domain expert:** "No. It is a **Feature component**, so the **Story check** wants its stories file. Give it one **Story** per state, neutral, warning and danger, and a **Play function** where it reacts to the user. Each **Story** runs as a **Story test** in **Verify**."
+> **Dev:** "The danger **Story** fails with 'ARIA meter nodes must have an accessible name'. The prototype shows no name."
+> **Domain expert:** "That is the **Accessibility check**. Add the accessible name without changing what anyone sees, as the Switch's `ariaLabel` does. A colour-contrast failure fails it too, like every other rule; the human raised the faint and red colours to 4.5:1 (design log D1)."
+> **Dev:** "The meter shows `−20,00 €`. Do I format it myself?"
+> **Domain expert:** "Never. The amount is **Cents**; the Amount **Primitive** renders it in the **Money format** through the domain's formatter and colours it by **Polarity**, unless you pass a **Tone** such as `danger`. Colours come from **Tokens** of the **Theme**, never a hex in your styles."
+> **Dev:** "My pull request is red on `check:coverage`, but every test passes."
+> **Domain expert:** "Your **Changed-lines coverage** is under the **Coverage threshold**: some of your **Changed lines** run in no unit test and no **Story test**. The gate names them by file. Cover them; the threshold only goes up."
 
 ## Flagged ambiguities
 
@@ -190,8 +238,8 @@
 - "hook" (new) means a git hook (the **Commit-msg hook**) and a Claude Code hook (the **Claude folder guard**, the dangerous-git hook). Name which one; neither is a **Gate**, because CI decides.
 - "exception" (new) means an **Audit exception** and a thrown error. Say **Audit exception** for the file entry.
 - "allowlist" (new) is only the **License allowlist**; accepted advisories are **Audit exceptions**, not an allowlist.
-- "threshold" (new) means the **Break threshold** and Stryker's `high` and `low` thresholds, which only colour the **Mutation report**; later also the coverage threshold (06). Say **Break threshold** for the one that fails a run.
-- "coverage" (new) means test coverage of lines and Stryker's per-test coverage of **Mutants**. A **Mutation score** is not coverage; a **Mutant** no test reaches is a **Surviving mutant**.
+- "threshold" (updated) means the **Break threshold**, the **Coverage threshold** and Stryker's `high` and `low` thresholds, which only colour the **Mutation report**. Say **Break threshold** for the one that fails a **Mutation run**, **Coverage threshold** for the one that fails **Verify** on **Changed lines**.
+- "coverage" (updated) means test coverage of lines and Stryker's per-test coverage of **Mutants**. The gate judges only **Changed-lines coverage**, never the coverage of the whole code. A **Mutation score** is not coverage; a **Mutant** no test reaches is a **Surviving mutant**.
 - "nightly" and "daily" (new) name the same schedule: the **Mutation run** is a job of the **Daily run**, not a workflow of its own.
 - "mutation" (new) is the technique; one edit is a **Mutant**. Avoid "a mutation" for a single edit.
 - "workflow" (new) means a GitHub Actions file and the planning-and-build workflow of `docs/conventions.md`. Say "CI workflow" for the file, or name it: the push workflow, the pull-request workflow, the **Daily run**.
@@ -208,3 +256,10 @@
 - "hold" and "disabled" (new) both name a **Hold rule**, whatever Renovate option it uses (`enabled: false` or `allowedVersions`). Say **Hold rule**.
 - "hook" (updated): the dangerous-git hook is now the **Dangerous-git hook**.
 - "debug port" (new) is only the **Debug port** of `npm run dev`; the port Playwright opens to drive the **App build** is Playwright's own and not part of the app.
+- "component" (new) means any React component and the components **Layer**. Say **Primitive**, **Component** or **Feature component** for the three kinds, and "React component" for any of them.
+- "story" (new) means a Storybook **Story** and a PRD's user story. Say **Story** for Storybook and "user story" for the PRD.
+- "variant" and "tone" (new): a Button's `variant` is its look (primary, secondary, ghost, danger), a Loader's its motion (draw, march, orbit, grow), a Logo's its form (full, mark). A **Tone** is always a colour role.
+- "milestone" (new) means the **Milestone tone** of the mortgage payoff and a streak's next milestone (3, 6, 12 …, from 18). Name which.
+- "amount" (new) means the Amount **Primitive** and a sum of money. Money is **Cents**; Amount is the **Primitive** that shows it.
+- "token" (new) is only a **Token** of the **Theme**, never a parser or login token.
+- "Chromium" (new) means the headless browser `npm ci` installs for the **Story tests**, not the Chromium inside the **Electron binary**, which runs the app and the **End-to-end tests**.

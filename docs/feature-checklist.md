@@ -11,7 +11,7 @@ Status: `planned` → `in-progress` (feature branch open) → `done` (merged int
 | 03 | mutation-testing | StrykerJS on `packages/domain`, `scripts/` and `gates/`, informative first, then a break threshold that only goes up; the licence check fails closed on a malformed lockfile | refactored |
 | 04 | desktop-shell | Electron main and preload with secure defaults and CSP, typed IPC bridge, SQLite and migrations, data folder, single instance, dev-only debug port, Playwright harness with the first end-to-end test, flaky quarantine | refactored |
 | 05 | gate-maintenance | App protocol serves only the host dashcash; quarantined tests left out also when tagged or in a subfolder of `e2e/`, on Linux and Windows; Renovate titles from commit-message parts, `@types/node` capped at the Node major, TypeScript and Node majors held; gate wiring test split by what it checks, each problem finder a mutated module; shared date rules and today as a parameter in the audit and quarantine checks; Playwright config through the shared quarantine reader; `npm ci` installs the Electron binary; configurable debug port; break threshold raised to the measured score; dangerous-git hook blocks chained pushes (built by the human) | refactored |
-| 06 | design-system | Theme and tokens, primitives, components, Storybook with story tests, accessibility check and MCP, every component has a story check, coverage on changed lines, reviewer gets the Storybook MCP tools | planned |
+| 06 | design-system | Theme and tokens, primitives, components, Storybook with story tests, accessibility check and MCP, every component has a story check, coverage on changed lines, reviewer gets the Storybook MCP tools | done |
 | 07 | app-shell | AppShell, Sidebar with collapse, PageLayout, routing with persisted route, empty pages, SnackbarHost, splash, LoadingOverlay, reviewer gets the DevTools MCP tools | planned |
 | 08 | accounts | Five account types, anchor, AccountList, AccountCard, AccountFormModal, delete | planned |
 | 09 | categories | Kinds, 40 category colours, built-in Cash category, CategoryList, create, rename, delete-as-merge | planned |
@@ -22,7 +22,7 @@ Status: `planned` → `in-progress` (feature branch open) → `done` (merged int
 | 14 | uncategorised | UncategorisedPage, sidebar counter, save as exact rule | planned |
 | 15 | imported-files | Archive of original CSVs: download, edit and move, delete file only or file and transactions | planned |
 | 16 | projection | Typical spending (median), mortgage plan, credit card reset, AccountDetail with YearTable and projection assumptions, sparkline | planned |
-| 17 | dashboard | BalanceChart with ranges, toggles and payoff, BalanceTable with edit mode, both persisted | planned |
+| 17 | dashboard | BalanceChart with ranges, toggles and payoff, BalanceTable with edit mode, both persisted; projected values marked by a cue other than colour strength, since contrast blocks (06 design log, D2; the chart's dashed projection line is one) | planned |
 | 18 | saving | Streak rule, goals, StreakStrip, HeadroomMeter, SavingPanel, goal card | planned |
 | 19 | compare | CompareTable with months and years, like-for-like comparison | planned |
 | 20 | import-reminders | Last import per account, stale state, reminder snackbar, Settings page, ReminderSettings | planned |
@@ -37,3 +37,4 @@ Status: `planned` → `in-progress` (feature branch open) → `done` (merged int
 | Feature | Contents |
 | --- | --- |
 | manual-entry | Add a transaction by hand, reconciled with the matching CSV row on the next import |
+| gate-maintenance-2 | `scripts/readWorkflow/` verb-first names; one `GITLEAKS_ACTION` and `isGitleaksStep`, in the secret-scan finder; the Renovate gate's repeated filter and fail function shared; the Electron install finder on the shared readers; a dependency-cruiser `no-circular` rule instead of the protocol test that reads its own source; `.dependency-cruiser.js` covering `gates/`; the flaky end-to-end gate test from 05 ticket 11; `git commit` as its own command in the dangerous-git hook (built by the human); "report verify's exit code" and "write files with the Write tool, never a heredoc" in the build, refactor and planner prompts (built by the human) |

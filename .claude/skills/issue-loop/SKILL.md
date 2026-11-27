@@ -191,6 +191,9 @@ Fill `<path>`, `<feature>`, `<nn>`, `<description>` and `<range>`.
 > - `docs/conventions.md` and CLAUDE.md: layers, filing, naming, `Cents`
 >   for money, stories for new components
 > - UI matches `docs/design/` 1:1
+> - when the diff touches a story or a component and the storybook tools
+>   are available, the changed Stories as Storybook shows them; otherwise
+>   say so in one line
 > - nothing was built that no test or acceptance criterion asks for
 >
 > Change no files. Answer with `APPROVE`, or `CHANGES` followed by a numbered

@@ -1,8 +1,17 @@
 import js from '@eslint/js';
 import vitest from '@vitest/eslint-plugin';
 import prettier from 'eslint-config-prettier';
+import reactHooks from 'eslint-plugin-react-hooks';
+import storybook from 'eslint-plugin-storybook';
 import { defineConfig, globalIgnores } from 'eslint/config';
 import tseslint from 'typescript-eslint';
+
+// The plugin types its rules against typescript-eslint's RuleContext, which
+// ESLint's own config types do not accept; the config is the plugin's own
+// flat recommended config, unchanged.
+const storybookRecommended = /** @type {import('eslint').Linter.Config[]} */ (
+  /** @type {unknown} */ (storybook.configs['flat/recommended'])
+);
 
 export default defineConfig(
   globalIgnores([
@@ -13,7 +22,7 @@ export default defineConfig(
     '**/release/',
     '**/.vite/',
     '**/storybook-static/',
-    '**/coverage/',
+    'coverage/',
     '**/playwright-report/',
     '**/test-results/',
     '**/.stryker-tmp/',
@@ -21,6 +30,8 @@ export default defineConfig(
   ]),
   js.configs.recommended,
   tseslint.configs.strictTypeChecked,
+  reactHooks.configs.flat.recommended,
+  storybookRecommended,
   {
     languageOptions: {
       parserOptions: {

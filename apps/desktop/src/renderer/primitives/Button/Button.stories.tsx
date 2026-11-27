@@ -357,6 +357,21 @@ export const Loading: Story = {
   },
 };
 
+// An empty label is absent: the icon-only button of IconOnly, square at its
+// Control height, one icon and no text, named by its title.
+export const EmptyLabel: Story = {
+  args: { icon: 'trash', label: '', title: 'Delete account', onClick: fn() },
+  play: async ({ args, canvasElement }) => {
+    const button = theButton(canvasElement, 'Delete account');
+    await expectBox(button, 36, 36, 'button');
+    await expectOneIcon(button, 16);
+    await expect(button.textContent.trim()).toBe('');
+
+    await userEvent.click(button);
+    await expect(args.onClick).toHaveBeenCalledTimes(1);
+  },
+};
+
 // An empty title is absent, as in Button.dc.html (title || label): the label
 // is the title.
 export const EmptyTitle: Story = {

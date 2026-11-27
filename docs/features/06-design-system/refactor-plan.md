@@ -104,7 +104,7 @@ score** must stay at or above the **Break threshold** of 83.
 - [x] 02 pin the reveal jump under reduced motion
 - [x] 03 pin the loader under reduced motion
 - [x] 04 pin an empty accordion tag and meta
-- [ ] 05 pin an empty button label
+- [x] 05 pin an empty button label
 - [ ] 06 pin an empty loader label
 - [ ] 07 add the shared computed colour probe
 - [ ] 08 add the shared first family probe

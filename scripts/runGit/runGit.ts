@@ -25,6 +25,13 @@ export function listTrackedPaths(cwd: string): string[] {
     .filter((path) => path !== '');
 }
 
+// Every path git does not track and does not ignore.
+export function listUntrackedPaths(cwd: string): string[] {
+  return runGit(cwd, ['ls-files', '--others', '--exclude-standard', '-z'])
+    .split('\0')
+    .filter((path) => path !== '');
+}
+
 // Every path in the committed tree at HEAD.
 export function listHeadPaths(cwd: string): string[] {
   return runGit(cwd, ['ls-tree', '-r', '--name-only', 'HEAD'])

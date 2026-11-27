@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   listHeadPaths,
   listTrackedPaths,
+  listUntrackedPaths,
   readHeadFile,
   runGit,
 } from './runGit.ts';
@@ -54,6 +55,22 @@ describe('runGit', { timeout: 30_000 }, () => {
       'a.txt',
       'b.txt',
       'docs/note.md',
+    ]);
+  });
+
+  it('lists the untracked paths, leaving out tracked, staged and ignored ones', () => {
+    writeFileSync(join(repo, '.gitignore'), '*.log\n');
+    writeFileSync(join(repo, 'b.txt'), 'staged\n');
+    writeFileSync(join(repo, 'ignored.log'), 'ignored\n');
+    writeFileSync(join(repo, 'naïve file.txt'), 'untracked\n');
+    mkdirSync(join(repo, 'docs', 'deep'));
+    writeFileSync(join(repo, 'docs', 'deep', 'new.md'), 'untracked\n');
+    runGit(repo, ['add', '--', 'b.txt']);
+
+    expect(listUntrackedPaths(repo).sort()).toEqual([
+      '.gitignore',
+      'docs/deep/new.md',
+      'naïve file.txt',
     ]);
   });
 

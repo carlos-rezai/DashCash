@@ -2,6 +2,8 @@ import { useState, type ComponentProps } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import styled from 'styled-components';
 import { expect, fn, userEvent, within } from 'storybook/test';
+import { readComputedColour } from '../../test-support/readComputedColour/readComputedColour.ts';
+import { readFirstFamily } from '../../test-support/readFirstFamily/readFirstFamily.ts';
 import { Icon } from '../Icon/Icon.tsx';
 import { Input } from './Input.tsx';
 
@@ -57,19 +59,6 @@ type MissingAlign = Exclude<ListedAlign, InputAlign>;
 type UnlistedAlign = Exclude<InputAlign, ListedAlign>;
 const NO_MISSING_ALIGN: [MissingAlign] extends [never] ? true : false = true;
 const NO_UNLISTED_ALIGN: [UnlistedAlign] extends [never] ? true : false = true;
-
-// What Chromium computes for a CSS colour, read from a probe element.
-function computedColour(css: string): string {
-  const probe = document.createElement('span');
-  probe.style.color = css;
-  if (probe.style.color === '') {
-    throw new Error(`not a CSS colour: ${css}`);
-  }
-  document.body.append(probe);
-  const value = getComputedStyle(probe).color;
-  probe.remove();
-  return value;
-}
 
 // The border colour the stylesheet gives an element under the pointer: that of
 // the :hover rules that select it. A story's synthetic pointer events do not
@@ -181,11 +170,11 @@ async function expectField(field: HTMLInputElement, look: Look): Promise<void> {
     1,
   );
   await expect(style.backgroundColor, 'fill').toBe(
-    computedColour(INPUT_GROUND),
+    readComputedColour(INPUT_GROUND),
   );
-  await expect(style.color, 'text').toBe(computedColour(INK));
+  await expect(style.color, 'text').toBe(readComputedColour(INK));
   await expect(style.fontSize, 'font size').toBe(look.fontSize);
-  await expect(style.fontFamily.startsWith('Barlow'), 'Barlow').toBe(true);
+  await expect(readFirstFamily(style), 'font').toBe('Barlow');
   for (const side of ['Top', 'Right', 'Bottom', 'Left'] as const) {
     await expect(style[`border${side}Width`], `${side} border width`).toBe(
       '1px',
@@ -194,7 +183,7 @@ async function expectField(field: HTMLInputElement, look: Look): Promise<void> {
       'solid',
     );
     await expect(style[`border${side}Color`], `${side} border colour`).toBe(
-      computedColour(DIVIDER),
+      readComputedColour(DIVIDER),
     );
   }
 
@@ -279,7 +268,7 @@ export const LeftIcon: Story = {
     // Muted, read while the holder keeps the pointer off.
     await expect(field.matches(':hover'), 'hovered').toBe(false);
     await expect(getComputedStyle(svg).color, 'icon colour').toBe(
-      computedColour(TEXT_MUTED),
+      readComputedColour(TEXT_MUTED),
     );
     await expectField(field, { height: 36, fontSize: '14px' });
     const reference = within(canvasElement)
@@ -317,7 +306,7 @@ export const MoneyField: Story = {
     await expect(
       getComputedStyle(within(canvasElement).getByText('€')).color,
       'suffix colour',
-    ).toBe(computedColour(TEXT_MUTED));
+    ).toBe(readComputedColour(TEXT_MUTED));
     await expectField(field, { height: 36, fontSize: '14px' });
 
     const style = getComputedStyle(field);
@@ -377,7 +366,7 @@ export const HoverAndFocus: Story = {
   play: async ({ canvasElement }) => {
     const field = theField(canvasElement, 'Merchant');
     await expect(getComputedStyle(field).caretColor, 'caret').toBe(
-      computedColour(ACCENT),
+      readComputedColour(ACCENT),
     );
 
     await expect(hoverBorderColours(field), 'hover border').toEqual([
@@ -390,7 +379,7 @@ export const HoverAndFocus: Story = {
     const style = getComputedStyle(field);
     for (const side of ['Top', 'Right', 'Bottom', 'Left'] as const) {
       await expect(style[`border${side}Color`], `${side} focus border`).toBe(
-        computedColour(ACCENT),
+        readComputedColour(ACCENT),
       );
     }
     await expect(style.outlineOffset, 'outline offset').toBe('0px');

@@ -1,6 +1,7 @@
 import type { ComponentProps } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, within } from 'storybook/test';
+import { readComputedColour } from '../../test-support/readComputedColour/readComputedColour.ts';
 import { Icon } from '../Icon/Icon.tsx';
 import { Tag, type TagTone } from './Tag.tsx';
 
@@ -58,19 +59,6 @@ type MissingProp = Exclude<ListedProp, TagProp>;
 type UnlistedProp = Exclude<TagProp, ListedProp>;
 const NO_MISSING_PROP: [MissingProp] extends [never] ? true : false = true;
 const NO_UNLISTED_PROP: [UnlistedProp] extends [never] ? true : false = true;
-
-// What Chromium computes for a CSS colour, read from a probe element.
-function computedColour(css: string): string {
-  const probe = document.createElement('span');
-  probe.style.color = css;
-  if (probe.style.color === '') {
-    throw new Error(`not a CSS colour: ${css}`);
-  }
-  document.body.append(probe);
-  const value = getComputedStyle(probe).color;
-  probe.remove();
-  return value;
-}
 
 // What Chromium computes as the letter spacing of a probe at the tag's font
 // size, for a CSS length such as 0.02em.
@@ -132,9 +120,11 @@ async function expectTag(
     TAG_HEIGHT,
     1,
   );
-  await expect(style.backgroundColor, 'fill').toBe(computedColour(look.fill));
+  await expect(style.backgroundColor, 'fill').toBe(
+    readComputedColour(look.fill),
+  );
   await expect(getComputedStyle(label).color, 'text').toBe(
-    computedColour(look.text),
+    readComputedColour(look.text),
   );
   await expect(getComputedStyle(label).fontSize, 'font size').toBe(
     TAG_FONT_SIZE,
@@ -149,7 +139,7 @@ async function expectTag(
     const noBorder =
       style.borderTopStyle === 'none' ||
       style.borderTopWidth === '0px' ||
-      style.borderTopColor === computedColour(TRANSPARENT);
+      style.borderTopColor === readComputedColour(TRANSPARENT);
     await expect(noBorder, 'no visible border').toBe(true);
   } else {
     for (const side of ['Top', 'Right', 'Bottom', 'Left'] as const) {
@@ -160,7 +150,7 @@ async function expectTag(
         'solid',
       );
       await expect(style[`border${side}Color`], `${side} border colour`).toBe(
-        computedColour(look.border),
+        readComputedColour(look.border),
       );
     }
   }
@@ -332,7 +322,7 @@ export const WithSwatch: Story = {
     });
     await expectNoIcon(tag);
 
-    const colour = computedColour(CATEGORY_2);
+    const colour = readComputedColour(CATEGORY_2);
     const swatches = [...tag.querySelectorAll('*')].filter(
       (element) => getComputedStyle(element).backgroundColor === colour,
     );

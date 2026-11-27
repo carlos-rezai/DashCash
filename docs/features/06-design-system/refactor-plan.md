@@ -110,7 +110,7 @@ score** must stay at or above the **Break threshold** of 83.
 - [x] 08 add the shared first family probe
 - [x] 09 add the shared hover probe
 - [x] 10 use shared probes in the amount stories
-- [ ] 11 use shared probes in the button stories
+- [x] 11 use shared probes in the button stories
 - [ ] 12 use shared probes in the checkbox stories
 - [ ] 13 use shared probes in the chip stories
 - [ ] 14 use shared probes in the input stories

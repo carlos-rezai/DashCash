@@ -2,6 +2,7 @@ import { useState, type ComponentProps } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import styled from 'styled-components';
 import { expect, fn, userEvent, within } from 'storybook/test';
+import { readFirstFamily } from '../../test-support/readFirstFamily/readFirstFamily.ts';
 import { Button } from './Button.tsx';
 
 // The colours a reader sees, written out from SPEC section 2 and
@@ -221,8 +222,7 @@ export const Medium: Story = {
     const style = getComputedStyle(button);
     await expect(style.fontSize).toBe('14px');
     await expect(style.fontWeight).toBe('600');
-    const family = style.fontFamily.split(',')[0]?.trim().replaceAll('"', '');
-    await expect(family).toBe('Barlow Condensed');
+    await expect(readFirstFamily(style)).toBe('Barlow Condensed');
   },
 };
 

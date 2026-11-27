@@ -335,6 +335,21 @@ export const Checking: Story = {
   },
 };
 
+// An empty label is absent: no label element, and the status is named Loading.
+export const EmptyLabel: Story = {
+  args: { variant: 'march', size: 28, label: '', delay: 0 },
+  play: async ({ canvasElement }) => {
+    const status = within(canvasElement).getByRole('status', {
+      name: 'Loading',
+    });
+    await readMark(status, 28, true);
+
+    await expect(status.children).toHaveLength(1);
+    await expect(status.children.item(0)?.tagName).toBe('svg');
+    await expect(status.textContent).toBe('');
+  },
+};
+
 // Inside a button the Loader takes the colour of the text around it.
 const PositiveText = styled.span`
   color: ${({ theme }) => theme.color.positive};

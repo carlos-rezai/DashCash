@@ -123,7 +123,7 @@ score** must stay at or above the **Break threshold** of 83.
 - [x] 21 use shared probes in the accordion stories
 - [x] 22 use shared probes in the card stories
 - [x] 23 use shared probes in the form field stories
-- [ ] 24 use shared probes in the logo stories
+- [x] 24 use shared probes in the logo stories
 - [ ] 25 use shared probes in the modal stories
 - [ ] 26 use shared probes in the nav item stories
 - [ ] 27 use shared probes in the page header stories

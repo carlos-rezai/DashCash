@@ -2,6 +2,8 @@ import type { ComponentProps } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import styled from 'styled-components';
 import { expect, within } from 'storybook/test';
+import { readComputedColour } from '../../test-support/readComputedColour/readComputedColour.ts';
+import { readFirstFamily } from '../../test-support/readFirstFamily/readFirstFamily.ts';
 import * as components from '../index.ts';
 import { Logo } from './Logo.tsx';
 
@@ -69,25 +71,6 @@ const SIZE_IS_NUMBER: [LogoSize] extends [number]
     ? true
     : false
   : false = true;
-
-// What Chromium computes for a CSS colour, read from a probe element.
-function computedColour(css: string): string {
-  const probe = document.createElement('span');
-  probe.style.color = css;
-  if (probe.style.color === '') {
-    throw new Error(`not a CSS colour: ${css}`);
-  }
-  document.body.append(probe);
-  const value = getComputedStyle(probe).color;
-  probe.remove();
-  return value;
-}
-
-// The first family of a computed font-family, without quotes: Chromium quotes
-// only names that contain a space.
-function firstFamily(style: CSSStyleDeclaration): string | undefined {
-  return style.fontFamily.split(',')[0]?.trim().replaceAll('"', '');
-}
 
 // The light logo sits on the light ground it is drawn for.
 const LightGround = styled.div`
@@ -162,7 +145,7 @@ async function expectLogo(
   for (const path of paths) {
     const style = getComputedStyle(path);
     await expect(style.stroke, 'stroke colour').toBe(
-      computedColour(look.markColour),
+      readComputedColour(look.markColour),
     );
     await expect(Number.parseFloat(style.strokeWidth), 'stroke width').toBe(
       look.strokeWidth,
@@ -196,9 +179,9 @@ async function expectLogo(
   const style = getComputedStyle(word);
   const wordBox = word.getBoundingClientRect();
   await expect(style.color, 'wordmark colour').toBe(
-    computedColour(look.inkColour),
+    readComputedColour(look.inkColour),
   );
-  await expect(firstFamily(style), 'wordmark font').toBe(HEADING_FONT);
+  await expect(readFirstFamily(style), 'wordmark font').toBe(HEADING_FONT);
   await expect(style.fontWeight, 'wordmark weight').toBe(HEADING_WEIGHT);
   await expect(style.fontSize, 'wordmark size').toBe(`${String(fontSize)}px`);
   await expect(

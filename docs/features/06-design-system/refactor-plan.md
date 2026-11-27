@@ -107,7 +107,7 @@ score** must stay at or above the **Break threshold** of 83.
 - [x] 05 pin an empty button label
 - [x] 06 pin an empty loader label
 - [x] 07 add the shared computed colour probe
-- [ ] 08 add the shared first family probe
+- [x] 08 add the shared first family probe
 - [ ] 09 add the shared hover probe
 - [ ] 10 use shared probes in the amount stories
 - [ ] 11 use shared probes in the button stories

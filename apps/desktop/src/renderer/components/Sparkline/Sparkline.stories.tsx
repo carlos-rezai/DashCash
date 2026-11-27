@@ -3,6 +3,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import styled from 'styled-components';
 import { expect, within } from 'storybook/test';
 import { toCents, type Cents } from '@dashcash/domain/money/cents/cents';
+import { readComputedColour } from '../../test-support/readComputedColour/readComputedColour.ts';
 import * as components from '../index.ts';
 import { computeSparklinePoints, Sparkline } from './Sparkline.tsx';
 
@@ -82,19 +83,6 @@ const FUTURE_IS_CENTS: [SparklineProps['future']] extends [readonly Cents[]]
     ? true
     : false
   : false = true;
-
-// What Chromium computes for a CSS colour, read from a probe element.
-function computedColour(css: string): string {
-  const probe = document.createElement('span');
-  probe.style.color = css;
-  if (probe.style.color === '') {
-    throw new Error(`not a CSS colour: ${css}`);
-  }
-  document.body.append(probe);
-  const value = getComputedStyle(probe).color;
-  probe.remove();
-  return value;
-}
 
 const Frame = styled.div`
   width: ${FRAME_WIDTH}px;
@@ -185,7 +173,9 @@ async function expectSparkline(
   const paths = [...svg.querySelectorAll('path')];
   for (const path of paths) {
     const style = getComputedStyle(path);
-    await expect(style.stroke, 'line colour').toBe(computedColour(look.colour));
+    await expect(style.stroke, 'line colour').toBe(
+      readComputedColour(look.colour),
+    );
     await expect(style.strokeWidth, 'line width').toBe(LINE_WIDTH);
     await expect(style.fill, 'line fill').toBe('none');
     await expect(style.vectorEffect, 'line width kept').toBe(
@@ -233,7 +223,9 @@ async function expectSparkline(
   );
   await expect(tick.y1.baseVal.value, 'tick top').toBe(0);
   await expect(tick.y2.baseVal.value, 'tick bottom').toBe(look.height);
-  await expect(tickStyle.stroke, 'tick colour').toBe(computedColour(DIVIDER));
+  await expect(tickStyle.stroke, 'tick colour').toBe(
+    readComputedColour(DIVIDER),
+  );
   await expect(tickStyle.strokeWidth, 'tick width').toBe(TICK_WIDTH);
   await expect(tickStyle.vectorEffect, 'tick width kept').toBe(
     'non-scaling-stroke',

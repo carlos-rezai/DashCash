@@ -36,6 +36,11 @@ const TAG_HEIGHT = 22;
 const TAG_FONT_SIZE = '11px';
 const ICON_SIZE = 12;
 const SWATCH_SIZE = 8;
+// The side padding, and the gap between the icon or swatch and the label.
+const TAG_PADDING = '8px';
+const TAG_GAP = 5;
+// The label's letter spacing: 0.02em at the tag's font size.
+const TAG_LETTER_SPACING = '0.02em';
 
 // SPEC section 1's five tones plus milestone (SPEC section 2, Milestone).
 type ListedTone =
@@ -63,6 +68,18 @@ function computedColour(css: string): string {
   }
   document.body.append(probe);
   const value = getComputedStyle(probe).color;
+  probe.remove();
+  return value;
+}
+
+// What Chromium computes as the letter spacing of a probe at the tag's font
+// size, for a CSS length such as 0.02em.
+function computedLetterSpacing(css: string): string {
+  const probe = document.createElement('span');
+  probe.style.fontSize = TAG_FONT_SIZE;
+  probe.style.letterSpacing = css;
+  document.body.append(probe);
+  const value = getComputedStyle(probe).letterSpacing;
   probe.remove();
   return value;
 }
@@ -122,6 +139,11 @@ async function expectTag(
   await expect(getComputedStyle(label).fontSize, 'font size').toBe(
     TAG_FONT_SIZE,
   );
+  await expect(style.paddingLeft, 'padding left').toBe(TAG_PADDING);
+  await expect(style.paddingRight, 'padding right').toBe(TAG_PADDING);
+  await expect(getComputedStyle(label).letterSpacing, 'letter spacing').toBe(
+    computedLetterSpacing(TAG_LETTER_SPACING),
+  );
 
   if (look.border === undefined) {
     const noBorder =
@@ -168,9 +190,10 @@ async function expectIcon(
     .querySelector('svg');
   await expect(svg.innerHTML, 'glyph').toBe(reference?.innerHTML);
 
-  await expect(box.right).toBeLessThanOrEqual(
-    label.getBoundingClientRect().left,
-  );
+  await expect(
+    label.getBoundingClientRect().left - box.right,
+    'gap between icon and label',
+  ).toBeCloseTo(TAG_GAP, 1);
 }
 
 async function expectNoIcon(tag: HTMLElement): Promise<void> {
@@ -322,8 +345,9 @@ export const WithSwatch: Story = {
     await expect(box.width, 'swatch width').toBeCloseTo(SWATCH_SIZE, 1);
     await expect(box.height, 'swatch height').toBeCloseTo(SWATCH_SIZE, 1);
     await expect(getComputedStyle(swatch).borderRadius).toBe('0px');
-    await expect(box.right).toBeLessThanOrEqual(
-      label.getBoundingClientRect().left,
-    );
+    await expect(
+      label.getBoundingClientRect().left - box.right,
+      'gap between swatch and label',
+    ).toBeCloseTo(TAG_GAP, 1);
   },
 };

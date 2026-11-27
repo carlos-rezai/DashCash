@@ -100,7 +100,7 @@ step needs `npm run verify:full`. Steps 33 to 35 change `scripts/`, which
 Stryker mutates; after step 35 run `npm run test:mutation`. The **Mutation
 score** must stay at or above the **Break threshold** of 83.
 
-- [ ] 01 pin the tag spacing
+- [x] 01 pin the tag spacing
 - [ ] 02 pin the reveal jump under reduced motion
 - [ ] 03 pin the loader under reduced motion
 - [ ] 04 pin an empty accordion tag and meta

@@ -2,6 +2,9 @@ import { useState, type ComponentProps } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import styled from 'styled-components';
 import { expect, fn, userEvent, within } from 'storybook/test';
+import { readComputedColour } from '../../test-support/readComputedColour/readComputedColour.ts';
+import { readFirstFamily } from '../../test-support/readFirstFamily/readFirstFamily.ts';
+import { readHoveredStyle } from '../../test-support/readHoveredStyle/readHoveredStyle.ts';
 import { Segmented } from './Segmented.tsx';
 
 // The colours a reader sees, written out from dashcash-dark.css and
@@ -50,73 +53,15 @@ type UnlistedSize = Exclude<SegmentedSize, ListedSize>;
 const NO_MISSING_SIZE: [MissingSize] extends [never] ? true : false = true;
 const NO_UNLISTED_SIZE: [UnlistedSize] extends [never] ? true : false = true;
 
-// What Chromium computes for a CSS colour, read from a probe element.
-function computedColour(css: string): string {
-  const probe = document.createElement('span');
-  probe.style.color = css;
-  if (probe.style.color === '') {
-    throw new Error(`not a CSS colour: ${css}`);
-  }
-  document.body.append(probe);
-  const value = getComputedStyle(probe).color;
-  probe.remove();
-  return value;
-}
-
-// The marker that stands in for :hover while a hovered style is read.
-const HOVER_MARK = 'data-hover-probe';
-
-// What the element looks like under the pointer. A story's synthetic pointer
-// events do not make Chromium apply :hover, so every :hover rule is copied
-// right after itself with the marker in its place, and the marker is set on
-// the element and its ancestors while the style is read. The marker weighs as
-// much as :hover and each copy follows its rule, so the cascade is that of a
-// real hover.
+// What the element looks like under the pointer: its fill and its text.
 function hoveredStyle(element: Element): {
   backgroundColor: string;
   color: string;
 } {
-  const copies: CSSRule[] = [];
-  for (const sheet of document.styleSheets) {
-    const rules = [...sheet.cssRules];
-    for (let index = rules.length - 1; index >= 0; index -= 1) {
-      const rule = rules[index];
-      if (
-        rule instanceof CSSStyleRule &&
-        rule.selectorText.includes(':hover')
-      ) {
-        sheet.insertRule(
-          rule.cssText.replaceAll(':hover', `[${HOVER_MARK}]`),
-          index + 1,
-        );
-        const copy = sheet.cssRules.item(index + 1);
-        if (copy !== null) {
-          copies.push(copy);
-        }
-      }
-    }
-  }
-  const marked: Element[] = [];
-  for (let node: Element | null = element; node; node = node.parentElement) {
-    node.setAttribute(HOVER_MARK, '');
-    marked.push(node);
-  }
-  try {
-    const style = getComputedStyle(element);
-    return { backgroundColor: style.backgroundColor, color: style.color };
-  } finally {
-    for (const node of marked) {
-      node.removeAttribute(HOVER_MARK);
-    }
-    for (const sheet of document.styleSheets) {
-      for (let index = sheet.cssRules.length - 1; index >= 0; index -= 1) {
-        const rule = sheet.cssRules.item(index);
-        if (rule !== null && copies.includes(rule)) {
-          sheet.deleteRule(index);
-        }
-      }
-    }
-  }
+  return readHoveredStyle(element, (style) => ({
+    backgroundColor: style.backgroundColor,
+    color: style.color,
+  }));
 }
 
 // Holds the Segmented out of the pointer's reach while its resting colours
@@ -160,12 +105,6 @@ function theOption(canvasElement: HTMLElement, name: string): HTMLElement {
   return within(canvasElement).getByRole('radio', { name });
 }
 
-// The first family of a computed font-family, unquoted as Chromium writes a
-// one-word name.
-function firstFamily(style: CSSStyleDeclaration): string {
-  return style.fontFamily.split(',')[0]?.trim() ?? '';
-}
-
 type Look = {
   selected: string;
   height: number;
@@ -202,7 +141,7 @@ async function expectGroup(
       'solid',
     );
     await expect(groupStyle[`border${side}Color`], `${side} border`).toBe(
-      computedColour(DIVIDER),
+      readComputedColour(DIVIDER),
     );
   }
 
@@ -216,13 +155,13 @@ async function expectGroup(
       String(selected),
     );
     await expect(style.backgroundColor, `${label} fill`).toBe(
-      computedColour(selected ? ACCENT : TRANSPARENT),
+      readComputedColour(selected ? ACCENT : TRANSPARENT),
     );
     await expect(style.color, `${label} text`).toBe(
-      computedColour(selected ? GROUND : INK),
+      readComputedColour(selected ? GROUND : INK),
     );
     await expect(style.fontSize, `${label} font size`).toBe(look.fontSize);
-    await expect(firstFamily(style), `${label} font`).toBe('Barlow');
+    await expect(readFirstFamily(style), `${label} font`).toBe('Barlow');
     await expect(style.paddingLeft, `${label} left padding`).toBe(
       OPTION_PADDING,
     );
@@ -241,7 +180,7 @@ async function expectGroup(
       await expect(style.borderLeftWidth, `${label} divider`).toBe('1px');
       await expect(style.borderLeftStyle, `${label} divider`).toBe('solid');
       await expect(style.borderLeftColor, `${label} divider`).toBe(
-        computedColour(DIVIDER),
+        readComputedColour(DIVIDER),
       );
     }
   }
@@ -355,16 +294,16 @@ export const HoverAndFocus: Story = {
   play: async ({ canvasElement }) => {
     const selected = hoveredStyle(theOption(canvasElement, 'Month'));
     await expect(selected.backgroundColor, 'selected hover fill').toBe(
-      computedColour(ACCENT_600),
+      readComputedColour(ACCENT_600),
     );
     await expect(selected.color, 'selected hover text').toBe(
-      computedColour(GROUND),
+      readComputedColour(GROUND),
     );
     const other = hoveredStyle(theOption(canvasElement, 'Quarter'));
     await expect(other.backgroundColor, 'hover fill').toBe(
-      computedColour(HOVER),
+      readComputedColour(HOVER),
     );
-    await expect(other.color, 'hover text').toBe(computedColour(INK));
+    await expect(other.color, 'hover text').toBe(readComputedColour(INK));
 
     await userEvent.tab();
     const focused = document.activeElement;
@@ -377,7 +316,7 @@ export const HoverAndFocus: Story = {
     await expect(style.outlineStyle, 'outline style').toBe('solid');
     await expect(style.outlineWidth, 'outline width').toBe('2px');
     await expect(style.outlineColor, 'outline colour').toBe(
-      computedColour(ACCENT),
+      readComputedColour(ACCENT),
     );
     await expect(style.outlineOffset, 'outline offset').toBe('2px');
   },

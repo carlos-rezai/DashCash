@@ -3,6 +3,8 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import styled from 'styled-components';
 import { expect, fn, userEvent, within } from 'storybook/test';
 import { Icon } from '../../primitives/Icon/Icon.tsx';
+import { readComputedColour } from '../../test-support/readComputedColour/readComputedColour.ts';
+import { readFirstFamily } from '../../test-support/readFirstFamily/readFirstFamily.ts';
 import * as components from '../index.ts';
 import { Stepper } from './Stepper.tsx';
 
@@ -92,19 +94,6 @@ const ON_STEP_TAKES_AN_INDEX: Exactly<
   (index: number) => void
 > = true;
 
-// What Chromium computes for a CSS colour, read from a probe element.
-function computedColour(css: string): string {
-  const probe = document.createElement('span');
-  probe.style.color = css;
-  if (probe.style.color === '') {
-    throw new Error(`not a CSS colour: ${css}`);
-  }
-  document.body.append(probe);
-  const value = getComputedStyle(probe).color;
-  probe.remove();
-  return value;
-}
-
 // What Chromium computes for a CSS box shadow, read from a probe element.
 function computedShadow(css: string): string {
   const probe = document.createElement('span');
@@ -116,12 +105,6 @@ function computedShadow(css: string): string {
   const value = getComputedStyle(probe).boxShadow;
   probe.remove();
   return value;
-}
-
-// The first family of a computed font-family, without quotes: Chromium quotes
-// only names that contain a space.
-function firstFamily(style: CSSStyleDeclaration): string | undefined {
-  return style.fontFamily.split(',')[0]?.trim().replaceAll('"', '');
 }
 
 // The page column the Stepper sits in. While its resting colours are read, it
@@ -237,7 +220,7 @@ async function expectList(canvasElement: HTMLElement): Promise<HTMLElement> {
       'solid',
     );
     await expect(style[`border${side}Color`], `list ${side} colour`).toBe(
-      computedColour(DIVIDER),
+      readComputedColour(DIVIDER),
     );
   }
   return list;
@@ -315,15 +298,15 @@ async function expectStep(
 
   const style = getComputedStyle(step);
   await expect(style.backgroundColor, `${at}: fill`).toBe(
-    computedColour(look.fill),
+    readComputedColour(look.fill),
   );
   await expect(style.boxShadow, `${at}: bottom bar`).toBe(
     look.bar === 'none' ? 'none' : computedShadow(look.bar),
   );
-  await expect(style.color, `${at}: text`).toBe(computedColour(look.text));
+  await expect(style.color, `${at}: text`).toBe(readComputedColour(look.text));
   await expect(style.cursor, `${at}: cursor`).toBe(look.cursor);
   await expect(style.fontSize, `${at}: font size`).toBe(FONT_SIZE);
-  await expect(firstFamily(style), `${at}: font`).toBe('Barlow');
+  await expect(readFirstFamily(style), `${at}: font`).toBe('Barlow');
   await expect(style.textAlign, `${at}: text align`).toBe('left');
   await expect(style.paddingTop, `${at}: top padding`).toBe(PADDING_Y);
   await expect(style.paddingBottom, `${at}: bottom padding`).toBe(PADDING_Y);
@@ -345,7 +328,7 @@ async function expectStep(
   if (line > 0) {
     await expect(style.borderLeftStyle, `${at}: line style`).toBe('solid');
     await expect(style.borderLeftColor, `${at}: line colour`).toBe(
-      computedColour(DIVIDER),
+      readComputedColour(DIVIDER),
     );
   }
 
@@ -363,12 +346,12 @@ async function expectStep(
     await expect(
       squareStyle[`border${side}Color`],
       `${at}: square ${side} colour`,
-    ).toBe(computedColour(look.squareBorder));
+    ).toBe(readComputedColour(look.squareBorder));
   }
   await expect(squareStyle.backgroundColor, `${at}: square fill`).toBe(
-    computedColour(look.squareFill),
+    readComputedColour(look.squareFill),
   );
-  await expect(firstFamily(squareStyle), `${at}: square font`).toBe(
+  await expect(readFirstFamily(squareStyle), `${at}: square font`).toBe(
     HEADING_FONT,
   );
   await expect(squareStyle.fontWeight, `${at}: square weight`).toBe(
@@ -407,7 +390,7 @@ async function expectStep(
     await expect(
       icon === null ? undefined : getComputedStyle(icon).color,
       `${at}: check colour`,
-    ).toBe(computedColour(look.squareText));
+    ).toBe(readComputedColour(look.squareText));
     mark = icon?.getBoundingClientRect() ?? new DOMRect();
     await expect(mark.width, `${at}: check width`).toBeCloseTo(CHECK_SIZE, 1);
     await expect(mark.height, `${at}: check height`).toBeCloseTo(CHECK_SIZE, 1);
@@ -418,7 +401,7 @@ async function expectStep(
       true,
     );
     await expect(getComputedStyle(digits).color, `${at}: number colour`).toBe(
-      computedColour(look.squareText),
+      readComputedColour(look.squareText),
     );
     const glyphs = document.createRange();
     glyphs.selectNodeContents(digits);

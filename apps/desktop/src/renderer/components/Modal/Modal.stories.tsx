@@ -3,6 +3,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import styled from 'styled-components';
 import { expect, fn, userEvent, within } from 'storybook/test';
 import { Button } from '../../primitives/Button/Button.tsx';
+import { readFirstFamily } from '../../test-support/readFirstFamily/readFirstFamily.ts';
 import * as components from '../index.ts';
 import { Modal } from './Modal.tsx';
 
@@ -114,12 +115,6 @@ function computed(property: 'color' | 'boxShadow', css: string): string {
   const value = getComputedStyle(probe)[property];
   probe.remove();
   return value;
-}
-
-// The first family of a computed font-family, without quotes: Chromium quotes
-// only names that contain a space.
-function firstFamily(style: CSSStyleDeclaration): string | undefined {
-  return style.fontFamily.split(',')[0]?.trim().replaceAll('"', '');
 }
 
 // The preview frame. Its transform makes it the containing block of the
@@ -238,7 +233,7 @@ async function expectRestingPanel(
   );
 
   const heading = getComputedStyle(title);
-  await expect(firstFamily(heading), 'title font').toBe(HEADING_FONT);
+  await expect(readFirstFamily(heading), 'title font').toBe(HEADING_FONT);
   await expect(heading.fontWeight, 'title weight').toBe(HEADING_WEIGHT);
   await expect(heading.fontSize, 'title size').toBe(TITLE_SIZE);
 

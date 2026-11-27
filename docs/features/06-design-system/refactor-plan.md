@@ -112,7 +112,7 @@ score** must stay at or above the **Break threshold** of 83.
 - [x] 10 use shared probes in the amount stories
 - [x] 11 use shared probes in the button stories
 - [x] 12 use shared probes in the checkbox stories
-- [ ] 13 use shared probes in the chip stories
+- [x] 13 use shared probes in the chip stories
 - [ ] 14 use shared probes in the input stories
 - [ ] 15 use shared probes in the meter stories
 - [ ] 16 use shared probes in the segmented stories

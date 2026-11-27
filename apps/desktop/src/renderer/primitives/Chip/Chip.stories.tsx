@@ -2,6 +2,9 @@ import { useState, type ComponentProps } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import styled from 'styled-components';
 import { expect, fn, userEvent, within } from 'storybook/test';
+import { readComputedColour } from '../../test-support/readComputedColour/readComputedColour.ts';
+import { readFirstFamily } from '../../test-support/readFirstFamily/readFirstFamily.ts';
+import { readHoveredStyle } from '../../test-support/readHoveredStyle/readHoveredStyle.ts';
 import { Chip } from './Chip.tsx';
 
 // The colours a reader sees, written out from dashcash-dark.css and
@@ -62,71 +65,6 @@ type UnlistedShape = Exclude<ChipShape, ListedShape>;
 const NO_MISSING_SHAPE: [MissingShape] extends [never] ? true : false = true;
 const NO_UNLISTED_SHAPE: [UnlistedShape] extends [never] ? true : false = true;
 
-// What Chromium computes for a CSS colour, read from a probe element.
-function computedColour(css: string): string {
-  const probe = document.createElement('span');
-  probe.style.color = css;
-  if (probe.style.color === '') {
-    throw new Error(`not a CSS colour: ${css}`);
-  }
-  document.body.append(probe);
-  const value = getComputedStyle(probe).color;
-  probe.remove();
-  return value;
-}
-
-// The marker that stands in for :hover while a hovered style is read.
-const HOVER_MARK = 'data-hover-probe';
-
-// The fill of the element under the pointer. A story's synthetic pointer
-// events do not make Chromium apply :hover, so every :hover rule is copied
-// right after itself with the marker in its place, and the marker is set on
-// the element and its ancestors while the fill is read. The marker weighs as
-// much as :hover and each copy follows its rule, so the cascade is that of a
-// real hover.
-function hoveredFill(element: Element): string {
-  const copies: CSSRule[] = [];
-  for (const sheet of document.styleSheets) {
-    const rules = [...sheet.cssRules];
-    for (let index = rules.length - 1; index >= 0; index -= 1) {
-      const rule = rules[index];
-      if (
-        rule instanceof CSSStyleRule &&
-        rule.selectorText.includes(':hover')
-      ) {
-        sheet.insertRule(
-          rule.cssText.replaceAll(':hover', `[${HOVER_MARK}]`),
-          index + 1,
-        );
-        const copy = sheet.cssRules.item(index + 1);
-        if (copy !== null) {
-          copies.push(copy);
-        }
-      }
-    }
-  }
-  const marked: Element[] = [];
-  for (let node: Element | null = element; node; node = node.parentElement) {
-    node.setAttribute(HOVER_MARK, '');
-    marked.push(node);
-  }
-  try {
-    return getComputedStyle(element).backgroundColor;
-  } finally {
-    for (const node of marked) {
-      node.removeAttribute(HOVER_MARK);
-    }
-    for (const sheet of document.styleSheets) {
-      for (let index = sheet.cssRules.length - 1; index >= 0; index -= 1) {
-        const rule = sheet.cssRules.item(index);
-        if (rule !== null && copies.includes(rule)) {
-          sheet.deleteRule(index);
-        }
-      }
-    }
-  }
-}
-
 // Holds the Chip out of the pointer's reach while its resting colours are
 // read: Chromium on Linux can apply :hover without pointer movement.
 const Holder = styled.div`
@@ -156,12 +94,6 @@ function theChip(canvasElement: HTMLElement): HTMLElement {
   return within(canvasElement).getByRole('button');
 }
 
-// The first family of a computed font-family, unquoted as Chromium writes a
-// one-word name.
-function firstFamily(style: CSSStyleDeclaration): string {
-  return style.fontFamily.split(',')[0]?.trim() ?? '';
-}
-
 // The vertical centre of a box.
 function middle(box: DOMRect): number {
   return box.top + box.height / 2;
@@ -169,7 +101,7 @@ function middle(box: DOMRect): number {
 
 // The elements inside the chip drawn with the swatch colour.
 function swatchesIn(chip: HTMLElement): Element[] {
-  const colour = computedColour(SWATCH);
+  const colour = readComputedColour(SWATCH);
   return [...chip.querySelectorAll('*')].filter((element) => {
     const style = getComputedStyle(element);
     return style.borderTopColor === colour || style.backgroundColor === colour;
@@ -203,13 +135,13 @@ async function expectChip(chip: HTMLElement, look: Look): Promise<void> {
     1,
   );
   await expect(style.backgroundColor, 'fill').toBe(
-    computedColour(look.pressed ? ACCENT_100 : TRANSPARENT),
+    readComputedColour(look.pressed ? ACCENT_100 : TRANSPARENT),
   );
   await expect(style.color, 'text').toBe(
-    computedColour(look.pressed ? INK : TEXT_MUTED),
+    readComputedColour(look.pressed ? INK : TEXT_MUTED),
   );
   await expect(style.fontSize, 'font size').toBe('13px');
-  await expect(firstFamily(style), 'font').toBe('Barlow');
+  await expect(readFirstFamily(style), 'font').toBe('Barlow');
   await expect(style.paddingLeft, 'left padding').toBe(PADDING);
   await expect(style.paddingRight, 'right padding').toBe(PADDING);
   for (const side of ['Top', 'Right', 'Bottom', 'Left'] as const) {
@@ -220,7 +152,7 @@ async function expectChip(chip: HTMLElement, look: Look): Promise<void> {
       'solid',
     );
     await expect(style[`border${side}Color`], `${side} border colour`).toBe(
-      computedColour(look.pressed ? ACCENT_400 : DIVIDER),
+      readComputedColour(look.pressed ? ACCENT_400 : DIVIDER),
     );
   }
 
@@ -256,11 +188,11 @@ async function expectSwatch(
       '1px',
     );
     await expect(style[`border${side}Color`], `swatch ${side} border`).toBe(
-      computedColour(SWATCH),
+      readComputedColour(SWATCH),
     );
   }
   await expect(style.backgroundColor, 'swatch fill').toBe(
-    computedColour(look.filled ? SWATCH : TRANSPARENT),
+    readComputedColour(look.filled ? SWATCH : TRANSPARENT),
   );
   await expect(middle(mark), 'swatch centred').toBeCloseTo(
     middle(chip.getBoundingClientRect()),
@@ -384,7 +316,9 @@ export const WithMeta: Story = {
     await expectChip(chip, { pressed: true });
     const value = within(chip).getByText(META);
     const style = getComputedStyle(value);
-    await expect(style.color, 'meta colour').toBe(computedColour(TEXT_MUTED));
+    await expect(style.color, 'meta colour').toBe(
+      readComputedColour(TEXT_MUTED),
+    );
     await expect(style.fontVariantNumeric, 'tabular figures').toBe(
       'tabular-nums',
     );
@@ -444,9 +378,10 @@ export const HoverAndFocus: Story = {
   play: async ({ canvasElement }) => {
     const chip = theChip(canvasElement);
     await expectChip(chip, { pressed: false });
-    await expect(hoveredFill(chip), 'hover fill').toBe(
-      computedColour(ACCENT_100),
-    );
+    await expect(
+      readHoveredStyle(chip, (style) => style.backgroundColor),
+      'hover fill',
+    ).toBe(readComputedColour(ACCENT_100));
 
     await userEvent.tab();
     await expect(chip).toHaveFocus();
@@ -455,7 +390,7 @@ export const HoverAndFocus: Story = {
     await expect(style.outlineStyle, 'outline style').toBe('solid');
     await expect(style.outlineWidth, 'outline width').toBe('2px');
     await expect(style.outlineColor, 'outline colour').toBe(
-      computedColour(ACCENT),
+      readComputedColour(ACCENT),
     );
     await expect(style.outlineOffset, 'outline offset').toBe('2px');
   },
@@ -467,9 +402,10 @@ export const PressedHover: Story = {
   play: async ({ canvasElement }) => {
     const chip = theChip(canvasElement);
     await expectChip(chip, { pressed: true });
-    await expect(hoveredFill(chip), 'hover fill').toBe(
-      computedColour(ACCENT_100),
-    );
+    await expect(
+      readHoveredStyle(chip, (style) => style.backgroundColor),
+      'hover fill',
+    ).toBe(readComputedColour(ACCENT_100));
   },
 };
 
@@ -484,9 +420,10 @@ export const Disabled: Story = {
     await expect(getComputedStyle(chip).opacity, 'opacity').toBe(
       DISABLED_OPACITY,
     );
-    await expect(hoveredFill(chip), 'hover fill').toBe(
-      computedColour(ACCENT_100),
-    );
+    await expect(
+      readHoveredStyle(chip, (style) => style.backgroundColor),
+      'hover fill',
+    ).toBe(readComputedColour(ACCENT_100));
 
     await userEvent.click(chip);
     await expect(args.onClick).not.toHaveBeenCalled();
@@ -508,9 +445,10 @@ export const DisabledResting: Story = {
     await expect(getComputedStyle(chip).opacity, 'opacity').toBe(
       DISABLED_OPACITY,
     );
-    await expect(hoveredFill(chip), 'hover fill').toBe(
-      computedColour(TRANSPARENT),
-    );
+    await expect(
+      readHoveredStyle(chip, (style) => style.backgroundColor),
+      'hover fill',
+    ).toBe(readComputedColour(TRANSPARENT));
 
     await userEvent.click(chip);
     await expect(args.onClick).not.toHaveBeenCalled();

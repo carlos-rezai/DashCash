@@ -2,6 +2,8 @@ import type { ComponentProps } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import styled from 'styled-components';
 import { expect, within } from 'storybook/test';
+import { readComputedColour } from '../../test-support/readComputedColour/readComputedColour.ts';
+import { readFirstFamily } from '../../test-support/readFirstFamily/readFirstFamily.ts';
 import * as components from '../index.ts';
 import { Card } from './Card.tsx';
 
@@ -77,25 +79,6 @@ const NO_MISSING_PADDING: [MissingPadding] extends [never] ? true : false =
 const NO_UNLISTED_PADDING: [UnlistedPadding] extends [never] ? true : false =
   true;
 
-// What Chromium computes for a CSS colour, read from a probe element.
-function computedColour(css: string): string {
-  const probe = document.createElement('span');
-  probe.style.color = css;
-  if (probe.style.color === '') {
-    throw new Error(`not a CSS colour: ${css}`);
-  }
-  document.body.append(probe);
-  const value = getComputedStyle(probe).color;
-  probe.remove();
-  return value;
-}
-
-// The first family of a computed font-family, without quotes: Chromium quotes
-// only names that contain a space.
-function firstFamily(style: CSSStyleDeclaration): string | undefined {
-  return style.fontFamily.split(',')[0]?.trim().replaceAll('"', '');
-}
-
 // Holds the Card out of the pointer's reach while its resting colours are
 // read: Chromium on Linux can apply :hover without pointer movement.
 const Holder = styled.div`
@@ -161,14 +144,14 @@ async function expectCard(card: HTMLElement, look: Look): Promise<void> {
   await expect(card.matches(':hover'), 'hovered').toBe(false);
 
   const style = getComputedStyle(card);
-  await expect(style.backgroundColor, 'fill').toBe(computedColour(SURFACE));
+  await expect(style.backgroundColor, 'fill').toBe(readComputedColour(SURFACE));
   for (const side of ['Top', 'Right', 'Bottom', 'Left'] as const) {
     await expect(style[`border${side}Width`], `${side} border`).toBe(
       BORDER_WIDTH,
     );
     await expect(style[`border${side}Style`], `${side} style`).toBe('solid');
     await expect(style[`border${side}Color`], `${side} colour`).toBe(
-      computedColour(CARD_BORDER),
+      readComputedColour(CARD_BORDER),
     );
   }
 
@@ -215,7 +198,7 @@ async function expectCard(card: HTMLElement, look: Look): Promise<void> {
   if (look.kicker !== undefined) {
     const kicker = getComputedStyle(look.kicker);
     await expect(kicker.color, 'kicker colour').toBe(
-      computedColour(ACCENT_600),
+      readComputedColour(ACCENT_600),
     );
     await expect(kicker.fontSize, 'kicker size').toBe(
       `${String(KICKER_SIZE)}px`,
@@ -229,7 +212,7 @@ async function expectCard(card: HTMLElement, look: Look): Promise<void> {
 
   if (look.title !== undefined) {
     const title = getComputedStyle(look.title);
-    await expect(firstFamily(title), 'title font').toBe(HEADING_FONT);
+    await expect(readFirstFamily(title), 'title font').toBe(HEADING_FONT);
     await expect(title.fontWeight, 'title weight').toBe(HEADING_WEIGHT);
     await expect(title.fontSize, 'title size').toBe(`${String(TITLE_SIZE)}px`);
     await expect(

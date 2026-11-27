@@ -364,6 +364,18 @@ export const RestingSwatch: Story = {
   },
 };
 
+// An empty swatch is absent, as in Chip.dc.html (sc-if): no swatch element,
+// only the label in the chip.
+export const EmptySwatch: Story = {
+  args: { active: true, swatch: '' },
+  play: async ({ canvasElement }) => {
+    const chip = theChip(canvasElement);
+    await expectChip(chip, { pressed: true });
+    await expect(chip.children, 'children of the chip').toHaveLength(1);
+    await expect(chip.textContent, 'text').toBe(LABEL);
+  },
+};
+
 // The meta value: muted, with tabular figures, right of the label.
 export const WithMeta: Story = {
   args: { active: true, meta: META },

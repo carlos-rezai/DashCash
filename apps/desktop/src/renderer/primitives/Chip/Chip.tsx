@@ -34,7 +34,7 @@ export function Chip({
         onClick?.(!active);
       }}
     >
-      {swatch === undefined ? null : (
+      {swatch === undefined || swatch === '' ? null : (
         <Mark
           aria-hidden="true"
           $color={swatch}

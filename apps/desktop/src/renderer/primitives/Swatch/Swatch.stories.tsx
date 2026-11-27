@@ -1,6 +1,7 @@
 import type { ComponentProps } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, within } from 'storybook/test';
+import { readComputedColour } from '../../test-support/readComputedColour/readComputedColour.ts';
 import { Swatch } from './Swatch.tsx';
 
 // The colours of the stories, written out from dashcash-dark.css apart from
@@ -28,19 +29,6 @@ type MissingShape = Exclude<ListedShape, SwatchShape>;
 type UnlistedShape = Exclude<SwatchShape, ListedShape>;
 const NO_MISSING_SHAPE: [MissingShape] extends [never] ? true : false = true;
 const NO_UNLISTED_SHAPE: [UnlistedShape] extends [never] ? true : false = true;
-
-// What Chromium computes for a CSS colour, read from a probe element.
-function computedColour(css: string): string {
-  const probe = document.createElement('span');
-  probe.style.color = css;
-  if (probe.style.color === '') {
-    throw new Error(`not a CSS colour: ${css}`);
-  }
-  document.body.append(probe);
-  const value = getComputedStyle(probe).color;
-  probe.remove();
-  return value;
-}
 
 // The Swatch in a holder, so the story finds it: it has no role or text.
 function renderSwatch(args: ComponentProps<typeof Swatch>) {
@@ -76,7 +64,7 @@ async function expectSwatch(
   await expect(box.width, 'width').toBeCloseTo(look.width, 1);
   await expect(box.height, 'height').toBeCloseTo(look.height, 1);
   await expect(style.backgroundColor, 'colour').toBe(
-    computedColour(look.colour),
+    readComputedColour(look.colour),
   );
   await expect(style.borderRadius, 'corners').toBe(look.borderRadius);
   await expect(swatch.getAttribute('aria-hidden')).toBe('true');

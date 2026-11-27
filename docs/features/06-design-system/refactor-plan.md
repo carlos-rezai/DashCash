@@ -126,7 +126,7 @@ score** must stay at or above the **Break threshold** of 83.
 - [x] 24 use shared probes in the logo stories
 - [x] 25 use shared probes in the modal stories
 - [x] 26 use shared probes in the nav item stories
-- [ ] 27 use shared probes in the page header stories
+- [x] 27 use shared probes in the page header stories
 - [ ] 28 use shared probes in the sparkline stories
 - [ ] 29 use shared probes in the stat tile stories
 - [ ] 30 use shared probes in the stepper stories

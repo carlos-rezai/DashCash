@@ -6,6 +6,9 @@ import { Button } from '../../primitives/Button/Button.tsx';
 import { Icon } from '../../primitives/Icon/Icon.tsx';
 import { Segmented } from '../../primitives/Segmented/Segmented.tsx';
 import { Tag, type TagTone } from '../../primitives/Tag/Tag.tsx';
+import { readComputedColour } from '../../test-support/readComputedColour/readComputedColour.ts';
+import { readFirstFamily } from '../../test-support/readFirstFamily/readFirstFamily.ts';
+import { readHoveredStyle } from '../../test-support/readHoveredStyle/readHoveredStyle.ts';
 import * as components from '../index.ts';
 import { PageHeader } from './PageHeader.tsx';
 
@@ -104,75 +107,9 @@ const ON_BACK_TAKES_NOTHING: Exactly<
   () => void
 > = true;
 
-// What Chromium computes for a CSS colour, read from a probe element.
-function computedColour(css: string): string {
-  const probe = document.createElement('span');
-  probe.style.color = css;
-  if (probe.style.color === '') {
-    throw new Error(`not a CSS colour: ${css}`);
-  }
-  document.body.append(probe);
-  const value = getComputedStyle(probe).color;
-  probe.remove();
-  return value;
-}
-
-// The first family of a computed font-family, without quotes: Chromium quotes
-// only names that contain a space.
-function firstFamily(style: CSSStyleDeclaration): string | undefined {
-  return style.fontFamily.split(',')[0]?.trim().replaceAll('"', '');
-}
-
-// The marker that stands in for :hover while a hovered style is read.
-const HOVER_MARK = 'data-hover-probe';
-
-// What the element looks like under the pointer. A story's synthetic pointer
-// events do not make Chromium apply :hover, so every :hover rule is copied
-// right after itself with the marker in its place, and the marker is set on
-// the element and its ancestors while the style is read. The marker weighs as
-// much as :hover and each copy follows its rule, so the cascade is that of a
-// real hover.
+// What the element's text colour is under the pointer.
 function hoveredColour(element: Element): string {
-  const copies: CSSRule[] = [];
-  for (const sheet of document.styleSheets) {
-    const rules = [...sheet.cssRules];
-    for (let index = rules.length - 1; index >= 0; index -= 1) {
-      const rule = rules[index];
-      if (
-        rule instanceof CSSStyleRule &&
-        rule.selectorText.includes(':hover')
-      ) {
-        sheet.insertRule(
-          rule.cssText.replaceAll(':hover', `[${HOVER_MARK}]`),
-          index + 1,
-        );
-        const copy = sheet.cssRules.item(index + 1);
-        if (copy !== null) {
-          copies.push(copy);
-        }
-      }
-    }
-  }
-  const marked: Element[] = [];
-  for (let node: Element | null = element; node; node = node.parentElement) {
-    node.setAttribute(HOVER_MARK, '');
-    marked.push(node);
-  }
-  try {
-    return getComputedStyle(element).color;
-  } finally {
-    for (const node of marked) {
-      node.removeAttribute(HOVER_MARK);
-    }
-    for (const sheet of document.styleSheets) {
-      for (let index = sheet.cssRules.length - 1; index >= 0; index -= 1) {
-        const rule = sheet.cssRules.item(index);
-        if (rule !== null && copies.includes(rule)) {
-          sheet.deleteRule(index);
-        }
-      }
-    }
-  }
+  return readHoveredStyle(element, (style) => style.color);
 }
 
 // The page's top. While its resting colours are read, it holds the
@@ -248,7 +185,7 @@ async function expectTitle(
   title: HTMLElement,
 ): Promise<void> {
   const style = getComputedStyle(title);
-  await expect(firstFamily(style), 'title font').toBe(HEADING_FONT);
+  await expect(readFirstFamily(style), 'title font').toBe(HEADING_FONT);
   await expect(style.fontWeight, 'title weight').toBe(HEADING_WEIGHT);
   await expect(style.fontSize, 'title size').toBe(TITLE_SIZE);
   await expect(style.letterSpacing, 'title letter-spacing').toBe(
@@ -275,7 +212,9 @@ async function expectSubtitle(
   await expect(subtitle.matches(':hover'), 'subtitle hovered').toBe(false);
   const style = getComputedStyle(subtitle);
   await expect(style.fontSize, 'subtitle size').toBe(SUBTITLE_SIZE);
-  await expect(style.color, 'subtitle colour').toBe(computedColour(TEXT_MUTED));
+  await expect(style.color, 'subtitle colour').toBe(
+    readComputedColour(TEXT_MUTED),
+  );
   await expect(
     box(subtitle).top - box(title).bottom,
     'subtitle gap',
@@ -300,12 +239,12 @@ async function expectBack(
   await expect(theFrame(canvasElement).hasAttribute('data-resting')).toBe(true);
   await expect(back.matches(':hover'), 'back hovered').toBe(false);
   const style = getComputedStyle(back);
-  await expect(style.color, 'back colour').toBe(computedColour(ACCENT_600));
+  await expect(style.color, 'back colour').toBe(readComputedColour(ACCENT_600));
   await expect(style.backgroundColor, 'back fill').toBe(
-    computedColour(TRANSPARENT),
+    readComputedColour(TRANSPARENT),
   );
   await expect(style.fontSize, 'back size').toBe(BACK_SIZE);
-  await expect(firstFamily(style), 'back font').toBe('Barlow');
+  await expect(readFirstFamily(style), 'back font').toBe('Barlow');
   await expect(style.cursor, 'back cursor').toBe('pointer');
   for (const side of ['Top', 'Right', 'Bottom', 'Left'] as const) {
     await expect(style[`border${side}Width`], `back ${side} border`).toBe(
@@ -603,7 +542,7 @@ export const BackHoverAndFocus: Story = {
     release(canvasElement);
     const back = theBack(canvasElement, BACK_LABEL);
     await expect(hoveredColour(back), 'hover colour').toBe(
-      computedColour(ACCENT_700),
+      readComputedColour(ACCENT_700),
     );
 
     await userEvent.tab();
@@ -613,7 +552,7 @@ export const BackHoverAndFocus: Story = {
     await expect(style.outlineStyle, 'outline style').toBe('solid');
     await expect(style.outlineWidth, 'outline width').toBe('2px');
     await expect(style.outlineColor, 'outline colour').toBe(
-      computedColour(ACCENT),
+      readComputedColour(ACCENT),
     );
     await expect(style.outlineOffset, 'outline offset').toBe('2px');
   },

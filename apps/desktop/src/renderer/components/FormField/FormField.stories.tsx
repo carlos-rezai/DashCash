@@ -4,6 +4,7 @@ import styled from 'styled-components';
 import { expect, fn, within } from 'storybook/test';
 import { Input } from '../../primitives/Input/Input.tsx';
 import { Select } from '../../primitives/Select/Select.tsx';
+import { readComputedColour } from '../../test-support/readComputedColour/readComputedColour.ts';
 import * as components from '../index.ts';
 import { FormField } from './FormField.tsx';
 
@@ -67,19 +68,6 @@ const LABEL_AND_CHILDREN_REQUIRED: [RequiredProp] extends ['label' | 'children']
     : false
   : false = true;
 
-// What Chromium computes for a CSS colour, read from a probe element.
-function computedColour(css: string): string {
-  const probe = document.createElement('span');
-  probe.style.color = css;
-  if (probe.style.color === '') {
-    throw new Error(`not a CSS colour: ${css}`);
-  }
-  document.body.append(probe);
-  const value = getComputedStyle(probe).color;
-  probe.remove();
-  return value;
-}
-
 // Holds the FormField out of the pointer's reach while its resting colours
 // are read: Chromium on Linux can apply :hover without pointer movement.
 const Holder = styled.div`
@@ -136,7 +124,7 @@ async function expectField(
   const labelBox = label.getBoundingClientRect();
   const labelStyle = getComputedStyle(label);
   await expect(labelStyle.color, 'label colour').toBe(
-    computedColour(TEXT_MUTED),
+    readComputedColour(TEXT_MUTED),
   );
   await expect(labelStyle.fontSize, 'label size').toBe(
     `${String(TEXT_SIZE)}px`,
@@ -157,7 +145,7 @@ async function expectField(
     const messageBox = message.getBoundingClientRect();
     const messageStyle = getComputedStyle(message);
     await expect(messageStyle.color, 'message colour').toBe(
-      computedColour(look.message.colour),
+      readComputedColour(look.message.colour),
     );
     await expect(messageStyle.fontSize, 'message size').toBe(
       `${String(TEXT_SIZE)}px`,

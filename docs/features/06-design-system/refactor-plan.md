@@ -101,7 +101,7 @@ Stryker mutates; after step 35 run `npm run test:mutation`. The **Mutation
 score** must stay at or above the **Break threshold** of 83.
 
 - [x] 01 pin the tag spacing
-- [ ] 02 pin the reveal jump under reduced motion
+- [x] 02 pin the reveal jump under reduced motion
 - [ ] 03 pin the loader under reduced motion
 - [ ] 04 pin an empty accordion tag and meta
 - [ ] 05 pin an empty button label

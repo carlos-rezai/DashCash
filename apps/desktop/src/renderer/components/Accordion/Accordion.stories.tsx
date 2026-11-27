@@ -1,7 +1,7 @@
 import { useState, type ComponentProps, type ReactNode } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import styled from 'styled-components';
-import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
+import { expect, fn, spyOn, userEvent, waitFor, within } from 'storybook/test';
 import { Icon } from '../../primitives/Icon/Icon.tsx';
 import { Tag, type TagTone } from '../../primitives/Tag/Tag.tsx';
 import * as components from '../index.ts';
@@ -43,6 +43,7 @@ const CONTENT_BOTTOM = 13.6;
 
 // SPEC, Auto-scroll on expand: the margin kept below an opened block.
 const REVEAL_MARGIN = 24;
+const REDUCED_MOTION = '(prefers-reduced-motion: reduce)';
 
 // Accordion.dc.html's preview width; an invented scroll area that holds the
 // closed accordions but not an opened one, with room below them.
@@ -646,12 +647,8 @@ export const Toggles: Story = {
   },
 };
 
-// Several accordions in a scroll area that holds them closed. Opening the
-// last one runs its block past the area's bottom: the area scrolls just far
-// enough to show the whole block with the 24 px margin below it, and the
-// clicked row stays inside the area.
-export const InAScrollArea: Story = {
-  render: (args) => (
+function renderScrollArea(args: AccordionProps) {
+  return (
     <>
       <Frame data-testid="frame">
         <Area data-testid="area">
@@ -669,7 +666,47 @@ export const InAScrollArea: Story = {
       </Frame>
       <References />
     </>
-  ),
+  );
+}
+
+function theLastYear(): { title: string } {
+  const last = YEARS[YEARS.length - 1];
+  if (last === undefined) {
+    throw new Error('no years');
+  }
+  return last;
+}
+
+// The one scrollBy call the reveal makes on the area: its options, and the
+// scroll the area has reached once it settles (it starts at the top, so the
+// distance asked for and the scroll reached are the same number).
+async function expectOneScroll(
+  scrollBy: { mock: { calls: unknown[][] } },
+  area: HTMLElement,
+  behavior: ScrollBehavior,
+): Promise<void> {
+  await expect(scrollBy.mock.calls, 'one scroll').toHaveLength(1);
+  const options = scrollBy.mock.calls[0]?.[0];
+  await expect(options, 'scroll options').toEqual({
+    top: expect.any(Number) as number,
+    behavior,
+  });
+  const top = (options as ScrollToOptions).top ?? 0;
+  await expect(top > 0, 'scrolled down').toBe(true);
+  await waitFor(
+    async () => {
+      await expect(area.scrollTop, 'scroll reached').toBeCloseTo(top, 0);
+    },
+    { timeout: 2000 },
+  );
+}
+
+// Several accordions in a scroll area that holds them closed. Opening the
+// last one runs its block past the area's bottom: the area scrolls just far
+// enough to show the whole block with the 24 px margin below it, smoothly,
+// and the clicked row stays inside the area.
+export const InAScrollArea: Story = {
+  render: renderScrollArea,
   play: async ({ args, canvasElement }) => {
     const area = within(canvasElement).getByTestId('area');
     await expect(
@@ -678,28 +715,32 @@ export const InAScrollArea: Story = {
     ).toBe(true);
     await expect(area.scrollTop, 'not scrolled').toBe(0);
 
-    const last = YEARS[YEARS.length - 1];
-    if (last === undefined) {
-      throw new Error('no years');
-    }
+    const last = theLastYear();
     const header = theHeader(area, last.title);
-    await userEvent.click(header);
-    await expect(args.onToggle).toHaveBeenCalledTimes(1);
-    await expect(
-      within(area).getByText(`${MONTHS} ${last.title}`),
-      'opened',
-    ).toBeInTheDocument();
+    const scrollBy = spyOn(area, 'scrollBy');
+    try {
+      await userEvent.click(header);
+      await expect(args.onToggle).toHaveBeenCalledTimes(1);
+      await expect(
+        within(area).getByText(`${MONTHS} ${last.title}`),
+        'opened',
+      ).toBeInTheDocument();
 
-    const section = theSection(header);
-    await waitFor(
-      async () => {
-        await expect(
-          Math.abs(box(area).bottom - box(section).bottom - REVEAL_MARGIN) <= 1,
-          'the block shown with the margin below it',
-        ).toBe(true);
-      },
-      { timeout: 2000 },
-    );
+      const section = theSection(header);
+      await waitFor(
+        async () => {
+          await expect(
+            Math.abs(box(area).bottom - box(section).bottom - REVEAL_MARGIN) <=
+              1,
+            'the block shown with the margin below it',
+          ).toBe(true);
+        },
+        { timeout: 2000 },
+      );
+      await expectOneScroll(scrollBy, area, 'smooth');
+    } finally {
+      scrollBy.mockRestore();
+    }
     await expect(area.scrollTop > 0, 'scrolled').toBe(true);
     await expect(
       box(header).top >= box(area).top + REVEAL_MARGIN - 1,
@@ -709,5 +750,52 @@ export const InAScrollArea: Story = {
       box(header).bottom <= box(area).bottom,
       'the clicked row inside the area',
     ).toBe(true);
+  },
+};
+
+// The same scroll area for a reader who prefers reduced motion: the area
+// jumps to the same place in one call, with no smooth scroll.
+export const InAScrollAreaReducedMotion: Story = {
+  render: renderScrollArea,
+  play: async ({ args, canvasElement }) => {
+    const area = within(canvasElement).getByTestId('area');
+    const last = theLastYear();
+    const header = theHeader(area, last.title);
+    const original = window.matchMedia.bind(window);
+    const media = spyOn(window, 'matchMedia').mockImplementation((query) => {
+      const list = original(query);
+      return query === REDUCED_MOTION
+        ? Object.defineProperty(list, 'matches', { value: true })
+        : list;
+    });
+    const scrollBy = spyOn(area, 'scrollBy');
+    try {
+      await expect(
+        window.matchMedia(REDUCED_MOTION).matches,
+        'reduced motion preferred',
+      ).toBe(true);
+      await expect(
+        window.matchMedia('(min-width: 1px)').matches,
+        'other queries pass through',
+      ).toBe(true);
+      await userEvent.click(header);
+      await expect(args.onToggle).toHaveBeenCalledTimes(1);
+      await waitFor(
+        async () => {
+          await expect(scrollBy.mock.calls, 'scrolled').toHaveLength(1);
+        },
+        { timeout: 2000 },
+      );
+      await expectOneScroll(scrollBy, area, 'auto');
+      await expect(
+        Math.abs(
+          box(area).bottom - box(theSection(header)).bottom - REVEAL_MARGIN,
+        ) <= 1,
+        'the block shown with the margin below it',
+      ).toBe(true);
+    } finally {
+      scrollBy.mockRestore();
+      media.mockRestore();
+    }
   },
 };

@@ -3,6 +3,9 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import styled from 'styled-components';
 import { expect, fn, userEvent, within } from 'storybook/test';
 import { Icon, type IconName } from '../../primitives/Icon/Icon.tsx';
+import { readComputedColour } from '../../test-support/readComputedColour/readComputedColour.ts';
+import { readFirstFamily } from '../../test-support/readFirstFamily/readFirstFamily.ts';
+import { readHoveredStyle } from '../../test-support/readHoveredStyle/readHoveredStyle.ts';
 import * as components from '../index.ts';
 import { NavItem } from './NavItem.tsx';
 
@@ -105,79 +108,15 @@ const BADGE_TONES: Exactly<
 const ON_CLICK_TAKES_NOTHING: Exactly<NavItemProps['onClick'], () => void> =
   true;
 
-// What Chromium computes for a CSS colour, read from a probe element.
-function computedColour(css: string): string {
-  const probe = document.createElement('span');
-  probe.style.color = css;
-  if (probe.style.color === '') {
-    throw new Error(`not a CSS colour: ${css}`);
-  }
-  document.body.append(probe);
-  const value = getComputedStyle(probe).color;
-  probe.remove();
-  return value;
-}
-
-// The first family of a computed font-family, without quotes: Chromium quotes
-// only names that contain a space.
-function firstFamily(style: CSSStyleDeclaration): string | undefined {
-  return style.fontFamily.split(',')[0]?.trim().replaceAll('"', '');
-}
-
-// The marker that stands in for :hover while a hovered style is read.
-const HOVER_MARK = 'data-hover-probe';
-
-// What the element looks like under the pointer. A story's synthetic pointer
-// events do not make Chromium apply :hover, so every :hover rule is copied
-// right after itself with the marker in its place, and the marker is set on
-// the element and its ancestors while the style is read. The marker weighs as
-// much as :hover and each copy follows its rule, so the cascade is that of a
-// real hover.
+// What the element looks like under the pointer: its fill and its text colour.
 function hoveredStyle(element: Element): {
   backgroundColor: string;
   color: string;
 } {
-  const copies: CSSRule[] = [];
-  for (const sheet of document.styleSheets) {
-    const rules = [...sheet.cssRules];
-    for (let index = rules.length - 1; index >= 0; index -= 1) {
-      const rule = rules[index];
-      if (
-        rule instanceof CSSStyleRule &&
-        rule.selectorText.includes(':hover')
-      ) {
-        sheet.insertRule(
-          rule.cssText.replaceAll(':hover', `[${HOVER_MARK}]`),
-          index + 1,
-        );
-        const copy = sheet.cssRules.item(index + 1);
-        if (copy !== null) {
-          copies.push(copy);
-        }
-      }
-    }
-  }
-  const marked: Element[] = [];
-  for (let node: Element | null = element; node; node = node.parentElement) {
-    node.setAttribute(HOVER_MARK, '');
-    marked.push(node);
-  }
-  try {
-    const style = getComputedStyle(element);
-    return { backgroundColor: style.backgroundColor, color: style.color };
-  } finally {
-    for (const node of marked) {
-      node.removeAttribute(HOVER_MARK);
-    }
-    for (const sheet of document.styleSheets) {
-      for (let index = sheet.cssRules.length - 1; index >= 0; index -= 1) {
-        const rule = sheet.cssRules.item(index);
-        if (rule !== null && copies.includes(rule)) {
-          sheet.deleteRule(index);
-        }
-      }
-    }
-  }
+  return readHoveredStyle(element, (style) => ({
+    backgroundColor: style.backgroundColor,
+    color: style.color,
+  }));
 }
 
 // The sidebar's column, or the compact rail. While its resting colours are
@@ -247,22 +186,24 @@ async function expectLook(
   await expect(item.matches(':hover'), 'hovered').toBe(false);
 
   const style = getComputedStyle(item);
-  await expect(style.backgroundColor, 'fill').toBe(computedColour(look.fill));
+  await expect(style.backgroundColor, 'fill').toBe(
+    readComputedColour(look.fill),
+  );
   for (const side of ['Top', 'Right', 'Bottom', 'Left'] as const) {
     await expect(style[`border${side}Width`], `${side} border`).toBe(
       `${String(BORDER)}px`,
     );
     await expect(style[`border${side}Style`], `${side} style`).toBe('solid');
     await expect(style[`border${side}Color`], `${side} colour`).toBe(
-      computedColour(look.border),
+      readComputedColour(look.border),
     );
   }
-  await expect(style.color, 'text').toBe(computedColour(look.text));
+  await expect(style.color, 'text').toBe(readComputedColour(look.text));
   await expect(getComputedStyle(theIcon(item)).color, 'icon').toBe(
-    computedColour(look.icon),
+    readComputedColour(look.icon),
   );
   await expect(style.fontSize, 'font size').toBe(FONT_SIZE);
-  await expect(firstFamily(style), 'font').toBe('Barlow');
+  await expect(readFirstFamily(style), 'font').toBe('Barlow');
   await expect(style.cursor, 'cursor').toBe('pointer');
 
   release(canvasElement);
@@ -349,9 +290,9 @@ async function expectBadge(
 ): Promise<void> {
   const style = getComputedStyle(badge);
   await expect(style.backgroundColor, 'badge fill').toBe(
-    computedColour(look.fill),
+    readComputedColour(look.fill),
   );
-  await expect(style.color, 'badge text').toBe(computedColour(look.text));
+  await expect(style.color, 'badge text').toBe(readComputedColour(look.text));
   await expect(style.fontSize, 'badge font size').toBe(BADGE_FONT_SIZE);
   await expect(style.fontVariantNumeric, 'badge figures').toBe('tabular-nums');
   await expect(style.textAlign, 'badge centred').toBe('center');
@@ -398,9 +339,9 @@ async function expectChip(
 ): Promise<void> {
   const style = getComputedStyle(chip);
   await expect(style.backgroundColor, 'chip fill').toBe(
-    computedColour(look.fill),
+    readComputedColour(look.fill),
   );
-  await expect(style.color, 'chip text').toBe(computedColour(look.text));
+  await expect(style.color, 'chip text').toBe(readComputedColour(look.text));
   await expect(style.fontSize, 'chip font size').toBe(CHIP_FONT_SIZE);
   await expect(style.fontVariantNumeric, 'chip figures').toBe('tabular-nums');
   await expect(style.textAlign, 'chip centred').toBe('center');
@@ -433,7 +374,7 @@ async function expectFocusRing(canvasElement: HTMLElement): Promise<void> {
   await expect(style.outlineStyle, 'outline style').toBe('solid');
   await expect(style.outlineWidth, 'outline width').toBe('2px');
   await expect(style.outlineColor, 'outline colour').toBe(
-    computedColour(ACCENT),
+    readComputedColour(ACCENT),
   );
   await expect(style.outlineOffset, 'outline offset').toBe('2px');
 }
@@ -694,9 +635,9 @@ export const HoverAndFocus: Story = {
     release(canvasElement);
     const hovered = hoveredStyle(theItem(canvasElement));
     await expect(hovered.backgroundColor, 'hover fill').toBe(
-      computedColour(HOVER),
+      readComputedColour(HOVER),
     );
-    await expect(hovered.color, 'hover text').toBe(computedColour(INK));
+    await expect(hovered.color, 'hover text').toBe(readComputedColour(INK));
     await expectFocusRing(canvasElement);
   },
 };
@@ -709,9 +650,9 @@ export const ActiveHoverAndFocus: Story = {
     release(canvasElement);
     const hovered = hoveredStyle(theItem(canvasElement));
     await expect(hovered.backgroundColor, 'hover fill').toBe(
-      computedColour(ACCENT_100),
+      readComputedColour(ACCENT_100),
     );
-    await expect(hovered.color, 'hover text').toBe(computedColour(INK));
+    await expect(hovered.color, 'hover text').toBe(readComputedColour(INK));
     await expectFocusRing(canvasElement);
   },
 };

@@ -2,6 +2,7 @@ import type { ComponentProps } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import styled from 'styled-components';
 import { expect, within } from 'storybook/test';
+import { readComputedColour } from '../../test-support/readComputedColour/readComputedColour.ts';
 import { Meter } from './Meter.tsx';
 
 // The colours a reader sees, written out from dashcash-dark.css, Meter.dc.html
@@ -61,19 +62,6 @@ const ONLY_VALUE_REQUIRED: [RequiredProp] extends ['value']
     : false
   : false = true;
 
-// What Chromium computes for a CSS colour, read from a probe element.
-function computedColour(css: string): string {
-  const probe = document.createElement('span');
-  probe.style.color = css;
-  if (probe.style.color === '') {
-    throw new Error(`not a CSS colour: ${css}`);
-  }
-  document.body.append(probe);
-  const value = getComputedStyle(probe).color;
-  probe.remove();
-  return value;
-}
-
 // Holds the Meter out of the pointer's reach while its resting colours are
 // read: Chromium on Linux can apply :hover without pointer movement.
 const Holder = styled.div`
@@ -104,7 +92,7 @@ function theMeter(canvasElement: HTMLElement): HTMLElement {
 
 // The solid bar: the one element inside the meter with a fill.
 async function theBar(meter: HTMLElement): Promise<Element> {
-  const transparent = computedColour(TRANSPARENT);
+  const transparent = readComputedColour(TRANSPARENT);
   const bars = [...meter.querySelectorAll('*')].filter(
     (element) => getComputedStyle(element).backgroundColor !== transparent,
   );
@@ -148,7 +136,7 @@ async function expectMeter(meter: HTMLElement, look: Look): Promise<void> {
     throw new Error('the meter is not held at rest');
   }
   await expect(meter.matches(':hover'), 'hovered').toBe(false);
-  const fill = computedColour(TONE_FILL[look.tone]);
+  const fill = readComputedColour(TONE_FILL[look.tone]);
   const height = look.height ?? DEFAULT_HEIGHT;
 
   await expect(meter, 'minimum').toHaveAttribute('aria-valuemin', '0');
@@ -163,7 +151,9 @@ async function expectMeter(meter: HTMLElement, look: Look): Promise<void> {
   await expect(box.width, 'meter width').toBeCloseTo(FRAME_WIDTH, 1);
   await expect(box.height, 'meter height').toBeCloseTo(height, 1);
   await expect(style.borderTopLeftRadius, 'square meter').toBe('0px');
-  await expect(style.backgroundColor, 'ground').toBe(computedColour(SUNKEN));
+  await expect(style.backgroundColor, 'ground').toBe(
+    readComputedColour(SUNKEN),
+  );
   for (const side of ['Top', 'Right', 'Bottom', 'Left'] as const) {
     await expect(style[`border${side}Width`], `meter ${side} border`).toBe(
       BORDER_WIDTH,
@@ -172,7 +162,7 @@ async function expectMeter(meter: HTMLElement, look: Look): Promise<void> {
       'solid',
     );
     await expect(style[`border${side}Color`], `meter ${side} colour`).toBe(
-      computedColour(DIVIDER),
+      readComputedColour(DIVIDER),
     );
   }
 
@@ -219,7 +209,7 @@ async function expectMeter(meter: HTMLElement, look: Look): Promise<void> {
       1,
     );
     await expect(outlineStyle.backgroundColor, 'outline fill').toBe(
-      computedColour(TRANSPARENT),
+      readComputedColour(TRANSPARENT),
     );
     await expect(outlineStyle.opacity, 'outline opacity').toBe(
       PROJECTION_OPACITY,

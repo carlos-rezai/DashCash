@@ -131,7 +131,7 @@ score** must stay at or above the **Break threshold** of 83.
 - [x] 29 use shared probes in the stat tile stories
 - [x] 30 use shared probes in the stepper stories
 - [x] 31 use shared probes in the year table stories
-- [ ] 32 use shared probes in the global style stories
+- [x] 32 use shared probes in the global style stories
 - [ ] 33 add the untracked path reader to run git
 - [ ] 34 use the untracked reader in check coverage
 - [ ] 35 use the shared readers in check stories

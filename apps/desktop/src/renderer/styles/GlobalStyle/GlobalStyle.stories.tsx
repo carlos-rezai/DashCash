@@ -2,6 +2,9 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import styled from 'styled-components';
 import { expect, userEvent, within } from 'storybook/test';
 
+import { readFirstFamily } from '../../test-support/readFirstFamily/readFirstFamily.ts';
+import { readHoveredStyle } from '../../test-support/readHoveredStyle/readHoveredStyle.ts';
+
 // The proof of the global style (design log I3): Storybook's preview wraps
 // every Story in GlobalStyle and imports the fonts, so these Stories render
 // plain elements and read what the browser computes for them. The expected
@@ -19,12 +22,6 @@ const LINK_HOVER = 'rgb(181, 217, 253)';
 // styles.css: :focus-visible { outline: 2px solid var(--color-accent) },
 // dashcash-dark.css --color-accent #749dc4
 const FOCUS_ACCENT = 'rgb(116, 157, 196)';
-
-// The first family of a computed font-family list, without its quotes.
-function firstFamily(element: Element): string {
-  const [first = ''] = getComputedStyle(element).fontFamily.split(',');
-  return first.trim().replace(/^["']|["']$/g, '');
-}
 
 function normaliseWeight(weight: string): string {
   if (weight === 'normal') return '400';
@@ -137,10 +134,16 @@ export const FontFamilies: Story = {
     const canvas = within(canvasElement);
 
     await expect(
-      firstFamily(canvas.getByText('Every balance from your last import.')),
+      readFirstFamily(
+        getComputedStyle(
+          canvas.getByText('Every balance from your last import.'),
+        ),
+      ),
     ).toBe('Barlow');
     await expect(
-      firstFamily(canvas.getByRole('heading', { name: 'Accounts' })),
+      readFirstFamily(
+        getComputedStyle(canvas.getByRole('heading', { name: 'Accounts' })),
+      ),
     ).toBe('Barlow Condensed');
   },
 };
@@ -151,51 +154,6 @@ export const FontFamilies: Story = {
 const RestingFrame = styled.div`
   pointer-events: none;
 `;
-
-// The marker that stands in for :hover while a hovered style is read.
-const HOVER_MARK = 'data-hover-probe';
-
-// What the element looks like under the pointer. A story's synthetic pointer
-// events do not make Chromium apply :hover, so every :hover rule is copied
-// right after itself with the marker in its place, and the marker is set on
-// the element while the style is read. The marker weighs as much as :hover and
-// each copy follows its rule, so the cascade is that of a real hover.
-function hoveredColour(element: Element): string {
-  const copies: CSSRule[] = [];
-  for (const sheet of document.styleSheets) {
-    const rules = [...sheet.cssRules];
-    for (let index = rules.length - 1; index >= 0; index -= 1) {
-      const rule = rules[index];
-      if (
-        rule instanceof CSSStyleRule &&
-        rule.selectorText.includes(':hover')
-      ) {
-        sheet.insertRule(
-          rule.cssText.replaceAll(':hover', `[${HOVER_MARK}]`),
-          index + 1,
-        );
-        const copy = sheet.cssRules.item(index + 1);
-        if (copy !== null) {
-          copies.push(copy);
-        }
-      }
-    }
-  }
-  element.setAttribute(HOVER_MARK, '');
-  try {
-    return getComputedStyle(element).color;
-  } finally {
-    element.removeAttribute(HOVER_MARK);
-    for (const sheet of document.styleSheets) {
-      for (let index = sheet.cssRules.length - 1; index >= 0; index -= 1) {
-        const rule = sheet.cssRules.item(index);
-        if (rule !== null && copies.includes(rule)) {
-          sheet.deleteRule(index);
-        }
-      }
-    }
-  }
-}
 
 export const LinkInAccent: Story = {
   render: () => (
@@ -209,7 +167,10 @@ export const LinkInAccent: Story = {
 
     await expect(link.matches(':hover'), 'hovered').toBe(false);
     await expect(getComputedStyle(link).color, 'resting').toBe(LINK_ACCENT);
-    await expect(hoveredColour(link), 'hovered colour').toBe(LINK_HOVER);
+    await expect(
+      readHoveredStyle(link, (style) => style.color),
+      'hovered colour',
+    ).toBe(LINK_HOVER);
   },
 };
 

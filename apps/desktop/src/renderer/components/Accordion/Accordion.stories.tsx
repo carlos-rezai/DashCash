@@ -576,6 +576,30 @@ export const WithMetaAndTag: Story = {
   },
 };
 
+// An empty tag and an empty meta are absent, as in Accordion.dc.html (sc-if):
+// the header holds the chevron and the title only, with no Tag and no meta
+// element.
+export const EmptyTagAndMeta: Story = {
+  args: { meta: '', tag: '' },
+  play: async ({ canvasElement }) => {
+    const header = theHeader(theFrame(canvasElement), TITLE);
+    await expectRestingLook(canvasElement, header, false);
+    await expect(header.children, 'children of the header').toHaveLength(2);
+    await expect(header.children[0], 'the chevron first').toBe(
+      theChevron(header).turner,
+    );
+    await expect(header.children[1]?.textContent, 'the title second').toBe(
+      TITLE,
+    );
+    await expect(header.textContent, 'text').toBe(TITLE);
+    const emptyTag = theReference(canvasElement, 'reference-tag');
+    await expect(
+      [...header.children].some((part) => part.outerHTML === emptyTag),
+      'no tag',
+    ).toBe(false);
+  },
+};
+
 // A tag of another tone: the Tag of that tone.
 export const MilestoneTag: Story = {
   args: {

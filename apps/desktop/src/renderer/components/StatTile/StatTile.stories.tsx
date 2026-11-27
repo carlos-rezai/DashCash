@@ -3,6 +3,8 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import styled from 'styled-components';
 import { expect, within } from 'storybook/test';
 import { toCents, type Cents } from '@dashcash/domain/money/cents/cents';
+import { readComputedColour } from '../../test-support/readComputedColour/readComputedColour.ts';
+import { readFirstFamily } from '../../test-support/readFirstFamily/readFirstFamily.ts';
 import * as components from '../index.ts';
 import { StatTile } from './StatTile.tsx';
 
@@ -94,25 +96,6 @@ const CENTS_ARE_CENTS: [StatTileCents] extends [Cents]
     : false
   : false = true;
 
-// What Chromium computes for a CSS colour, read from a probe element.
-function computedColour(css: string): string {
-  const probe = document.createElement('span');
-  probe.style.color = css;
-  if (probe.style.color === '') {
-    throw new Error(`not a CSS colour: ${css}`);
-  }
-  document.body.append(probe);
-  const value = getComputedStyle(probe).color;
-  probe.remove();
-  return value;
-}
-
-// The first family of a computed font-family, without quotes: Chromium quotes
-// only names that contain a space.
-function firstFamily(style: CSSStyleDeclaration): string | undefined {
-  return style.fontFamily.split(',')[0]?.trim().replaceAll('"', '');
-}
-
 // Holds the StatTile out of the pointer's reach while its resting colours are
 // read: Chromium on Linux can apply :hover without pointer movement.
 const Holder = styled.div`
@@ -172,14 +155,14 @@ async function expectTile(
   await expect(tile.matches(':hover'), 'hovered').toBe(false);
 
   const style = getComputedStyle(tile);
-  await expect(style.backgroundColor, 'fill').toBe(computedColour(SURFACE));
+  await expect(style.backgroundColor, 'fill').toBe(readComputedColour(SURFACE));
   for (const side of ['Top', 'Right', 'Bottom', 'Left'] as const) {
     await expect(style[`border${side}Width`], `${side} border`).toBe(
       BORDER_WIDTH,
     );
     await expect(style[`border${side}Style`], `${side} style`).toBe('solid');
     await expect(style[`border${side}Color`], `${side} colour`).toBe(
-      computedColour(CARD_BORDER),
+      readComputedColour(CARD_BORDER),
     );
   }
   const box = tile.getBoundingClientRect();
@@ -188,7 +171,7 @@ async function expectTile(
   const labelBox = label.getBoundingClientRect();
   const labelStyle = getComputedStyle(label);
   await expect(labelStyle.color, 'label colour').toBe(
-    computedColour(TEXT_MUTED),
+    readComputedColour(TEXT_MUTED),
   );
   await expect(labelStyle.fontSize, 'label size').toBe(
     `${String(LABEL_SIZE)}px`,
@@ -206,9 +189,9 @@ async function expectTile(
   const valueBox = value.getBoundingClientRect();
   const valueStyle = getComputedStyle(value);
   await expect(valueStyle.color, 'value colour').toBe(
-    computedColour(look.valueColour),
+    readComputedColour(look.valueColour),
   );
-  await expect(firstFamily(valueStyle), 'value font').toBe(HEADING_FONT);
+  await expect(readFirstFamily(valueStyle), 'value font').toBe(HEADING_FONT);
   await expect(valueStyle.fontWeight, 'value weight').toBe(HEADING_WEIGHT);
   await expect(valueStyle.fontSize, 'value size').toBe(
     `${String(VALUE_SIZE)}px`,
@@ -233,7 +216,7 @@ async function expectTile(
     const hintBox = hint.getBoundingClientRect();
     const hintStyle = getComputedStyle(hint);
     await expect(hintStyle.color, 'hint colour').toBe(
-      computedColour(TEXT_MUTED),
+      readComputedColour(TEXT_MUTED),
     );
     await expect(hintStyle.fontSize, 'hint size').toBe(
       `${String(HINT_SIZE)}px`,

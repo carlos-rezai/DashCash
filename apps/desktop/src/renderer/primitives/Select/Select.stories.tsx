@@ -2,6 +2,8 @@ import { useState, type ComponentProps } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import styled from 'styled-components';
 import { expect, fn, userEvent, within } from 'storybook/test';
+import { readComputedColour } from '../../test-support/readComputedColour/readComputedColour.ts';
+import { readFirstFamily } from '../../test-support/readFirstFamily/readFirstFamily.ts';
 import { Icon } from '../Icon/Icon.tsx';
 import { Select } from './Select.tsx';
 
@@ -76,19 +78,6 @@ type MissingSize = Exclude<ListedSize, SelectSize>;
 type UnlistedSize = Exclude<SelectSize, ListedSize>;
 const NO_MISSING_SIZE: [MissingSize] extends [never] ? true : false = true;
 const NO_UNLISTED_SIZE: [UnlistedSize] extends [never] ? true : false = true;
-
-// What Chromium computes for a CSS colour, read from a probe element.
-function computedColour(css: string): string {
-  const probe = document.createElement('span');
-  probe.style.color = css;
-  if (probe.style.color === '') {
-    throw new Error(`not a CSS colour: ${css}`);
-  }
-  document.body.append(probe);
-  const value = getComputedStyle(probe).color;
-  probe.remove();
-  return value;
-}
 
 // The border colour the stylesheet gives an element under the pointer: that of
 // the :hover rules that select it. A story's synthetic pointer events do not
@@ -188,7 +177,7 @@ function shownText(select: HTMLSelectElement): string {
 
 // The elements of the story's control filled with a colour.
 function filledWith(canvasElement: HTMLElement, css: string): Element[] {
-  const colour = computedColour(css);
+  const colour = readComputedColour(css);
   const control = within(canvasElement).getByTestId('control');
   return [...control.querySelectorAll('*')].filter(
     (element) => getComputedStyle(element).backgroundColor === colour,
@@ -221,11 +210,11 @@ async function expectSelect(
     1,
   );
   await expect(style.backgroundColor, 'fill').toBe(
-    computedColour(INPUT_GROUND),
+    readComputedColour(INPUT_GROUND),
   );
-  await expect(style.color, 'text').toBe(computedColour(look.text));
+  await expect(style.color, 'text').toBe(readComputedColour(look.text));
   await expect(style.fontSize, 'font size').toBe(look.fontSize);
-  await expect(style.fontFamily.startsWith('Barlow'), 'Barlow').toBe(true);
+  await expect(readFirstFamily(style), 'font').toBe('Barlow');
   for (const side of ['Top', 'Right', 'Bottom', 'Left'] as const) {
     await expect(style[`border${side}Width`], `${side} border width`).toBe(
       '1px',
@@ -234,7 +223,7 @@ async function expectSelect(
       'solid',
     );
     await expect(style[`border${side}Color`], `${side} border colour`).toBe(
-      computedColour(look.border),
+      readComputedColour(look.border),
     );
   }
 
@@ -303,7 +292,7 @@ export const Empty: Story = {
     // The chevron is muted, read while the holder keeps the pointer off.
     await expect(select.matches(':hover'), 'hovered').toBe(false);
     await expect(getComputedStyle(svg).color, 'chevron colour').toBe(
-      computedColour(TEXT_MUTED),
+      readComputedColour(TEXT_MUTED),
     );
     await expectSelect(select, {
       height: 36,
@@ -475,7 +464,7 @@ export const HoverAndFocus: Story = {
   play: async ({ canvasElement }) => {
     const select = theSelect(canvasElement, 'Category');
     await expect(getComputedStyle(select).caretColor, 'caret').toBe(
-      computedColour(ACCENT),
+      readComputedColour(ACCENT),
     );
 
     await expect(hoverBorderColours(select), 'hover border').toEqual([
@@ -488,7 +477,7 @@ export const HoverAndFocus: Story = {
     const style = getComputedStyle(select);
     for (const side of ['Top', 'Right', 'Bottom', 'Left'] as const) {
       await expect(style[`border${side}Color`], `${side} focus border`).toBe(
-        computedColour(ACCENT),
+        readComputedColour(ACCENT),
       );
     }
     await expect(style.outlineOffset, 'outline offset').toBe('0px');
@@ -512,7 +501,7 @@ export const WarningHoverAndFocus: Story = {
     // No :hover rule recolours the border, so the resting amber stays.
     await expect(hoverBorderColours(select), 'hover border').toEqual([]);
     await expect(getComputedStyle(select).borderTopColor, 'border').toBe(
-      computedColour(WARNING),
+      readComputedColour(WARNING),
     );
 
     await userEvent.tab();
@@ -521,7 +510,7 @@ export const WarningHoverAndFocus: Story = {
     const style = getComputedStyle(select);
     for (const side of ['Top', 'Right', 'Bottom', 'Left'] as const) {
       await expect(style[`border${side}Color`], `${side} focus border`).toBe(
-        computedColour(WARNING),
+        readComputedColour(WARNING),
       );
     }
     await expect(style.outlineOffset, 'outline offset').toBe('0px');

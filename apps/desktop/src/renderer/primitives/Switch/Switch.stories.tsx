@@ -2,6 +2,8 @@ import { useState, type ComponentProps } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import styled from 'styled-components';
 import { expect, fn, userEvent, within } from 'storybook/test';
+import { readComputedColour } from '../../test-support/readComputedColour/readComputedColour.ts';
+import { readFirstFamily } from '../../test-support/readFirstFamily/readFirstFamily.ts';
 import { Switch } from './Switch.tsx';
 
 // The colours a reader sees, written out from dashcash-dark.css and
@@ -49,19 +51,6 @@ type UnlistedProp = Exclude<SwitchProp, ListedProp>;
 const NO_MISSING_PROP: [MissingProp] extends [never] ? true : false = true;
 const NO_UNLISTED_PROP: [UnlistedProp] extends [never] ? true : false = true;
 
-// What Chromium computes for a CSS colour, read from a probe element.
-function computedColour(css: string): string {
-  const probe = document.createElement('span');
-  probe.style.color = css;
-  if (probe.style.color === '') {
-    throw new Error(`not a CSS colour: ${css}`);
-  }
-  document.body.append(probe);
-  const value = getComputedStyle(probe).color;
-  probe.remove();
-  return value;
-}
-
 // Holds the Switch out of the pointer's reach while its resting colours are
 // read: Chromium on Linux can apply :hover without pointer movement.
 const Holder = styled.div`
@@ -94,12 +83,6 @@ function ControlledSwitch(args: ComponentProps<typeof Switch>) {
 
 function theSwitch(canvasElement: HTMLElement): HTMLElement {
   return within(canvasElement).getByRole('switch');
-}
-
-// The first family of a computed font-family, unquoted as Chromium writes a
-// one-word name.
-function firstFamily(style: CSSStyleDeclaration): string {
-  return style.fontFamily.split(',')[0]?.trim() ?? '';
 }
 
 // The vertical centre of a box.
@@ -156,11 +139,11 @@ async function expectSwitch(control: HTMLElement, look: Look): Promise<void> {
   await expect(control, 'on').toHaveAttribute('aria-checked', String(look.on));
   await expect(style.display, 'display').toBe('inline-flex');
   await expect(style.backgroundColor, 'control fill').toBe(
-    computedColour(TRANSPARENT),
+    readComputedColour(TRANSPARENT),
   );
-  await expect(style.color, 'text').toBe(computedColour(INK));
+  await expect(style.color, 'text').toBe(readComputedColour(INK));
   await expect(style.fontSize, 'font size').toBe(FONT_SIZE);
-  await expect(firstFamily(style), 'font').toBe('Barlow');
+  await expect(readFirstFamily(style), 'font').toBe('Barlow');
   await expect(style.cursor, 'cursor').toBe(
     look.disabled === true ? 'not-allowed' : 'pointer',
   );
@@ -183,7 +166,7 @@ async function expectSwitch(control: HTMLElement, look: Look): Promise<void> {
   await expect(rail.height, 'track height').toBeCloseTo(TRACK_HEIGHT, 1);
   await expect(trackStyle.borderTopLeftRadius, 'square track').toBe('0px');
   await expect(trackStyle.backgroundColor, 'track fill').toBe(
-    computedColour(look.on ? ACCENT : TRANSPARENT),
+    readComputedColour(look.on ? ACCENT : TRANSPARENT),
   );
   for (const side of ['Top', 'Right', 'Bottom', 'Left'] as const) {
     await expect(trackStyle[`border${side}Width`], `track ${side} border`).toBe(
@@ -193,7 +176,7 @@ async function expectSwitch(control: HTMLElement, look: Look): Promise<void> {
       'solid',
     );
     await expect(trackStyle[`border${side}Color`], `track ${side} colour`).toBe(
-      computedColour(look.on ? ACCENT : NEUTRAL_400),
+      readComputedColour(look.on ? ACCENT : NEUTRAL_400),
     );
   }
 
@@ -204,7 +187,7 @@ async function expectSwitch(control: HTMLElement, look: Look): Promise<void> {
   await expect(dot.height, 'knob height').toBeCloseTo(KNOB, 1);
   await expect(knobStyle.borderTopLeftRadius, 'square knob').toBe('0px');
   await expect(knobStyle.backgroundColor, 'knob fill').toBe(
-    computedColour(look.on ? GROUND : NEUTRAL_600),
+    readComputedColour(look.on ? GROUND : NEUTRAL_600),
   );
   await expect(dot.top - rail.top, 'knob top').toBeCloseTo(KNOB_INSET, 1);
   await expect(dot.left - rail.left, 'knob left').toBeCloseTo(

@@ -118,7 +118,7 @@ score** must stay at or above the **Break threshold** of 83.
 - [x] 16 use shared probes in the segmented stories
 - [x] 17 use shared probes in the select stories
 - [x] 18 use shared probes in the swatch stories
-- [ ] 19 use shared probes in the switch stories
+- [x] 19 use shared probes in the switch stories
 - [ ] 20 use shared probes in the tag stories
 - [ ] 21 use shared probes in the accordion stories
 - [ ] 22 use shared probes in the card stories

@@ -357,6 +357,26 @@ export const Loading: Story = {
   },
 };
 
+// An empty title is absent, as in Button.dc.html (title || label): the label
+// is the title.
+export const EmptyTitle: Story = {
+  args: { label: 'Cancel', title: '' },
+  play: async ({ canvasElement }) => {
+    const button = theButton(canvasElement, 'Cancel');
+    await expect(button).toHaveAttribute('title', 'Cancel');
+  },
+};
+
+// An empty loading label is absent, as in Button.dc.html (loadingLabel ||
+// label): while loading, the label stays.
+export const EmptyLoadingLabel: Story = {
+  args: { label: 'Import CSV', loadingLabel: '', loading: true },
+  play: async ({ canvasElement }) => {
+    const button = theButton(canvasElement);
+    await expect(button.textContent.trim()).toBe('Import CSV');
+  },
+};
+
 // A Button in a hidden container is hidden whole: its icon, its Loader and its
 // label are neither seen nor in the accessibility tree. (The shown face must
 // not set an explicit `visibility: visible`, which would override the

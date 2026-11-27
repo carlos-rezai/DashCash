@@ -114,7 +114,7 @@ export function Button({
       $busy={loading}
       disabled={disabled || loading}
       aria-busy={loading}
-      title={title ?? label}
+      title={title === undefined || title === '' ? label : title}
       onClick={onClick}
     >
       <ButtonFace {...common} shown={!loading} lead={icon} text={label} />
@@ -122,7 +122,11 @@ export function Button({
         {...common}
         shown={loading}
         lead="loader"
-        text={loadingLabel ?? label}
+        text={
+          loadingLabel === undefined || loadingLabel === ''
+            ? label
+            : loadingLabel
+        }
       />
     </Control>
   );

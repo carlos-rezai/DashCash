@@ -5,7 +5,7 @@ import {
   runGate,
   type Violation,
 } from '../reportViolations/reportViolations.ts';
-import { runGit } from '../runGit/runGit.ts';
+import { listUntrackedPaths, runGit } from '../runGit/runGit.ts';
 
 export type ChangedLines = ReadonlyMap<string, readonly number[]>;
 export type CoverageReport = ReadonlyMap<string, ReadonlyMap<number, number>>;
@@ -196,14 +196,7 @@ function readChangedLines(cwd: string): ChangedLines {
       changed.set(path, lines);
     }
   }
-  const untracked = runGit(cwd, [
-    'ls-files',
-    '--others',
-    '--exclude-standard',
-    '-z',
-  ])
-    .split('\0')
-    .filter((path) => path !== '' && isMeasured(path));
+  const untracked = listUntrackedPaths(cwd).filter(isMeasured);
   for (const path of untracked) {
     const text = readFileSync(join(cwd, path), 'utf8');
     const count = text.split('\n').length - (text.endsWith('\n') ? 1 : 0);

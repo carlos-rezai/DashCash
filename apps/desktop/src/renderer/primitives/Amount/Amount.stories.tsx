@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, within } from 'storybook/test';
 import { toCents } from '@dashcash/domain/money/cents/cents';
+import { readFirstFamily } from '../../test-support/readFirstFamily/readFirstFamily.ts';
 import { Amount } from './Amount.tsx';
 
 // The colours a reader sees, written out from SPEC section 2 and design
@@ -47,9 +48,7 @@ async function expectAmount(
 
   await expect(style.color).toBe(look.color);
   await expect(style.fontSize).toBe(look.fontSize);
-  // The family name without quotes: Chromium quotes only a name with a space.
-  const family = style.fontFamily.split(',')[0]?.trim().replaceAll('"', '');
-  await expect(family).toBe(look.font);
+  await expect(readFirstFamily(style)).toBe(look.font);
   await expect(style.fontWeight).toBe(look.fontWeight);
   await expect(style.fontVariantNumeric).toBe('tabular-nums');
 

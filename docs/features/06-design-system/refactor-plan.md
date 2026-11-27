@@ -102,7 +102,7 @@ score** must stay at or above the **Break threshold** of 83.
 
 - [x] 01 pin the tag spacing
 - [x] 02 pin the reveal jump under reduced motion
-- [ ] 03 pin the loader under reduced motion
+- [x] 03 pin the loader under reduced motion
 - [ ] 04 pin an empty accordion tag and meta
 - [ ] 05 pin an empty button label
 - [ ] 06 pin an empty loader label

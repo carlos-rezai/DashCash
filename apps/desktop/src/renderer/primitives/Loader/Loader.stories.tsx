@@ -356,6 +356,87 @@ export const CurrentColour: Story = {
   },
 };
 
+// The declarations the `prefers-reduced-motion: reduce` block gives an
+// element. Chromium in the Story tests does not report reduced motion, so the
+// rules are read from the style sheets, not from the cascade.
+function reducedMotionRules(element: Element): CSSStyleDeclaration[] {
+  const rules: CSSStyleDeclaration[] = [];
+  for (const sheet of document.styleSheets) {
+    for (const outer of sheet.cssRules) {
+      if (
+        outer instanceof CSSMediaRule &&
+        outer.conditionText.includes('prefers-reduced-motion: reduce')
+      ) {
+        for (const rule of outer.cssRules) {
+          if (
+            rule instanceof CSSStyleRule &&
+            element.matches(rule.selectorText)
+          ) {
+            rules.push(rule.style);
+          }
+        }
+      }
+    }
+  }
+  return rules;
+}
+
+// The opacity at each offset of a named @keyframes rule.
+function keyframeOpacities(name: string): Record<string, string> {
+  const opacities: Record<string, string> = {};
+  for (const sheet of document.styleSheets) {
+    for (const rule of sheet.cssRules) {
+      if (rule instanceof CSSKeyframesRule && rule.name === name) {
+        for (const frame of rule.cssRules) {
+          if (frame instanceof CSSKeyframeRule) {
+            for (const offset of frame.keyText.split(',')) {
+              opacities[offset.trim()] = frame.style.opacity;
+            }
+          }
+        }
+      }
+    }
+  }
+  return opacities;
+}
+
+// Under reduced motion the mark breathes and every stroke and the orbit stand
+// still and in full.
+export const ReducedMotion: Story = {
+  args: { variant: 'orbit', size: 48, delay: 0 },
+  play: async ({ canvasElement }) => {
+    const status = within(canvasElement).getByRole('status', {
+      name: 'Loading',
+    });
+    const mark = await readMark(status, 48, true);
+
+    const breathing = reducedMotionRules(mark.svg);
+    await expect(breathing).toHaveLength(1);
+    const [breath] = breathing;
+    await expect(breath?.animationDuration).toBe('2.4s');
+    await expect(breath?.animationTimingFunction).toBe('ease-in-out');
+    await expect(breath?.animationIterationCount).toBe('infinite');
+    await expect(
+      keyframeOpacities(breath?.animationName ?? ''),
+      'the keyframes of the breathing',
+    ).toEqual({ '0%': '1', '50%': '0.45', '100%': '1' });
+
+    const orbit = mark.c?.parentElement ?? null;
+    await expect(orbit?.tagName).toBe('g');
+    const still = [orbit, mark.c, mark.line, ...mark.dashes];
+    await expect(still).toHaveLength(6);
+    for (const [index, element] of still.entries()) {
+      const rules = reducedMotionRules(element ?? mark.svg);
+      await expect(rules, `stroke ${String(index)}`).toHaveLength(1);
+      const [rule] = rules;
+      await expect(rule?.animationName, `stroke ${String(index)}`).toBe('none');
+      await expect(rule?.strokeDashoffset, `stroke ${String(index)}`).toBe('0');
+      await expect(rule?.opacity, `stroke ${String(index)}`).toBe('1');
+      await expect(rule?.transform, `stroke ${String(index)}`).toBe('none');
+    }
+  },
+};
+
 // The default delay of 300 ms: nothing shows before it, the status after it.
 export const Delayed: Story = {
   args: {},

@@ -7,6 +7,9 @@ import { Amount } from '../../primitives/Amount/Amount.tsx';
 import { Icon, type IconName } from '../../primitives/Icon/Icon.tsx';
 import { Swatch } from '../../primitives/Swatch/Swatch.tsx';
 import { Tag, type TagTone } from '../../primitives/Tag/Tag.tsx';
+import { readComputedColour } from '../../test-support/readComputedColour/readComputedColour.ts';
+import { readFirstFamily } from '../../test-support/readFirstFamily/readFirstFamily.ts';
+import { readHoveredStyle } from '../../test-support/readHoveredStyle/readHoveredStyle.ts';
 import * as components from '../index.ts';
 import { YearTable } from './YearTable.tsx';
 
@@ -453,77 +456,6 @@ const SCROLL_YEARS: Year[] = [2026, 2027, 2028, 2029, 2030].map(
 );
 const SCROLL_COLUMNS: Column[] = [{ label: 'Balance' }, { label: 'Change' }];
 
-// What Chromium computes for a CSS colour, read from a probe element.
-function computedColour(css: string): string {
-  const probe = document.createElement('span');
-  probe.style.color = css;
-  if (probe.style.color === '') {
-    throw new Error(`not a CSS colour: ${css}`);
-  }
-  document.body.append(probe);
-  const value = getComputedStyle(probe).color;
-  probe.remove();
-  return value;
-}
-
-// The first family of a computed font-family, without quotes: Chromium quotes
-// only names that contain a space.
-function firstFamily(style: CSSStyleDeclaration): string | undefined {
-  return style.fontFamily.split(',')[0]?.trim().replaceAll('"', '');
-}
-
-// The marker that stands in for :hover while a hovered style is read.
-const HOVER_MARK = 'data-hover-probe';
-
-// The fill of the element under the pointer. A story's synthetic pointer
-// events do not make Chromium apply :hover, so every :hover rule is copied
-// right after itself with the marker in its place, and the marker is set on
-// the element and its ancestors while the style is read. The marker weighs as
-// much as :hover and each copy follows its rule, so the cascade is that of a
-// real hover.
-function hoveredFill(element: Element): string {
-  const copies: CSSRule[] = [];
-  for (const sheet of document.styleSheets) {
-    const rules = [...sheet.cssRules];
-    for (let index = rules.length - 1; index >= 0; index -= 1) {
-      const rule = rules[index];
-      if (
-        rule instanceof CSSStyleRule &&
-        rule.selectorText.includes(':hover')
-      ) {
-        sheet.insertRule(
-          rule.cssText.replaceAll(':hover', `[${HOVER_MARK}]`),
-          index + 1,
-        );
-        const copy = sheet.cssRules.item(index + 1);
-        if (copy !== null) {
-          copies.push(copy);
-        }
-      }
-    }
-  }
-  const marked: Element[] = [];
-  for (let node: Element | null = element; node; node = node.parentElement) {
-    node.setAttribute(HOVER_MARK, '');
-    marked.push(node);
-  }
-  try {
-    return getComputedStyle(element).backgroundColor;
-  } finally {
-    for (const node of marked) {
-      node.removeAttribute(HOVER_MARK);
-    }
-    for (const sheet of document.styleSheets) {
-      for (let index = sheet.cssRules.length - 1; index >= 0; index -= 1) {
-        const rule = sheet.cssRules.item(index);
-        if (rule !== null && copies.includes(rule)) {
-          sheet.deleteRule(index);
-        }
-      }
-    }
-  }
-}
-
 // The turn a computed transform describes, as the matrix Chromium gives for
 // it; none is no turn.
 function turnOf(transform: string): DOMMatrix {
@@ -826,7 +758,7 @@ async function expectHeaders(
     );
     await expect(style.letterSpacing, 'header spacing').toBe(HEAD_SPACING);
     await expect(style.textTransform, 'header case').toBe('uppercase');
-    await expect(style.color, 'header ink').toBe(computedColour(HEAD_INK));
+    await expect(style.color, 'header ink').toBe(readComputedColour(HEAD_INK));
     for (const side of ['Top', 'Right', 'Bottom', 'Left'] as const) {
       await expect(style[`padding${side}`], `header ${side} padding`).toBe(
         `${String(CELL_PADDING)}px`,
@@ -835,7 +767,7 @@ async function expectHeaders(
     await expect(style.borderBottomWidth, 'header line').toBe('1px');
     await expect(style.borderBottomStyle, 'header line style').toBe('solid');
     await expect(style.borderBottomColor, 'header line colour').toBe(
-      computedColour(DIVIDER),
+      readComputedColour(DIVIDER),
     );
     await expect(style.whiteSpace, 'header never wraps').toBe('nowrap');
     await expect(style.verticalAlign, 'header at the bottom').toBe('bottom');
@@ -909,7 +841,7 @@ async function expectYearRow(
   const rowStyle = getComputedStyle(row);
   await expect(rowStyle.cursor, 'cursor').toBe('pointer');
   await expect(rowStyle.backgroundColor, 'no fill').toBe(
-    computedColour(TRANSPARENT),
+    readComputedColour(TRANSPARENT),
   );
 
   const first = cell(row, 0);
@@ -924,7 +856,7 @@ async function expectYearRow(
   const firstStyle = getComputedStyle(first);
   const buttonStyle = getComputedStyle(button);
   await expect(buttonStyle.backgroundColor, 'button no fill').toBe(
-    computedColour(TRANSPARENT),
+    readComputedColour(TRANSPARENT),
   );
   for (const side of ['Top', 'Right', 'Bottom', 'Left'] as const) {
     await expect(
@@ -958,7 +890,7 @@ async function expectYearRow(
     'the 16 px chevronRight',
   ).toBe(true);
   await expect(getComputedStyle(svg).color, 'chevron colour').toBe(
-    computedColour(TEXT_MUTED),
+    readComputedColour(TEXT_MUTED),
   );
   const turnerStyle = getComputedStyle(turner);
   await expect(turnerStyle.display, 'chevron holder').toBe('flex');
@@ -981,7 +913,7 @@ async function expectYearRow(
 
   const label = within(first).getByText(year.label);
   const labelStyle = getComputedStyle(label);
-  await expect(firstFamily(labelStyle), 'year font').toBe(HEADING_FONT);
+  await expect(readFirstFamily(labelStyle), 'year font').toBe(HEADING_FONT);
   await expect(labelStyle.fontSize, 'year size').toBe(YEAR_SIZE);
   await expect(labelStyle.fontWeight, 'year weight').toBe(YEAR_WEIGHT);
   await expect(box(label).left - box(turner).right, 'chevron gap').toBeCloseTo(
@@ -1040,7 +972,7 @@ async function expectCells(
     await expect(style.borderBottomWidth, `${name} line`).toBe('1px');
     await expect(style.borderBottomStyle, `${name} line style`).toBe('solid');
     await expect(style.borderBottomColor, `${name} line colour`).toBe(
-      computedColour(ROW_LINE),
+      readComputedColour(ROW_LINE),
     );
 
     const id = referenceId(...idParts, 'cell', index);
@@ -1062,7 +994,7 @@ async function expectCells(
       const holderStyle = getComputedStyle(holder);
       await expect(holderStyle.display, `${name} holder`).toBe('inline-flex');
       await expect(holderStyle.color, `${name} icon colour`).toBe(
-        data.color === undefined ? style.color : computedColour(data.color),
+        data.color === undefined ? style.color : readComputedColour(data.color),
       );
       if (data.title !== undefined) {
         await expect(holder, `${name} tooltip`).toHaveAttribute(
@@ -1079,7 +1011,7 @@ async function expectCells(
         TEXT_CELL_SIZE,
       );
       await expect(spanStyle.color, `${name} text colour`).toBe(
-        computedColour(TEXT_MUTED),
+        readComputedColour(TEXT_MUTED),
       );
       await expect(spanStyle.whiteSpace, `${name} text never wraps`).toBe(
         'nowrap',
@@ -1109,7 +1041,7 @@ async function expectMonthRow(
   await expect(
     getComputedStyle(row).backgroundColor,
     `${data.label} ground`,
-  ).toBe(computedColour(ground));
+  ).toBe(readComputedColour(ground));
 
   const first = cell(row, 0);
   await expect(getComputedStyle(first).paddingLeft, 'month inset').toBe(
@@ -1131,7 +1063,7 @@ async function expectMonthRow(
   const labelStyle = getComputedStyle(label);
   await expect(labelStyle.fontSize, 'month size').toBe(TABLE_SIZE);
   await expect(labelStyle.color, `${data.label} label colour`).toBe(
-    computedColour(labelColour),
+    readComputedColour(labelColour),
   );
 
   if (data.tag === undefined) {
@@ -1585,7 +1517,10 @@ export const YearRowHover: Story = {
   render: renderIn(FRAME_WIDTH, false),
   play: async ({ canvasElement }) => {
     const row = yearRow(theTable(theFrame(canvasElement)), String(TODAY_YEAR));
-    await expect(hoveredFill(row), 'hover fill').toBe(computedColour(HOVER));
+    await expect(
+      readHoveredStyle(row, (style) => style.backgroundColor),
+      'hover fill',
+    ).toBe(readComputedColour(HOVER));
   },
 };
 

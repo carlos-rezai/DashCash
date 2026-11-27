@@ -2,6 +2,8 @@ import { useState, type ComponentProps } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import styled from 'styled-components';
 import { expect, fn, userEvent, within } from 'storybook/test';
+import { readComputedColour } from '../../test-support/readComputedColour/readComputedColour.ts';
+import { readFirstFamily } from '../../test-support/readFirstFamily/readFirstFamily.ts';
 import { Checkbox } from './Checkbox.tsx';
 
 // The colours a reader sees, written out from dashcash-dark.css and
@@ -41,19 +43,6 @@ type UnlistedProp = Exclude<CheckboxProp, ListedProp>;
 const NO_MISSING_PROP: [MissingProp] extends [never] ? true : false = true;
 const NO_UNLISTED_PROP: [UnlistedProp] extends [never] ? true : false = true;
 
-// What Chromium computes for a CSS colour, read from a probe element.
-function computedColour(css: string): string {
-  const probe = document.createElement('span');
-  probe.style.color = css;
-  if (probe.style.color === '') {
-    throw new Error(`not a CSS colour: ${css}`);
-  }
-  document.body.append(probe);
-  const value = getComputedStyle(probe).color;
-  probe.remove();
-  return value;
-}
-
 // Holds the Checkbox out of the pointer's reach while its resting colours are
 // read: Chromium on Linux can apply :hover without pointer movement.
 const Holder = styled.div`
@@ -91,12 +80,6 @@ function ControlledCheckbox(args: ComponentProps<typeof Checkbox>) {
 
 function theCheckbox(canvasElement: HTMLElement): HTMLElement {
   return within(canvasElement).getByRole('checkbox');
-}
-
-// The first family of a computed font-family, unquoted as Chromium writes a
-// one-word name.
-function firstFamily(style: CSSStyleDeclaration): string {
-  return style.fontFamily.split(',')[0]?.trim() ?? '';
 }
 
 // The vertical centre of a box.
@@ -150,11 +133,11 @@ async function expectCheckbox(control: HTMLElement, look: Look): Promise<void> {
   );
   await expect(style.display, 'display').toBe('inline-flex');
   await expect(style.backgroundColor, 'control fill').toBe(
-    computedColour(TRANSPARENT),
+    readComputedColour(TRANSPARENT),
   );
-  await expect(style.color, 'text').toBe(computedColour(INK));
+  await expect(style.color, 'text').toBe(readComputedColour(INK));
   await expect(style.fontSize, 'font size').toBe(FONT_SIZE);
-  await expect(firstFamily(style), 'font').toBe('Barlow');
+  await expect(readFirstFamily(style), 'font').toBe('Barlow');
   await expect(style.cursor, 'cursor').toBe(
     look.disabled === true ? 'not-allowed' : 'pointer',
   );
@@ -173,7 +156,7 @@ async function expectCheckbox(control: HTMLElement, look: Look): Promise<void> {
   await expect(square.width, 'box width').toBeCloseTo(BOX, 1);
   await expect(square.height, 'box height').toBeCloseTo(BOX, 1);
   await expect(boxStyle.backgroundColor, 'box fill').toBe(
-    computedColour(look.checked ? ACCENT : TRANSPARENT),
+    readComputedColour(look.checked ? ACCENT : TRANSPARENT),
   );
   for (const side of ['Top', 'Right', 'Bottom', 'Left'] as const) {
     await expect(boxStyle[`border${side}Width`], `box ${side} border`).toBe(
@@ -183,7 +166,7 @@ async function expectCheckbox(control: HTMLElement, look: Look): Promise<void> {
       'solid',
     );
     await expect(boxStyle[`border${side}Color`], `box ${side} colour`).toBe(
-      computedColour(look.checked ? ACCENT : NEUTRAL_400),
+      readComputedColour(look.checked ? ACCENT : NEUTRAL_400),
     );
   }
 
@@ -195,7 +178,7 @@ async function expectCheckbox(control: HTMLElement, look: Look): Promise<void> {
     await expect(mark.width, 'check width').toBeCloseTo(CHECK, 1);
     await expect(mark.height, 'check height').toBeCloseTo(CHECK, 1);
     await expect(getComputedStyle(check).color, 'check colour').toBe(
-      computedColour(GROUND),
+      readComputedColour(GROUND),
     );
     await expect(centre(mark), 'check centred across').toBeCloseTo(
       centre(square),

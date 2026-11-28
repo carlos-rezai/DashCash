@@ -18,7 +18,7 @@ type ControlProps = {
   $swatch: boolean;
 };
 
-function textColour(
+function pickTextColour(
   { $chosen, $tone }: ControlProps,
   theme: DefaultTheme,
 ): string {
@@ -40,7 +40,7 @@ export const Control = styled.select<ControlProps>`
   font-family: ${({ theme }) => theme.font.body};
   font-size: ${({ $size, theme }) => theme.fontSize[$size]};
   line-height: 1.2;
-  color: ${(props) => textColour(props, props.theme)};
+  color: ${(props) => pickTextColour(props, props.theme)};
   background: ${({ theme }) => theme.color.inputBg};
   border: ${({ theme }) => theme.size.hairline} solid
     ${({ $tone, theme }) =>

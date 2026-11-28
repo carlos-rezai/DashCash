@@ -6,7 +6,7 @@ export type TagTone =
 type Look = { fill: string; text: string; border: string };
 
 // SPEC section 3, Tag fills.
-function look(tone: TagTone, theme: DefaultTheme): Look {
+function pickLook(tone: TagTone, theme: DefaultTheme): Look {
   const { color } = theme;
   const none = 'transparent';
   switch (tone) {
@@ -48,9 +48,9 @@ export const Frame = styled.span<{ $tone: TagTone }>`
   letter-spacing: ${({ theme }) => theme.font.tagLetterSpacing};
   line-height: 1;
   white-space: nowrap;
-  background: ${({ $tone, theme }) => look($tone, theme).fill};
-  color: ${({ $tone, theme }) => look($tone, theme).text};
+  background: ${({ $tone, theme }) => pickLook($tone, theme).fill};
+  color: ${({ $tone, theme }) => pickLook($tone, theme).text};
   border: ${({ theme }) => theme.size.hairline} solid
-    ${({ $tone, theme }) => look($tone, theme).border};
+    ${({ $tone, theme }) => pickLook($tone, theme).border};
   border-radius: ${({ theme }) => theme.size.radius};
 `;

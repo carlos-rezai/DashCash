@@ -88,7 +88,7 @@ const GROW: ((theme: DefaultTheme) => ReturnType<typeof keyframes>)[] = [
 ];
 
 // One loop of a motion, in the Theme's duration.
-function loop(
+function animateLoop(
   name: ReturnType<typeof keyframes>,
   theme: DefaultTheme,
   extra = '',
@@ -105,20 +105,23 @@ type StrokeProps = {
   $index: number;
 };
 
-function motionOf({ $motion, $index }: StrokeProps, theme: DefaultTheme) {
+function pickStrokeMotion(
+  { $motion, $index }: StrokeProps,
+  theme: DefaultTheme,
+) {
   switch ($motion) {
     case 'drawC':
-      return loop(drawC, theme);
+      return animateLoop(drawC, theme);
     case 'drawLine':
-      return loop(drawLine, theme);
+      return animateLoop(drawLine, theme);
     case 'drawDash':
-      return loop(DRAW_DASH[$index] ?? drawDash1, theme);
+      return animateLoop(DRAW_DASH[$index] ?? drawDash1, theme);
     case 'grow':
-      return loop((GROW[$index] ?? grow1)(theme), theme);
+      return animateLoop((GROW[$index] ?? grow1)(theme), theme);
     case 'march':
       // The dashes pulse in turn, 1/6 loop apart.
       return css`
-        ${loop(march(theme), theme)}
+        ${animateLoop(march(theme), theme)}
         animation-delay: calc(${theme.motion.loaderLoop} * ${$index} / 6);
       `;
     default:
@@ -139,14 +142,14 @@ const stillStroke = css`
 export const Stroke = styled.path<StrokeProps>`
   fill: none;
   stroke: currentColor;
-  ${(props) => motionOf(props, props.theme)}
+  ${(props) => pickStrokeMotion(props, props.theme)}
   ${stillStroke}
 `;
 
 export const Orbit = styled.g`
   transform-origin: ${LOGO_CENTRE}px ${LOGO_CENTRE}px;
   transform-box: view-box;
-  ${({ theme }) => loop(spin, theme, 'linear')}
+  ${({ theme }) => animateLoop(spin, theme, 'linear')}
   ${stillStroke}
 `;
 

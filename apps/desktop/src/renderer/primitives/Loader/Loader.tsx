@@ -37,28 +37,28 @@ const DASH_ARRAY = '1 1.05';
 const SMALL_DASH_WIDTH = 5.2;
 
 // A point on the 45 degree line, t along it from the centre.
-function onDiagonal(t: number): string {
+function placeOnDiagonal(t: number): string {
   const x = LOGO_CENTRE + LOGO_DIAGONAL * t;
   const y = LOGO_CENTRE - LOGO_DIAGONAL * t;
   return `${x.toFixed(3)} ${y.toFixed(3)}`;
 }
 
-function segment(from: number, to: number): string {
-  return `M${onDiagonal(from)} L${onDiagonal(to)}`;
+function drawSegment(from: number, to: number): string {
+  return `M${placeOnDiagonal(from)} L${placeOnDiagonal(to)}`;
 }
 
-function dashPaths(small: boolean, strokeWidth: number): string[] {
+function buildDashPaths(small: boolean, strokeWidth: number): string[] {
   if (small) {
-    return [segment(-13, -5.5), segment(-3, 4.5), segment(7, 14.5)];
+    return [drawSegment(-13, -5.5), drawSegment(-3, 4.5), drawSegment(7, 14.5)];
   }
   return [
-    segment(LOGO_UNIT, 3 * LOGO_UNIT),
-    segment(4 * LOGO_UNIT, 6 * LOGO_UNIT),
-    segment(7 * LOGO_UNIT, LOGO_RADIUS + strokeWidth / 2),
+    drawSegment(LOGO_UNIT, 3 * LOGO_UNIT),
+    drawSegment(4 * LOGO_UNIT, 6 * LOGO_UNIT),
+    drawSegment(7 * LOGO_UNIT, LOGO_RADIUS + strokeWidth / 2),
   ];
 }
 
-function dashMotion(variant: LoaderVariant, small: boolean): StrokeMotion {
+function pickDashMotion(variant: LoaderVariant, small: boolean): StrokeMotion {
   if (variant === 'draw') {
     return 'drawDash';
   }
@@ -99,7 +99,7 @@ export function Loader({
   const strokeWidth = computeLogoStrokeWidth(size);
   const large = size >= LARGE_FROM;
   const drawn = variant === 'draw';
-  const motion = dashMotion(variant, small);
+  const motion = pickDashMotion(variant, small);
   const shownLabel = hasText(label) ? label : null;
 
   const arc = (
@@ -143,7 +143,7 @@ export function Loader({
               />
             </>
           )}
-          {dashPaths(small, strokeWidth).map((d, index) => (
+          {buildDashPaths(small, strokeWidth).map((d, index) => (
             <Stroke
               key={d}
               d={d}

@@ -165,7 +165,7 @@ score** must stay at or above the **Break threshold** of 83.
 - [x] 63 use the hairline token in the input styles
 - [x] 64 use the hairline token in the meter styles
 - [x] 65 use the hairline token in the segmented styles
-- [ ] 66 use the hairline token in the select styles
+- [x] 66 use the hairline token in the select styles
 - [ ] 67 use the hairline token in the switch styles
 - [ ] 68 use the hairline token in the tag styles
 - [ ] 69 use opacity tokens in the loader styles

@@ -42,7 +42,7 @@ export const Control = styled.select<ControlProps>`
   line-height: 1.2;
   color: ${(props) => textColour(props, props.theme)};
   background: ${({ theme }) => theme.color.inputBg};
-  border: 1px solid
+  border: ${({ theme }) => theme.size.hairline} solid
     ${({ $tone, theme }) =>
       $tone === 'warning' ? theme.color.warning : theme.color.divider};
   border-radius: ${({ theme }) => theme.size.radius};

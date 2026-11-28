@@ -149,7 +149,7 @@ score** must stay at or above the **Break threshold** of 83.
 - [x] 47 use has text in the modal
 - [x] 48 use has text in the page header
 - [x] 49 use has text in the snackbar
-- [ ] 50 use has text in the stat tile
+- [x] 50 use has text in the stat tile
 - [ ] 51 use has text in the year table
 - [ ] 52 add the hairline token in the accordion styles
 - [ ] 53 use the hairline token in the card styles

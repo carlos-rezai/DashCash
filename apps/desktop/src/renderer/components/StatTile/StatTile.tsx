@@ -1,5 +1,6 @@
 import type { Cents } from '@dashcash/domain/money/cents/cents';
 import { Amount } from '../../primitives/Amount/Amount.tsx';
+import { hasText } from '../../utils/hasText/hasText.ts';
 import {
   Frame,
   Hint,
@@ -38,7 +39,7 @@ export function StatTile({
           tone={tone === 'default' ? 'auto' : tone}
         />
       )}
-      {hint ? <Hint>{hint}</Hint> : null}
+      {hasText(hint) ? <Hint>{hint}</Hint> : null}
     </Frame>
   );
 }

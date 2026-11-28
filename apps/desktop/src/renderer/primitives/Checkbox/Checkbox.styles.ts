@@ -26,7 +26,7 @@ export const Box = styled.span<{ $checked: boolean }>`
   color: ${({ theme }) => theme.color.bg};
   background: ${({ $checked, theme }) =>
     $checked ? theme.color.accent[500] : 'transparent'};
-  border: 1px solid
+  border: ${({ theme }) => theme.size.hairline} solid
     ${({ $checked, theme }) =>
       $checked ? theme.color.accent[500] : theme.color.neutral[400]};
 `;

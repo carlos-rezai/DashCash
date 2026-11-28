@@ -5,6 +5,7 @@ import { Amount } from '../../primitives/Amount/Amount.tsx';
 import { Icon, type IconName } from '../../primitives/Icon/Icon.tsx';
 import { Swatch } from '../../primitives/Swatch/Swatch.tsx';
 import { Tag, type TagTone } from '../../primitives/Tag/Tag.tsx';
+import { hasText } from '../../utils/hasText/hasText.ts';
 import {
   Chevron,
   CellText,
@@ -82,11 +83,6 @@ const CELL_ICON_SIZE = 14;
 const DEFAULT_FIRST_LABEL = 'Year · month';
 const EMPTY: Cell = { type: 'empty' };
 
-// An empty string is absent, as in the prototype.
-function present(text: string | undefined): text is string {
-  return text !== undefined && text !== '';
-}
-
 function CellContent({ cell, strong }: { cell: Cell; strong: boolean }) {
   switch (cell.type) {
     case 'amount':
@@ -103,7 +99,7 @@ function CellContent({ cell, strong }: { cell: Cell; strong: boolean }) {
       return (
         <IconHolder
           $color={cell.color}
-          {...(present(cell.title)
+          {...(hasText(cell.title)
             ? { role: 'img', title: cell.title, 'aria-label': cell.title }
             : {})}
         >
@@ -159,7 +155,7 @@ function YearBody({
               <Icon glyph="chevronRight" size={CHEVRON_SIZE} />
             </Chevron>
             <YearLabel>{year.label}</YearLabel>
-            {present(year.tag) ? (
+            {hasText(year.tag) ? (
               <Tag
                 label={year.tag}
                 tone={year.tagTone ?? 'neutral'}
@@ -176,7 +172,7 @@ function YearBody({
               <DataCell $align="left" $inset>
                 <MonthHead>
                   <Month $muted={month.muted === true}>{month.label}</Month>
-                  {present(month.tag) ? (
+                  {hasText(month.tag) ? (
                     <Tag
                       label={month.tag}
                       tone={month.tagTone ?? 'outline'}
@@ -227,7 +223,7 @@ export function YearTable({
         <thead>
           <tr>
             <Head $align="left" $width={equalColumns ? firstWidth : '1%'}>
-              {present(firstLabel) ? firstLabel : DEFAULT_FIRST_LABEL}
+              {hasText(firstLabel) ? firstLabel : DEFAULT_FIRST_LABEL}
             </Head>
             {columns.map((column, index) => {
               const align = column.align ?? 'right';

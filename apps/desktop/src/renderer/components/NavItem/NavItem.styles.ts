@@ -33,7 +33,7 @@ export const Frame = styled.button<FrameProps>`
     $active ? theme.color.accent[100] : 'transparent'};
   color: ${({ $active, theme }) =>
     $active ? theme.color.text : theme.color.textMuted};
-  border: 1px solid
+  border: ${({ theme }) => theme.size.hairline} solid
     ${({ $active, theme }) => ($active ? theme.color.accent[300] : 'transparent')};
   font-family: ${({ theme }) => theme.font.body};
   font-size: ${({ theme }) => theme.fontSize.md};

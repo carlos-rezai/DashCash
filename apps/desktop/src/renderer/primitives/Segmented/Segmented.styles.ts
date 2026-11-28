@@ -9,7 +9,8 @@ export const Group = styled.div<{ $size: SegmentedSize }>`
   display: inline-flex;
   flex: none;
   height: ${({ $size, theme }) => theme.size.controlHeight[$size]};
-  border: 1px solid ${({ theme }) => theme.color.divider};
+  border: ${({ theme }) => theme.size.hairline} solid
+    ${({ theme }) => theme.color.divider};
   border-radius: ${({ theme }) => theme.size.radius};
 `;
 
@@ -37,7 +38,8 @@ export const Option = styled.button<OptionProps>`
   border: 0;
 
   & + & {
-    border-left: 1px solid ${({ theme }) => theme.color.divider};
+    border-left: ${({ theme }) => theme.size.hairline} solid
+      ${({ theme }) => theme.color.divider};
   }
 
   &:hover {

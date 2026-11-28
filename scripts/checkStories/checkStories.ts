@@ -1,4 +1,4 @@
-import { runGit } from '../runGit/runGit.ts';
+import { listTrackedPaths, listUntrackedPaths } from '../runGit/runGit.ts';
 import {
   runGate,
   type Violation,
@@ -29,16 +29,8 @@ export function findMissingStories(paths: readonly string[]): Violation[] {
 }
 
 // Every tracked path and every untracked path that is not ignored.
-function listCandidatePaths(cwd: string): string[] {
-  return runGit(cwd, [
-    'ls-files',
-    '-z',
-    '--cached',
-    '--others',
-    '--exclude-standard',
-  ])
-    .split('\0')
-    .filter((path) => path !== '');
+export function listCandidatePaths(cwd: string): string[] {
+  return [...listTrackedPaths(cwd), ...listUntrackedPaths(cwd)];
 }
 
 if (import.meta.main) {

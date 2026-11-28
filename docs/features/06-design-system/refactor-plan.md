@@ -134,7 +134,7 @@ score** must stay at or above the **Break threshold** of 83.
 - [x] 32 use shared probes in the global style stories
 - [x] 33 add the untracked path reader to run git
 - [x] 34 use the untracked reader in check coverage
-- [ ] 35 use the shared readers in check stories
+- [x] 35 use the shared readers in check stories
 - [ ] 36 add the has text helper
 - [ ] 37 use has text in the button
 - [ ] 38 use has text in the checkbox

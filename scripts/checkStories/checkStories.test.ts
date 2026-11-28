@@ -9,7 +9,7 @@ import {
   runSampleGit as git,
   writeTreeFile,
 } from '../test-support/sampleRepository/sampleRepository.ts';
-import { findMissingStories } from './checkStories.ts';
+import { findMissingStories, listCandidatePaths } from './checkStories.ts';
 
 const RENDERER = 'apps/desktop/src/renderer';
 
@@ -147,6 +147,33 @@ describe('findMissingStories', () => {
         })),
       ),
     );
+  });
+});
+
+describe('listCandidatePaths', { timeout: 30_000 }, () => {
+  let repo: string;
+
+  beforeEach(() => {
+    repo = mkdtempSync(join(tmpdir(), 'dashcash-candidates-'));
+    initSampleRepository(repo);
+  });
+
+  afterEach(() => {
+    rmSync(repo, { recursive: true, force: true });
+  });
+
+  it('lists the tracked paths, then the untracked ones, and leaves out an ignored one', () => {
+    writeTreeFile(repo, '.gitignore', '*.log\n');
+    writeTreeFile(repo, 'tracked.txt', 'tracked\n');
+    git(repo, 'add', '.gitignore', 'tracked.txt');
+    writeTreeFile(repo, 'a-untracked.txt', 'untracked\n');
+    writeTreeFile(repo, 'ignored.log', 'ignored\n');
+
+    expect(listCandidatePaths(repo)).toEqual([
+      '.gitignore',
+      'tracked.txt',
+      'a-untracked.txt',
+    ]);
   });
 });
 

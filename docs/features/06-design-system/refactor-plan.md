@@ -168,7 +168,7 @@ score** must stay at or above the **Break threshold** of 83.
 - [x] 66 use the hairline token in the select styles
 - [x] 67 use the hairline token in the switch styles
 - [x] 68 use the hairline token in the tag styles
-- [ ] 69 use opacity tokens in the loader styles
+- [x] 69 use opacity tokens in the loader styles
 - [ ] 70 move the logo geometry into utils
 - [ ] 71 use the logo geometry in the loader
 - [ ] 72 rename the amount colour helpers

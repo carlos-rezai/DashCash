@@ -167,6 +167,12 @@ export const theme = {
       projection: 0.8,
       // Sparkline.dc.html: the dashed future line
       future: 0.85,
+      // loader-keyframes.css: a marching dash between its pulses
+      loaderMarch: 0.2,
+      // loader-keyframes.css: a growing dash before it lights up
+      loaderGrow: 0.18,
+      // loader-keyframes.css: the low point of the reduced-motion breathing
+      loaderBreathe: 0.45,
     },
   },
   font: {

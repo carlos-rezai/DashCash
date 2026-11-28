@@ -40,35 +40,36 @@ const drawDash3 = keyframes`
   86% { opacity: 1; }
   100% { opacity: 0; }
 `;
-const march = keyframes`
-  0% { opacity: 0.2; }
+// The keyframes whose opacities are Theme tokens are built from the Theme.
+const march = (theme: DefaultTheme) => keyframes`
+  0% { opacity: ${theme.color.opacity.loaderMarch}; }
   25% { opacity: 1; }
-  55%, 100% { opacity: 0.2; }
+  55%, 100% { opacity: ${theme.color.opacity.loaderMarch}; }
 `;
 const spin = keyframes`
   to { transform: rotate(360deg); }
 `;
-const grow1 = keyframes`
-  0%, 12% { opacity: 0.18; }
+const grow1 = (theme: DefaultTheme) => keyframes`
+  0%, 12% { opacity: ${theme.color.opacity.loaderGrow}; }
   20% { opacity: 1; }
   86% { opacity: 1; }
-  100% { opacity: 0.18; }
+  100% { opacity: ${theme.color.opacity.loaderGrow}; }
 `;
-const grow2 = keyframes`
-  0%, 34% { opacity: 0.18; }
+const grow2 = (theme: DefaultTheme) => keyframes`
+  0%, 34% { opacity: ${theme.color.opacity.loaderGrow}; }
   42% { opacity: 1; }
   86% { opacity: 1; }
-  100% { opacity: 0.18; }
+  100% { opacity: ${theme.color.opacity.loaderGrow}; }
 `;
-const grow3 = keyframes`
-  0%, 56% { opacity: 0.18; }
+const grow3 = (theme: DefaultTheme) => keyframes`
+  0%, 56% { opacity: ${theme.color.opacity.loaderGrow}; }
   64% { opacity: 1; }
   86% { opacity: 1; }
-  100% { opacity: 0.18; }
+  100% { opacity: ${theme.color.opacity.loaderGrow}; }
 `;
-const breathe = keyframes`
+const breathe = (theme: DefaultTheme) => keyframes`
   0%, 100% { opacity: 1; }
-  50% { opacity: 0.45; }
+  50% { opacity: ${theme.color.opacity.loaderBreathe}; }
 `;
 const fadeIn = keyframes`
   from { opacity: 0; }
@@ -79,7 +80,11 @@ export type StrokeMotion =
   'drawC' | 'drawLine' | 'drawDash' | 'march' | 'grow' | 'none';
 
 const DRAW_DASH = [drawDash1, drawDash2, drawDash3];
-const GROW = [grow1, grow2, grow3];
+const GROW: ((theme: DefaultTheme) => ReturnType<typeof keyframes>)[] = [
+  grow1,
+  grow2,
+  grow3,
+];
 
 // One loop of a motion, in the Theme's duration.
 function loop(
@@ -108,11 +113,11 @@ function motionOf({ $motion, $index }: StrokeProps, theme: DefaultTheme) {
     case 'drawDash':
       return loop(DRAW_DASH[$index] ?? drawDash1, theme);
     case 'grow':
-      return loop(GROW[$index] ?? grow1, theme);
+      return loop((GROW[$index] ?? grow1)(theme), theme);
     case 'march':
       // The dashes pulse in turn, 1/6 loop apart.
       return css`
-        ${loop(march, theme)}
+        ${loop(march(theme), theme)}
         animation-delay: calc(${theme.motion.loaderLoop} * ${$index} / 6);
       `;
     default:
@@ -151,8 +156,10 @@ export const Mark = styled.svg`
   animation: ${fadeIn} ${({ theme }) => theme.motion.loaderFadeIn} ease-out;
 
   @media (prefers-reduced-motion: reduce) {
-    animation: ${breathe} ${({ theme }) => theme.motion.loaderBreathe}
-      ease-in-out infinite;
+    ${({ theme }) => css`
+      animation: ${breathe(theme)} ${theme.motion.loaderBreathe} ease-in-out
+        infinite;
+    `}
   }
 `;
 

@@ -5,7 +5,7 @@ export type NavItemBadgeTone = 'accent' | 'warning';
 type Look = { fill: string; text: string };
 
 // NavItem.dc.html: the badge's fill and text by tone.
-function badgeLook(tone: NavItemBadgeTone, theme: DefaultTheme): Look {
+function pickBadgeLook(tone: NavItemBadgeTone, theme: DefaultTheme): Look {
   const { color } = theme;
   return tone === 'warning'
     ? { fill: color.warningTint, text: color.warning }
@@ -69,8 +69,8 @@ export const Badge = styled.span<BadgeProps>`
   font-size: ${({ theme }) => theme.fontSize.caption};
   line-height: ${({ theme }) => theme.size.navBadgeLine};
   text-align: center;
-  background: ${({ $tone, theme }) => badgeLook($tone, theme).fill};
-  color: ${({ $tone, theme }) => badgeLook($tone, theme).text};
+  background: ${({ $tone, theme }) => pickBadgeLook($tone, theme).fill};
+  color: ${({ $tone, theme }) => pickBadgeLook($tone, theme).text};
   font-variant-numeric: tabular-nums;
 `;
 
@@ -85,7 +85,7 @@ export const Chip = styled.span<BadgeProps>`
   font-size: ${({ theme }) => theme.fontSize.navChip};
   line-height: ${({ theme }) => theme.size.navChipLine};
   text-align: center;
-  background: ${({ $tone, theme }) => badgeLook($tone, theme).fill};
-  color: ${({ $tone, theme }) => badgeLook($tone, theme).text};
+  background: ${({ $tone, theme }) => pickBadgeLook($tone, theme).fill};
+  color: ${({ $tone, theme }) => pickBadgeLook($tone, theme).text};
   font-variant-numeric: tabular-nums;
 `;

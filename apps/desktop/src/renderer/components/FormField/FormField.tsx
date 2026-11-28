@@ -1,4 +1,5 @@
 import { useId, useLayoutEffect, useRef, type ReactNode } from 'react';
+import { hasText } from '../../utils/hasText/hasText.ts';
 import { Frame, Label, Message } from './FormField.styles.ts';
 
 type FormFieldProps = {
@@ -28,15 +29,13 @@ export function FormField({ label, hint, error, children }: FormFieldProps) {
     }
   });
 
-  const failed = error !== undefined && error !== '';
+  const failed = hasText(error);
   const message = failed ? error : hint;
   return (
     <Frame ref={frame}>
       <Label htmlFor={controlId}>{label}</Label>
       {children}
-      {message === undefined || message === '' ? null : (
-        <Message $error={failed}>{message}</Message>
-      )}
+      {hasText(message) ? <Message $error={failed}>{message}</Message> : null}
     </Frame>
   );
 }

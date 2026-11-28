@@ -145,7 +145,7 @@ score** must stay at or above the **Break threshold** of 83.
 - [x] 43 use has text in the switch
 - [x] 44 use has text in the accordion
 - [x] 45 use has text in the card
-- [ ] 46 use has text in the form field
+- [x] 46 use has text in the form field
 - [ ] 47 use has text in the modal
 - [ ] 48 use has text in the page header
 - [ ] 49 use has text in the snackbar

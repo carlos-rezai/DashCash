@@ -24,18 +24,18 @@ type AmountProps = {
 const NO_AMOUNT = '-';
 
 // The Polarity colour: green above zero, red below, ink at zero and for none.
-function polarityColour(cents: Cents | null): AmountColour {
+function pickPolarityColour(cents: Cents | null): AmountColour {
   if (cents === null || cents === 0) {
     return 'ink';
   }
   return cents > 0 ? 'positive' : 'negative';
 }
 
-function toneColour(tone: AmountTone, cents: Cents | null): AmountColour {
+function pickToneColour(tone: AmountTone, cents: Cents | null): AmountColour {
   switch (tone) {
     case 'auto':
     case 'muted':
-      return polarityColour(cents);
+      return pickPolarityColour(cents);
     case 'neutral':
       return 'ink';
     default:
@@ -52,7 +52,7 @@ export function Amount({
   strong = false,
 }: AmountProps) {
   return (
-    <Figure $size={size} $colour={toneColour(tone, cents)} $strong={strong}>
+    <Figure $size={size} $colour={pickToneColour(tone, cents)} $strong={strong}>
       {cents === null ? NO_AMOUNT : formatCents(cents, { whole, sign })}
     </Figure>
   );

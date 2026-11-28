@@ -171,7 +171,7 @@ score** must stay at or above the **Break threshold** of 83.
 - [x] 69 use opacity tokens in the loader styles
 - [x] 70 move the logo geometry into utils
 - [x] 71 use the logo geometry in the loader
-- [ ] 72 rename the amount colour helpers
+- [x] 72 rename the amount colour helpers
 - [ ] 73 rename the button text colour helper
 - [ ] 74 rename the loader helpers verb first
 - [ ] 75 rename the meter fill helper

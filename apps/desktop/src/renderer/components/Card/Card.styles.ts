@@ -21,7 +21,8 @@ export const Frame = styled.div<{ $padding: CardPadding }>`
   padding: ${({ theme, $padding }) =>
     $padding === 'none' ? '0' : theme.space[PADDING[$padding]]};
   background: ${({ theme }) => theme.color.cardBg};
-  border: 1px solid ${({ theme }) => theme.color.cardBorder};
+  border: ${({ theme }) => theme.size.hairline} solid
+    ${({ theme }) => theme.color.cardBorder};
 `;
 
 // The kicker and the title, one above the other.

@@ -1,3 +1,4 @@
+import { hasText } from '../../utils/hasText/hasText.ts';
 import { Icon, type IconName } from '../Icon/Icon.tsx';
 import {
   Field,
@@ -41,7 +42,7 @@ export function Input({
   ariaLabel,
 }: InputProps) {
   // An empty string is absent, as in the prototype.
-  const hasSuffix = suffix !== undefined && suffix !== '';
+  const hasSuffix = hasText(suffix);
   return (
     <Frame $width={width}>
       {icon === undefined ? null : (

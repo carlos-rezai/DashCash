@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { Icon } from '../../primitives/Icon/Icon.tsx';
 import { Tag, type TagTone } from '../../primitives/Tag/Tag.tsx';
+import { hasText } from '../../utils/hasText/hasText.ts';
 import {
   Actions,
   Back,
@@ -43,14 +44,14 @@ export function PageHeader({
         {onBack ? (
           <Back type="button" onClick={onBack}>
             <Icon glyph="arrowLeft" size={BACK_ICON_SIZE} />
-            <span>{backLabel || DEFAULT_BACK_LABEL}</span>
+            <span>{hasText(backLabel) ? backLabel : DEFAULT_BACK_LABEL}</span>
           </Back>
         ) : null}
         <TitleRow>
           <Title>{title}</Title>
-          {tag ? <Tag label={tag} tone={tagTone} /> : null}
+          {hasText(tag) ? <Tag label={tag} tone={tagTone} /> : null}
         </TitleRow>
-        {subtitle ? <Subtitle>{subtitle}</Subtitle> : null}
+        {hasText(subtitle) ? <Subtitle>{subtitle}</Subtitle> : null}
       </Column>
       <Actions>{children}</Actions>
     </Frame>

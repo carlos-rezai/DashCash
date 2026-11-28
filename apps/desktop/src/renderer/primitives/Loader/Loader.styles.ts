@@ -5,6 +5,7 @@ import {
   type DefaultTheme,
   type RuleSet,
 } from 'styled-components';
+import { LOGO_CENTRE } from '../../utils/logoGeometry/logoGeometry.ts';
 
 export type LoaderVariant = 'draw' | 'march' | 'orbit' | 'grow';
 
@@ -143,7 +144,7 @@ export const Stroke = styled.path<StrokeProps>`
 `;
 
 export const Orbit = styled.g`
-  transform-origin: 16px 16px;
+  transform-origin: ${LOGO_CENTRE}px ${LOGO_CENTRE}px;
   transform-box: view-box;
   ${({ theme }) => loop(spin, theme, 'linear')}
   ${stillStroke}

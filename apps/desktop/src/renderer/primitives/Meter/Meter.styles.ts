@@ -18,7 +18,8 @@ export const Frame = styled.div<{ $height: number }>`
   width: 100%;
   height: ${({ $height }) => String($height)}px;
   background: ${({ theme }) => theme.color.sunken};
-  border: 1px solid ${({ theme }) => theme.color.divider};
+  border: ${({ theme }) => theme.size.hairline} solid
+    ${({ theme }) => theme.color.divider};
 `;
 
 // The projection: a dashed outline, open on its left, under the bar.
@@ -29,7 +30,8 @@ export const Projection = styled.div<{ $tone: MeterTone; $share: number }>`
   bottom: 0;
   left: 0;
   width: ${({ $share }) => String($share * 100)}%;
-  border: 1px dashed ${({ theme, $tone }) => fill(theme, $tone)};
+  border: ${({ theme }) => theme.size.hairline} dashed
+    ${({ theme, $tone }) => fill(theme, $tone)};
   border-left: 0;
   opacity: ${({ theme }) => theme.color.opacity.projection};
 `;

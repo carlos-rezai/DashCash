@@ -21,7 +21,7 @@ export const Frame = styled.button<{ $active: boolean }>`
     $active ? theme.color.text : theme.color.textMuted};
   background: ${({ $active, theme }) =>
     $active ? theme.color.accent[100] : 'transparent'};
-  border: 1px solid
+  border: ${({ theme }) => theme.size.hairline} solid
     ${({ $active, theme }) =>
       $active ? theme.color.accent[400] : theme.color.divider};
   border-radius: ${({ theme }) => theme.size.radius};
@@ -45,7 +45,7 @@ export const Mark = styled.span<MarkProps>`
   height: ${({ $shape, theme }) =>
     $shape === 'line' ? theme.size.chipSwatchLine : theme.size.chipSwatch};
   background: ${({ $color, $filled }) => ($filled ? $color : 'transparent')};
-  border: 1px solid ${({ $color }) => $color};
+  border: ${({ theme }) => theme.size.hairline} solid ${({ $color }) => $color};
   border-radius: ${({ $shape, theme }) =>
     $shape === 'circle' ? '50%' : theme.size.radius};
 `;

@@ -44,7 +44,8 @@ export const List = styled.ol<{ $count: number }>`
   margin: 0;
   padding: 0;
   list-style: none;
-  border: 1px solid ${({ theme }) => theme.color.divider};
+  border: ${({ theme }) => theme.size.hairline} solid
+    ${({ theme }) => theme.color.divider};
 `;
 
 export const Item = styled.li`
@@ -70,7 +71,7 @@ export const Step = styled.button<StepProps>`
     $state === 'current' ? theme.color.accent[100] : 'transparent'};
   border: 0;
   border-left: ${({ $first, theme }) =>
-    $first ? '0' : `1px solid ${theme.color.divider}`};
+    $first ? '0' : `${theme.size.hairline} solid ${theme.color.divider}`};
   box-shadow: ${({ $state, theme }) =>
     $state === 'current'
       ? `inset 0 -${theme.size.stepperBar} 0 ${theme.color.accent[500]}`
@@ -94,7 +95,8 @@ export const Square = styled.span<{ $state: StepState }>`
   flex: none;
   display: grid;
   place-items: center;
-  border: 1px solid ${({ $state, theme }) => look($state, theme).squareBorder};
+  border: ${({ theme }) => theme.size.hairline} solid
+    ${({ $state, theme }) => look($state, theme).squareBorder};
   background: ${({ $state, theme }) => look($state, theme).squareFill};
   color: ${({ $state, theme }) => look($state, theme).squareText};
   font-family: ${({ theme }) => theme.font.heading};

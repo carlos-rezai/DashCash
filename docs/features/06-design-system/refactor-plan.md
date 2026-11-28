@@ -177,7 +177,7 @@ score** must stay at or above the **Break threshold** of 83.
 - [x] 75 rename the meter fill helper
 - [x] 76 rename the select text colour helper
 - [x] 77 rename the tag look helper
-- [ ] 78 rename the logo third dash builder
+- [x] 78 rename the logo third dash builder
 - [ ] 79 rename the nav item badge look helper
 - [ ] 80 rename the snackbar tone helpers
 - [ ] 81 rename the stat tile text colour helper

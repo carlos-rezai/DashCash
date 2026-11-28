@@ -20,7 +20,7 @@ type LogoProps = {
 const FIRST_DASHES_PATH = 'M16 16 L22.128 9.872';
 const NAME = 'DashCash';
 
-function thirdDashPath(strokeWidth: number): string {
+function buildThirdDashPath(strokeWidth: number): string {
   const start = LOGO_DIAGONAL * 7 * LOGO_UNIT;
   const end = computeLogoDashEnd(strokeWidth);
   return `M${(LOGO_CENTRE + start).toFixed(3)} ${(LOGO_CENTRE - start).toFixed(3)} L${end.x.toFixed(3)} ${end.y.toFixed(3)}`;
@@ -67,7 +67,7 @@ export function Logo({
           strokeDasharray="2 1"
           strokeDashoffset={2}
         />
-        <path d={thirdDashPath(strokeWidth)} strokeWidth={strokeWidth} />
+        <path d={buildThirdDashPath(strokeWidth)} strokeWidth={strokeWidth} />
       </Mark>
       {variant === 'mark' ? null : (
         <Wordmark $fontSize={Math.round(size * 0.78)}>{NAME}</Wordmark>

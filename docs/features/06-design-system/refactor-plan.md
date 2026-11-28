@@ -159,7 +159,7 @@ score** must stay at or above the **Break threshold** of 83.
 - [x] 57 use the hairline token in the stat tile styles
 - [x] 58 use the hairline token in the stepper styles
 - [x] 59 use the hairline token in the year table styles
-- [ ] 60 use the hairline token in the button styles
+- [x] 60 use the hairline token in the button styles
 - [ ] 61 use the hairline token in the checkbox styles
 - [ ] 62 use the hairline token in the chip styles
 - [ ] 63 use the hairline token in the input styles

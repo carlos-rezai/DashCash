@@ -113,7 +113,7 @@ export const Control = styled.button<StyledProps>`
   white-space: nowrap;
   color: ${({ $variant, theme }) => textColour($variant, theme)};
   background: transparent;
-  border: 1px solid transparent;
+  border: ${({ theme }) => theme.size.hairline} solid transparent;
   border-radius: ${({ theme }) => theme.size.radius};
   cursor: pointer;
   ${({ $variant }) => FILLS[$variant === 'danger' ? 'secondary' : $variant]}

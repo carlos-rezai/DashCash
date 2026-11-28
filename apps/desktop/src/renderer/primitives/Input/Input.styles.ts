@@ -37,7 +37,8 @@ export const Field = styled.input<FieldProps>`
   text-align: ${({ $align }) => $align};
   color: ${({ theme }) => theme.color.text};
   background: ${({ theme }) => theme.color.inputBg};
-  border: 1px solid ${({ theme }) => theme.color.divider};
+  border: ${({ theme }) => theme.size.hairline} solid
+    ${({ theme }) => theme.color.divider};
   border-radius: ${({ theme }) => theme.size.radius};
   caret-color: ${({ theme }) => theme.color.accent[500]};
 

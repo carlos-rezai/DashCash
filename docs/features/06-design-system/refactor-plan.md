@@ -162,7 +162,7 @@ score** must stay at or above the **Break threshold** of 83.
 - [x] 60 use the hairline token in the button styles
 - [x] 61 use the hairline token in the checkbox styles
 - [x] 62 use the hairline token in the chip styles
-- [ ] 63 use the hairline token in the input styles
+- [x] 63 use the hairline token in the input styles
 - [ ] 64 use the hairline token in the meter styles
 - [ ] 65 use the hairline token in the segmented styles
 - [ ] 66 use the hairline token in the select styles

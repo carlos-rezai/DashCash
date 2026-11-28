@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { hasText } from '../../utils/hasText/hasText.ts';
 import {
   Frame,
   Header,
@@ -18,13 +19,13 @@ type CardProps = {
 // the content.
 export function Card({ kicker, title, padding = 'md', children }: CardProps) {
   // An empty string is absent, as in the prototype.
-  const hasHeader = Boolean(kicker) || Boolean(title);
+  const hasHeader = hasText(kicker) || hasText(title);
   return (
     <Frame $padding={padding}>
       {hasHeader ? (
         <Header>
-          {kicker ? <Kicker>{kicker}</Kicker> : null}
-          {title ? <Title>{title}</Title> : null}
+          {hasText(kicker) ? <Kicker>{kicker}</Kicker> : null}
+          {hasText(title) ? <Title>{title}</Title> : null}
         </Header>
       ) : null}
       {children}

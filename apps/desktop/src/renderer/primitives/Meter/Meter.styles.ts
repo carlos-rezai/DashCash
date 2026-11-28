@@ -4,7 +4,7 @@ export type MeterTone = 'neutral' | 'warning' | 'danger';
 
 // Meter.dc.html: the neutral tone is the accent, the others the warning and
 // the danger colour.
-function fill(theme: DefaultTheme, tone: MeterTone): string {
+function pickFill(theme: DefaultTheme, tone: MeterTone): string {
   if (tone === 'warning') {
     return theme.color.warning;
   }
@@ -31,7 +31,7 @@ export const Projection = styled.div<{ $tone: MeterTone; $share: number }>`
   left: 0;
   width: ${({ $share }) => String($share * 100)}%;
   border: ${({ theme }) => theme.size.hairline} dashed
-    ${({ theme, $tone }) => fill(theme, $tone)};
+    ${({ theme, $tone }) => pickFill(theme, $tone)};
   border-left: 0;
   opacity: ${({ theme }) => theme.color.opacity.projection};
 `;
@@ -43,6 +43,6 @@ export const Bar = styled.div<{ $tone: MeterTone; $share: number }>`
   bottom: 0;
   left: 0;
   width: ${({ $share }) => String($share * 100)}%;
-  background: ${({ theme, $tone }) => fill(theme, $tone)};
+  background: ${({ theme, $tone }) => pickFill(theme, $tone)};
   transition: width ${({ theme }) => theme.motion.meterWidth} ease;
 `;

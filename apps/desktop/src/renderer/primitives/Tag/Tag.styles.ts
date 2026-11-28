@@ -50,6 +50,7 @@ export const Frame = styled.span<{ $tone: TagTone }>`
   white-space: nowrap;
   background: ${({ $tone, theme }) => look($tone, theme).fill};
   color: ${({ $tone, theme }) => look($tone, theme).text};
-  border: 1px solid ${({ $tone, theme }) => look($tone, theme).border};
+  border: ${({ theme }) => theme.size.hairline} solid
+    ${({ $tone, theme }) => look($tone, theme).border};
   border-radius: ${({ theme }) => theme.size.radius};
 `;

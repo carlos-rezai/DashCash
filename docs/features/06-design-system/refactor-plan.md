@@ -151,7 +151,7 @@ score** must stay at or above the **Break threshold** of 83.
 - [x] 49 use has text in the snackbar
 - [x] 50 use has text in the stat tile
 - [x] 51 use has text in the year table
-- [ ] 52 add the hairline token in the accordion styles
+- [x] 52 add the hairline token in the accordion styles
 - [ ] 53 use the hairline token in the card styles
 - [ ] 54 use the hairline token in the modal styles
 - [ ] 55 use the hairline token in the nav item styles

@@ -338,6 +338,8 @@ export const theme = {
   size: {
     // SPEC section 2, Shape: square corners, radius 0 on every framed element
     radius: '0',
+    // SPEC section 2: the 1px hairlines of every frame and divider
+    hairline: '1px',
     // styles.css: a { text-underline-offset: 3px }
     underlineOffset: '3px',
     // --sb-sidebar-width and --sb-sidebar-width-compact

@@ -2,7 +2,8 @@ import { styled } from 'styled-components';
 
 // Accordion.dc.html: the section with its line under it.
 export const Section = styled.section`
-  border-bottom: 1px solid ${({ theme }) => theme.color.divider};
+  border-bottom: ${({ theme }) => theme.size.hairline} solid
+    ${({ theme }) => theme.color.divider};
 `;
 
 // The header: a full-width button that shows the hover fill under the pointer.

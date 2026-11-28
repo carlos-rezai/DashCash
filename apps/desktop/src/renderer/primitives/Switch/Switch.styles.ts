@@ -29,7 +29,7 @@ export const Track = styled.span<{ $on: boolean }>`
   height: ${({ theme }) => theme.size.switchHeight};
   background: ${({ $on, theme }) =>
     $on ? theme.color.accent[500] : 'transparent'};
-  border: 1px solid
+  border: ${({ theme }) => theme.size.hairline} solid
     ${({ $on, theme }) =>
       $on ? theme.color.accent[500] : theme.color.neutral[400]};
 `;

@@ -1,4 +1,5 @@
 import { useEffect, useId, useState } from 'react';
+import { hasText } from '../../utils/hasText/hasText.ts';
 import {
   Label,
   Mark,
@@ -103,7 +104,7 @@ export function Loader({
   const large = size >= LARGE_FROM;
   const drawn = variant === 'draw';
   const motion = dashMotion(variant, small);
-  const shownLabel = label === undefined || label === '' ? null : label;
+  const shownLabel = hasText(label) ? label : null;
 
   const arc = (
     <Stroke

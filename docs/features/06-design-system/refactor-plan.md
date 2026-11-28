@@ -312,12 +312,17 @@ replace the inline `ls-files` call in `readChangedLines` with
 `listUntrackedPaths(cwd)`, filtered by `isMeasured` as before. The gate's
 tests stay green unchanged.
 
-**35 use the shared readers in check stories.** In `checkStories`, delete
-`listCandidatePaths`. The entry passes `findMissingStories` the tracked paths
-followed by the untracked ones, from `listTrackedPaths` and
-`listUntrackedPaths`: the same set as `ls-files --cached --others
---exclude-standard`. The gate's tests, whose output check sorts the lines,
-stay green unchanged. Then run `npm run test:mutation`.
+**35 use the shared readers in check stories.** In `checkStories`,
+`listCandidatePaths(cwd)` stays, exported and small: it returns the tracked
+paths followed by the untracked ones, from the shared `listTrackedPaths` and
+`listUntrackedPaths`, the same set as `ls-files --cached --others
+--exclude-standard`. Its inline `ls-files` call goes. The `import.meta.main`
+block only calls it, as now, so no logic is left where the coverage gate
+cannot see it. Add a unit test for `listCandidatePaths` in a temporary
+repository with a `.gitignore`: a tracked file and an untracked one are
+listed, tracked first, and an ignored one is not. Show the test fails without
+the function before keeping it. The gate's tests, whose output check sorts
+the lines, stay green unchanged. Then run `npm run test:mutation`.
 
 **36 add the has text helper.** Create the module `hasText` in the
 renderer's `utils/`, with its test, the `utils/` barrel `index.ts` (the

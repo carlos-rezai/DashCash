@@ -2,6 +2,7 @@ import type { MouseEvent } from 'react';
 import { Icon, type IconName } from '../Icon/Icon.tsx';
 import { Loader } from '../Loader/Loader.tsx';
 import type { LoaderVariant } from '../Loader/Loader.styles.ts';
+import { hasText } from '../../utils/hasText/hasText.ts';
 import {
   Control,
   Face,
@@ -73,7 +74,7 @@ function ButtonFace({
     trailing = shown ? <Icon glyph={iconRight} size={iconSize} /> : mark;
   }
   let words = null;
-  if (text !== undefined && text !== '') {
+  if (hasText(text)) {
     words = shown ? text : <Ghost data-text={text} />;
   }
 
@@ -101,7 +102,7 @@ export function Button({
   loaderVariant = 'draw',
 }: ButtonProps) {
   const iconSize = ICON_SIZE[size];
-  const iconOnly = label === undefined || label === '';
+  const iconOnly = !hasText(label);
   const common = { iconSize, iconRight, loaderVariant };
 
   return (
@@ -114,7 +115,7 @@ export function Button({
       $busy={loading}
       disabled={disabled || loading}
       aria-busy={loading}
-      title={title === undefined || title === '' ? label : title}
+      title={hasText(title) ? title : label}
       onClick={onClick}
     >
       <ButtonFace {...common} shown={!loading} lead={icon} text={label} />
@@ -122,11 +123,7 @@ export function Button({
         {...common}
         shown={loading}
         lead="loader"
-        text={
-          loadingLabel === undefined || loadingLabel === ''
-            ? label
-            : loadingLabel
-        }
+        text={hasText(loadingLabel) ? loadingLabel : label}
       />
     </Control>
   );

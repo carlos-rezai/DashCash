@@ -136,7 +136,7 @@ score** must stay at or above the **Break threshold** of 83.
 - [x] 34 use the untracked reader in check coverage
 - [x] 35 use the shared readers in check stories
 - [x] 36 add the has text helper
-- [ ] 37 use has text in the button
+- [x] 37 use has text in the button
 - [ ] 38 use has text in the checkbox
 - [ ] 39 use has text in the chip
 - [ ] 40 use has text in the input

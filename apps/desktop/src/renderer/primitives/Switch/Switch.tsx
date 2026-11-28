@@ -1,3 +1,4 @@
+import { hasText } from '../../utils/hasText/hasText.ts';
 import { Frame, Knob, Label, Track } from './Switch.styles.ts';
 
 type SwitchProps = {
@@ -18,13 +19,12 @@ export function Switch({
   ariaLabel,
   disabled = false,
 }: SwitchProps) {
-  const hasLabel = label !== undefined && label !== '';
   return (
     <Frame
       type="button"
       role="switch"
       aria-checked={checked}
-      aria-label={hasLabel ? undefined : ariaLabel}
+      aria-label={hasText(label) ? undefined : ariaLabel}
       disabled={disabled}
       onClick={() => {
         onChange(!checked);
@@ -33,7 +33,7 @@ export function Switch({
       <Track $on={checked}>
         <Knob $on={checked} />
       </Track>
-      {hasLabel ? <Label>{label}</Label> : null}
+      {hasText(label) ? <Label>{label}</Label> : null}
     </Frame>
   );
 }

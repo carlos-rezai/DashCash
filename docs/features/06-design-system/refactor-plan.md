@@ -142,7 +142,7 @@ score** must stay at or above the **Break threshold** of 83.
 - [x] 40 use has text in the input
 - [x] 41 use has text in the loader
 - [x] 42 use has text in the select
-- [ ] 43 use has text in the switch
+- [x] 43 use has text in the switch
 - [ ] 44 use has text in the accordion
 - [ ] 45 use has text in the card
 - [ ] 46 use has text in the form field

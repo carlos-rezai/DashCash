@@ -156,7 +156,7 @@ score** must stay at or above the **Break threshold** of 83.
 - [x] 54 use the hairline token in the modal styles
 - [x] 55 use the hairline token in the nav item styles
 - [x] 56 use the hairline token in the snackbar styles
-- [ ] 57 use the hairline token in the stat tile styles
+- [x] 57 use the hairline token in the stat tile styles
 - [ ] 58 use the hairline token in the stepper styles
 - [ ] 59 use the hairline token in the year table styles
 - [ ] 60 use the hairline token in the button styles

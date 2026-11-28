@@ -23,7 +23,8 @@ export const Frame = styled.div`
   min-width: 0;
   padding: ${({ theme }) => theme.space.space4};
   background: ${({ theme }) => theme.color.cardBg};
-  border: 1px solid ${({ theme }) => theme.color.cardBorder};
+  border: ${({ theme }) => theme.size.hairline} solid
+    ${({ theme }) => theme.color.cardBorder};
 `;
 
 export const Label = styled.span`

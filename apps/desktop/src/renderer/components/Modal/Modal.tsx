@@ -1,5 +1,6 @@
 import { useEffect, useId, type MouseEvent, type ReactNode } from 'react';
 import { Button } from '../../primitives/Button/Button.tsx';
+import { hasText } from '../../utils/hasText/hasText.ts';
 import {
   Backdrop,
   Content,
@@ -68,7 +69,7 @@ export function Modal({
         <Header>
           <Heading>
             <Title id={titleId}>{title}</Title>
-            {subtitle ? <Subtitle>{subtitle}</Subtitle> : null}
+            {hasText(subtitle) ? <Subtitle>{subtitle}</Subtitle> : null}
           </Heading>
           <Button
             variant="ghost"

@@ -47,7 +47,7 @@ export const Frame = styled.div<{ $tone: SnackbarTone }>`
     ${({ theme, $tone }) => toneTint($tone, theme)},
     ${({ theme, $tone }) => toneTint($tone, theme)}
   );
-  border: 1px solid
+  border: ${({ theme }) => theme.size.hairline} solid
     color-mix(
       in srgb,
       ${({ theme, $tone }) => toneColour($tone, theme)}

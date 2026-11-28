@@ -1,4 +1,5 @@
 import { Icon } from '../Icon/Icon.tsx';
+import { hasText } from '../../utils/hasText/hasText.ts';
 import { Box, Frame, Label } from './Checkbox.styles.ts';
 
 // The check, 12 px inside the 16 px box.
@@ -32,7 +33,7 @@ export function Checkbox({
       <Box $checked={checked}>
         {checked ? <Icon glyph="check" size={CHECK_SIZE} /> : null}
       </Box>
-      {label === undefined || label === '' ? null : <Label>{label}</Label>}
+      {hasText(label) ? <Label>{label}</Label> : null}
     </Frame>
   );
 }

@@ -1,6 +1,7 @@
 import { Button } from '../../primitives/Button/Button.tsx';
 import { Icon, type IconName } from '../../primitives/Icon/Icon.tsx';
 import { Loader } from '../../primitives/Loader/Loader.tsx';
+import { hasText } from '../../utils/hasText/hasText.ts';
 import {
   Actions,
   Close,
@@ -54,9 +55,8 @@ export function Snackbar({
   loading = false,
 }: SnackbarProps) {
   const alert = tone === 'error' || tone === 'warning';
-  // An empty string is absent, as in the prototype.
-  const hasAction = actionLabel !== undefined && actionLabel !== '';
-  const hasSecondary = secondaryLabel !== undefined && secondaryLabel !== '';
+  const hasAction = hasText(actionLabel);
+  const hasSecondary = hasText(secondaryLabel);
 
   return (
     <Frame
@@ -73,7 +73,7 @@ export function Snackbar({
       </Lead>
       <Text>
         <Title>{title}</Title>
-        {message ? <Message>{message}</Message> : null}
+        {hasText(message) ? <Message>{message}</Message> : null}
         {hasAction || hasSecondary ? (
           <Actions>
             {hasAction ? (

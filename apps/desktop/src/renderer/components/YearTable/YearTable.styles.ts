@@ -31,7 +31,8 @@ export const Table = styled.table<{ $equal: boolean; $columns: number }>`
 export const Head = styled.th<{ $align: Align; $width: string | undefined }>`
   width: ${({ $width, theme }) => $width ?? theme.size.yearTableFirstColumn};
   padding: ${({ theme }) => theme.space.space2};
-  border-bottom: 1px solid ${({ theme }) => theme.color.divider};
+  border-bottom: ${({ theme }) => theme.size.hairline} solid
+    ${({ theme }) => theme.color.divider};
   text-align: ${({ $align }) => $align};
   font-size: ${({ theme }) => theme.fontSize.tableHead};
   letter-spacing: ${({ theme }) => theme.font.tableHeadLetterSpacing};
@@ -82,7 +83,8 @@ export const DataCell = styled.td<{ $align: Align; $inset?: boolean }>`
   padding: ${({ theme }) => theme.space.space2};
   padding-left: ${({ $inset, theme }) =>
     $inset === true ? theme.space.yearTableMonthInset : theme.space.space2};
-  border-bottom: 1px solid ${({ theme }) => theme.color.cardBorder};
+  border-bottom: ${({ theme }) => theme.size.hairline} solid
+    ${({ theme }) => theme.color.cardBorder};
   text-align: ${({ $align }) => $align};
 `;
 

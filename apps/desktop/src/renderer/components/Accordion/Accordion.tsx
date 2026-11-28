@@ -1,4 +1,5 @@
 import { useRef, type ReactNode } from 'react';
+import { hasText } from '../../utils/hasText/hasText.ts';
 import { useRevealOnExpand } from '../../hooks/useRevealOnExpand/useRevealOnExpand.ts';
 import { Icon } from '../../primitives/Icon/Icon.tsx';
 import { Tag, type TagTone } from '../../primitives/Tag/Tag.tsx';
@@ -50,8 +51,8 @@ export function Accordion({
           <Icon glyph="chevronRight" size={ICON_SIZE} />
         </Chevron>
         <Title>{title}</Title>
-        {tag ? <Tag label={tag} tone={tagTone} /> : null}
-        {meta ? <Meta>{meta}</Meta> : null}
+        {hasText(tag) ? <Tag label={tag} tone={tagTone} /> : null}
+        {hasText(meta) ? <Meta>{meta}</Meta> : null}
       </Header>
       {open ? <Content>{children}</Content> : null}
     </Section>

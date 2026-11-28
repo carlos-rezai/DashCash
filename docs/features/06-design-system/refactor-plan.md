@@ -153,7 +153,7 @@ score** must stay at or above the **Break threshold** of 83.
 - [x] 51 use has text in the year table
 - [x] 52 add the hairline token in the accordion styles
 - [x] 53 use the hairline token in the card styles
-- [ ] 54 use the hairline token in the modal styles
+- [x] 54 use the hairline token in the modal styles
 - [ ] 55 use the hairline token in the nav item styles
 - [ ] 56 use the hairline token in the snackbar styles
 - [ ] 57 use the hairline token in the stat tile styles

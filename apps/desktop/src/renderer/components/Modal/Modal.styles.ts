@@ -23,7 +23,8 @@ export const Panel = styled.div<{ $width: number | undefined }>`
   gap: ${({ theme }) => theme.space.space4};
   padding: ${({ theme }) => theme.space.space6};
   background: ${({ theme }) => theme.color.raisedBg};
-  border: 1px solid ${({ theme }) => theme.color.cardBorder};
+  border: ${({ theme }) => theme.size.hairline} solid
+    ${({ theme }) => theme.color.cardBorder};
   box-shadow: ${({ theme }) => theme.shadow.lg};
 `;
 

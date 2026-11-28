@@ -1,3 +1,4 @@
+import { hasText } from '../../utils/hasText/hasText.ts';
 import { Frame, Mark, Meta, type ChipSwatchShape } from './Chip.styles.ts';
 
 type ChipProps = {
@@ -34,16 +35,16 @@ export function Chip({
         onClick?.(!active);
       }}
     >
-      {swatch === undefined || swatch === '' ? null : (
+      {hasText(swatch) ? (
         <Mark
           aria-hidden="true"
           $color={swatch}
           $shape={swatchShape}
           $filled={active}
         />
-      )}
+      ) : null}
       <span>{label}</span>
-      {meta === undefined || meta === '' ? null : <Meta>{meta}</Meta>}
+      {hasText(meta) ? <Meta>{meta}</Meta> : null}
     </Frame>
   );
 }

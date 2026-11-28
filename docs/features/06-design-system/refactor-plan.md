@@ -138,7 +138,7 @@ score** must stay at or above the **Break threshold** of 83.
 - [x] 36 add the has text helper
 - [x] 37 use has text in the button
 - [x] 38 use has text in the checkbox
-- [ ] 39 use has text in the chip
+- [x] 39 use has text in the chip
 - [ ] 40 use has text in the input
 - [ ] 41 use has text in the loader
 - [ ] 42 use has text in the select

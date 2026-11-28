@@ -172,7 +172,7 @@ score** must stay at or above the **Break threshold** of 83.
 - [x] 70 move the logo geometry into utils
 - [x] 71 use the logo geometry in the loader
 - [x] 72 rename the amount colour helpers
-- [ ] 73 rename the button text colour helper
+- [x] 73 rename the button text colour helper
 - [ ] 74 rename the loader helpers verb first
 - [ ] 75 rename the meter fill helper
 - [ ] 76 rename the select text colour helper

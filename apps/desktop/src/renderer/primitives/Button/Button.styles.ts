@@ -11,7 +11,7 @@ type StyledProps = {
   $busy: boolean;
 };
 
-function textColour(variant: ButtonVariant, theme: DefaultTheme): string {
+function pickTextColour(variant: ButtonVariant, theme: DefaultTheme): string {
   switch (variant) {
     case 'primary':
       return theme.color.bg;
@@ -111,7 +111,7 @@ export const Control = styled.button<StyledProps>`
   letter-spacing: ${({ theme }) => theme.font.buttonLetterSpacing};
   line-height: 1;
   white-space: nowrap;
-  color: ${({ $variant, theme }) => textColour($variant, theme)};
+  color: ${({ $variant, theme }) => pickTextColour($variant, theme)};
   background: transparent;
   border: ${({ theme }) => theme.size.hairline} solid transparent;
   border-radius: ${({ theme }) => theme.size.radius};

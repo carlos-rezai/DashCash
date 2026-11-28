@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { computeLogoDashEnd, computeLogoStrokeWidth } from './Logo.tsx';
+import { computeLogoDashEnd, computeLogoStrokeWidth } from './logoGeometry.ts';
 
 // SPEC, Name and logo: the optical stroke width by size, 3.2 up to 20 px, 2.6
 // up to 32 px and 2.2 above; dash 3 ends on the 45° line from the centre

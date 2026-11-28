@@ -1,3 +1,4 @@
+import { hasText } from '../../utils/hasText/hasText.ts';
 import { Icon } from '../Icon/Icon.tsx';
 import { Swatch } from '../Swatch/Swatch.tsx';
 import {
@@ -63,9 +64,7 @@ export function Select({
           onChange(event.target.value);
         }}
       >
-        {placeholder === undefined || placeholder === '' ? null : (
-          <option value="">{placeholder}</option>
-        )}
+        {hasText(placeholder) ? <option value="">{placeholder}</option> : null}
         {options.map((option) => (
           <option key={option.value} value={option.value}>
             {option.label}
